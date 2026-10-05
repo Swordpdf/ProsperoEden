@@ -3,8 +3,11 @@
 # each also set when the following page is blocked, so a direct access never crosses into
 # a blocked page. A32 loads/stores test that byte, access [r13 + vaddr] when clear and
 # otherwise run the checked page-table lookup out of line. Unaliased, GPU-tracked and
-# read-only pages therefore never fault or recompile; the fault handler only covers races
-# with concurrent mapping changes. Exclusive accesses keep the page-table path. A64 is
+# read-only pages therefore never fault; the fault handler only covers races with concurrent
+# mapping changes. An access site that keeps finding its page blocked (the window cannot alias
+# memory whose backing is out of step with 16 KiB chunks, such as thread stacks and TLS) is
+# recompiled onto the inline page-table path after checked_site_budget blocked executions,
+# the same way a faulting site is, so such sites cost what they cost without fastmem. Exclusive accesses keep the page-table path. A64 is
 # unchanged. Operates on memory_emitter (emit_x64_memory.h) and memory_source (.cpp.inc).
 
 set(checked_helpers [=[
@@ -110,11 +113,14 @@ foreach(direction Read Write)
         // Use fastmem
         if constexpr (checked_fastmem) {
             const Xbyak::Reg64 index = ctx.reg_alloc.ScratchGpr(code);
-            SharedLabel blocked = ctx.GenSharedLabel();
+            SharedLabel blocked = ctx.GenSharedLabel(), slow = ctx.GenSharedLabel(), demote = ctx.GenSharedLabel();
+            CheckedSite* const site = conf.recompile_on_fastmem_failure ? NewCheckedSite(*fastmem_marker) : nullptr;
             EmitCheckedFastmemTest(code, vaddr, index, ${blocked_bit}, *blocked);
             const auto location = ${direct_access};
             ctx.deferred_emits.emplace_back([=, this, &ctx] {
                 code.L(*blocked);
+                EmitCheckedSiteCount(code, site, index, *demote);
+                code.L(*slow);
                 const auto fallback_ptr = EmitCheckedFallbackLookup(code, ctx, bitsize, *abort, vaddr, index);
                 ${fallback_access};
                 code.jmp(*end, code.T_NEAR);
@@ -130,6 +136,7 @@ foreach(direction Read Write)
                     });
                 EmitCheckMemoryAbort(ctx, inst, end);
                 code.jmp(*end, code.T_NEAR);
+                EmitCheckedSiteDemote(code, this, site, *demote, *slow);
             });
         } else {
         bool require_abort_handling = false;
@@ -148,13 +155,16 @@ set(vec_read [=[
             const auto temporary = ctx.reg_alloc.ScratchGpr(code);
             const auto vector = ctx.reg_alloc.ScratchXmm(code);
             const auto wrapped_fn = read_fallbacks[std::make_tuple(false, bitsize, vaddr.getIdx(), temporary.getIdx())];
-            SharedLabel blocked = ctx.GenSharedLabel(), abort = ctx.GenSharedLabel(), end = ctx.GenSharedLabel();
+            SharedLabel blocked = ctx.GenSharedLabel(), slow = ctx.GenSharedLabel(), demote = ctx.GenSharedLabel(), abort = ctx.GenSharedLabel(), end = ctx.GenSharedLabel();
+            CheckedSite* const site = conf.recompile_on_fastmem_failure ? NewCheckedSite(*fastmem_marker) : nullptr;
             EmitCheckedFastmemTest(code, vaddr, temporary, checked_read_blocked, *blocked);
             const auto location = code.getCurr();
             if constexpr (bitsize == 32) code.movd(vector, code.dword[r13 + vaddr]);
             else code.movq(vector, code.qword[r13 + vaddr]);
             ctx.deferred_emits.emplace_back([=, this, &ctx] {
                 code.L(*blocked);
+                EmitCheckedSiteCount(code, site, temporary, *demote);
+                code.L(*slow);
                 const auto pointer = EmitCheckedFallbackLookup(code, ctx, bitsize, *abort, vaddr, temporary);
                 if constexpr (bitsize == 32) code.movd(vector, code.dword[pointer]);
                 else code.movq(vector, code.qword[pointer]);
@@ -174,6 +184,7 @@ set(vec_read [=[
                 else code.movq(vector, temporary);
                 EmitCheckMemoryAbort(ctx, inst, end);
                 code.jmp(*end, code.T_NEAR);
+                EmitCheckedSiteDemote(code, this, site, *demote, *slow);
             });
             code.L(*end);
             ctx.reg_alloc.DefineValue(code, inst, vector);
@@ -188,13 +199,16 @@ set(vec_write [=[
             const auto temporary = ctx.reg_alloc.ScratchGpr(code);
             const auto vector = ctx.reg_alloc.UseXmm(code, args[2]);
             const auto wrapped_fn = write_fallbacks[std::make_tuple(false, bitsize, vaddr.getIdx(), temporary.getIdx())];
-            SharedLabel blocked = ctx.GenSharedLabel(), abort = ctx.GenSharedLabel(), end = ctx.GenSharedLabel();
+            SharedLabel blocked = ctx.GenSharedLabel(), slow = ctx.GenSharedLabel(), demote = ctx.GenSharedLabel(), abort = ctx.GenSharedLabel(), end = ctx.GenSharedLabel();
+            CheckedSite* const site = conf.recompile_on_fastmem_failure ? NewCheckedSite(*fastmem_marker) : nullptr;
             EmitCheckedFastmemTest(code, vaddr, temporary, checked_write_blocked, *blocked);
             const auto location = code.getCurr();
             if constexpr (bitsize == 32) code.movd(code.dword[r13 + vaddr], vector);
             else code.movq(code.qword[r13 + vaddr], vector);
             ctx.deferred_emits.emplace_back([=, this, &ctx] {
                 code.L(*blocked);
+                EmitCheckedSiteCount(code, site, temporary, *demote);
+                code.L(*slow);
                 const auto pointer = EmitCheckedFallbackLookup(code, ctx, bitsize, *abort, vaddr, temporary);
                 if constexpr (bitsize == 32) code.movd(code.dword[pointer], vector);
                 else code.movq(code.qword[pointer], vector);
@@ -218,6 +232,7 @@ set(vec_write [=[
                     });
                 EmitCheckMemoryAbort(ctx, inst, end);
                 code.jmp(*end, code.T_NEAR);
+                EmitCheckedSiteDemote(code, this, site, *demote, *slow);
             });
             code.L(*end);
             return;
@@ -256,6 +271,61 @@ string(REPLACE "${exclusive_marker}"
     checked_exclusive "${checked_exclusive}")
 set(memory_source "${checked_prefix}${checked_exclusive}")
 
+# Blocked-site budget (see the top of this file). The .inc is compiled once for A32 and once
+# for A64; only A32 emits these.
+set(checked_sites [=[
+// Checked fastmem: one record per access site, allocated when the site is emitted and kept
+// for the session. The JIT counts the site's blocked executions down in place.
+void CheckedFastmemDemoted() noexcept; // headless/fastmem_handler.cpp
+namespace {
+constexpr u8 checked_site_budget = 64;
+struct CheckedSite {
+    u64 location;
+    unsigned name;
+    u8 budget;
+    bool demoted;
+};
+[[maybe_unused]] CheckedSite* NewCheckedSite(const std::tuple<IR::LocationDescriptor, unsigned>& marker) {
+    return new CheckedSite{std::get<0>(marker).Value(), std::get<1>(marker), checked_site_budget, false};
+}
+// In a site's out-of-line path, before its page-table lookup: count one blocked execution.
+[[maybe_unused]] void EmitCheckedSiteCount(BlockOfCode& code, CheckedSite* site, Xbyak::Reg64 scratch, Xbyak::Label& demote) {
+    if (!site) return;
+    code.mov(scratch, std::bit_cast<u64>(site));
+    code.dec(code.byte[scratch + offsetof(CheckedSite, budget)]);
+    code.jz(demote, code.T_NEAR);
+}
+// Recompile the site without fastmem, as FastmemCallback does after a fault; the current
+// block finishes on its lookup. Called once the budget runs out (and again, harmlessly,
+// every 256 blocked executions after that until the block is replaced).
+template<typename Emitter>
+void CheckedSiteDemote(Emitter* emitter, CheckedSite* site) {
+    if (site->demoted) return;
+    site->demoted = true;
+    const IR::LocationDescriptor location{site->location};
+    emitter->do_not_fastmem.insert(std::make_tuple(location, site->name));
+    emitter->InvalidateBasicBlocks({location});
+    CheckedFastmemDemoted();
+}
+// The call goes through a local thunk so the caller-saved spill sees the stack as a callee
+// does, like the access fallbacks; afterwards the access continues with its lookup.
+template<typename Emitter>
+void EmitCheckedSiteDemote(BlockOfCode& code, Emitter* emitter, CheckedSite* site, Xbyak::Label& demote, Xbyak::Label& resume) {
+    if (!site) return;
+    Xbyak::Label thunk;
+    code.L(demote);
+    code.call(thunk);
+    code.jmp(resume, code.T_NEAR);
+    code.L(thunk);
+    ABI_PushCallerSaveRegistersAndAdjustStack(code);
+    code.mov(code.ABI_PARAM1, std::bit_cast<u64>(emitter));
+    code.mov(code.ABI_PARAM2, std::bit_cast<u64>(site));
+    code.CallFunction(&CheckedSiteDemote<Emitter>);
+    ABI_PopCallerSaveRegistersAndAdjustStack(code);
+    code.ret();
+}
+} // namespace
+]=])
 # The .inc is compiled once for A32 and once for A64.
 set(checked_select "namespace {\nusing Vector = std::array<u64, 2>;\n}\n")
 string(FIND "${memory_source}" "${checked_select}" checked_select_at)
@@ -263,5 +333,5 @@ if(checked_select_at LESS 0)
     message(FATAL_ERROR "Pinned memory emitter prologue changed")
 endif()
 string(REPLACE "${checked_select}"
-    "${checked_select}\nconstexpr bool checked_fastmem = std::is_same_v<AxxEmitContext, A32EmitContext>;\n"
+    "${checked_select}\nconstexpr bool checked_fastmem = std::is_same_v<AxxEmitContext, A32EmitContext>;\n${checked_sites}"
     memory_source "${memory_source}")

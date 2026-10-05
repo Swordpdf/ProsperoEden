@@ -46,6 +46,7 @@ extern "C" void ps5_opengl_heap_snapshot(const char*, unsigned) {}
 namespace Eden::Fastmem {
 Stats WindowStats() noexcept { return {}; }
 std::uint64_t Faults() noexcept { return 0; }
+std::uint64_t Demotions() noexcept { return 0; }
 }
 int main() {
     using namespace Eden::Performance;

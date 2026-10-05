@@ -745,10 +745,14 @@ static void CheckFastmemA32() {
         {0x400000, 0xc00, 0},        // partially unmapped chunk: page table
         {0x500000, 0x2000, 2 * 2048}, // tracked page: callbacks for its 1024 words, both passes
     };
+    const auto demotions_before = Eden::Fastmem::Demotions();
     for (const auto& c : increments) {
         fill(c.address, c.words);
         run(increment, c.address, c.words, 0, c.callbacks, incremented(c.address, c.words));
     }
+    // The loops over unaliased, read-only, partly unmapped and tracked pages keep finding
+    // them blocked: their LDR/STR sites move to the page-table path with the same results.
+    require(Eden::Fastmem::Demotions() > demotions_before);
     // Unaligned word loads ending two bytes into the next page: direct only when both
     // pages allow it, otherwise the page-table path's crossing check calls back.
     // ldr r3,[r0]; subs r1,r1,#1; bne loop; svc #0

@@ -29,6 +29,8 @@ Stats WindowStats() noexcept;
 
 // JIT faults redirected to an access fallback (dynarmic exception handler): races only.
 std::uint64_t Faults() noexcept;
+// Checked access sites moved to the page-table path because their pages kept being blocked.
+std::uint64_t Demotions() noexcept;
 
 // Registers of an interrupted thread in a signal handler's context argument
 // (targets without PS5_NATIVE, such as dynarmic, still build for the console).

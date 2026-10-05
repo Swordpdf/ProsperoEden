@@ -933,12 +933,13 @@ void ReportGpuThread(unsigned frame) {
                 load(ipc_thread_overflow, true), load(ipc_thread_overflow, false));
     const auto window = Eden::Fastmem::WindowStats();
     std::printf("EDEN_FASTMEM window=%llx pages=%llu chunks=%llu direct_reads=%llu direct_writes=%llu "
-                "faults=%llu maps=%llu unmaps=%llu protects=%llu kernel_calls=%llu kernel_ns=%llu failures=%llu\n",
+                "faults=%llu demotions=%llu maps=%llu unmaps=%llu protects=%llu kernel_calls=%llu kernel_ns=%llu failures=%llu\n",
                 static_cast<unsigned long long>(window.window), static_cast<unsigned long long>(window.mapped_pages),
                 static_cast<unsigned long long>(window.aliased_chunks),
                 static_cast<unsigned long long>(window.direct_reads),
                 static_cast<unsigned long long>(window.direct_writes),
                 static_cast<unsigned long long>(Eden::Fastmem::Faults()),
+                static_cast<unsigned long long>(Eden::Fastmem::Demotions()),
                 static_cast<unsigned long long>(window.map_calls), static_cast<unsigned long long>(window.unmap_calls),
                 static_cast<unsigned long long>(window.protect_calls),
                 static_cast<unsigned long long>(window.kernel_calls), static_cast<unsigned long long>(window.kernel_ns),
