@@ -15,6 +15,8 @@ namespace Eden::Fastmem {
 // Select before Core::System (and so HostMemory) is constructed.
 void Request(bool enabled) noexcept;
 bool Requested() noexcept;
+// Development A/B (dev-settings fastmem_large=off): keep every alias at 16 KiB.
+void RequestLarge(bool enabled) noexcept;
 
 struct Stats {
     std::uint64_t window;          // window base, 0 without a window
@@ -24,6 +26,7 @@ struct Stats {
     std::uint64_t map_calls, unmap_calls, protect_calls; // HostMemory requests
     std::uint64_t kernel_calls, kernel_ns; // mapping system calls and their duration
     std::uint64_t failures;        // mappings the kernel refused (chunk left unaliased)
+    std::uint64_t large_blocks;    // 2 MiB blocks mapped as one large mapping
 };
 Stats WindowStats() noexcept;
 

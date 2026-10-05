@@ -775,6 +775,9 @@ int main(int argc, char** argv) {
                     Eden::Performance::SetSecondaryPlacement(false);
                 } else if (entry == "fastmem=off" || entry == "fastmem=on") {
                     Eden::Fastmem::Request(entry.ends_with("on"));
+                } else if (entry == "fastmem_large=off") {
+                    // Window aliases stay 16 KiB mappings, never 2 MiB ones.
+                    Eden::Fastmem::RequestLarge(false);
                 } else if (entry == "fastmem_sites=off") {
                     // Window and reserved register kept, every access on the page-table path.
                     Eden::Fastmem::RequestSites(false);

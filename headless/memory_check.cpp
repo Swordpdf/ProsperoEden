@@ -831,6 +831,18 @@ static void CheckFastmemA32() {
     host.Map(0x300000, 0x40000, 0x4000, MemoryPermission::ReadWrite, false);
     stats = Eden::Fastmem::WindowStats();
     require(stats.aliased_chunks == 1 + 2 + 1 && stats.failures == 0); // C, E and the race chunk remain
+    // A whole 2 MiB block over 2 MiB-aligned backing becomes one large mapping; withdrawing a
+    // chunk of it first returns the block to 16 KiB mappings, and the rest stays direct.
+    require(stats.large_blocks == 0);
+    fixture.Map({0x800000, 0x200000, 0x200000});
+    require(Eden::Fastmem::WindowStats().large_blocks == 1);
+    fill(0x800000, 0x80000);
+    run(increment, 0x800000, 0x80000, 0, 0, incremented(0x800000, 0x80000));
+    host.Unmap(0x9fc000, 0x4000, false);
+    stats = Eden::Fastmem::WindowStats();
+    require(stats.large_blocks == 0 && stats.aliased_chunks == 1 + 2 + 1 + 127 && stats.failures == 0);
+    fill(0x800000, 0x7f000);
+    run(increment, 0x800000, 0x7f000, 0, 0, incremented(0x800000, 0x7f000));
     std::printf("Fastmem A32 PASS: %u cases, %llu faults, %llu kernel calls\n", cases,
                 static_cast<unsigned long long>(Eden::Fastmem::Faults()),
                 static_cast<unsigned long long>(stats.kernel_calls));
@@ -838,7 +850,8 @@ static void CheckFastmemA32() {
 
 // Checked fastmem under concurrency: three JIT workers increment their own slices of an
 // aliased region while a mutator flips GPU-style tracking (access byte + marked PTE) on
-// random pages and a reader runs over a region that is repeatedly unmapped and mapped.
+// random pages and a reader runs over a 2 MiB region that is repeatedly unmapped and mapped
+// (and so moved between a large mapping and 16 KiB ones).
 // Every access path writes the same backing, so the slices must end exact.
 static void StressFastmemA32() {
     using Common::MemoryPermission;
@@ -847,7 +860,7 @@ static void StressFastmemA32() {
     Eden::Fastmem::Request(false);
     require(fixture.host.VirtualBasePointer() != nullptr);
     constexpr uint32_t hot = 0x100000, hot_bytes = 0x30000, slice = 0x10000;
-    constexpr uint32_t cold = 0x800000, cold_bytes = 0x10000;
+    constexpr uint32_t cold = 0x800000, cold_bytes = 0x200000;
     fixture.Map({hot, 0x100000, hot_bytes});
     fixture.Map({cold, 0x200000, cold_bytes});
     std::memset(fixture.backing + 0x100000, 0, hot_bytes);
@@ -876,7 +889,7 @@ static void StressFastmemA32() {
     const auto before = Eden::Fastmem::Faults();
     std::vector<std::thread> threads;
     for (uint32_t i = 0; i < 3; ++i) threads.emplace_back(worker, increment, hot + i * slice, slice / 4, passes);
-    threads.emplace_back(worker, scan, cold, cold_bytes / 4, passes * 4);
+    threads.emplace_back(worker, scan, cold, cold_bytes / 4, passes / 2);
     unsigned flips = 0, remaps = 0;
     uint32_t seed = 1;
     while (running.load()) {
@@ -902,6 +915,7 @@ static void StressFastmemA32() {
         uint32_t value; std::memcpy(&value, fixture.backing + 0x100000 + at, 4);
         require(value == passes);
     }
+    require(Eden::Fastmem::WindowStats().large_blocks == 1); // the reader's region, mapped again
     std::printf("Fastmem A32 stress PASS: %u flips, %u remaps, %llu callbacks, %llu faults\n", flips, remaps,
                 callbacks.load(), static_cast<unsigned long long>(Eden::Fastmem::Faults() - before));
 }
