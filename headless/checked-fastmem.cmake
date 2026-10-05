@@ -277,6 +277,7 @@ set(checked_sites [=[
 // Checked fastmem: one record per access site, allocated when the site is emitted and kept
 // for the session. The JIT counts the site's blocked executions down in place.
 void CheckedFastmemDemoted() noexcept; // headless/fastmem_handler.cpp
+bool CheckedFastmemSites() noexcept;   // false: dev-settings fastmem_sites=off
 namespace {
 constexpr u8 checked_site_budget = 64;
 struct CheckedSite {
@@ -334,4 +335,15 @@ if(checked_select_at LESS 0)
 endif()
 string(REPLACE "${checked_select}"
     "${checked_select}\nconstexpr bool checked_fastmem = std::is_same_v<AxxEmitContext, A32EmitContext>;\n${checked_sites}"
+    memory_source "${memory_source}")
+
+# Development A/B: with fastmem_sites=off no site uses the window, which stays mapped and
+# keeps r13; the difference from fastmem=off is then the cost of having the window at all.
+set(checked_marker "    const auto marker = std::make_tuple(ctx.Location(), inst->GetName());\n")
+string(FIND "${memory_source}" "${checked_marker}" checked_marker_at)
+if(checked_marker_at LESS 0)
+    message(FATAL_ERROR "Pinned fastmem site selection changed")
+endif()
+string(REPLACE "${checked_marker}"
+    "    if (checked_fastmem && !CheckedFastmemSites()) {\n        return std::nullopt;\n    }\n${checked_marker}"
     memory_source "${memory_source}")

@@ -123,6 +123,11 @@ void ExceptionHandler::SetFastmemCallback(std::function<FakeCall(u64)> cb) {
 namespace Dynarmic::Backend::X64 {
 namespace {
 std::atomic<std::uint64_t> demotion_count{0};
+std::atomic<bool> sites_enabled{true};
+}
+// Whether A32 loads/stores may use the window (headless/checked-fastmem.cmake).
+bool CheckedFastmemSites() noexcept {
+    return sites_enabled.load(std::memory_order_relaxed);
 }
 // A checked fastmem site recompiled onto the page-table path after its blocked budget
 // (headless/checked-fastmem.cmake).
@@ -137,5 +142,11 @@ std::uint64_t Faults() noexcept {
 }
 std::uint64_t Demotions() noexcept {
     return Dynarmic::Backend::X64::demotion_count.load(std::memory_order_relaxed);
+}
+void RequestSites(bool enabled) noexcept {
+    Dynarmic::Backend::X64::sites_enabled.store(enabled, std::memory_order_relaxed);
+}
+bool SitesRequested() noexcept {
+    return Dynarmic::Backend::X64::CheckedFastmemSites();
 }
 } // namespace Eden::Fastmem

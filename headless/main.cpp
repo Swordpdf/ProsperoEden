@@ -775,6 +775,9 @@ int main(int argc, char** argv) {
                     Eden::Performance::SetSecondaryPlacement(false);
                 } else if (entry == "fastmem=off" || entry == "fastmem=on") {
                     Eden::Fastmem::Request(entry.ends_with("on"));
+                } else if (entry == "fastmem_sites=off") {
+                    // Window and reserved register kept, every access on the page-table path.
+                    Eden::Fastmem::RequestSites(false);
                 } else if (entry.starts_with("cache_spin=")) {
                     // try_lock retries before a guest core sleeps on a GPU cache lock (0 = upstream).
                     Eden::Performance::cache_lock_spins = static_cast<unsigned>(std::strtoul(entry.c_str() + 11, nullptr, 10));
@@ -914,7 +917,7 @@ int main(int argc, char** argv) {
             }
             std::printf("EDEN_DEV_SETTINGS dma_accuracy=%u gpu_accuracy=%u null_descriptor=%u "
                         "descriptor_buffer=%u robustness2=%u vertex_input_dynamic=%u dyna_state=%u "
-                        "sparse=%u multirange=%u custom_border=%u submit_sync=%u fastmem=%u\n",
+                        "sparse=%u multirange=%u custom_border=%u submit_sync=%u fastmem=%u fastmem_sites=%u\n",
                         unsigned(Settings::values.dma_accuracy.GetValue()),
                         unsigned(Settings::values.current_gpu_accuracy),
                         unsigned(!Eden::DevVulkan::disable_null_descriptor),
@@ -926,7 +929,7 @@ int main(int argc, char** argv) {
                         unsigned(!Eden::DevVulkan::disable_multi_range),
                         unsigned(!Eden::DevVulkan::disable_custom_border),
                         unsigned(Eden::DevVulkan::sync_submissions),
-                        unsigned(Eden::Fastmem::Requested()));
+                        unsigned(Eden::Fastmem::Requested()), unsigned(Eden::Fastmem::SitesRequested()));
             std::printf("EDEN_DEV_MEMORY direct_memory=%lld vram_mode=%u\n",
                         static_cast<long long>(sceKernelGetDirectMemorySize()),
                         unsigned(Settings::values.vram_usage_mode.GetValue()));

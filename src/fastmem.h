@@ -31,6 +31,10 @@ Stats WindowStats() noexcept;
 std::uint64_t Faults() noexcept;
 // Checked access sites moved to the page-table path because their pages kept being blocked.
 std::uint64_t Demotions() noexcept;
+// Development A/B (dev-settings fastmem_sites=off): keep the window and its reserved register
+// but emit every access on the page-table path. Select before the JITs are created.
+void RequestSites(bool enabled) noexcept;
+bool SitesRequested() noexcept;
 
 // Registers of an interrupted thread in a signal handler's context argument
 // (targets without PS5_NATIVE, such as dynarmic, still build for the console).

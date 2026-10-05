@@ -808,6 +808,15 @@ static void CheckFastmemA32() {
     run(increment, 0x600100, 1, 0, 2, [&](uint32_t) {
         uint32_t value; std::memcpy(&value, host_at(0x600100), 4); return value == 2;
     }, 2);                                       // LDR and STR each fault once
+    // fastmem_sites=off: same window, every access on the page table, so nothing faults on
+    // the raced chunk and no site is demoted.
+    Eden::Fastmem::RequestSites(false);
+    const auto demotions_sites_off = Eden::Fastmem::Demotions();
+    copy(false, 0x600000, 0x502000, 1, 0);
+    copy(true, 0x100000, 0x600008, 1, 0);
+    run(increment, 0x200000, 0x2000, 0, 0, [](uint32_t) { return true; });
+    require(Eden::Fastmem::Demotions() == demotions_sites_off);
+    Eden::Fastmem::RequestSites(true);
     // ldrex r1,[r0]; add r1,r1,#1; strex r2,r1,[r0]; cmp r2,#0; bne loop; subs r3,r3,#1; bne loop; svc #0
     const std::vector<uint32_t> atomic{0xe1901f9fu, 0xe2811001u, 0xe1802f91u, 0xe3520000u, 0x1afffffau,
                                        0xe2533001u, 0x1afffff8u, 0xef000000u};
