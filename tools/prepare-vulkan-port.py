@@ -188,6 +188,19 @@ void RasterizerVulkan::DispatchCompute() {"""),
     return false;
 """,
      """    DEBUG_ASSERT(addr != 0 || size != 0);
+    // Under the buffer cache lock: mark the buffer pages after this write CPU-modified as their own
+    // first writes would (performance.h cpu_write_ahead), up to a page no buffer covers or one the
+    // GPU modified.
+    const auto write_ahead = [this](DAddr written, u64 written_size) {
+        const unsigned pages = ::Eden::Performance::cpu_write_ahead.load(std::memory_order_relaxed);
+        unsigned marked = 0;
+        DAddr page = Common::AlignDown(written + written_size - 1, Core::DEVICE_PAGESIZE) + Core::DEVICE_PAGESIZE;
+        for (; marked < pages; ++marked, page += Core::DEVICE_PAGESIZE)
+            if (!buffer_cache.IsRegionRegistered(page, Core::DEVICE_PAGESIZE) ||
+                buffer_cache.OnCPUWrite(page, Core::DEVICE_PAGESIZE))
+                break;
+        return marked;
+    };
     if (::Eden::Performance::cpu_write_detail.load(std::memory_order_relaxed)) [[unlikely]] {
         using Detail = ::Eden::Performance::CpuWriteDetail;
         Detail& stats = ::Eden::Performance::cpu_write_stats[::Eden::Performance::cpu_write_core & 3];
@@ -209,6 +222,9 @@ void RasterizerVulkan::DispatchCompute() {"""),
             if (gpu_modified) {
                 return true;
             }
+            if (registered)
+                stats.ahead_pages.fetch_add(write_ahead(addr, size), std::memory_order_relaxed);
+            lap(&Detail::buffer_ns);
         }
         {
             ::Eden::Performance::GuestCacheLock(texture_cache.mutex);
@@ -227,6 +243,7 @@ void RasterizerVulkan::DispatchCompute() {"""),
         if (buffer_cache.OnCPUWrite(addr, size)) {
             return true;
         }
+        write_ahead(addr, size);
     }
     {
         ::Eden::Performance::GuestCacheLock(texture_cache.mutex);

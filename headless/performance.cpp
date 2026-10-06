@@ -941,13 +941,13 @@ void ReportGpuThread(unsigned frame) {
                 return value.load(std::memory_order_relaxed);
             };
             std::printf(" c%u=%llu/%llu/%llu/%llu/%llu sizes%u=%llu/%llu/%llu/%llu out%u=%llu/%llu/%llu"
-                        " ns%u=%llu/%llu/%llu/%llu/%llu",
+                        " ns%u=%llu/%llu/%llu/%llu/%llu ahead%u=%llu/%llu",
                         core, get(stats.tracked), get(stats.tracked_ns), get(stats.passed), get(stats.same_page),
                         get(stats.still_tracked), core, get(stats.sizes[0]), get(stats.sizes[1]),
                         get(stats.sizes[2]), get(stats.sizes[3]), core, get(stats.unregistered),
                         get(stats.gpu_modified), get(stats.cpu_modified), core, get(stats.buffer_wait_ns),
                         get(stats.buffer_ns), get(stats.texture_wait_ns), get(stats.texture_ns),
-                        get(stats.shader_ns));
+                        get(stats.shader_ns), core, get(stats.next_page), get(stats.ahead_pages));
         }
         std::printf("\n");
     }

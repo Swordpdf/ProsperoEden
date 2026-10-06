@@ -142,7 +142,8 @@ inline std::atomic<int> cache_lock_sleepers{0};
 // EDEN_DEV_CPUWRITE). Per guest core (3 = any other thread): writes that took the tracked path
 // (core/memory.cpp HandleRasterizerWrite) and their time, those the core's last GPU-modified page
 // let through without OnCPUWrite, OnCPUWrite calls by write size (<=8, <=64, <=4096 bytes, more),
-// calls on the same page as the core's previous call, calls after which the page was still
+// calls on the same page as the core's previous call and on the page after it, buffer pages marked
+// ahead (cpu_write_ahead), calls after which the page was still
 // tracked (its next write calls again), and inside OnCPUWrite: buffer cache lock wait and work by
 // outcome (no buffer there, GPU-modified, marked CPU-modified), texture cache lock wait and work,
 // and the shader cache invalidation.
@@ -150,11 +151,19 @@ inline std::atomic<bool> cpu_write_detail{false};
 struct alignas(64) CpuWriteDetail {
     std::atomic<unsigned long long> tracked{}, tracked_ns{}, passed{}, same_page{}, still_tracked{},
         unregistered{}, gpu_modified{}, cpu_modified{}, buffer_wait_ns{}, buffer_ns{}, texture_wait_ns{},
-        texture_ns{}, shader_ns{};
+        texture_ns{}, shader_ns{}, next_page{}, ahead_pages{};
     std::array<std::atomic<unsigned long long>, 4> sizes{};
     unsigned long long last_page{~0ULL};  // the owning core's (core 3: under Eden's sys-core guard)
 };
 inline std::array<CpuWriteDetail, 4> cpu_write_stats{};
+// A guest write that leaves a buffer page tracked by the GPU caches costs a trip through
+// OnCPUWrite, mostly waiting for the buffer cache lock the GPU thread holds while it prepares each
+// draw (a game writing ~3,300 buffer pages per frame spent a third of two guest cores there). With
+// N > 0 (dev-settings cpu_write_ahead=N) the same trip also marks up to N following buffer pages
+// CPU-modified, as their own first write would, stopping at a page no buffer covers or one the GPU
+// modified; texture and shader pages stay tracked by their caches. A page marked ahead and never
+// written is uploaded again unchanged.
+inline std::atomic<unsigned> cpu_write_ahead{0};
 // The guest core of the write OnCPUWrite serves, set by HandleRasterizerWrite.
 inline thread_local unsigned cpu_write_core = 3;
 // The GPU thread's buffer and texture cache hold per draw preparation, with cpu_write_detail.
