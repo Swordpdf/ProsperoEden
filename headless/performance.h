@@ -138,6 +138,27 @@ inline std::atomic<unsigned long long> cache_lock_contended{0}, cache_lock_block
 // for 110 ms of a 150 ms frame, in a large open-world game). So the GPU thread looks here
 // before it takes the locks for a draw (YieldToGuests), and lets the sleepers in first.
 inline std::atomic<int> cache_lock_sleepers{0};
+// Development: guest writes to GPU-tracked pages in detail (dev-settings cpu_write_detail=on,
+// EDEN_DEV_CPUWRITE). Per guest core (3 = any other thread): writes that took the tracked path
+// (core/memory.cpp HandleRasterizerWrite) and their time, those the core's last GPU-modified page
+// let through without OnCPUWrite, OnCPUWrite calls by write size (<=8, <=64, <=4096 bytes, more),
+// calls on the same page as the core's previous call, calls after which the page was still
+// tracked (its next write calls again), and inside OnCPUWrite: buffer cache lock wait and work by
+// outcome (no buffer there, GPU-modified, marked CPU-modified), texture cache lock wait and work,
+// and the shader cache invalidation.
+inline std::atomic<bool> cpu_write_detail{false};
+struct alignas(64) CpuWriteDetail {
+    std::atomic<unsigned long long> tracked{}, tracked_ns{}, passed{}, same_page{}, still_tracked{},
+        unregistered{}, gpu_modified{}, cpu_modified{}, buffer_wait_ns{}, buffer_ns{}, texture_wait_ns{},
+        texture_ns{}, shader_ns{};
+    std::array<std::atomic<unsigned long long>, 4> sizes{};
+    unsigned long long last_page{~0ULL};  // the owning core's (core 3: under Eden's sys-core guard)
+};
+inline std::array<CpuWriteDetail, 4> cpu_write_stats{};
+// The guest core of the write OnCPUWrite serves, set by HandleRasterizerWrite.
+inline thread_local unsigned cpu_write_core = 3;
+// The GPU thread's buffer and texture cache hold per draw preparation, with cpu_write_detail.
+inline Totals draw_cache_hold;
 template <typename Mutex>
 inline void GuestCacheLock(Mutex& mutex) {
     if (mutex.try_lock()) return;

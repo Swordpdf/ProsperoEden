@@ -170,6 +170,72 @@ void RasterizerVulkan::DispatchCompute() {"""),
     ::Eden::Performance::Mark(::Eden::Performance::draw_state, phase);
     draw_func();
     ::Eden::Performance::Mark(::Eden::Performance::draw_record, phase);'''),
+    # Development: where OnCPUWrite spends its time (performance.h CpuWriteDetail).
+    ("""    DEBUG_ASSERT(addr != 0 || size != 0);
+    {
+        ::Eden::Performance::GuestCacheLock(buffer_cache.mutex);
+        std::lock_guard lock{buffer_cache.mutex, std::adopt_lock};
+        if (buffer_cache.OnCPUWrite(addr, size)) {
+            return true;
+        }
+    }
+    {
+        ::Eden::Performance::GuestCacheLock(texture_cache.mutex);
+        std::lock_guard lock{texture_cache.mutex, std::adopt_lock};
+        texture_cache.WriteMemory(addr, size);
+    }
+    pipeline_cache.InvalidateRegion(addr, size);
+    return false;
+""",
+     """    DEBUG_ASSERT(addr != 0 || size != 0);
+    if (::Eden::Performance::cpu_write_detail.load(std::memory_order_relaxed)) [[unlikely]] {
+        using Detail = ::Eden::Performance::CpuWriteDetail;
+        Detail& stats = ::Eden::Performance::cpu_write_stats[::Eden::Performance::cpu_write_core & 3];
+        long long mark = ::Eden::Performance::NowNs();
+        const auto lap = [&](std::atomic<unsigned long long> Detail::*total) {
+            const long long now = ::Eden::Performance::NowNs();
+            (stats.*total).fetch_add(static_cast<unsigned long long>(now - mark), std::memory_order_relaxed);
+            mark = now;
+        };
+        {
+            ::Eden::Performance::GuestCacheLock(buffer_cache.mutex);
+            std::lock_guard lock{buffer_cache.mutex, std::adopt_lock};
+            lap(&Detail::buffer_wait_ns);
+            const bool registered = buffer_cache.IsRegionRegistered(addr, size);
+            const bool gpu_modified = buffer_cache.OnCPUWrite(addr, size);
+            lap(&Detail::buffer_ns);
+            (!registered ? stats.unregistered : gpu_modified ? stats.gpu_modified : stats.cpu_modified)
+                .fetch_add(1, std::memory_order_relaxed);
+            if (gpu_modified) {
+                return true;
+            }
+        }
+        {
+            ::Eden::Performance::GuestCacheLock(texture_cache.mutex);
+            std::lock_guard lock{texture_cache.mutex, std::adopt_lock};
+            lap(&Detail::texture_wait_ns);
+            texture_cache.WriteMemory(addr, size);
+            lap(&Detail::texture_ns);
+        }
+        pipeline_cache.InvalidateRegion(addr, size);
+        lap(&Detail::shader_ns);
+        return false;
+    }
+    {
+        ::Eden::Performance::GuestCacheLock(buffer_cache.mutex);
+        std::lock_guard lock{buffer_cache.mutex, std::adopt_lock};
+        if (buffer_cache.OnCPUWrite(addr, size)) {
+            return true;
+        }
+    }
+    {
+        ::Eden::Performance::GuestCacheLock(texture_cache.mutex);
+        std::lock_guard lock{texture_cache.mutex, std::adopt_lock};
+        texture_cache.WriteMemory(addr, size);
+    }
+    pipeline_cache.InvalidateRegion(addr, size);
+    return false;
+"""),
     # A forced release blocks the GPU thread until the fence thread has retired
     # every older fence. Time only that producer-side drain.
     ('    fence_manager.WaitPendingFences(force);',
@@ -225,6 +291,14 @@ void RasterizerVulkan::PrepareDraw(bool is_indexed, Func&& draw_func) {'''),
      '    scheduler.Finish();\n'
      '}'),
     ('    prepared_pipeline = pipeline;\n', '    prepared_pipeline = pipeline;\n    probe_pipeline = pipeline;\n'),
+    # Development: how long draw preparation holds the cache locks guest writes wait for.
+    ('    probe_pipeline = pipeline;\n',
+     '    probe_pipeline = pipeline;\n'
+     '    const long long hold_start = ::Eden::Performance::cpu_write_detail.load(std::memory_order_relaxed)\n'
+     '        ? ::Eden::Performance::NowNs() : 0;\n'
+     '    SCOPE_EXIT {\n'
+     '        if (hold_start != 0) ::Eden::Performance::AddSince(::Eden::Performance::draw_cache_hold, hold_start);\n'
+     '    };\n'),
     ('        }\n    });\n}\n\nvoid RasterizerVulkan::DrawIndirect() {',
      '        }\n    });\n    SyncProbe(scheduler, "draw", probe_pipeline);\n}\n\nvoid RasterizerVulkan::DrawIndirect() {'),
     ('void RasterizerVulkan::DrawTexture() {', 'void RasterizerVulkan::DrawTexture() {\n    SCOPE_EXIT { SyncProbe(scheduler, "draw_texture", nullptr); };'),
