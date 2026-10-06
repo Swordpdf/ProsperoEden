@@ -159,11 +159,13 @@ inline std::array<CpuWriteDetail, 4> cpu_write_stats{};
 // A guest write that leaves a buffer page tracked by the GPU caches costs a trip through
 // OnCPUWrite, mostly waiting for the buffer cache lock the GPU thread holds while it prepares each
 // draw (a game writing ~3,300 buffer pages per frame spent a third of two guest cores there). With
-// N > 0 (dev-settings cpu_write_ahead=N) the same trip also marks up to N following buffer pages
-// CPU-modified, as their own first write would, stopping at a page no buffer covers or one the GPU
-// modified; texture and shader pages stay tracked by their caches. A page marked ahead and never
-// written is uploaded again unchanged.
-inline std::atomic<unsigned> cpu_write_ahead{0};
+// N > 0 the same trip also marks up to N following buffer pages CPU-modified, as their own first
+// write would, stopping at a page no buffer covers or one the GPU modified; texture and shader
+// pages stay tracked by their caches. A page marked ahead and never written is uploaded again
+// unchanged. That game wrote its buffers in order: 48.6 fps with 0, 58.7 with 16, 60 (its cap)
+// with 64, the trips falling from 159,000 to 4,500 a second. dev-settings cpu_write_ahead=N
+// (0-256) overrides it.
+inline std::atomic<unsigned> cpu_write_ahead{64};
 // The guest core of the write OnCPUWrite serves, set by HandleRasterizerWrite.
 inline thread_local unsigned cpu_write_core = 3;
 // The GPU thread's buffer and texture cache hold per draw preparation, with cpu_write_detail.
