@@ -134,8 +134,16 @@ eden_sparse_replace("inline const u64 HostPageMask = ~(HostPageSize - 1);"
 eden_sparse_replace("mprotect(reinterpret_cast<void*>(page), HostPageSize, PROT_READ | PROT_WRITE)"
     "(CommitSparsePage(page), 0)" 1)
 eden_sparse_replace("void FreeMemoryPages(void* base, std::size_t size) noexcept;"
-    "void FreeMemoryPages(void* base, std::size_t size) noexcept;\nvoid* AllocateSparsePages(std::size_t size) noexcept;\nvoid FreeSparsePages(void* base, std::size_t size) noexcept;\nvoid CommitSparsePage(std::uintptr_t page) noexcept;" 1)
+    "void FreeMemoryPages(void* base, std::size_t size) noexcept;\nvoid* AllocateSparsePages(std::size_t size) noexcept;\nvoid FreeSparsePages(void* base, std::size_t size) noexcept;\nvoid CommitSparsePage(std::uintptr_t page) noexcept;\nbool SparseTablesAvailable() noexcept;" 1)
+# A vector can carry a mirror mirror_index entries further on (the JIT's direct page table,
+# headless/jit-page-table.cmake): committing a page of the first part commits its mirror first,
+# so a write of an entry may always write its mirror.
+eden_sparse_replace("    constexpr void CommitPage(std::size_t index) noexcept {\n"
+    "    constexpr void CommitPage(std::size_t index) noexcept {\n        if (mirror_index != 0 && index < mirror_index && !IsCommittedPage(index + mirror_index))\n            CommitPage(index + mirror_index);\n" 1)
+eden_sparse_replace("    std::size_t alloc_size{};\n"
+    "public:\n    std::size_t mirror_index{};\n\nprivate:\n    std::size_t alloc_size{};\n" 1)
 write_derived("${PORT_BUILD_DIR}/sparse/common/sparse_large_vector.h" "${sparse_header}")
+include("${EDEN_PORT_DIR}/jit-page-table.cmake")
 
 # An abandoned fiber stack is not unwound. Empty the by-value weak reference
 # before switching; jump_fcontext returns the live destination supplied by the
@@ -658,6 +666,14 @@ foreach(bits 32 64)
     set(relative "arm/dynarmic/arm_dynarmic_${bits}.cpp")
     file(READ "${PROJECT_SOURCE_DIR}/src/core/${relative}" wrapper)
     string(REPLACE "Common::PageTable::SIGN_BIT" "std::countl_zero(Common::PageTable::ATTRIBUTE_MASK)" wrapper "${wrapper}")
+    # The JIT's direct page table when the process has one (headless/jit-page-table.cmake).
+    set(direct_anchor "            config.page_table_sign_extension = std::countl_zero(Common::PageTable::ATTRIBUTE_MASK);\n        }\n")
+    string(FIND "${wrapper}" "${direct_anchor}" direct_at)
+    if(direct_at LESS 0)
+        message(FATAL_ERROR "Pinned page-table JIT configuration changed (${bits})")
+    endif()
+    string(REPLACE "${direct_anchor}" "${direct_anchor}        if (void* const direct = page_table->DirectTable()) {\n            config.page_table = reinterpret_cast<decltype(config.page_table)>(direct);\n            config.page_table_pointer_mask = 0;\n            config.page_table_marked_bit = std::nullopt;\n            config.page_table_sign_extension = std::nullopt;\n        }\n"
+        wrapper "${wrapper}")
     # Without fastmem every LDREX/STREX left JIT code through a callback under the
     # global monitor lock (~7,000 pairs/frame in a measured racing game). The exclusive
     # emitter patch below supports page-table addresses; eden-memory-check covers
@@ -988,9 +1004,17 @@ if(EDEN_DEV_PROFILE)
     list(REMOVE_ITEM core_sources "hle/kernel/svc/svc_ipc.cpp")
     list(APPEND core_sources "${PORT_BUILD_DIR}/svc_ipc.cpp")
 endif()
+file(READ "${PROJECT_SOURCE_DIR}/src/core/memory.cpp" arena_source)
+# An unmap zeroes the entries directly: zero the JIT's direct values first (jit-page-table.cmake).
+set(unmap_old "            page_table.entries.ZeroRegion(base, end);\n")
+string(FIND "${arena_source}" "${unmap_old}" unmap_at)
+if(unmap_at LESS 0)
+    message(FATAL_ERROR "Pinned page-table unmap changed")
+endif()
+string(REPLACE "${unmap_old}" "            if (const auto mirror = page_table.entries.mirror_index; mirror != 0)\n                page_table.entries.ZeroRegion(base + mirror, end + mirror);\n${unmap_old}"
+    arena_source "${arena_source}")
 if(EDEN_A32_FASTMEM)
     # The window spans 4 GiB: only 32-bit applications get it as their fastmem arena.
-    file(READ "${PROJECT_SOURCE_DIR}/src/core/memory.cpp" arena_source)
     set(arena_old "        if (process.IsApplication() && Settings::IsFastmemEnabled()) {")
     string(FIND "${arena_source}" "${arena_old}" arena_at)
     if(arena_at LESS 0)
@@ -998,10 +1022,10 @@ if(EDEN_A32_FASTMEM)
     endif()
     string(REPLACE "${arena_old}" "        if (process.IsApplication() && !process.Is64Bit() && Settings::IsFastmemEnabled()) {"
         arena_source "${arena_source}")
-    write_derived("${PORT_BUILD_DIR}/memory.cpp" "${arena_source}")
-    list(REMOVE_ITEM core_sources "memory.cpp")
-    list(APPEND core_sources "${PORT_BUILD_DIR}/memory.cpp")
 endif()
+write_derived("${PORT_BUILD_DIR}/memory.cpp" "${arena_source}")
+list(REMOVE_ITEM core_sources "memory.cpp")
+list(APPEND core_sources "${PORT_BUILD_DIR}/memory.cpp")
 # Where a game's code is loaded: at a random offset, or at the one the game's seed gives
 # (load_address.h). Upstream takes the seed from its RNG seed setting, which also seeds the
 # random numbers a game is given; the port's seed fixes the offset alone.
