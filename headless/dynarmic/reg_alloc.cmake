@@ -120,6 +120,50 @@ macro(eden_reg_alloc_sources)
     return found;
 }
 ]==] eden_ra_source "${eden_ra_source}")
+    # A register an emitter needs (RAX for the flags of a compare, the ABI registers of a call...)
+    # that still holds a value has it moved out of the way. Upstream always moves it to a stack
+    # slot, and the next use loads it back: in a large game's hottest blocks, stack spill traffic
+    # was about 8% of the samples. A general-purpose value now goes to a free general-purpose
+    # register when there is one (a register move, which Zen 2 eliminates at rename), callee-saved
+    # ones first so a host call's caller-saved sweep does not move it again; the stack otherwise,
+    # as before. SelectARegister already places values in any free register, so this adds no new
+    # kind of placement. dev-settings jit_free_moves=off restores upstream's spill for A/B runs.
+    set(eden_ra_move [==[void RegAlloc::MoveOutOfTheWay(BlockOfCode& code, HostLoc reg) noexcept {
+    ASSERT(!LocInfo(reg).IsLocked());
+    if (!LocInfo(reg).IsEmpty()) {
+        SpillRegister(code, reg);
+    }
+}
+]==])
+    eden_reg_alloc_require("${eden_ra_source}" "${eden_ra_move}" "reg_alloc.cpp MoveOutOfTheWay")
+    string(REPLACE "${eden_ra_move}" [==[extern "C" {
+bool eden_free_moves = true;
+unsigned long long eden_free_moves_done = 0, eden_free_moves_spilled = 0;
+}
+
+void RegAlloc::MoveOutOfTheWay(BlockOfCode& code, HostLoc reg) noexcept {
+    ASSERT(!LocInfo(reg).IsLocked());
+    if (!LocInfo(reg).IsEmpty()) {
+        // ProsperoEden: a free general-purpose register before a stack slot (reg_alloc.cmake).
+        // RBP, R13-R15 and RSP stay out, as in SelectARegister.
+        if (HostLocIsGPR(reg) && __atomic_load_n(&eden_free_moves, __ATOMIC_RELAXED)) {
+            static constexpr HostLoc order[] = {
+                HostLoc::RBX, HostLoc::R12, HostLoc::RSI, HostLoc::RDI, HostLoc::R8, HostLoc::R9,
+                HostLoc::R10, HostLoc::R11, HostLoc::RCX, HostLoc::RDX, HostLoc::RAX,
+            };
+            for (const HostLoc to : order) {
+                if (to != reg && hostloc_info[size_t(to)].IsEmpty()) {
+                    Move(code, to, reg);
+                    __atomic_fetch_add(&eden_free_moves_done, 1, __ATOMIC_RELAXED);
+                    return;
+                }
+            }
+        }
+        __atomic_fetch_add(&eden_free_moves_spilled, 1, __ATOMIC_RELAXED);
+        SpillRegister(code, reg);
+    }
+}
+]==] eden_ra_source "${eden_ra_source}")
     write_derived("${PORT_BUILD_DIR}/reg_alloc.cpp" "${eden_ra_source}")
     get_target_property(eden_ra_sources dynarmic SOURCES)
     list(FILTER eden_ra_sources EXCLUDE REGEX "(^|/)backend/x64/reg_alloc\\.cpp$")
