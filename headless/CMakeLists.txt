@@ -540,6 +540,26 @@ string(REPLACE "${fastmem_declaration}" "${exclusive_lookup}${fastmem_declaratio
 if(EDEN_SHARED_JIT)
     eden_shared_jit_memory_header()
 endif()
+# Ordered reads (LDAR, LDAPR, and every exclusive read: LDXR/LDAXR) were a locked RMW of zero
+# (lock xadd), ~20 cycles and a full barrier each; a game's job and object-table code runs them in
+# its hottest blocks. Under x86-TSO a naturally aligned 8-64-bit load is atomic and already has
+# acquire semantics, and ordered writes stay xchg (a full barrier), so a plain load keeps ARM's
+# STLR->LDAR order: the usual sequentially consistent mapping (load = mov, store = xchg). Exclusive
+# reads stay correct because misaligned ones leave for the callback and the exclusive write's
+# lock cmpxchg compares against the value read. 128-bit reads keep cmpxchg16b (a 16-byte load is
+# not atomic). dev-settings jit_plain_ordered_reads=off restores the locked read.
+set(ordered_read_old [=[const void* EmitReadMemoryMov(BlockOfCode& code, int value_idx, const Xbyak::RegExp& addr, bool ordered) {
+    if (ordered) {
+]=])
+string(FIND "${memory_emitter}" "${ordered_read_old}" ordered_read_at)
+if(ordered_read_at LESS 0)
+    message(FATAL_ERROR "Pinned EmitReadMemoryMov changed")
+endif()
+string(REPLACE "${ordered_read_old}" [=[const void* EmitReadMemoryMov(BlockOfCode& code, int value_idx, const Xbyak::RegExp& addr, bool ordered) {
+    if (ordered && (bitsize == 128 || !__atomic_load_n(&eden_plain_ordered_reads, __ATOMIC_RELAXED))) {
+]=] memory_emitter "${memory_emitter}")
+string(REPLACE "#pragma once\n" "#pragma once\nextern \"C\" bool eden_plain_ordered_reads;  // ProsperoEden (CMakeLists.txt, ordered reads)\n"
+    memory_emitter "${memory_emitter}")
 write_derived("${PORT_BUILD_DIR}/include/${memory_relative}" "${memory_emitter}")
 # New include overlays do not invalidate objects whose depfile still names
 # upstream headers. Derive both translation units so the first build cannot

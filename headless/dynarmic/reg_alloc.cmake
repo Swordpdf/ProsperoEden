@@ -139,6 +139,7 @@ macro(eden_reg_alloc_sources)
     string(REPLACE "${eden_ra_move}" [==[extern "C" {
 bool eden_free_moves = true;
 bool eden_alloc_r13 = true;
+bool eden_plain_ordered_reads = true;  // headless/CMakeLists.txt, ordered reads
 unsigned long long eden_free_moves_done = 0, eden_free_moves_spilled = 0;
 }
 

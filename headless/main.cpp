@@ -109,6 +109,7 @@ extern "C" std::int32_t sceKernelAvailableFlexibleMemorySize(std::size_t*);
 extern "C" bool eden_jit_shared;  // headless/dynarmic/jit_group_support.inc
 extern "C" bool eden_free_moves;  // headless/dynarmic/reg_alloc.cmake
 extern "C" bool eden_alloc_r13;  // headless/dynarmic/reg_alloc.cmake
+extern "C" bool eden_plain_ordered_reads;  // headless/CMakeLists.txt
 extern "C" unsigned long long eden_free_moves_done, eden_free_moves_spilled;
 #endif
 #include "video_core/gpu.h"
@@ -812,6 +813,9 @@ int main(int argc, char** argv) {
                     // The saved block list (jit_list.h), whatever the settings file says.
                     Eden::JitList::enabled = entry.ends_with("on");
                     dev_block_list = true;
+                } else if (entry == "jit_plain_ordered_reads=off") {
+                    // Ordered and exclusive reads are a locked RMW again, as upstream (headless/CMakeLists.txt).
+                    eden_plain_ordered_reads = false;
                 } else if (entry == "jit_r13=off") {
                     // The JIT allocator skips R13 in every block, as upstream (headless/dynarmic/reg_alloc.cmake).
                     eden_alloc_r13 = false;
@@ -1722,7 +1726,7 @@ int main(int argc, char** argv) {
                                     lock.unlock();
                                     Eden::Crash::DevelopmentRequest(Eden::AppFile("crash-app.txt"));
                                     if (poll == 0)
-                                        std::printf("EDEN_JIT_FREE_MOVES enabled=%d r13=%d moves=%llu spills=%llu\n", eden_free_moves ? 1 : 0, eden_alloc_r13 ? 1 : 0,
+                                        std::printf("EDEN_JIT_FREE_MOVES enabled=%d r13=%d plain_ordered_reads=%d moves=%llu spills=%llu\n", eden_free_moves ? 1 : 0, eden_alloc_r13 ? 1 : 0, eden_plain_ordered_reads ? 1 : 0,
                                                     __atomic_load_n(&eden_free_moves_done, __ATOMIC_RELAXED),
                                                     __atomic_load_n(&eden_free_moves_spilled, __ATOMIC_RELAXED));
                                     lock.lock();
