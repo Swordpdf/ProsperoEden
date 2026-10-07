@@ -138,6 +138,14 @@ inline std::atomic<unsigned long long> cache_lock_contended{0}, cache_lock_block
 // for 110 ms of a 150 ms frame, in a large open-world game). So the GPU thread looks here
 // before it takes the locks for a draw (YieldToGuests), and lets the sleepers in first.
 inline std::atomic<int> cache_lock_sleepers{0};
+// The GPU command interpreter (DmaPusher::ProcessCommands) calls out once per data word. An
+// incrementing write whose registers only store their value (no engine work until a later method
+// executes) is handed to the engine's pending-write list in one pass instead; registers that start
+// work keep the per-word path. dev-settings dma_batch=off restores one call per word (upstream).
+inline std::atomic<bool> dma_batch{true};
+// Development (EDEN_DEV_GPU): incrementing runs taken in one pass, their words, and the data words
+// that went through the per-word path. Written by the GPU thread only.
+inline std::atomic<unsigned long long> dma_batch_runs{}, dma_batch_words{}, dma_single_words{};
 template <typename Mutex>
 inline void GuestCacheLock(Mutex& mutex) {
     if (mutex.try_lock()) return;
