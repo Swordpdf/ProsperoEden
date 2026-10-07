@@ -138,6 +138,7 @@ macro(eden_reg_alloc_sources)
     eden_reg_alloc_require("${eden_ra_source}" "${eden_ra_move}" "reg_alloc.cpp MoveOutOfTheWay")
     string(REPLACE "${eden_ra_move}" [==[extern "C" {
 bool eden_free_moves = true;
+bool eden_alloc_r13 = true;
 unsigned long long eden_free_moves_done = 0, eden_free_moves_spilled = 0;
 }
 
@@ -145,14 +146,16 @@ void RegAlloc::MoveOutOfTheWay(BlockOfCode& code, HostLoc reg) noexcept {
     ASSERT(!LocInfo(reg).IsLocked());
     if (!LocInfo(reg).IsEmpty()) {
         // ProsperoEden: a free general-purpose register before a stack slot (reg_alloc.cmake).
-        // RBP, R13-R15 and RSP stay out, as in SelectARegister.
+        // Only the emitter's GPR set (gpr_order); RBP, R14, R15 and RSP stay out, as in
+        // SelectARegister, and R13 under the same switch as there.
         if (HostLocIsGPR(reg) && __atomic_load_n(&eden_free_moves, __ATOMIC_RELAXED)) {
             static constexpr HostLoc order[] = {
-                HostLoc::RBX, HostLoc::R12, HostLoc::RSI, HostLoc::RDI, HostLoc::R8, HostLoc::R9,
+                HostLoc::RBX, HostLoc::R12, HostLoc::R13, HostLoc::RSI, HostLoc::RDI, HostLoc::R8, HostLoc::R9,
                 HostLoc::R10, HostLoc::R11, HostLoc::RCX, HostLoc::RDX, HostLoc::RAX,
             };
             for (const HostLoc to : order) {
-                if (to != reg && hostloc_info[size_t(to)].IsEmpty()) {
+                if (to != reg && gpr_order.test(size_t(to)) && hostloc_info[size_t(to)].IsEmpty() &&
+                    (to != HostLoc::R13 || __atomic_load_n(&eden_alloc_r13, __ATOMIC_RELAXED))) {
                     Move(code, to, reg);
                     __atomic_fetch_add(&eden_free_moves_done, 1, __ATOMIC_RELAXED);
                     return;
@@ -164,6 +167,19 @@ void RegAlloc::MoveOutOfTheWay(BlockOfCode& code, HostLoc reg) noexcept {
     }
 }
 ]==] eden_ra_source "${eden_ra_source}")
+    # R13 holds the fastmem base when a JIT has one; the A64 and A32 emitters then leave it out of
+    # their GPR set, and otherwise keep it in. SelectARegister still skipped it in every case, so
+    # A64 blocks (fastmem off on the console) had 11 allocatable GPRs instead of 12. Nothing else
+    # writes R13 inside blocks with fastmem off (it is only loaded by GenRCP when fastmem is set,
+    # and saved/restored with the other callee-saved registers around RunCode), so R13 is now
+    # handed out whenever the requested set contains it. dev-settings jit_r13=off skips it again.
+    set(eden_ra_select [==[            } else if (i == HostLoc::RBP || (i >= HostLoc::R13 && i <= HostLoc::R15)) {
+]==])
+    eden_reg_alloc_require("${eden_ra_source}" "${eden_ra_select}" "reg_alloc.cpp SelectARegister")
+    string(REPLACE "${eden_ra_select}" [==[            } else if (i == HostLoc::RBP || (i >= HostLoc::R14 && i <= HostLoc::R15) ||
+                       (i == HostLoc::R13 && !__atomic_load_n(&eden_alloc_r13, __ATOMIC_RELAXED))) {
+]==] eden_ra_source "${eden_ra_source}")
+    string(PREPEND eden_ra_source "extern \"C\" bool eden_alloc_r13;  // ProsperoEden (reg_alloc.cmake)\n")
     write_derived("${PORT_BUILD_DIR}/reg_alloc.cpp" "${eden_ra_source}")
     get_target_property(eden_ra_sources dynarmic SOURCES)
     list(FILTER eden_ra_sources EXCLUDE REGEX "(^|/)backend/x64/reg_alloc\\.cpp$")
