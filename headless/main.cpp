@@ -111,6 +111,8 @@ extern "C" bool eden_free_moves;  // headless/dynarmic/reg_alloc.cmake
 extern "C" bool eden_alloc_r13;  // headless/dynarmic/reg_alloc.cmake
 extern "C" bool eden_plain_ordered_reads;  // headless/CMakeLists.txt
 extern "C" unsigned long long eden_free_moves_done, eden_free_moves_spilled;
+extern "C" bool eden_fcmp_adc, eden_light_dmb, eden_checkbit_flags;  // headless/dynarmic/fast_paths.cmake
+extern "C" unsigned long long eden_dmb_dropped, eden_checkbit_fused;
 #endif
 #include "video_core/gpu.h"
 #ifdef EDEN_PS5_FRAMEGEN
@@ -816,6 +818,15 @@ int main(int argc, char** argv) {
                 } else if (entry == "jit_plain_ordered_reads=off") {
                     // Ordered and exclusive reads are a locked RMW again, as upstream (headless/CMakeLists.txt).
                     eden_plain_ordered_reads = false;
+                } else if (entry == "jit_fcmp_adc=off") {
+                    // FCMP turns host flags into NZCV with rcl again, as upstream (headless/dynarmic/fast_paths.cmake).
+                    eden_fcmp_adc = false;
+                } else if (entry == "jit_light_dmb=off") {
+                    // Every DMB is an mfence again, as upstream (headless/dynarmic/fast_paths.cmake).
+                    eden_light_dmb = false;
+                } else if (entry == "jit_checkbit_flags=off") {
+                    // CBZ/TBZ-style terminals reload their condition from the stack, as upstream (headless/dynarmic/fast_paths.cmake).
+                    eden_checkbit_flags = false;
                 } else if (entry == "jit_r13=off") {
                     // The JIT allocator skips R13 in every block, as upstream (headless/dynarmic/reg_alloc.cmake).
                     eden_alloc_r13 = false;
@@ -1729,6 +1740,10 @@ int main(int argc, char** argv) {
                                         std::printf("EDEN_JIT_FREE_MOVES enabled=%d r13=%d plain_ordered_reads=%d moves=%llu spills=%llu\n", eden_free_moves ? 1 : 0, eden_alloc_r13 ? 1 : 0, eden_plain_ordered_reads ? 1 : 0,
                                                     __atomic_load_n(&eden_free_moves_done, __ATOMIC_RELAXED),
                                                     __atomic_load_n(&eden_free_moves_spilled, __ATOMIC_RELAXED));
+                                    if (poll == 0)
+                                        std::printf("EDEN_JIT_FAST_PATHS fcmp_adc=%d light_dmb=%d checkbit_flags=%d dmb_dropped=%llu checkbit_fused=%llu\n", eden_fcmp_adc ? 1 : 0, eden_light_dmb ? 1 : 0, eden_checkbit_flags ? 1 : 0,
+                                                    __atomic_load_n(&eden_dmb_dropped, __ATOMIC_RELAXED),
+                                                    __atomic_load_n(&eden_checkbit_fused, __ATOMIC_RELAXED));
                                     lock.lock();
                                 }
 #ifndef EDEN_DEV_VULKAN

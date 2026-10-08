@@ -140,6 +140,8 @@ macro(eden_reg_alloc_sources)
 bool eden_free_moves = true;
 bool eden_alloc_r13 = true;
 bool eden_plain_ordered_reads = true;  // headless/CMakeLists.txt, ordered reads
+bool eden_fcmp_adc = true, eden_light_dmb = true, eden_checkbit_flags = true;  // fast_paths.cmake
+unsigned long long eden_dmb_dropped = 0, eden_checkbit_fused = 0;  // fast_paths.cmake
 unsigned long long eden_free_moves_done = 0, eden_free_moves_spilled = 0;
 }
 
