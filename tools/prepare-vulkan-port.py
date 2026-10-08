@@ -323,8 +323,8 @@ void RasterizerVulkan::PrepareDraw(bool is_indexed, Func&& draw_func) {'''),
     ('    ComputePipeline* const pipeline{pipeline_cache.CurrentComputePipeline()};\n    if (!pipeline) {\n        return;\n    }',
      '    ComputePipeline* const pipeline{pipeline_cache.CurrentComputePipeline()};\n    if (!pipeline) {\n        return;\n    }\n'
      '    SCOPE_EXIT { SyncProbe(scheduler, "dispatch", pipeline); };'),
-    # Guest writes while the GPU thread holds a cache lock are collected instead of waiting
-    # (performance.h cpu_write_defer); the GPU thread applies them before its next command list.
+    # Guest writes while the GPU thread holds a cache lock are queued instead of waiting
+    # (performance.h cpu_write_defer); the GPU thread runs them before its next draw.
     ('''    {
         ::Eden::Performance::GuestCacheLock(buffer_cache.mutex);
         std::lock_guard lock{buffer_cache.mutex, std::adopt_lock};
@@ -341,7 +341,8 @@ void RasterizerVulkan::PrepareDraw(bool is_indexed, Func&& draw_func) {'''),
 ''',
      '''    {
         if (!::Eden::Performance::GuestCacheLockOrDefer(buffer_cache.mutex)) {
-            return true;
+            ::Eden::Performance::DeferWrite(addr, size, ::Eden::Performance::cpu_write_core);
+            return false;
         }
         std::lock_guard lock{buffer_cache.mutex, std::adopt_lock};
         if (buffer_cache.OnCPUWrite(addr, size)) {
@@ -351,7 +352,8 @@ void RasterizerVulkan::PrepareDraw(bool is_indexed, Func&& draw_func) {'''),
     }
     {
         if (!::Eden::Performance::GuestCacheLockOrDefer(texture_cache.mutex)) {
-            return true;
+            ::Eden::Performance::DeferWrite(addr, size, ::Eden::Performance::cpu_write_core);
+            return false;
         }
         std::lock_guard lock{texture_cache.mutex, std::adopt_lock};
         texture_cache.WriteMemory(addr, size);
@@ -363,7 +365,8 @@ void RasterizerVulkan::PrepareDraw(bool is_indexed, Func&& draw_func) {'''),
 ''',
      '''            if (!::Eden::Performance::GuestCacheLockOrDefer(buffer_cache.mutex)) {
                 lap(&Detail::buffer_wait_ns);
-                return true;
+                ::Eden::Performance::DeferWrite(addr, size, ::Eden::Performance::cpu_write_core);
+                return false;
             }
             std::lock_guard lock{buffer_cache.mutex, std::adopt_lock};
             lap(&Detail::buffer_wait_ns);
@@ -374,7 +377,8 @@ void RasterizerVulkan::PrepareDraw(bool is_indexed, Func&& draw_func) {'''),
 ''',
      '''            if (!::Eden::Performance::GuestCacheLockOrDefer(texture_cache.mutex)) {
                 lap(&Detail::texture_wait_ns);
-                return true;
+                ::Eden::Performance::DeferWrite(addr, size, ::Eden::Performance::cpu_write_core);
+                return false;
             }
             std::lock_guard lock{texture_cache.mutex, std::adopt_lock};
             lap(&Detail::texture_wait_ns);

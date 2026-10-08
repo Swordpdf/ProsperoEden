@@ -1059,15 +1059,6 @@ foreach(pair IN ITEMS tracked collect)
     endif()
     string(REPLACE "${${pair}_old}" "${${pair}_new}" arena_source "${arena_source}")
 endforeach()
-# Every collected range (GPU-modified pages, and writes deferred past a held cache lock) is applied by
-# the GPU thread before its next command list (performance.h cpu_write_defer).
-set(collect_line "            gpu_dirty_managers[core].Collect(address, size);\n")
-string(FIND "${arena_source}" "${collect_line}" collect_line_at)
-if(collect_line_at LESS 0)
-    message(FATAL_ERROR "Pinned GPU dirty collection changed")
-endif()
-string(REPLACE "${collect_line}" "${collect_line}            if (::Eden::Performance::cpu_write_defer.load(std::memory_order_relaxed))
-                ::Eden::Performance::gpu_dirty_pending.store(true, std::memory_order_release);\n" arena_source "${arena_source}")
 string(PREPEND arena_source "#include \"${EDEN_PORT_DIR}/performance.h\"\n")
 if(EDEN_A32_FASTMEM)
     # The window spans 4 GiB: only 32-bit applications get it as their fastmem arena.
@@ -2276,17 +2267,16 @@ if(EDEN_PS5_OPENGL)
             "        while (!synced && !system.IsShuttingDown())\n            sync_cv.wait_for(lk, std::chrono::milliseconds(10));\n        if (system.IsShuttingDown()) return false;" command_source "${command_source}")
         string(REPLACE "    while (word != value) {" "    while (word != value && !dma_pusher.system.IsShuttingDown()) {" command_source "${command_source}")
         if(unit STREQUAL "dma_pusher")
-            # Guest writes collected while a cache lock was held (performance.h cpu_write_defer) reach the
-            # caches before the GPU thread runs work submitted after them.
+            # Guest writes queued while a cache lock was held (performance.h cpu_write_defer) reach the
+            # caches before the GPU thread runs work submitted after them (FlushCaching runs the queue).
             set(dispatch_old "void DmaPusher::DispatchCalls() {\n")
             string(FIND "${command_source}" "${dispatch_old}" dispatch_at)
             if(dispatch_at LESS 0)
                 message(FATAL_ERROR "Pinned DmaPusher::DispatchCalls changed")
             endif()
             string(REPLACE "${dispatch_old}" [=[void DmaPusher::DispatchCalls() {
-    if (::Eden::Performance::gpu_dirty_pending.exchange(false, std::memory_order_acq_rel)) {
-        ::Eden::Performance::gpu_dirty_replays.fetch_add(1, std::memory_order_relaxed);
-        system.GPU().InvalidateGPUCache();
+    if (::Eden::Performance::gpu_dirty_pending.load(std::memory_order_relaxed)) {
+        memory_manager.FlushCaching();
     }
 ]=] command_source "${command_source}")
             string(PREPEND command_source "#include <atomic>\n#include \"${EDEN_PORT_DIR}/performance.h\"\n")
@@ -2317,9 +2307,9 @@ if(EDEN_PS5_OPENGL)
 endif()
 write_derived("${PORT_BUILD_DIR}/gpu.cpp" "${gpu_source}")
 list(APPEND video_sources "${PORT_BUILD_DIR}/gpu.cpp")
-# Guest writes collected while a cache lock was held (performance.h cpu_write_defer) reach the caches
-# before the next draw, clear, dispatch or engine copy: the GPU thread calls FlushCaching first in
-# each, so it sees them no later than it would have seen the waited write.
+# Guest writes queued while a cache lock was held (performance.h cpu_write_defer) run before the next
+# draw, clear, dispatch or engine copy: the GPU thread calls FlushCaching first in each, so the caches
+# see them no later than had the guest waited for the lock.
 file(READ "${PROJECT_SOURCE_DIR}/src/video_core/memory_manager.cpp" gpu_memory_source)
 set(flush_caching_old "void MemoryManager::FlushCaching() {\n")
 string(FIND "${gpu_memory_source}" "${flush_caching_old}" flush_caching_at)
@@ -2331,11 +2321,15 @@ string(REPLACE "${flush_caching_old}" [=[void MemoryManager::FlushCaching() {
     if (::Eden::Performance::gpu_dirty_pending.load(std::memory_order_relaxed) &&
         ::Eden::Performance::gpu_dirty_pending.exchange(false, std::memory_order_acq_rel)) {
         ::Eden::Performance::gpu_dirty_replays.fetch_add(1, std::memory_order_relaxed);
-        system.GPU().InvalidateGPUCache();
+        for (const auto& write : ::Eden::Performance::TakeDeferredWrites()) {
+            if (rasterizer->OnCPUWrite(write.address, write.size)) {
+                system.GetGPUDirtyMemoryManager()[write.core].Collect(write.address, write.size);
+            }
+        }
     }
 ]=] gpu_memory_source "${gpu_memory_source}")
 write_derived("${PORT_BUILD_DIR}/memory_manager.cpp"
-    "#include <atomic>\n#include \"${EDEN_PORT_DIR}/performance.h\"\n#include \"core/core.h\"\n#include \"video_core/gpu.h\"\n${gpu_memory_source}")
+    "#include <atomic>\n#include \"${EDEN_PORT_DIR}/performance.h\"\n#include \"core/core.h\"\n#include \"core/gpu_dirty_memory_manager.h\"\n${gpu_memory_source}")
 list(REMOVE_ITEM video_sources memory_manager.cpp)
 list(APPEND video_sources "${PORT_BUILD_DIR}/memory_manager.cpp")
 if(EDEN_DEV_PROFILE)

@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <mutex>
+#include <vector>
 #include <optional>
 #include "common/cpu_features.h"
 
@@ -196,15 +198,35 @@ inline void YieldToGuests() {
 }
 // A guest write to a GPU-tracked page whose cache lock the GPU thread holds (it holds both for each
 // draw's preparation, up to 40% of the time in heavy scenes, longer when a scene change creates and
-// uploads resources) no longer waits: OnCPUWrite reports it as collected, so the write goes to Eden's
-// per-core dirty ranges like a write to GPU-modified memory, and the GPU thread applies every
-// collected range before its next draw, clear, dispatch or engine copy (MemoryManager::FlushCaching)
-// and before each command list (DmaPusher::DispatchCalls): no later than it would have seen the write
-// had the guest waited for the lock. dev-settings cpu_write_defer=off waits as before.
+// uploads resources) no longer waits: OnCPUWrite queues it here and returns as for an untracked
+// write. Before its next draw, clear, dispatch or engine copy (MemoryManager::FlushCaching) the GPU
+// thread runs each queued write through OnCPUWrite as the guest would have, and a write to
+// GPU-modified data goes to that core's dirty ranges for the next fence, as upstream: so the caches
+// see the write no later than had the guest waited, and GPU-written data keeps upstream's handling.
+// dev-settings cpu_write_defer=off waits as before.
 inline std::atomic<bool> cpu_write_defer{true};
-// Set after a range is collected; the GPU thread clears it and applies the ranges.
+struct DeferredWrite {
+    unsigned long long address, size;
+    unsigned core;
+};
+inline std::mutex deferred_writes_mutex;
+inline std::vector<DeferredWrite> deferred_writes;
+// Set after a write is queued; the GPU thread clears it and runs the queue.
 inline std::atomic<bool> gpu_dirty_pending{false};
 inline std::atomic<unsigned long long> cpu_write_deferred{}, gpu_dirty_replays{};
+inline void DeferWrite(unsigned long long address, unsigned long long size, unsigned core) {
+    {
+        std::scoped_lock lock{deferred_writes_mutex};
+        deferred_writes.push_back({address, size, core});
+    }
+    gpu_dirty_pending.store(true, std::memory_order_release);
+}
+inline std::vector<DeferredWrite> TakeDeferredWrites() {
+    std::vector<DeferredWrite> taken;
+    std::scoped_lock lock{deferred_writes_mutex};
+    taken.swap(deferred_writes);
+    return taken;
+}
 // A guest read of a GPU-tracked page whose texture cache lock is held answers "no download" without
 // waiting, as an empty area the read does not remember, so the next read checks again. A first read
 // of a newly GPU-written image can then miss its download: off by default (dev-settings cpu_read_skip=on).
