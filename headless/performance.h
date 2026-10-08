@@ -205,26 +205,50 @@ inline void YieldToGuests() {
 // see the write no later than had the guest waited, and GPU-written data keeps upstream's handling.
 // dev-settings cpu_write_defer=off waits as before.
 inline std::atomic<bool> cpu_write_defer{true};
+// One queue per guest core (3: other threads). Writes to the page of the queue's last entry, made
+// before the GPU thread takes the queue, widen that entry instead of trying the locks again, so a
+// burst of writes to a page costs one replay.
 struct DeferredWrite {
-    unsigned long long address, size;
-    unsigned core;
+    unsigned long long address, end;
 };
-inline std::mutex deferred_writes_mutex;
-inline std::vector<DeferredWrite> deferred_writes;
-// Set after a write is queued; the GPU thread clears it and runs the queue.
+struct DeferredQueue {
+    std::mutex mutex;
+    std::vector<DeferredWrite> writes;
+    unsigned taken = 0;  // Takes so far, under mutex.
+};
+inline std::array<DeferredQueue, 4> deferred_queues;
+inline thread_local unsigned long long deferred_page = ~0ULL;
+inline thread_local unsigned deferred_take = ~0U;
+// Set after a write is queued; the GPU thread clears it and runs the queues.
 inline std::atomic<bool> gpu_dirty_pending{false};
 inline std::atomic<unsigned long long> cpu_write_deferred{}, gpu_dirty_replays{};
+inline bool ExtendDeferredWrite(unsigned long long address, unsigned long long size, unsigned core) {
+    if ((address >> 12) != deferred_page) return false;
+    auto& queue = deferred_queues[core & 3];
+    std::scoped_lock lock{queue.mutex};
+    if (queue.taken != deferred_take || queue.writes.empty() || (queue.writes.back().address >> 12) != deferred_page)
+        return false;
+    auto& last = queue.writes.back();
+    last.address = std::min(last.address, address);
+    last.end = std::max(last.end, address + size);
+    return true;
+}
 inline void DeferWrite(unsigned long long address, unsigned long long size, unsigned core) {
+    auto& queue = deferred_queues[core & 3];
     {
-        std::scoped_lock lock{deferred_writes_mutex};
-        deferred_writes.push_back({address, size, core});
+        std::scoped_lock lock{queue.mutex};
+        queue.writes.push_back({address, address + size});
+        deferred_page = address >> 12;
+        deferred_take = queue.taken;
     }
     gpu_dirty_pending.store(true, std::memory_order_release);
 }
-inline std::vector<DeferredWrite> TakeDeferredWrites() {
+inline std::vector<DeferredWrite> TakeDeferredWrites(unsigned core) {
     std::vector<DeferredWrite> taken;
-    std::scoped_lock lock{deferred_writes_mutex};
-    taken.swap(deferred_writes);
+    auto& queue = deferred_queues[core];
+    std::scoped_lock lock{queue.mutex};
+    taken.swap(queue.writes);
+    ++queue.taken;
     return taken;
 }
 // A guest read of a GPU-tracked page whose texture cache lock is held answers "no download" without

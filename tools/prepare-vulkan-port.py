@@ -188,6 +188,11 @@ void RasterizerVulkan::DispatchCompute() {"""),
     return false;
 """,
      """    DEBUG_ASSERT(addr != 0 || size != 0);
+    // A write to the page this core's last queued write covers joins it (performance.h DeferWrite).
+    if (::Eden::Performance::cpu_write_defer.load(std::memory_order_relaxed) &&
+        ::Eden::Performance::ExtendDeferredWrite(addr, size, ::Eden::Performance::cpu_write_core)) {
+        return false;
+    }
     // Under the buffer cache lock: mark the buffer pages after this write CPU-modified as their own
     // first writes would (performance.h cpu_write_ahead), up to a page no buffer covers or one the
     // GPU modified.

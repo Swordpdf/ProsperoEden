@@ -2321,9 +2321,11 @@ string(REPLACE "${flush_caching_old}" [=[void MemoryManager::FlushCaching() {
     if (::Eden::Performance::gpu_dirty_pending.load(std::memory_order_relaxed) &&
         ::Eden::Performance::gpu_dirty_pending.exchange(false, std::memory_order_acq_rel)) {
         ::Eden::Performance::gpu_dirty_replays.fetch_add(1, std::memory_order_relaxed);
-        for (const auto& write : ::Eden::Performance::TakeDeferredWrites()) {
-            if (rasterizer->OnCPUWrite(write.address, write.size)) {
-                system.GetGPUDirtyMemoryManager()[write.core].Collect(write.address, write.size);
+        for (unsigned core = 0; core < 4; ++core) {
+            for (const auto& write : ::Eden::Performance::TakeDeferredWrites(core)) {
+                if (rasterizer->OnCPUWrite(write.address, write.end - write.address)) {
+                    system.GetGPUDirtyMemoryManager()[core].Collect(write.address, write.end - write.address);
+                }
             }
         }
     }
