@@ -859,6 +859,9 @@ void ReportGpuThread(unsigned frame) {
                 load(guest_sync_wait, true), load(guest_sync_wait, false),
                 load(guest_dequeue_wait, true), load(guest_dequeue_wait, false));
     std::printf(" ipc_calls=%llu ipc_ns=%llu", load(guest_ipc_wait, true), load(guest_ipc_wait, false));
+    std::printf(" write_deferred=%llu dirty_replays=%llu read_skipped=%llu",
+                cpu_write_deferred.load(std::memory_order_relaxed), gpu_dirty_replays.load(std::memory_order_relaxed),
+                cpu_read_skipped.load(std::memory_order_relaxed));
     std::printf(" cache_lock_contended=%llu cache_lock_blocked=%llu",
                 cache_lock_contended.load(std::memory_order_relaxed), cache_lock_blocked.load(std::memory_order_relaxed));
     std::printf(" fs_file_calls=%llu fs_file_ns=%llu fs_file_bytes=%llu fs_storage_calls=%llu fs_storage_ns=%llu "
@@ -933,8 +936,10 @@ void ReportGpuThread(unsigned frame) {
                 load(ipc_thread_overflow, true), load(ipc_thread_overflow, false));
     if (cpu_write_detail.load(std::memory_order_relaxed)) {
         // Cumulative per guest core (3 = other threads); performance.h CpuWriteDetail.
-        std::printf("EDEN_DEV_CPUWRITE hold_calls=%llu hold_ns=%llu", load(draw_cache_hold, true),
-                    load(draw_cache_hold, false));
+        std::printf("EDEN_DEV_CPUWRITE hold_calls=%llu hold_ns=%llu hold_max_ns=%llu hold_long=%llu",
+                    load(draw_cache_hold, true), load(draw_cache_hold, false),
+                    draw_cache_hold_max.exchange(0, std::memory_order_relaxed),
+                    draw_cache_hold_long.load(std::memory_order_relaxed));
         for (unsigned core = 0; core < cpu_write_stats.size(); ++core) {
             const auto& stats = cpu_write_stats[core];
             const auto get = [](const std::atomic<unsigned long long>& value) {

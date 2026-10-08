@@ -194,6 +194,34 @@ inline void YieldToGuests() {
     while (cache_lock_sleepers.load(std::memory_order_acquire) != 0 && now() < until)
         for (int pause = 0; pause < 16; ++pause) __builtin_ia32_pause();
 }
+// A guest write to a GPU-tracked page whose cache lock the GPU thread holds (it holds both for each
+// draw's preparation, up to 40% of the time in heavy scenes, longer when a scene change creates and
+// uploads resources) no longer waits: OnCPUWrite reports it as collected, so the write goes to Eden's
+// per-core dirty ranges like a write to GPU-modified memory, and the GPU thread applies every
+// collected range before it runs the next command list (DmaPusher::DispatchCalls), i.e. before any
+// work the guest submits after the write. dev-settings cpu_write_defer=off waits as before.
+inline std::atomic<bool> cpu_write_defer{true};
+// Set after a range is collected; the GPU thread clears it and applies the ranges.
+inline std::atomic<bool> gpu_dirty_pending{false};
+inline std::atomic<unsigned long long> cpu_write_deferred{}, gpu_dirty_replays{};
+// A guest read of a GPU-tracked page whose texture cache lock is held answers "no download" without
+// waiting, as an empty area the read does not remember, so the next read checks again. A first read
+// of a newly GPU-written image can then miss its download: off by default (dev-settings cpu_read_skip=on).
+inline std::atomic<bool> cpu_read_skip{false};
+inline std::atomic<unsigned long long> cpu_read_skipped{};
+template <typename Mutex>
+inline bool GuestCacheLockOrDefer(Mutex& mutex) {
+    if (!cpu_write_defer.load(std::memory_order_relaxed)) {
+        GuestCacheLock(mutex);
+        return true;
+    }
+    if (mutex.try_lock()) return true;
+    cpu_write_deferred.fetch_add(1, std::memory_order_relaxed);
+    return false;
+}
+// Development, with cpu_write_detail: the longest draw-preparation hold since the last report, and
+// holds of 1 ms or more.
+inline std::atomic<unsigned long long> draw_cache_hold_max{}, draw_cache_hold_long{};
 // Guest waits: nvhost_ctrl syncpoint event registration -> signal, and
 // BufferQueueProducer::DequeueBuffer waiting for a free buffer slot.
 inline Totals guest_sync_wait, guest_dequeue_wait;
@@ -460,6 +488,15 @@ inline bool BootTrace() {
 inline void AddSince(Totals& totals, long long start) {
     totals.nanoseconds.fetch_add(static_cast<unsigned long long>(NowNs() - start), std::memory_order_relaxed);
     totals.calls.fetch_add(1, std::memory_order_relaxed);
+}
+inline void AddHold(long long start) {
+    const auto held = static_cast<unsigned long long>(NowNs() - start);
+    draw_cache_hold.nanoseconds.fetch_add(held, std::memory_order_relaxed);
+    draw_cache_hold.calls.fetch_add(1, std::memory_order_relaxed);
+    if (held >= 1000000) draw_cache_hold_long.fetch_add(1, std::memory_order_relaxed);
+    auto longest = draw_cache_hold_max.load(std::memory_order_relaxed);
+    while (held > longest && !draw_cache_hold_max.compare_exchange_weak(longest, held, std::memory_order_relaxed)) {
+    }
 }
 // A32/A64 memory accesses that left JIT code through the C++ callback (tracked,
 // unmapped or misaligned pages, exclusive stores). Written only by the owning core.

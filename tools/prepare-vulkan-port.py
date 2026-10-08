@@ -323,6 +323,79 @@ void RasterizerVulkan::PrepareDraw(bool is_indexed, Func&& draw_func) {'''),
     ('    ComputePipeline* const pipeline{pipeline_cache.CurrentComputePipeline()};\n    if (!pipeline) {\n        return;\n    }',
      '    ComputePipeline* const pipeline{pipeline_cache.CurrentComputePipeline()};\n    if (!pipeline) {\n        return;\n    }\n'
      '    SCOPE_EXIT { SyncProbe(scheduler, "dispatch", pipeline); };'),
+    # Guest writes while the GPU thread holds a cache lock are collected instead of waiting
+    # (performance.h cpu_write_defer); the GPU thread applies them before its next command list.
+    ('''    {
+        ::Eden::Performance::GuestCacheLock(buffer_cache.mutex);
+        std::lock_guard lock{buffer_cache.mutex, std::adopt_lock};
+        if (buffer_cache.OnCPUWrite(addr, size)) {
+            return true;
+        }
+        write_ahead(addr, size);
+    }
+    {
+        ::Eden::Performance::GuestCacheLock(texture_cache.mutex);
+        std::lock_guard lock{texture_cache.mutex, std::adopt_lock};
+        texture_cache.WriteMemory(addr, size);
+    }
+''',
+     '''    {
+        if (!::Eden::Performance::GuestCacheLockOrDefer(buffer_cache.mutex)) {
+            return true;
+        }
+        std::lock_guard lock{buffer_cache.mutex, std::adopt_lock};
+        if (buffer_cache.OnCPUWrite(addr, size)) {
+            return true;
+        }
+        write_ahead(addr, size);
+    }
+    {
+        if (!::Eden::Performance::GuestCacheLockOrDefer(texture_cache.mutex)) {
+            return true;
+        }
+        std::lock_guard lock{texture_cache.mutex, std::adopt_lock};
+        texture_cache.WriteMemory(addr, size);
+    }
+'''),
+    ('''            ::Eden::Performance::GuestCacheLock(buffer_cache.mutex);
+            std::lock_guard lock{buffer_cache.mutex, std::adopt_lock};
+            lap(&Detail::buffer_wait_ns);
+''',
+     '''            if (!::Eden::Performance::GuestCacheLockOrDefer(buffer_cache.mutex)) {
+                lap(&Detail::buffer_wait_ns);
+                return true;
+            }
+            std::lock_guard lock{buffer_cache.mutex, std::adopt_lock};
+            lap(&Detail::buffer_wait_ns);
+'''),
+    ('''            ::Eden::Performance::GuestCacheLock(texture_cache.mutex);
+            std::lock_guard lock{texture_cache.mutex, std::adopt_lock};
+            lap(&Detail::texture_wait_ns);
+''',
+     '''            if (!::Eden::Performance::GuestCacheLockOrDefer(texture_cache.mutex)) {
+                lap(&Detail::texture_wait_ns);
+                return true;
+            }
+            std::lock_guard lock{texture_cache.mutex, std::adopt_lock};
+            lap(&Detail::texture_wait_ns);
+'''),
+    # Guest reads may skip the download check while the texture cache lock is held (cpu_read_skip).
+    ('''        ::Eden::Performance::GuestCacheLock(texture_cache.mutex);
+        std::lock_guard lock{texture_cache.mutex, std::adopt_lock};
+        auto area = texture_cache.GetFlushArea(addr, size);''',
+     '''        if (::Eden::Performance::cpu_read_skip.load(std::memory_order_relaxed)) {
+            if (!texture_cache.mutex.try_lock()) {
+                ::Eden::Performance::cpu_read_skipped.fetch_add(1, std::memory_order_relaxed);
+                // Empty: HandleRasterizerDownload does not remember it, so the next read checks again.
+                return VideoCore::RasterizerDownloadArea{.start_address = addr, .end_address = addr, .preemtive = true};
+            }
+        } else {
+            ::Eden::Performance::GuestCacheLock(texture_cache.mutex);
+        }
+        std::lock_guard lock{texture_cache.mutex, std::adopt_lock};
+        auto area = texture_cache.GetFlushArea(addr, size);'''),
+    ('        if (hold_start != 0) ::Eden::Performance::AddSince(::Eden::Performance::draw_cache_hold, hold_start);\n',
+     '        if (hold_start != 0) ::Eden::Performance::AddHold(hold_start);\n'),
 ])
 # Host conditional rendering (VK_EXT_conditional_rendering, dev_vulkan.h hcr_mode): count each
 # decision (EDEN_DEV_GUEST cond= slots 13-19); hcr=exact sends the conditions Eden would draw
