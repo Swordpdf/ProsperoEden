@@ -885,7 +885,26 @@ if(EDEN_DEV_PROFILE)
         message(FATAL_ERROR "Pinned nvhost_ctrl event wait changed")
     endif()
     string(REPLACE "${ctrl_old}" "    const auto wait_start = ::Eden::Performance::NowNs();\n    event.wait_handle =\n        host1x_syncpoint_manager.RegisterHostAction(fence_id, target_value, [this, slot, wait_start]() {\n            ::Eden::Performance::AddSince(::Eden::Performance::guest_sync_wait, wait_start);\n            auto& event_ = events[slot];" ctrl_source "${ctrl_source}")
-    write_derived("${PORT_BUILD_DIR}/nvhost_ctrl.cpp" "#include \"${EDEN_PORT_DIR}/performance.h\"\n${ctrl_source}")
+    # Development: Eden stalls the guest when a syncpoint event wait failed three times; log the
+    # stall and its length (a stall that never ends leaves only the begin line).
+    set(stall_old [=[                auto lk = system.StallApplication();
+                host1x_syncpoint_manager.WaitHost(fence_id, target_value);
+                system.UnstallApplication();
+]=])
+    string(FIND "${ctrl_source}" "${stall_old}" stall_at)
+    if(stall_at LESS 0)
+        message(FATAL_ERROR "Pinned nvhost_ctrl stall changed")
+    endif()
+    string(REPLACE "${stall_old}" [=[                const long long stall_start = ::Eden::Performance::NowNs();
+                std::fprintf(stderr, "EDEN_GPU_STALL begin fence=%u target=%u fails=%u mono_ns=%lld\n",
+                             unsigned(fence_id), unsigned(target_value), unsigned(events[slot].fails), stall_start);
+                auto lk = system.StallApplication();
+                host1x_syncpoint_manager.WaitHost(fence_id, target_value);
+                system.UnstallApplication();
+                std::fprintf(stderr, "EDEN_GPU_STALL end fence=%u ms=%lld\n", unsigned(fence_id),
+                             (::Eden::Performance::NowNs() - stall_start) / 1000000);
+]=] ctrl_source "${ctrl_source}")
+    write_derived("${PORT_BUILD_DIR}/nvhost_ctrl.cpp" "#include <cstdio>\n#include \"${EDEN_PORT_DIR}/performance.h\"\n${ctrl_source}")
     list(REMOVE_ITEM core_sources "hle/service/nvdrv/devices/nvhost_ctrl.cpp")
     list(APPEND core_sources "${PORT_BUILD_DIR}/nvhost_ctrl.cpp")
     set(producer_old "        Status status = WaitForFreeSlotThenRelock(async, &found, &return_flags, lock);")
@@ -2298,6 +2317,27 @@ if(EDEN_PS5_OPENGL)
 endif()
 write_derived("${PORT_BUILD_DIR}/gpu.cpp" "${gpu_source}")
 list(APPEND video_sources "${PORT_BUILD_DIR}/gpu.cpp")
+# Guest writes collected while a cache lock was held (performance.h cpu_write_defer) reach the caches
+# before the next draw, clear, dispatch or engine copy: the GPU thread calls FlushCaching first in
+# each, so it sees them no later than it would have seen the waited write.
+file(READ "${PROJECT_SOURCE_DIR}/src/video_core/memory_manager.cpp" gpu_memory_source)
+set(flush_caching_old "void MemoryManager::FlushCaching() {\n")
+string(FIND "${gpu_memory_source}" "${flush_caching_old}" flush_caching_at)
+if(flush_caching_at LESS 0)
+    message(FATAL_ERROR "Pinned MemoryManager::FlushCaching changed")
+endif()
+string(REPLACE "#include \"memory_manager.h\"\n" "" gpu_memory_source "${gpu_memory_source}")
+string(REPLACE "${flush_caching_old}" [=[void MemoryManager::FlushCaching() {
+    if (::Eden::Performance::gpu_dirty_pending.load(std::memory_order_relaxed) &&
+        ::Eden::Performance::gpu_dirty_pending.exchange(false, std::memory_order_acq_rel)) {
+        ::Eden::Performance::gpu_dirty_replays.fetch_add(1, std::memory_order_relaxed);
+        system.GPU().InvalidateGPUCache();
+    }
+]=] gpu_memory_source "${gpu_memory_source}")
+write_derived("${PORT_BUILD_DIR}/memory_manager.cpp"
+    "#include <atomic>\n#include \"${EDEN_PORT_DIR}/performance.h\"\n#include \"core/core.h\"\n#include \"video_core/gpu.h\"\n${gpu_memory_source}")
+list(REMOVE_ITEM video_sources memory_manager.cpp)
+list(APPEND video_sources "${PORT_BUILD_DIR}/memory_manager.cpp")
 if(EDEN_DEV_PROFILE)
     # Render-enable evaluations per mode and result (EDEN_DEV_GUEST cond=), to tell GPU
     # render conditions apart from the game's own LOD choices (LOD swaps).

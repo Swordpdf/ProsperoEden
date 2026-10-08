@@ -198,8 +198,9 @@ inline void YieldToGuests() {
 // draw's preparation, up to 40% of the time in heavy scenes, longer when a scene change creates and
 // uploads resources) no longer waits: OnCPUWrite reports it as collected, so the write goes to Eden's
 // per-core dirty ranges like a write to GPU-modified memory, and the GPU thread applies every
-// collected range before it runs the next command list (DmaPusher::DispatchCalls), i.e. before any
-// work the guest submits after the write. dev-settings cpu_write_defer=off waits as before.
+// collected range before its next draw, clear, dispatch or engine copy (MemoryManager::FlushCaching)
+// and before each command list (DmaPusher::DispatchCalls): no later than it would have seen the write
+// had the guest waited for the lock. dev-settings cpu_write_defer=off waits as before.
 inline std::atomic<bool> cpu_write_defer{true};
 // Set after a range is collected; the GPU thread clears it and applies the ranges.
 inline std::atomic<bool> gpu_dirty_pending{false};
