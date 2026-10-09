@@ -503,6 +503,13 @@ inline void Mark(Totals& totals, long long& since) {
 // Opt-in API wall times: calls may overlap across threads, so do not sum them as frame time.
 inline std::atomic<bool> vulkan_cost_enabled{false};
 inline std::array<Totals, 24> vulkan_api;
+// Large textures upload only the block rows guest writes changed (texture_partial.h): dev-settings
+// tex_partial=off, tex_partial_kb=N (smallest image, default 1 MiB), tex_partial_check=on (compare
+// each partial upload with a whole unswizzle). Counted: partial uploads, their bytes, checks, mismatches.
+inline std::atomic<bool> tex_partial{true}, tex_partial_check{false};
+inline std::atomic<unsigned long long> tex_partial_min{1ULL << 20};
+inline std::atomic<unsigned long long> tex_partial_uploads{}, tex_partial_bytes{}, tex_partial_checks{},
+    tex_partial_mismatches{};
 inline std::optional<Timer> VulkanTimer(unsigned index) {
     if (vulkan_cost_enabled.load(std::memory_order_relaxed))
         return std::optional<Timer>{std::in_place, vulkan_api.at(index)};

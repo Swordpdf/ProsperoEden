@@ -781,6 +781,13 @@ int main(int argc, char** argv) {
                 } else if (entry == "gc_dirty=upstream") {
                     // Eden's rule: evict GPU-written textures from the "expected" memory mark on.
                     Eden::Performance::gc_keep_dirty = false;
+                } else if (entry == "tex_partial=off") {
+                    // Whole-image uploads after every guest write, as upstream (texture_partial.h).
+                    Eden::Performance::tex_partial = false;
+                } else if (entry == "tex_partial_check=on") {
+                    Eden::Performance::tex_partial_check = true;
+                } else if (entry.starts_with("tex_partial_kb=")) {
+                    Eden::Performance::tex_partial_min = std::strtoull(entry.c_str() + 15, nullptr, 10) << 10;
                 } else if (entry == "gc_scan=upstream") {
                     // Eden's rule: the collector's budget counts visits, not evictions.
                     Eden::Performance::gc_count_visits = true;
