@@ -50,7 +50,9 @@
                 return;
             }
             // A layout the rows cannot follow: the whole upload below, which tracks the image again.
-            UntrackImage(image, image_id);
+            if (True(image.flags & ImageFlagBits::Tracked)) {
+                UntrackImage(image, image_id);
+            }
             image.flags |= ImageFlagBits::CpuModified;
         }
         partial.uploaded = true;

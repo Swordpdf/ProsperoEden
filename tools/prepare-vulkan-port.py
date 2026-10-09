@@ -927,6 +927,13 @@ for signature, index in (
 # Large textures re-upload only the block rows guest writes changed (headless/texture_partial.h).
 VULKAN_CACHE = 'if constexpr (std::is_same_v<Runtime, Vulkan::TextureCacheRuntime>) {'
 texture_partial = [
+    # The page lists belong to this cache's images: a title started after another in the same
+    # process (return to menu) must not see the previous cache's ImageId indices.
+    ('    : runtime{runtime_}, device_memory{device_memory_} {\n',
+     '    : runtime{runtime_}, device_memory{device_memory_} {\n'
+     '    ' + VULKAN_CACHE + '\n'
+     '        Eden::TexturePartial::images.clear();\n'
+     '    }\n'),
     ('    ForEachImageInRegion(cpu_addr, size, [this](ImageId image_id, Image& image) {\n'
      '        if (True(image.flags & ImageFlagBits::CpuModified)) {\n'
      '            return;\n'

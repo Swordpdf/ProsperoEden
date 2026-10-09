@@ -47,7 +47,9 @@ struct State {
     bool uploaded = false;                    // a whole upload filled the image once
     std::vector<u64> pages;                   // device pages untracked by guest writes, sorted
 };
-inline std::unordered_map<u32, State> images; // by ImageId index (the Vulkan cache only)
+// By ImageId index, for the live Vulkan cache only (its constructor clears it: a title started after
+// another one in the same process gets a new cache whose indices start over).
+inline std::unordered_map<u32, State> images;
 
 inline bool Eligible(const VideoCommon::ImageBase& image) {
     using VideoCommon::ImageFlagBits;
@@ -69,7 +71,7 @@ bool Write(DeviceMemory& device_memory, VideoCommon::ImageBase& image, u32 id, u
     if (it == images.end()) return false;
     State& state = it->second;
     if (True(image.flags & ImageFlagBits::CpuModified)) {
-        if (state.pages.empty()) return false;
+        if (state.pages.empty() || False(image.flags & ImageFlagBits::Tracked)) return false;
     } else if (!state.uploaded || !Eligible(image)) {
         return false;
     }
