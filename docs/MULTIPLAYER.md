@@ -41,7 +41,8 @@ While connected, Cross chooses **Leave room**. Square chooses **Go offline**, in
 after a failed join. Circle returns to the previous launcher screen without leaving a
 connected room. During a game, use the existing Touchpad + L1 shortcut to return to the
 launcher before changing rooms. If the room connection fails during play, the implementation
-requests the normal return-to-menu path; that native recovery remains a hardware test gate.
+requests the normal return-to-menu path. This recovery passed on `.30` from a Mario Kart
+8 Deluxe 3.0.5 wireless lobby; recovery during an active race remains unqualified.
 
 ## Private server example
 

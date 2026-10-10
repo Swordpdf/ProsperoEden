@@ -17,13 +17,28 @@ This hardware case used source `540f9a9` with the existing development input run
 enabled for reliable timed button presses. The normal candidate uses the same networking
 code. Exact package hashes and lifecycle evidence are in `results/multiplayer-development`.
 Title-specific shutdown and runtime release passed; temporary test-control files were
-restored. This qualifies lobby creation only. A second game instance, racing, room-loss
-recovery and the PS5 Tailscale payload remain unqualified.
+restored. A subsequent corrected host probe discovered the PS5 lobby, connected a second
+LDN node and received the two-node synchronization. It received 98 Mario Kart UDP proxy
+packets (port 12345, 205 bytes) before sending Disconnect and leaving. This verifies the
+PS5's guest discovery and outbound game traffic through a real room; the probe is not a
+second running game and does not establish racing or inbound guest game-packet handling.
+
+Stopping the owned temporary room server during that lobby caused normal game shutdown
+and return to the launcher with a reconnect message. Title close and runtime release passed.
+The normal package was restored and all 66 files verified; saved credentials were preserved.
+Evidence is in `results/multiplayer-live-ldn-joined` and `results/multiplayer-normal-restored`.
+The initial live probe was inconclusive because it used upstream `IsConnected()`, which
+includes Joining, before sending Scan. The corrected probe waits for Joined, matching the
+application's existing startup requirement. No production change was needed for that finding.
 
 - 2026-10-10 | LDN hardware | 540f9a9 | FW 6.02 | partial-pass: Mario Kart wireless lobby created; clean teardown | results/multiplayer-development | validate second peer
+- 2026-10-10 | LDN hardware | 27d6cb3 | FW 6.02 | partial-pass: peer scan/connect/sync, game packets, room-loss recovery | results/multiplayer-live-ldn-joined | qualify two-game racing
 
 ## Completed offline
 
+- Parse numeric room addresses before ENet's hostname resolver. On PS5 the resolver failed
+  before its numeric fallback; regression joins still work when hostname lookup is forced
+  to fail. Preserve hostname resolution in the application controller.
 - Preserve Eden's packet format while rejecting invalid lengths before allocation and
   preventing overflowing reads.
 - Validate received room messages before existing handlers consume them, including
@@ -52,8 +67,8 @@ recovery and the PS5 Tailscale payload remain unqualified.
 - Clear BSD's shared descriptor table when its final service is destroyed, closing sockets
   before releasing references. An offline fixture compiles the generated destructor with
   real proxy sockets and a minimal stand-in for the IPC class; it verifies the table survives
-  earlier service destruction and is empty for the next game. Full game teardown remains
-  a console acceptance gate.
+  earlier service destruction and is empty for the next game. The hardware cases above
+  additionally verify normal game teardown and runtime release.
 - Protect the BSD descriptor table with short locks and retain shared ownership for each
   socket operation and poll. Publish only initialized sockets, keep duplicated descriptors
   usable until their last alias closes, and preserve existing operations across descriptor
@@ -98,8 +113,8 @@ thread and is cancelled before launcher destruction.
 Game startup accepts only idle or fully joined connections. While a game exists, the controller
 refuses join/leave operations and preserves its socket mode through room loss: new BSD sockets
 remain proxies until game teardown. The input worker requests the existing normal return-to-menu
-shutdown path on room loss and displays a notice on return. This lifecycle wiring still needs
-full application and game qualification.
+shutdown path on room loss and displays a notice on return. The Mario Kart lobby case above
+qualifies this recovery path; active races and subsequent sessions still need qualification.
 
 Offline evidence: the real controller test covers game-start gating, blocked connect/leave during
 a game, and the retained proxy-mode flag after loss. The existing settings regression passes with
@@ -122,8 +137,8 @@ modified multiplayer headers to have used the derived declaration.
 
 The full host build and required integration suite now pass, including the updated room-loss
 stop-deadline check, profile/settings, saves, devices, keyboard and audio regressions. The
-optional live RomM/Docker check was not requested and remains skipped. An isolated native
-package also passes inventory, fixture, import and alignment checks; it has not been deployed.
+optional live RomM/Docker check was not requested and remains skipped. The isolated native
+package passes inventory, fixture, import and alignment checks and was deployed to `.30`.
 
 The packet/LDN and room/proxy test sources run under AddressSanitizer and UndefinedBehaviorSanitizer.
 The expanded room/proxy/BSD suite also passed ThreadSanitizer using clang 18.
@@ -152,68 +167,25 @@ CXX=clang++-18 python3 tools/check-multiplayer.py --source /path/to/pinned/eden 
 
 ## Remaining before feature qualification
 
-- Qualify socket cleanup and poll behavior in actual game transitions, including the
-  existing upstream proxy TCP limitations; offline concurrency tests do not prove game compatibility.
-- Qualify cancellation and bounded queues in the native application under room loss.
-- Qualify the integrated launcher, system keyboard and game transitions in a full application.
-- Repeat affected build/package checks if hardware findings require further changes.
-- Validate guest LDN and proxy sockets in a game, then internet room play.
-- Validate holdmysocks' outbound UDP forwarding on hardware. Source review confirms that
-  the pinned atreus04-GG payload lacks this facility; adding it is optional separate work.
-- Test console lifecycle, regressions and performance, only after confirming a console is idle.
+- Run two actual game instances with matching updates, test both host roles, complete a
+  race, and verify leaving/rejoining and another game session. The live protocol probe
+  does not replace this test or qualify the upstream proxy TCP limitations.
+- Repeat the two-game test across independent internet peers and record latency/topology.
+- Validate holdmysocks' outbound UDP forwarding on PS5, including cross-process loopback,
+  idle sessions and payload restart. The pinned atreus04-GG payload lacks this facility.
+- Repeat affected checks if those hardware findings require further changes.
 
-Read-only console preflight found one active session and one console with released title
-resources; the shared lock was released without deployment or launch. Recheck idle state
-under the lock immediately before any hardware case. The idle console has a newer existing
-development installation; it was left untouched. The saved Remote Play host entries point
-to the active console, so input/capture on the idle console is not currently verified.
-The local Windows Tailscale daemon
-is running, but WSL uses a NAT interface; its room server still needs a verified inbound
-route before console joins can be tested. A bounded Windows-to-WSL UDP relay probe received
-no datagrams, and the PC has explicit inbound block rules for Python. Those rules were
-left intact; the test relay exited and no console was contacted during this probe.
-An approved temporary Linux room host is now verified over Tailscale. The derived client
-passed password rejection, two-member join, LDN scan broadcast, directed UDP proxy delivery,
-and application-controller join/leave against the pinned standalone server. The client ran
-under AddressSanitizer/UndefinedBehaviorSanitizer; the server stopped cleanly after the case.
-Both clients ran on the same PC and reached the server through its Tailscale address;
-this does not qualify independent internet peers, PS5 networking or either PS5 payload.
-The server binary hash and bounded case logs are retained in local validation evidence.
-
-Hardware qualification still needs an idle console with a working observation/input path.
-The latest preflight found the other console busy, while the saved Remote Play connection
-to the stopped console remained on a loading screen. The observation client was closed;
-no candidate was deployed and no console controller input was sent. No existing registration
-or PS5 settings were changed.
-
-The operator has since launched the candidate on `.30` and tested room entry. Neither PS5
-multiplayer nor either Tailscale integration is qualified yet. Public room browsing and
-PS5 room hosting remain deferred.
-Issue #89 is explicitly reserved for a separate future follow-up; this PR addresses #98.
-
-On 2026-10-10, the operator confirmed the password keyboard fix and retried with saved
-room credentials. The `a8484b1` diagnostic build reported `ENet address conversion failed`
-before the handshake while the LAN room server was listening. The controller had already
-accepted the numeric IPv4 address; upstream ENet then called `getaddrinfo` again and returned
-failure before trying numeric parsing. The derived client now tries `enet_address_set_host_ip`
-first, retaining hostname fallback. The room regression forces hostname lookup failure during
-numeric joins, including wrong-password rejection and successful two-member retry.
-
-After deployment of `06492ef` to `.30` (FW 6.02), the operator reported **Connected**
-against the LAN room server on 2026-10-10. All 66 installed package hashes matched the
-candidate; the existing saved credentials were preserved. This confirms the operator's
-room-join test passed. The server was still listening, but its available output did not
-contain a per-member join entry, so this result is based on the operator's UI observation.
-Leave/rejoin, game transitions, two-player LDN gameplay and PS5 Tailscale transport remain
-unqualified.
-
-- 2026-10-10 | Hardware preparation | 1aae996 | FW 6.02 | partial-pass: deployed; all 66 package files verified in raw FTP mode | results/multiplayer-deploy | operator test pending
-
-The previous application files were backed up before deployment. FTP executable readback
-requires raw mode (`SELF` disables this server's decrypted transfer mode); hashes from
-decrypted readback are not package hashes. Deployment alone does not qualify launch or play.
+The native build/package checks, host packet/controller/socket regressions, and the
+hardware milestones above have passed. Keep this PR experimental until gameplay and
+transport qualification are complete. Only `.30` was used for these hardware cases.
+Public room browsing, PS5 room hosting and issue #89 remain separate follow-ups.
 
 ## Tailscale source qualification and user guide
+
+The derived client previously passed password rejection, two-member join, LDN broadcast,
+directed UDP proxy delivery and controller join/leave against the pinned standalone server
+on Bee through its Tailscale address, under ASan/UBSan. Both clients ran on the same PC;
+that test does not qualify independent internet peers or either PS5 payload.
 
 The [experimental setup guide](MULTIPLAYER.md) documents room connection, recovery and the
 holdmysocks forwarding configuration without advertising untested hardware support.
@@ -222,6 +194,13 @@ through `tsnet.Server.Dial`; `startUDP` supplies the native listener and per-cli
 The atreus04-GG revision instead configures fixed inbound Remote Play listeners and
 explicitly skips outbound dialing. Its required local forward is absent at that pin.
 
-Neither payload was executed. No Go toolchain was found in the current Windows/WSL
-environment, so the payload's Go component tests have not run here. This is source-level
-evidence only; it does not qualify tsnet transport, PS5 sandbox access or gameplay.
+The pinned holdmysocks `tsd` Go component suite passed on Bee/Linux with
+`go test -count=1 ./...`. The unmodified race-enabled suite failed in
+`TestLocalForward`: its TCP and UDP callbacks append to the same test-owned `dialed`
+slice without synchronization. In the temporary validation copy only, protecting the
+recorder's writes and assertion read with a mutex made `go test -race -count=1 ./...`
+pass. No production payload code changed. The initial failure and both follow-up runs
+are retained in `results/multiplayer-tailscale-forward-tests`.
+
+Neither payload was executed on PS5. These component tests use loopback in place of
+the tailnet dialer; they do not qualify real tsnet transport, PS5 sandbox access or gameplay.
