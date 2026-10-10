@@ -119,6 +119,10 @@ The native application now initializes logging and one controller before its lau
 Settings > Multiplayer offers address, UDP port, nickname and password entry, join/cancel,
 room status and a scrollable member list with each reported game/version. The connected
 view shows eight members at a time and keeps the scroll position valid when players leave.
+The home footer adds `Multiplayer: Connected` alongside game count and firmware status
+while joined, and removes it when disconnected. The Settings summary shows `Off` whenever
+the room is not connected. Host previews cover both footer states and the offline summary;
+these UI additions have not yet been deployed to the console.
 Cross leaves from that view; Square returns to offline mode, including after a failed join.
 Address, port, nickname and password use the existing per-profile settings store. Password persistence was explicitly requested during hardware testing.
 Changing profiles requires leaving the room first. The system keyboard runs outside the draw

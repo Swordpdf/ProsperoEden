@@ -373,8 +373,11 @@ void Launcher::draw_home(Canvas &c)
     list.rounded_rect({120.0f, 952.0f, 1680.0f, 1.0f}, 0.0f, theme::kText.with_alpha(0.10f));
     static constexpr Hint kHints[] = {
         {Pad::cross, TR("Select")}, {Pad::triangle, TR("Details")}, {Pad::dpad, TR("Navigate")}};
-    const float status_width = text(c, home_.system_status, 1800.0f, 989.0f, theme::kSmall,
-                                    Color::rgb(0x9eac9f), Align::right);
+    std::string status = home_.system_status;
+    if (services_.room_status().phase == Eden::Multiplayer::Phase::Connected)
+        status += std::string{"  /  "} + tr("Multiplayer") + ": " + tr("Connected");
+    const float status_width = text_shrink(c, status, 1800.0f, 989.0f, theme::kSmall,
+                                          Color::rgb(0x9eac9f), 1120.0f, Align::right);
     draw_hints(c, kHints, 3, 120.0f, 982.0f, theme::kMuted, 1680.0f - status_width - 48.0f);
     end_band();
 }

@@ -225,7 +225,7 @@ void Launcher::draw_settings(Canvas &c)
             return linked == 0 ? std::string{tr("Off")} : fill(tr("{0} of {1} profiles"), {std::to_string(linked),
                                                                                            std::to_string(sync_setup_.profiles.size())});
         }(),
-        services_.room_status().phase == Eden::Multiplayer::Phase::Connected ? tr("Connected") : "",
+        services_.room_status().phase == Eden::Multiplayer::Phase::Connected ? tr("Connected") : tr("Off"),
         pick(services_.language_labels(), prefs_.language),
     };
     for (int row = 0; row < kCategoryCount; ++row)

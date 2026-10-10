@@ -538,6 +538,17 @@ void pictures(Stage &s)
     s.wait(0.8f);
     s.shoot("22-language-chosen");
 
+    s.services.room = {Eden::Multiplayer::Phase::Connected, "", "Friends' room", {"PlayerPS5"}};
+    s.restart();
+    s.wait(1.0f);
+    s.shoot("C4-home-room-connected");
+    s.services.room = {};
+    s.wait(0.5f);
+    s.shoot("C5-home-room-disconnected");
+    s.press({Key::up, Key::right, Key::cross});
+    s.wait(0.8f);
+    s.shoot("C6-settings-multiplayer-off");
+
     // Two profiles: the home screen names who is playing.
     s.services.add_profile();
     s.restart();
