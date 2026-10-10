@@ -70,7 +70,7 @@ int main() {
 with tempfile.TemporaryDirectory() as tmp:
     exe=Path(tmp)/'probe'
     subprocess.run(['c++','-std=c++20','-Wall','-Wextra','-Werror',
-                    '-I'+str(root/'.deps/mirror-5f142c7926d0c7fcbbd0ce30794d72f638a43b2a/src'),
+                    '-I'+str(root/'.deps/mirror-67bada77f8a43a90da2e94e89b8e7da73c256989/src'),
                     '-x','c++','-o',str(exe),'-'],input=code,text=True,check=True)
     subprocess.run([str(exe)],check=True,stdout=subprocess.DEVNULL)
 print('Native queue probe PASS: 64 cases, packet ABI, submit failure/timeout preserve GPU allocations')

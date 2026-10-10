@@ -5,11 +5,11 @@
       "name": "eden",
       "about": "Eden emulator source at the pinned commit (GitHub mirror archive)",
       "kind": "archive",
-      "url": "https://github.com/eden-emulator/mirror/archive/5f142c7926d0c7fcbbd0ce30794d72f638a43b2a.tar.gz",
-      "sha256": "35ec0bb96b197181e66c0aeb8f44f0ff05334be832c631c50a4f1e271277285f",
-      "save": ".deps/eden-5f142c79.tar.gz",
+      "url": "https://github.com/eden-emulator/mirror/archive/67bada77f8a43a90da2e94e89b8e7da73c256989.tar.gz",
+      "sha256": "d42b6fb492c65eb5e98ab72a786dff01fd64384d073a739b9c9ff475414366ee",
+      "save": ".deps/eden-67bada77.tar.gz",
       "extract": ".deps",
-      "creates": ".deps/mirror-5f142c7926d0c7fcbbd0ce30794d72f638a43b2a/CMakeLists.txt"
+      "creates": ".deps/mirror-67bada77f8a43a90da2e94e89b8e7da73c256989/CMakeLists.txt"
     },
     {
       "name": "ffmpeg",

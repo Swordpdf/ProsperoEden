@@ -16,7 +16,7 @@ if [[ -n ${EDEN_DEV_CHECKOUT:-} ]]; then
             fi
         done
         mkdir -p .deps build
-        for input in "$dev"/.deps/eden-5f142c79.tar.gz "$dev"/.deps/mirror-* "$dev"/.deps/ffmpeg-* \
+        for input in "$dev"/.deps/eden-67bada77.tar.gz "$dev"/.deps/mirror-* "$dev"/.deps/ffmpeg-* \
                      "$dev"/.deps/fmt-12.1.0 "$dev"/.deps/compiler-rt-18.1.8 "$dev"/.deps/pacbrew-* \
                      "$dev"/.deps/ps5-opengl-sdk-*; do
             [[ -e $input && ! -e .deps/${input##*/} ]] && ln -s "$input" ".deps/${input##*/}"

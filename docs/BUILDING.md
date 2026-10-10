@@ -78,7 +78,7 @@ Downloads are cached in `~/.cache/prosperoeden-deps` (`PROSPEROEDEN_DEPS_CACHE`)
 
 Inside this repository, in `.deps/`:
 
-- **Eden** at commit `5f142c7926d0c7fcbbd0ce30794d72f638a43b2a` (GitHub mirror archive), with
+- **Eden** at commit `67bada77f8a43a90da2e94e89b8e7da73c256989` (GitHub mirror archive), with
   Eden's own hash-pinned packages, which its configure step downloads. ProsperoEden does not
   modify Eden's files: the PS5 frontend in `headless/` replaces and derives sources at
   configure time (`headless/inject.cmake`).
