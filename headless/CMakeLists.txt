@@ -336,11 +336,22 @@ target_sources(dynarmic PRIVATE "${PORT_BUILD_DIR}/opt_passes.cpp")
 set(memory_relative "dynarmic/backend/x64/emit_x64_memory.h")
 file(READ "${PROJECT_SOURCE_DIR}/src/dynarmic/src/${memory_relative}" memory_emitter)
 set(pointer_mask "    // mask away attributes\n    if (ctx.conf.page_table_pointer_mask == 0) {")
-set(pointer_end "        code.sar(page, *ctx.conf.page_table_sign_extension);\n    }\n\n    code.jz")
-foreach(anchor IN ITEMS pointer_mask pointer_end)
-    string(FIND "${memory_emitter}" "${${anchor}}" offset)
-    if(offset LESS 0)
-        message(FATAL_ERROR "Pinned page-table pointer decoding changed")
+# The A32 and the A64 lookup end their own sign extension differently; each closes the else.
+set(pointer_end_a32 "        code.sar(page, 63 - int(*ctx.conf.page_table_sign_extension));\n    }\n")
+set(pointer_end_a64 "        code.sar(page, *ctx.conf.page_table_sign_extension);\n    }\n")
+foreach(anchor IN ITEMS pointer_mask pointer_end_a32 pointer_end_a64)
+    string(REPLACE "${${anchor}}" "" without "${memory_emitter}")
+    string(LENGTH "${memory_emitter}" before)
+    string(LENGTH "${without}" after)
+    string(LENGTH "${${anchor}}" each)
+    math(EXPR found "(${before} - ${after}) / ${each}")
+    if(anchor STREQUAL "pointer_mask")
+        set(expected 2)
+    else()
+        set(expected 1)
+    endif()
+    if(NOT found EQUAL expected)
+        message(FATAL_ERROR "Pinned page-table pointer decoding changed: ${found} of ${anchor}, expected ${expected}")
     endif()
 endforeach()
 string(REPLACE "${pointer_mask}" [=[    // Eden packs pointer bits 12..55. Sign extension removes the upper
@@ -353,8 +364,9 @@ string(REPLACE "${pointer_mask}" [=[    // Eden packs pointer bits 12..55. Sign 
     } else {
     // mask away attributes
     if (ctx.conf.page_table_pointer_mask == 0) {]=] memory_emitter "${memory_emitter}")
-string(REPLACE "${pointer_end}" "        code.sar(page, *ctx.conf.page_table_sign_extension);\n    }\n    }\n\n    code.jz"
-    memory_emitter "${memory_emitter}")
+foreach(anchor IN ITEMS pointer_end_a32 pointer_end_a64)
+    string(REPLACE "${${anchor}}" "${${anchor}}    }\n" memory_emitter "${memory_emitter}")
+endforeach()
 # The packed-pointer decoder above uses only immediates. Like upstream's
 # unmasked absolute-offset path, it can reuse the index register for the page.
 # Relative offsets and other pointer formats still need two scratch registers.
