@@ -154,9 +154,19 @@ is running, but WSL uses a NAT interface; its room server still needs a verified
 route before console joins can be tested. A bounded Windows-to-WSL UDP relay probe received
 no datagrams, and the PC has explicit inbound block rules for Python. Those rules were
 left intact; the test relay exited and no console was contacted during this probe.
-The room-host choice is pending. Hardware qualification needs an approved reachable room
-endpoint and an idle console with a working observation/input path; no existing registration
-or PS5 settings were changed to obtain one.
+An approved temporary Linux room host is now verified over Tailscale. The derived client
+passed password rejection, two-member join, LDN scan broadcast, directed UDP proxy delivery,
+and application-controller join/leave against the pinned standalone server. The client ran
+under AddressSanitizer/UndefinedBehaviorSanitizer; the server stopped cleanly after the case.
+Both clients ran on the same PC and reached the server through its Tailscale address;
+this does not qualify independent internet peers, PS5 networking or either PS5 payload.
+The server binary hash and bounded case logs are retained in local validation evidence.
+
+Hardware qualification still needs an idle console with a working observation/input path.
+The latest preflight found the other console busy, while the saved Remote Play connection
+to the stopped console remained on a loading screen. The observation client was closed;
+no candidate was deployed and no console controller input was sent. No existing registration
+or PS5 settings were changed.
 
 No console application has been launched for this work. Neither PS5 multiplayer nor either Tailscale
 integration is qualified yet. Public room browsing and PS5 room hosting remain deferred.
