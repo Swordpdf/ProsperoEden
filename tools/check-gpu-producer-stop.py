@@ -29,6 +29,9 @@ struct ThreadManager {
           Common::SPSCQueue<Item,2> queue; std::condition_variable_any cv; } state;
  std::stop_source stop_source;
  u64 PushCommand(CommandData&&,bool,bool);
+ // The worker file defines these after PushCommand; here there is no worker to end.
+ void NotifyShutdown();
+ void Stop() { stop_source.request_stop(); }
 };
 '''+body+r'''
 int main() {
