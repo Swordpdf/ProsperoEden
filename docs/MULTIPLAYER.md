@@ -32,9 +32,10 @@ and optional room password from the room operator. The usual UDP port is **24872
    its **Local Wireless** mode. One player creates the in-game session and others join it.
    The in-game host can be different from the computer running the room server.
 
-Address, port and nickname are remembered per profile. Passwords are not saved and are
-cleared from the form after a connection attempt; enter them again for a retry. Leave the
-room before changing profiles or connection details.
+Address, port, nickname and password are remembered per profile when joining. The password
+is stored as plain text in that profile's `multiplayer.password` configuration field and
+remains available for retries. The form masks it. Leave the room before changing profiles
+or connection details. To remove a saved password, clear the field and attempt a join.
 
 While connected, Cross chooses **Leave room**. Square chooses **Go offline**, including
 after a failed join. Circle returns to the previous launcher screen without leaving a

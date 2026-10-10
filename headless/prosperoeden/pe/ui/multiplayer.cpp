@@ -46,7 +46,6 @@ void Launcher::press_multiplayer(Key key) {
         if (idle) {
             if (!services_.connect_room(room_connection_))
                 say(tr("Could not start the connection or save its settings."), true);
-            room_connection_.password.clear();
         } else services_.leave_room();
         return;
     }

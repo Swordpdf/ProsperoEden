@@ -745,17 +745,21 @@ inline Multiplayer::Connection LoadRoomConnection(const std::string& file = Sett
     Multiplayer::Connection result;
     result.host = Settings::String(document, Settings::Json::json_pointer("/multiplayer/host"));
     result.nickname = Settings::String(document, Settings::Json::json_pointer("/multiplayer/nickname"));
+    result.password = Settings::String(document, Settings::Json::json_pointer("/multiplayer/password"));
     const int port = Settings::Int(document, Settings::Json::json_pointer("/multiplayer/port"), 24872);
     result.port = port > 0 && port <= 65535 ? port : 24872;
     if (result.host.size() > 253) result.host.clear();
     if (result.nickname.size() > 20) result.nickname.clear();
+    if (result.password.size() > 128) result.password.clear();
     return result;
 }
 
 inline bool SaveRoomConnection(const Multiplayer::Connection& value,
                                const std::string& file = SettingsFile()) {
+    if (value.password.size() > 128) return false;
     auto document = Settings::Load(file);
-    document["multiplayer"] = {{"host", value.host}, {"port", value.port}, {"nickname", value.nickname}};
+    document["multiplayer"] = {{"host", value.host}, {"port", value.port},
+                               {"nickname", value.nickname}, {"password", value.password}};
     return Settings::Write(document, file);
 }
 

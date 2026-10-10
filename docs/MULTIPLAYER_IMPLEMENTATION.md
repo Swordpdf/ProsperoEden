@@ -73,7 +73,7 @@ Settings > Multiplayer offers address, UDP port, nickname and password entry, jo
 room status and a scrollable member list with each reported game/version. The connected
 view shows eight members at a time and keeps the scroll position valid when players leave.
 Cross leaves from that view; Square returns to offline mode, including after a failed join.
-Address, port and nickname use the existing per-profile settings store; passwords are omitted.
+Address, port, nickname and password use the existing per-profile settings store. Password persistence was explicitly requested during hardware testing.
 Changing profiles requires leaving the room first. The system keyboard runs outside the draw
 thread and is cancelled before launcher destruction.
 
@@ -85,7 +85,7 @@ full application and game qualification.
 
 Offline evidence: the real controller test covers game-start gating, blocked connect/leave during
 a game, and the retained proxy-mode flag after loss. The existing settings regression passes with
-password omission and unrelated preference preservation. The complete launcher preview suite
+password round-trip, clearing, length limits and unrelated preference preservation. The complete launcher preview suite
 passes, including rendered offline/connecting/connected/failed room states and the Go offline
 action; the connected dialog was visually inspected. Native SDK syntax checks pass for main,
 frontend, services, controller and the derived BSD implementation, using cached SDK/dependency

@@ -193,7 +193,7 @@ The connected view shows room name, members, each member's reported game/version
 
 Show specific errors for name collision, wrong password, protocol mismatch, full room, ban/kick, connection timeout/loss, and native networking failure. Do not collapse a wrong password into “check Wi-Fi.” A failed attempt must allow editing and retry without restarting the app.
 
-Persist only the last endpoint and nickname initially. Keep passwords in memory for the current app session and exclude them from diagnostic dumps. Missing configuration must preserve offline behavior. Use existing input facilities where suitable; if the launcher lacks a reusable text-entry adapter, add the narrow service operation needed for these fields and its host-preview equivalent. Confirm password masking.
+Persist the last endpoint, nickname and room password per profile, as requested during hardware testing. Store the password in the existing configuration file, mask it in the form, retain it for retries and exclude it from diagnostics. Missing configuration must preserve offline behavior. Use existing input facilities where suitable; if the launcher lacks a reusable text-entry adapter, add the narrow service operation needed for these fields and its host-preview equivalent. Confirm password masking.
 
 Example proposed addition to the existing settings file, not a replacement of it:
 

@@ -53,12 +53,17 @@ int main() {
     assert(Eden::LoadPreferences(file).volume == 40);
     assert(Read(file).find("\"renderer\": \"opengl\"") != std::string::npos);
 
-    const Eden::Multiplayer::Connection room{"127.0.0.1", 24872, "PlayerOne", "never-store-this-password"};
+    Eden::Multiplayer::Connection room{"127.0.0.1", 24872, "PlayerOne", "saved-room-password"};
     assert(Eden::SaveRoomConnection(room, file));
     const auto stored_room = Eden::LoadRoomConnection(file);
     assert(stored_room.host == room.host && stored_room.port == room.port && stored_room.nickname == room.nickname);
-    assert(stored_room.password.empty());
-    assert(Read(file).find("never-store-this-password") == std::string::npos);
+    assert(stored_room.password == room.password);
+    room.password.assign(129, 'x');
+    assert(!Eden::SaveRoomConnection(room, file));
+    assert(Eden::LoadRoomConnection(file).password == stored_room.password);
+    room.password.clear();
+    assert(Eden::SaveRoomConnection(room, file));
+    assert(Eden::LoadRoomConnection(file).password.empty());
     assert(Eden::LoadPreferences(file).volume == 40);
 
     // Language: English (US) by default, saved by code, invalid values rejected or ignored.

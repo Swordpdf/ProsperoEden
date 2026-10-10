@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "multiplayer.h"
 #include "multiplayer_session.h"
+#include "diagnostics.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -71,6 +72,7 @@ struct RoomClient::Impl {
     void Fail(std::string message) {
         std::lock_guard lock(mutex);
         if (snapshot.phase == Phase::Disconnecting) return;
+        Eden::Report("multiplayer", message.c_str());
         if (!joining) snapshot.phase = Phase::Failed;
         snapshot.error = std::move(message);
         snapshot.room.clear();
