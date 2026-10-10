@@ -4,28 +4,80 @@
 #include <cassert>
 #include <chrono>
 #include <cstdlib>
+#include <cstring>
 #include <thread>
 #include "common/logging.h"
 #include "common/assert.h"
+#include "common/settings.h"
+#include "core/hle/service/sockets/sockets_translate.h"
 #include "network/network.h"
 #include "core/internal_network/socket_proxy.h"
 #include "multiplayer_proxy.h"
 #include "multiplayer.h"
 #include "multiplayer_session.h"
+#include "multiplayer_descriptors.h"
 #include "enet/enet.h"
 #include "network/packet.h"
 
-// Compile the generated production destructor without the unrelated IPC framework.
+// Compile production BSD operations without the unrelated IPC framework.
 namespace Service::Sockets {
 class BSD_USA {
 public:
-    struct FileDescriptor { std::shared_ptr<Network::SocketBase> socket; };
+    using FileDescriptor = Eden::Multiplayer::SocketDescriptor;
+    static constexpr auto MAX_FD = Eden::Multiplayer::SocketDescriptors::Capacity;
     static inline std::atomic<unsigned> live_instances{};
-    static inline std::array<std::optional<FileDescriptor>, 128> file_descriptors{};
+    static inline Eden::Multiplayer::SocketDescriptors file_descriptors;
+    bool is_user = true;
     BSD_USA() { ++live_instances; }
     ~BSD_USA();
+    std::pair<s32, Errno> SocketImpl(Domain, Type, Protocol);
+    std::pair<s32, Errno> PollImpl(std::vector<u8>&, std::span<const u8>, s32, s32);
+    std::pair<s32, Errno> AcceptImpl(s32, std::vector<u8>&);
+    Errno CloseImpl(s32);
+    std::variant<s32, Errno> DuplicateSocketImpl(s32);
 };
+#include "bsd_helpers.cpp"
 #include "bsd_lifetime.cpp"
+#include "multiplayer_bsd.inc"
+}
+
+void CheckBsdService() {
+    using namespace Service::Sockets;
+    BSD_USA bsd;
+    Eden::Multiplayer::guest_socket_mode = 1;
+    const auto [fd, error] = bsd.SocketImpl(Domain::INET, Type::DGRAM, Protocol::UDP);
+    assert(fd == 0 && error == Errno::SUCCESS);
+    const auto duplicate = std::get<s32>(bsd.DuplicateSocketImpl(fd));
+    assert(duplicate == 1);
+    assert(bsd.CloseImpl(duplicate) == Errno::SUCCESS);
+    assert(bsd.file_descriptors.Get(fd)->socket->IsOpened());
+    std::array<PollFD, 3> input{{{fd, PollEvents::Out, {}}, {128, PollEvents::In, {}}, {-1, PollEvents::In, {}}}};
+    std::vector<u8> read(sizeof(input)), written(sizeof(input));
+    std::memcpy(read.data(), input.data(), read.size());
+    assert(bsd.PollImpl(written, read, 3, 0).first == 2);
+    std::memcpy(input.data(), written.data(), written.size());
+    assert(input[0].revents == PollEvents::Out && input[1].revents == PollEvents::Nval &&
+           input[2].revents == PollEvents{});
+    assert(bsd.PollImpl(written, {}, 1, 0).second == Errno::INVAL);
+    assert(bsd.PollImpl(written, read, 129, 0).second == Errno::INVAL);
+    assert(bsd.PollImpl(written, read, 1, -2).second == Errno::INVAL);
+    std::vector<u8> empty;
+    assert(bsd.PollImpl(empty, read, 1, 0).second == Errno::INVAL);
+    assert(bsd.AcceptImpl(fd, written).second == Errno::NOTCONN);
+    std::weak_ptr<Network::SocketBase> released = bsd.file_descriptors.Get(fd)->socket;
+    input[0] = {fd, PollEvents::In, {}};
+    std::memcpy(read.data(), input.data(), read.size());
+    std::jthread close([&] {
+        std::this_thread::sleep_for(std::chrono::milliseconds{20});
+        assert(bsd.CloseImpl(fd) == Errno::SUCCESS);
+    });
+    assert(bsd.PollImpl(written, read, 1, -1).first == 1);
+    close.join();
+    std::memcpy(input.data(), written.data(), sizeof(PollFD));
+    assert(input[0].revents == PollEvents::Nval && released.expired());
+    assert(bsd.CloseImpl(fd) == Errno::BADF);
+    assert(std::get<Errno>(bsd.DuplicateSocketImpl(128)) == Errno::BADF);
+    Eden::Multiplayer::guest_socket_mode = -1;
 }
 
 void CheckBsdLifetime() {
@@ -35,19 +87,64 @@ void CheckBsdLifetime() {
     auto last = std::make_unique<BSD_USA>();
     auto socket = std::make_shared<Network::ProxySocket>();
     socket->Initialize(Network::Domain::INET, Network::Type::DGRAM, Network::Protocol::UDP);
-    BSD_USA::file_descriptors[0] = BSD_USA::FileDescriptor{socket};
-    BSD_USA::file_descriptors[1] = BSD_USA::FileDescriptor{socket};
+    assert(BSD_USA::file_descriptors.Insert(socket, false) == 0);
+    assert(BSD_USA::file_descriptors.Duplicate(0).first == 1);
     first.reset();
     second.reset();
-    assert(socket->IsOpened() && BSD_USA::file_descriptors[0]);
+    assert(socket->IsOpened() && BSD_USA::file_descriptors.Get(0));
     last.reset();
     assert(!socket->IsOpened() && BSD_USA::live_instances == 0);
-    for (const auto& entry : BSD_USA::file_descriptors) assert(!entry);
+    for (int fd = 0; fd < 128; ++fd) assert(!BSD_USA::file_descriptors.Get(fd));
     std::weak_ptr<Network::ProxySocket> released = socket;
     socket.reset();
     assert(released.expired());
     BSD_USA next_game;
-    for (const auto& entry : BSD_USA::file_descriptors) assert(!entry);
+    for (int fd = 0; fd < 128; ++fd) assert(!BSD_USA::file_descriptors.Get(fd));
+}
+
+void CheckDescriptors() {
+    using namespace Network;
+    Eden::Multiplayer::SocketDescriptors table;
+    const auto make = [] {
+        auto socket = std::make_shared<ProxySocket>();
+        socket->Initialize(Domain::INET, Type::DGRAM, Protocol::UDP);
+        return socket;
+    };
+    assert(!table.Get(-1) && !table.Get(128));
+    assert(table.Close(128) == Errno::BADF && table.Duplicate(-1).second == Errno::BADF);
+    assert(table.Insert(nullptr, false) == -1);
+    auto original = make();
+    assert(table.Insert(original, false) == 0);
+    auto retained = table.Get(0);
+    assert(table.Duplicate(0).first == 1);
+    retained->flags = FLAG_O_NONBLOCK;
+    assert(table.Get(1)->flags == FLAG_O_NONBLOCK);
+    assert(table.Close(0) == Errno::SUCCESS && original->IsOpened());
+    auto replacement = make();
+    assert(table.Insert(replacement, false) == 0);
+    assert(table.Close(1) == Errno::SUCCESS && !original->IsOpened());
+    assert(retained->socket == original && table.Get(0)->socket == replacement);
+    table.Clear();
+    assert(!replacement->IsOpened());
+    for (int fd = 0; fd < 128; ++fd) assert(table.Insert(make(), false) == fd);
+    assert(table.Insert(make(), false) == -1 && table.Duplicate(0).second == Errno::MFILE);
+    table.Clear();
+    std::vector<std::jthread> workers;
+    for (int thread = 0; thread < 4; ++thread) workers.emplace_back([&] {
+        for (int i = 0; i < 100; ++i) {
+            auto socket = make();
+            const auto fd = table.Insert(socket, false);
+            assert(fd >= 0);
+            auto snapshot = table.Get(fd);
+            const auto [duplicate, error] = table.Duplicate(fd);
+            assert(error == Errno::SUCCESS && snapshot->socket == socket);
+            assert(table.Close(fd) == Errno::SUCCESS && socket->IsOpened());
+            assert(table.Close(duplicate) == Errno::SUCCESS && !socket->IsOpened());
+            assert(snapshot->socket == socket);
+        }
+    });
+    workers.clear();
+    for (int fd = 0; fd < 128; ++fd) assert(!table.Get(fd));
 }
 
 template <typename Predicate>
@@ -391,6 +488,8 @@ int main(int argc, char** argv) {
     assert(Network::Init());
     CheckProxySocket();
     CheckBsdLifetime();
+    CheckDescriptors();
+    CheckBsdService();
     CheckProxyPoll();
     {
         Network::Room room;

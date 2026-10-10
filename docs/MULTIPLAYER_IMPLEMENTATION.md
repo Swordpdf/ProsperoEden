@@ -36,6 +36,14 @@ predates this checkout; the new work does not include the old development branch
   real proxy sockets and a minimal stand-in for the IPC class; it verifies the table survives
   earlier service destruction and is empty for the next game. Full game teardown remains
   a console acceptance gate.
+- Protect the BSD descriptor table with short locks and retain shared ownership for each
+  socket operation and poll. Publish only initialized sockets, keep duplicated descriptors
+  usable until their last alias closes, and preserve existing operations across descriptor
+  reuse. Blocking calls run outside the table lock. Poll validates both buffer lengths and
+  descriptor bounds; invalid entries report `Nval`, and negative entries are ignored.
+  Tests compile the production operation overrides with the real socket and translation
+  code, replacing only the unrelated IPC framework. They cover capacity, four concurrent
+  descriptor workers, reuse, duplicate/close, malformed poll buffers and close during poll.
 - Run the actual room server and derived client over loopback: wrong password, retry,
   two members with distinct virtual IPs, LDN broadcast, directed proxy traffic and server loss.
 - Run the standalone controller against that server: hostname resolution, input validation,
@@ -90,6 +98,7 @@ to invalidate those objects. Both build wrappers require every active consumer o
 modified multiplayer headers to have used the derived declaration.
 
 The packet/LDN and room/proxy test sources run under AddressSanitizer and UndefinedBehaviorSanitizer.
+The expanded room/proxy/BSD suite also passed ThreadSanitizer using clang 18.
 The loopback check compiles the modified client against the pinned server source and
 links existing, uninstrumented host common/ENet/fmt dependencies. It is a transport test,
 not a game test.
@@ -98,12 +107,14 @@ not a game test.
 python3 tools/check-multiplayer.py --source /path/to/pinned/eden
 python3 tools/check-multiplayer.py --source /path/to/pinned/eden \
     --host-cache /path/to/existing/host-cache
+CXX=clang++-18 python3 tools/check-multiplayer.py --source /path/to/pinned/eden \
+    --host-cache /path/to/existing/host-cache --thread-sanitizer
 ```
 
 ## Remaining before feature qualification
 
-- Audit guest-to-guest descriptor concurrency separately from the eliminated room-thread
-  descriptor traversal; qualify socket cleanup and poll behavior in actual game transitions.
+- Qualify socket cleanup and poll behavior in actual game transitions, including the
+  existing upstream proxy TCP limitations; offline concurrency tests do not prove game compatibility.
 - Qualify cancellation and bounded queues in the native application under room loss.
 - Qualify the integrated launcher, system keyboard and game transitions in a full application.
 - Build the full host candidate and repeat affected native checks as remaining socket fixes land.

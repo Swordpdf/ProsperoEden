@@ -10,6 +10,17 @@ function(multiplayer_replace variable before after)
     set(${variable} "${result}" PARENT_SCOPE)
 endfunction()
 
+function(multiplayer_remove_between variable begin_marker end_marker)
+    string(FIND "${${variable}}" "${begin_marker}" first)
+    string(FIND "${${variable}}" "${end_marker}" last)
+    if(first LESS 0 OR last LESS first)
+        message(FATAL_ERROR "Pinned multiplayer function changed: ${begin_marker}")
+    endif()
+    string(SUBSTRING "${${variable}}" 0 ${first} prefix)
+    string(SUBSTRING "${${variable}}" ${last} -1 suffix)
+    set(${variable} "${prefix}${suffix}" PARENT_SCOPE)
+endfunction()
+
 file(READ "${MULTIPLAYER_SOURCE}/src/network/packet.h" packet_header)
 multiplayer_replace(packet_header "#include <array>" "#include <array>\n#include <string>")
 multiplayer_replace(packet_header [=[    out_data.resize(size);
@@ -309,9 +320,18 @@ configure_file("${MULTIPLAYER_OUTPUT}/socket_proxy.cpp.in"
     "${MULTIPLAYER_OUTPUT}/socket_proxy.cpp" COPYONLY)
 
 file(READ "${MULTIPLAYER_SOURCE}/src/core/hle/service/sockets/bsd.h" bsd_header)
-multiplayer_replace(bsd_header "#include <memory>" "#include <memory>\n#include <atomic>")
+multiplayer_replace(bsd_header "#include <memory>" "#include <memory>\n#include <atomic>\n#include \"multiplayer_descriptors.h\"")
+multiplayer_replace(bsd_header "    static constexpr size_t MAX_FD = 128;"
+    "    static constexpr size_t MAX_FD = Eden::Multiplayer::SocketDescriptors::Capacity;")
+multiplayer_replace(bsd_header [=[    struct FileDescriptor {
+        std::shared_ptr<Network::SocketBase> socket;
+        s32 flags = 0;
+        bool is_connection_based = false;
+    };]=] "    using FileDescriptor = Eden::Multiplayer::SocketDescriptor;")
+multiplayer_replace(bsd_header "    s32 FindFreeFileDescriptorHandle() noexcept;" "")
+multiplayer_replace(bsd_header "    bool IsFileDescriptorValid(s32 fd) const noexcept;" "")
 multiplayer_replace(bsd_header "    static inline std::array<std::optional<FileDescriptor>, MAX_FD> file_descriptors{};"
-    "    static inline std::atomic<unsigned> live_instances{};\n    static inline std::array<std::optional<FileDescriptor>, MAX_FD> file_descriptors{};")
+    "    static inline std::atomic<unsigned> live_instances{};\n    static inline Eden::Multiplayer::SocketDescriptors file_descriptors;")
 multiplayer_replace(bsd_header [=[    /// Callback to parse and handle a received wifi packet.
     void OnProxyPacketReceived(const Network::ProxyPacket& packet);]=] "")
 multiplayer_replace(bsd_header [=[    // Callback identifier for the OnProxyPacketReceived event.
@@ -339,10 +359,7 @@ multiplayer_replace(bsd_source [=[BSD_USA::~BSD_USA() {
     ASSERT(previous > 0);
     if (previous != 1) return;
     // All BSD services are gone; no descriptor may survive into the next game.
-    for (auto& entry : file_descriptors) {
-        if (entry && entry->socket && entry->socket->IsOpened()) entry->socket->Close();
-        entry.reset();
-    }
+    file_descriptors.Clear();
 }]=])
 multiplayer_replace(bsd_source [=[    if (auto room_member = Network::GetRoomMember().lock()) {
         proxy_packet_received = room_member->BindOnProxyPacketReceived(
@@ -352,9 +369,16 @@ multiplayer_replace(bsd_source [=[    if (auto room_member = Network::GetRoomMem
     }]=] "    ++live_instances; // Proxy sockets own their receive subscriptions.")
 multiplayer_replace(bsd_source "#include \"network/network.h\""
     "#include \"network/network.h\"\n#include \"multiplayer_session.h\"")
-multiplayer_replace(bsd_source "    if (room_member && room_member->IsConnected()) {"
-    [=[    const int room_mode = Eden::Multiplayer::guest_socket_mode.load();
-    if (room_mode == 1 || (room_mode < 0 && room_member && room_member->IsConnected())) {]=])
+multiplayer_remove_between(bsd_source "std::pair<s32, Errno> BSD_USA::SocketImpl("
+    "Errno BSD_USA::BindImpl(")
+multiplayer_remove_between(bsd_source "Errno BSD_USA::CloseImpl("
+    "std::optional<std::shared_ptr<Network::SocketBase>> BSD_USA::GetSocket(")
+multiplayer_remove_between(bsd_source "s32 BSD_USA::FindFreeFileDescriptorHandle()"
+    "void BSD_USA::BuildErrnoResponse(")
+multiplayer_replace(bsd_source "    if (!IsFileDescriptorValid(fd)) {"
+    "    const auto descriptor_entry = file_descriptors.Get(fd);\n    if (!descriptor_entry) {")
+multiplayer_replace(bsd_source "file_descriptors[fd]" "descriptor_entry")
+string(APPEND bsd_source "\nnamespace Service::Sockets {\n#include \"multiplayer_bsd.inc\"\n}\n")
 file(WRITE "${MULTIPLAYER_OUTPUT}/bsd.cpp.in" "${bsd_source}")
 configure_file("${MULTIPLAYER_OUTPUT}/bsd.cpp.in" "${MULTIPLAYER_OUTPUT}/bsd.cpp" COPYONLY)
 

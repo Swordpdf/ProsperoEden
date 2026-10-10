@@ -14,7 +14,10 @@ def main():
     parser.add_argument("--source", required=True, type=Path, help="Pinned Eden source tree")
     parser.add_argument("--host-cache", type=Path,
                         help="Optional existing host cache with common/ENet/fmt archives")
+    parser.add_argument("--thread-sanitizer", action="store_true",
+                        help="Check data races instead of address/undefined behavior")
     args = parser.parse_args()
+    sanitizer = "-fsanitize=thread" if args.thread_sanitizer else "-fsanitize=address,undefined"
     root = Path(__file__).resolve().parents[1]
     source = args.source.resolve()
     with tempfile.TemporaryDirectory(prefix="eden-multiplayer-") as directory:
@@ -28,7 +31,7 @@ def main():
                     source.parent / "fmt-12.1.0/include"]
         subprocess.run([
             os.environ.get("CXX", "clang++"), "-std=c++20", "-g", "-O1",
-            "-fsanitize=address,undefined", "-fno-omit-frame-pointer",
+            sanitizer, "-fno-omit-frame-pointer",
             "-I", str(output), "-I", str(source / "src"),
             *[arg for path in includes for arg in ("-I", str(path))],
             str(root / "headless/multiplayer_packets_check.cpp"),
@@ -40,19 +43,22 @@ def main():
             destructor = bsd.split("BSD_USA::~BSD_USA() {", 1)[1].split(
                 "std::unique_lock<std::mutex> BSD_USA::LockService()", 1)[0]
             (output / "bsd_lifetime.cpp").write_text("BSD_USA::~BSD_USA() {" + destructor)
+            (output / "bsd_helpers.cpp").write_text(bsd.split("namespace {", 1)[1].split(
+                "} // Anonymous namespace", 1)[0])
             cache = args.host_cache.resolve()
             fmt = cache / "source/.cache/cpm/fmt/12.1.0/include"
             enet = cache / "source/.cache/cpm/enet/v1.3.18/include"
             executable = output / "room-check"
             subprocess.run([
                 os.environ.get("CXX", "clang++"), "-std=c++20", "-g", "-O1", "-pthread",
-                "-fsanitize=address,undefined", "-fno-omit-frame-pointer",
+                sanitizer, "-fno-omit-frame-pointer",
                 "-I", str(output / "socket-headers"), "-I", str(output), "-I", str(root / "headless"),
                 "-I", str(source / "src"), "-I", str(fmt), "-I", str(enet),
                 str(root / "headless/multiplayer_room_check.cpp"),
                 str(root / "headless/multiplayer.cpp"),
                 str(output / "room_member.cpp"), str(output / "packet.cpp"),
                 str(output / "socket_proxy.cpp"),
+                str(source / "src/core/hle/service/sockets/sockets_translate.cpp"),
                 str(output / "socket_network.cpp"),
                 str(source / "src/core/internal_network/network_interface.cpp"),
                 *[str(source / "src/network" / name) for name in
@@ -73,6 +79,7 @@ def main():
             print("Proxy ownership: real-room delivery, shared references, concurrent destruction, close wakeup: PASS")
             print("Proxy poll: timeout, readiness, mixed native sockets, shutdown interrupt, close: PASS")
             print("Generated BSD teardown: shared table survives until final service, closes and clears for next game: PASS")
+            print("BSD descriptors: concurrent ownership, duplicate/close, fd reuse, poll buffers and close-during-poll: PASS")
             print("Room controller: hostname, validation, retry, members, leave, loss, cancellation: PASS")
             print("Room send budgets: packet/byte/count limits and stalled ENet peer: PASS")
     print("Multiplayer packet round-trip, truncation, allocation bounds and overflow: PASS")
