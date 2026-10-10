@@ -9,6 +9,8 @@
 #include "network/network.h"
 #include "core/internal_network/socket_proxy.h"
 #include "multiplayer_proxy.h"
+#include "multiplayer.h"
+#include "enet/enet.h"
 
 template <typename Predicate>
 void Wait(Predicate predicate) {
@@ -87,6 +89,76 @@ void CheckProxySocket() {
         assert(socket.RecvFrom(0, bytes, nullptr).first == static_cast<s32>(bytes.size()));
 }
 
+void CheckController(u16 port) {
+    using namespace Eden::Multiplayer;
+    RoomClient client;
+    Network::Room room;
+    assert(room.Create("Controller test", "", "127.0.0.1", port, "secret", 2,
+                      "", {}, std::make_unique<Network::VerifyUser::NullBackend>()));
+    Connection connection{"localhost", port, "PlayerOne", "wrong"};
+    auto invalid = connection;
+    invalid.nickname = "x";
+    assert(!client.Connect(invalid));
+    assert(client.Connect(connection));
+    Wait([&] { return client.GetSnapshot().phase == Phase::Failed; });
+    assert(client.GetSnapshot().error == "The room password is incorrect.");
+    connection.password = "secret";
+    assert(client.Connect(connection));
+    Wait([&] { return client.GetSnapshot().phase == Phase::Connected; });
+    const auto snapshot = client.GetSnapshot();
+    assert(snapshot.room == "Controller test" && snapshot.members == std::vector<std::string>{"PlayerOne"});
+    assert(!client.Connect(connection));
+    client.Leave();
+    Wait([&] { return client.GetSnapshot().phase == Phase::Idle; });
+    assert(client.GetSnapshot().members.empty());
+    assert(client.Connect(connection));
+    Wait([&] { return client.GetSnapshot().phase == Phase::Connected; });
+    room.Destroy();
+    Wait([&] { return client.GetSnapshot().phase == Phase::Failed; });
+    assert(client.GetSnapshot().error == "The connection to the room was lost.");
+    connection.host = "127.0.0.1";
+    assert(client.Connect(connection));
+    std::this_thread::sleep_for(std::chrono::milliseconds{100});
+    const auto start = std::chrono::steady_clock::now();
+    client.Leave();
+    Wait([&] { return client.GetSnapshot().phase == Phase::Idle; });
+    assert(std::chrono::steady_clock::now() - start < std::chrono::seconds{2});
+    assert(client.Connect(connection));
+    // Destruction must also cancel a join without waiting for its five-second timeout.
+}
+
+void CheckMalformedRoom(u16 port) {
+    using namespace Eden::Multiplayer;
+    RoomClient client;
+    ENetAddress address{};
+    assert(enet_address_set_host_ip(&address, "127.0.0.1") == 0);
+    address.port = port;
+    auto* server = enet_host_create(&address, 1, Network::NumChannels, 0, 0);
+    assert(server);
+    std::jthread replies([&](std::stop_token stop) {
+        while (!stop.stop_requested()) {
+            ENetEvent event{};
+            if (enet_host_service(server, &event, 10) <= 0) continue;
+            if (event.type == ENET_EVENT_TYPE_RECEIVE) {
+                enet_packet_destroy(event.packet);
+                // Structurally valid, but missing the preceding room/member information.
+                const u8 reply[]{Network::IdJoinSuccess, 192, 168, 0, 1};
+                auto* packet = enet_packet_create(reply, sizeof(reply), ENET_PACKET_FLAG_RELIABLE);
+                assert(enet_peer_send(event.peer, 0, packet) == 0);
+                enet_host_flush(server);
+            }
+        }
+    });
+    assert(client.Connect({"127.0.0.1", port, "PlayerOne", ""}));
+    Wait([&] { return client.GetSnapshot().phase == Phase::Failed; });
+    assert(client.GetSnapshot().error == "The room connection failed.");
+    client.Leave();
+    Wait([&] { return client.GetSnapshot().phase == Phase::Idle; });
+    replies.request_stop();
+    replies.join();
+    enet_host_destroy(server);
+}
+
 int main(int argc, char** argv) {
     assert(argc == 2);
     const auto port = static_cast<u16>(std::strtoul(argv[1], nullptr, 10));
@@ -137,4 +209,13 @@ int main(int argc, char** argv) {
         first.Unbind(errors);
     }
     Network::Shutdown();
+    CheckController(port);
+    CheckMalformedRoom(port);
+    const auto start = std::chrono::steady_clock::now();
+    {
+        Eden::Multiplayer::RoomClient client;
+        assert(client.Connect({"127.0.0.1", port, "PlayerOne", ""}));
+        std::this_thread::sleep_for(std::chrono::milliseconds{100});
+    }
+    assert(std::chrono::steady_clock::now() - start < std::chrono::seconds{2});
 }

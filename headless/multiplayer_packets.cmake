@@ -51,9 +51,16 @@ configure_file("${MULTIPLAYER_OUTPUT}/network/packet.h.in"
 file(WRITE "${MULTIPLAYER_OUTPUT}/packet.cpp.in" "${packet_source}")
 configure_file("${MULTIPLAYER_OUTPUT}/packet.cpp.in" "${MULTIPLAYER_OUTPUT}/packet.cpp" COPYONLY)
 
+file(READ "${MULTIPLAYER_SOURCE}/src/network/room_member.h" member_header)
+multiplayer_replace(member_header "#include <functional>" "#include <functional>\n#include <stop_token>")
+multiplayer_replace(member_header "const std::string& password = \"\", const std::string& token = \"\");"
+    "const std::string& password = \"\", const std::string& token = \"\",\n              std::stop_token stop = {});")
+file(WRITE "${MULTIPLAYER_OUTPUT}/network/room_member.h.in" "${member_header}")
+configure_file("${MULTIPLAYER_OUTPUT}/network/room_member.h.in"
+    "${MULTIPLAYER_OUTPUT}/network/room_member.h" COPYONLY)
 file(READ "${MULTIPLAYER_SOURCE}/src/network/room_member.cpp" member_source)
 multiplayer_replace(member_source "#include <atomic>"
-    "#include <atomic>\n#include \"multiplayer_validation.h\"")
+    "#include <atomic>\n#include <chrono>\n#include \"multiplayer_validation.h\"")
 multiplayer_replace(member_source [=[                case ENET_EVENT_TYPE_RECEIVE:
                     switch (event.packet->data[0]) {]=] [=[                case ENET_EVENT_TYPE_RECEIVE:
                     if (!Eden::Multiplayer::ValidRoomPacket(
@@ -65,9 +72,65 @@ multiplayer_replace(member_source [=[                case ENET_EVENT_TYPE_RECEIV
                     }
                     switch (event.packet->data[0]) {]=])
 multiplayer_replace(member_source [=[        ASSERT_MSG(room_member_impl->client != nullptr, "Could not create client");]=]
-    [=[        ASSERT_MSG(room_member_impl->client != nullptr, "Could not create client");
+    [=[        if (!room_member_impl->client) {
+            room_member_impl->SetState(State::Idle);
+            room_member_impl->SetError(Error::CouldNotConnect);
+            return;
+        }
         room_member_impl->client->maximumPacketSize = Eden::Multiplayer::MaxRoomPacketBytes;
         room_member_impl->client->maximumWaitingData = Eden::Multiplayer::MaxRoomPacketBytes;]=])
+multiplayer_replace(member_source "const std::string& password, const std::string& token) {"
+    "const std::string& password, const std::string& token, std::stop_token stop) {")
+multiplayer_replace(member_source "    enet_address_set_host(&address, server_addr);"
+    [=[    if (stop.stop_requested()) {
+        room_member_impl->SetState(State::Idle);
+        return;
+    }
+    if (enet_address_set_host(&address, server_addr) != 0) {
+        room_member_impl->SetState(State::Idle);
+        room_member_impl->SetError(Error::CouldNotConnect);
+        return;
+    }]=])
+multiplayer_replace(member_source
+    "    int net = enet_host_service(room_member_impl->client, &event, ConnectionTimeoutMs);"
+    [=[    const auto deadline = std::chrono::steady_clock::now() +
+                          std::chrono::milliseconds{ConnectionTimeoutMs};
+    int net = 0;
+    while (!stop.stop_requested() && std::chrono::steady_clock::now() < deadline) {
+        net = enet_host_service(room_member_impl->client, &event, 20);
+        if (net != 0) break;
+    }
+    if (stop.stop_requested()) {
+        if (net > 0 && event.type == ENET_EVENT_TYPE_RECEIVE) enet_packet_destroy(event.packet);
+        enet_peer_reset(room_member_impl->server);
+        room_member_impl->server = nullptr;
+        room_member_impl->SetState(State::Idle);
+        return;
+    }]=])
+multiplayer_replace(member_source [=[        enet_peer_disconnect(room_member_impl->server, 0);
+        room_member_impl->SetState(State::Idle);]=] [=[        if (net > 0 && event.type == ENET_EVENT_TYPE_RECEIVE) enet_packet_destroy(event.packet);
+        enet_peer_reset(room_member_impl->server);
+        room_member_impl->server = nullptr;
+        room_member_impl->SetState(State::Idle);]=])
+multiplayer_replace(member_source [=[    while (enet_host_service(client, &event, ConnectionTimeoutMs) > 0) {]=]
+    [=[    const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds{500};
+    while (std::chrono::steady_clock::now() < deadline) {
+        if (enet_host_service(client, &event, 20) <= 0) continue;]=])
+multiplayer_replace(member_source [=[                        ASSERT_MSG(member_information.size() > 0,
+                                "We have not yet received member information.");]=]
+    [=[                        if (state != State::Joining || member_information.empty()) {
+                            SetState(State::Idle);
+                            SetError(Error::UnknownError);
+                            break;
+                        }]=])
+multiplayer_replace(member_source [=[                    if (state == State::Joined || state == State::Moderator) {]=]
+    [=[                    if (IsConnected()) {]=])
+multiplayer_replace(member_source [=[    room_member_impl->client = nullptr;
+}]=] [=[    room_member_impl->client = nullptr;
+    room_member_impl->server = nullptr;
+    std::lock_guard lock(room_member_impl->send_list_mutex);
+    room_member_impl->send_list.clear();
+}]=])
 file(WRITE "${MULTIPLAYER_OUTPUT}/room_member.cpp.in" "${member_source}")
 configure_file("${MULTIPLAYER_OUTPUT}/room_member.cpp.in"
     "${MULTIPLAYER_OUTPUT}/room_member.cpp" COPYONLY)

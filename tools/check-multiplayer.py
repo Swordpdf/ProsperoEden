@@ -46,6 +46,7 @@ def main():
                 "-I", str(output), "-I", str(root / "headless"),
                 "-I", str(source / "src"), "-I", str(fmt), "-I", str(enet),
                 str(root / "headless/multiplayer_room_check.cpp"),
+                str(root / "headless/multiplayer.cpp"),
                 str(output / "room_member.cpp"), str(output / "packet.cpp"),
                 str(output / "socket_proxy.cpp"),
                 str(source / "src/core/internal_network/network.cpp"),
@@ -65,6 +66,7 @@ def main():
             subprocess.run([str(executable), str(port)], check=True, timeout=40, env=environment)
             print("Real room: password rejection, retry, two members, LDN broadcast, proxy routing, loss: PASS")
             print("Proxy socket: decompression, queue limits, truncation, partial reads, recovery: PASS")
+            print("Room controller: hostname, validation, retry, members, leave, loss, cancellation: PASS")
     print("Multiplayer packet round-trip, truncation, allocation bounds and overflow: PASS")
 
 

@@ -2298,6 +2298,7 @@ target_include_directories(eden-headless PRIVATE "${PORT_BUILD_DIR}/version")
 target_link_libraries(eden-headless PRIVATE core eden-pad)
 # A game's text entry on the PS5's own on-screen keyboard (system_keyboard.h, keyboard_applet.h).
 target_sources(eden-headless PRIVATE "${EDEN_PORT_DIR}/system_keyboard.cpp")
+target_sources(eden-headless PRIVATE "${EDEN_PORT_DIR}/multiplayer.cpp")
 if(PS5_NATIVE)
     target_link_libraries(eden-headless PRIVATE
         "${sdk}/target/lib/libSceImeDialog.so" "${sdk}/target/lib/libSceSysmodule.so"

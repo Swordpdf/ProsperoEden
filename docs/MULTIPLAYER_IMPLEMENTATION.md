@@ -19,6 +19,30 @@ predates this checkout; the new work does not include the old development branch
   truncation and TCP partial-read accounting. This does not implement the upstream TCP stubs.
 - Run the actual room server and derived client over loopback: wrong password, retry,
   two members with distinct virtual IPs, LDN broadcast, directed proxy traffic and server loss.
+- Run the standalone controller against that server: hostname resolution, input validation,
+  wrong-password retry, copied membership, leave/rejoin, room loss, join cancellation and
+  destruction during a pending join. A raw ENet server verifies out-of-order join-success
+  rejection. Cancellation and pending-join destruction complete within the two-second test limit.
+
+## Controller in development
+
+`headless/multiplayer.{h,cpp}` owns the application room client and serializes connect/leave
+operations on a worker. The UI receives copied snapshots, including member names and specific
+join errors. Nickname, host, port and password lengths are validated before connecting.
+Numeric IPv4 endpoints bypass DNS; hostname lookups run separately with a five-second UI
+deadline. Because libc DNS is not cancellable, one abandoned lookup may finish in the
+background. Further hostname lookups are refused while it is still running; numeric endpoints
+remain usable. The lookup owns no controller, ENet or game state.
+
+The derived room client accepts an optional cancellation token for ENet connection attempts,
+limits graceful disconnect cleanup to 500 ms, clears unsent messages on leave, and rejects
+join-success messages received before member information. Existing callers keep their defaults.
+
+The controller is included in the application target but is not yet constructed by the launcher.
+Integration must initialize logging first, create exactly one controller before game services,
+prevent connect/leave/profile changes while game services exist, and stop a running game through
+its normal shutdown path if its room is lost. No gameplay readiness claim follows from the
+standalone controller tests.
 
 The packet/LDN and room/proxy test sources run under AddressSanitizer and UndefinedBehaviorSanitizer.
 The loopback check compiles the modified client against the pinned server source and
@@ -34,7 +58,7 @@ python3 tools/check-multiplayer.py --source /path/to/pinned/eden \
 ## Remaining before feature qualification
 
 - Qualify cancellation, callback ownership and outgoing queue bounds.
-- Add room initialization, controller lifecycle, join/leave/retry and safe game transitions.
+- Integrate the room controller with application lifetime and safe game transitions.
 - Add launcher direct-connect settings and room/member UI with text entry.
 - Build the full host/native candidates and run relevant existing checks.
 - Validate guest LDN and proxy sockets in a game, then internet room play.
