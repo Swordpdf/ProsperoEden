@@ -179,8 +179,15 @@ before the handshake while the LAN room server was listening. The controller had
 accepted the numeric IPv4 address; upstream ENet then called `getaddrinfo` again and returned
 failure before trying numeric parsing. The derived client now tries `enet_address_set_host_ip`
 first, retaining hostname fallback. The room regression forces hostname lookup failure during
-numeric joins, including wrong-password rejection and successful two-member retry. Native
-socket traffic, room joining and gameplay still require successful console tests.
+numeric joins, including wrong-password rejection and successful two-member retry.
+
+After deployment of `06492ef` to `.30` (FW 6.02), the operator reported **Connected**
+against the LAN room server on 2026-10-10. All 66 installed package hashes matched the
+candidate; the existing saved credentials were preserved. This confirms the operator's
+room-join test passed. The server was still listening, but its available output did not
+contain a per-member join entry, so this result is based on the operator's UI observation.
+Leave/rejoin, game transitions, two-player LDN gameplay and PS5 Tailscale transport remain
+unqualified.
 
 - 2026-10-10 | Hardware preparation | 1aae996 | FW 6.02 | partial-pass: deployed; all 66 package files verified in raw FTP mode | results/multiplayer-deploy | operator test pending
 
