@@ -172,6 +172,12 @@ No console application has been launched for this work. Neither PS5 multiplayer 
 integration is qualified yet. Public room browsing and PS5 room hosting remain deferred.
 Issue #89 is explicitly reserved for a separate future follow-up; this PR addresses #98.
 
+- 2026-10-10 | Hardware preparation | 1aae996 | FW 6.02 | partial-pass: deployed; all 66 package files verified in raw FTP mode | results/multiplayer-deploy | operator test pending
+
+The previous application files were backed up before deployment. FTP executable readback
+requires raw mode (`SELF` disables this server's decrypted transfer mode); hashes from
+decrypted readback are not package hashes. Deployment alone does not qualify launch or play.
+
 ## Tailscale source qualification and user guide
 
 The [experimental setup guide](MULTIPLAYER.md) documents room connection, recovery and the
