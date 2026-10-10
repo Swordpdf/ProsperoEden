@@ -20,7 +20,7 @@ constexpr Rect kListPanel{108.0f, 188.0f, 820.0f, 720.0f};
 constexpr Rect kDetailPanel{980.0f, 188.0f, 820.0f, 720.0f};
 constexpr Rect kDialog{550.0f, 180.0f, 820.0f, 720.0f};
 constexpr float kRowsTop = 264.0f;
-constexpr float kRowHeight = 54.0f;
+constexpr float kRowHeight = 50.0f;
 enum Category
 {
     kProfiles,
@@ -33,16 +33,17 @@ enum Category
     kFiles,
     kDownloads,
     kSaveSync,
+    kMultiplayer,
     kLanguage,
     kCategoryCount,
 };
 constexpr const char *kCategories[kCategoryCount] = {
     TR("Profiles"), TR("Video"), TR("Performance"), TR("Audio"), TR("Controls"), TR("Accessibility"),
-    TR("Diagnostics"), TR("Game files"), TR("Downloads"), TR("Save sync"), TR("Language")};
+    TR("Diagnostics"), TR("Game files"), TR("Downloads"), TR("Save sync"), TR("Multiplayer"), TR("Language")};
 // The same as headings: capitals differ by language, so each is its own text.
 constexpr const char *kHeadings[kCategoryCount] = {
     TR("PROFILES"), TR("VIDEO"), TR("PERFORMANCE"), TR("AUDIO"), TR("CONTROLS"), TR("ACCESSIBILITY"),
-    TR("DIAGNOSTICS"), TR("GAME FILES"), TR("DOWNLOADS"), TR("SAVE SYNC"), TR("LANGUAGE")};
+    TR("DIAGNOSTICS"), TR("GAME FILES"), TR("DOWNLOADS"), TR("SAVE SYNC"), TR("MULTIPLAYER"), TR("LANGUAGE")};
 
 // The Video dialog's rows, and the window that shows five of them (placed as a game's settings
 // are).
@@ -156,6 +157,9 @@ void Launcher::press_settings(Key key)
         case kSaveSync:
             open_sync_setup();
             break;
+        case kMultiplayer:
+            open_multiplayer();
+            break;
         case kVideo:
             open_modal(Modal::video);
             video_rows_.visible = kVideoRowsShown;
@@ -221,6 +225,7 @@ void Launcher::draw_settings(Canvas &c)
             return linked == 0 ? std::string{tr("Off")} : fill(tr("{0} of {1} profiles"), {std::to_string(linked),
                                                                                            std::to_string(sync_setup_.profiles.size())});
         }(),
+        services_.room_status().phase == Eden::Multiplayer::Phase::Connected ? tr("Connected") : "",
         pick(services_.language_labels(), prefs_.language),
     };
     for (int row = 0; row < kCategoryCount; ++row)
@@ -351,6 +356,11 @@ void Launcher::draw_settings(Canvas &c)
             lines.push_back({tr("SYNC"), tr("Off")});
         break;
     }
+    case kMultiplayer:
+        about = tr("Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version.");
+        lines = {{tr("CONNECTION"), tr("Room address and UDP port")},
+                 {tr("TAILSCALE"), tr("Use the local UDP forward address")}};
+        break;
     default:
         about = tr("The language games use when they offer it.");
         lines = {{tr("LANGUAGE"), pick(services_.language_labels(), prefs_.language)},

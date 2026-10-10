@@ -24,7 +24,7 @@ predates this checkout; the new work does not include the old development branch
   destruction during a pending join. A raw ENet server verifies out-of-order join-success
   rejection. Cancellation and pending-join destruction complete within the two-second test limit.
 
-## Controller in development
+## Controller and launcher integration
 
 `headless/multiplayer.{h,cpp}` owns the application room client and serializes connect/leave
 operations on a worker. The UI receives copied snapshots, including member names and specific
@@ -38,11 +38,26 @@ The derived room client accepts an optional cancellation token for ENet connecti
 limits graceful disconnect cleanup to 500 ms, clears unsent messages on leave, and rejects
 join-success messages received before member information. Existing callers keep their defaults.
 
-The controller is included in the application target but is not yet constructed by the launcher.
-Integration must initialize logging first, create exactly one controller before game services,
-prevent connect/leave/profile changes while game services exist, and stop a running game through
-its normal shutdown path if its room is lost. No gameplay readiness claim follows from the
-standalone controller tests.
+The native application now initializes logging and one controller before its launcher loop.
+Settings > Multiplayer offers address, UDP port, nickname and password entry, join/cancel,
+room status and member names. Square returns to offline mode, including after a failed join.
+Address, port and nickname use the existing per-profile settings store; passwords are omitted.
+Changing profiles requires leaving the room first. The system keyboard runs outside the draw
+thread and is cancelled before launcher destruction.
+
+Game startup accepts only idle or fully joined connections. While a game exists, the controller
+refuses join/leave operations and preserves its socket mode through room loss: new BSD sockets
+remain proxies until game teardown. The input worker requests the existing normal return-to-menu
+shutdown path on room loss and displays a notice on return. This lifecycle wiring still needs
+full application and game qualification.
+
+Offline evidence: the real controller test covers game-start gating, blocked connect/leave during
+a game, and the retained proxy-mode flag after loss. The existing settings regression passes with
+password omission and unrelated preference preservation. The complete launcher preview suite
+passes, including rendered offline/connecting/connected/failed room states and the Go offline
+action; the connected dialog was visually inspected. Native SDK syntax checks pass for main,
+frontend, services, controller and the derived BSD implementation, using cached SDK/dependency
+headers. These are not a full native build or gameplay tests.
 
 The packet/LDN and room/proxy test sources run under AddressSanitizer and UndefinedBehaviorSanitizer.
 The loopback check compiles the modified client against the pinned server source and
@@ -58,8 +73,7 @@ python3 tools/check-multiplayer.py --source /path/to/pinned/eden \
 ## Remaining before feature qualification
 
 - Qualify cancellation, callback ownership and outgoing queue bounds.
-- Integrate the room controller with application lifetime and safe game transitions.
-- Add launcher direct-connect settings and room/member UI with text entry.
+- Qualify the integrated launcher, system keyboard and game transitions in a full application.
 - Build the full host/native candidates and run relevant existing checks.
 - Validate guest LDN and proxy sockets in a game, then internet room play.
 - Validate holdmysocks' outbound UDP forwarding and investigate the equivalent capability

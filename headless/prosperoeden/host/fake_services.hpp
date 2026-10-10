@@ -30,6 +30,17 @@ class FakeServices final : public ui::Services
     bool import_available = true;
     ui::SaveSource import_source = ui::SaveSource::ryujinx;
     unsigned connected_controllers = 0b0011;
+    Eden::Multiplayer::Snapshot room;
+    Eden::Multiplayer::Snapshot room_status() override { return room; }
+    Eden::Multiplayer::Connection room_connection() override { return {"127.0.0.1", 24872, "PlayerPS5", ""}; }
+    bool connect_room(const Eden::Multiplayer::Connection&) override {
+        room = {Eden::Multiplayer::Phase::Connecting, {}, {}, {}};
+        return true;
+    }
+    void leave_room() override { room = {}; }
+    bool can_launch_game() override {
+        return room.phase == Eden::Multiplayer::Phase::Idle || room.phase == Eden::Multiplayer::Phase::Connected;
+    }
 
     ui::Home home() override;
     std::string clock() override

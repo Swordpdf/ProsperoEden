@@ -169,7 +169,7 @@ int SaveCapture(const std::string& path, int width, int height) {
 }
 #endif
 
-std::string RunApp(const std::string& launch_error, bool first_start) {
+std::string RunApp(const std::string& launch_error, bool first_start, Eden::Multiplayer::RoomClient& rooms) {
     const auto opened = Clock::now();
     // What Settings > Video asks for, and what opened.
     int output = std::clamp(Eden::LoadPreferences().output, 0, static_cast<int>(std::size(Eden::kOutputKeys)) - 1);
@@ -211,7 +211,7 @@ std::string RunApp(const std::string& launch_error, bool first_start) {
         const pe::ui::Fonts fonts{&font, font_texture};
 
         Eden::Report("setup", "Checking supplied keys and firmware");
-        EdenServices services(launch_error);
+        EdenServices services(launch_error, rooms);
         pe::ui::Textures textures(batch, services);
         if (!textures.load_art(Eden::AppFile("ui")))
             Eden::Report("menu", "Launcher art is incomplete; check the app's ui/art folder");
@@ -404,8 +404,8 @@ std::string RunApp(const std::string& launch_error, bool first_start) {
 
 } // namespace
 
-std::string SelectProsperoEdenGame(const std::string& launch_error) {
+std::string SelectProsperoEdenGame(Eden::Multiplayer::RoomClient& rooms, const std::string& launch_error) {
     // The first time is the app opening; afterwards the launcher returns from a game.
     static bool first_start = true;
-    return RunApp(launch_error, std::exchange(first_start, false));
+    return RunApp(launch_error, std::exchange(first_start, false), rooms);
 }

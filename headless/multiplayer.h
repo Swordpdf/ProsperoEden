@@ -30,6 +30,9 @@ public:
     bool Connect(Connection connection);
     void Leave();
     Snapshot GetSnapshot() const;
+    bool BeginGame();
+    void EndGame();
+    bool GameConnectionLost() const;
 
 private:
     struct Impl;

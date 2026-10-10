@@ -152,7 +152,7 @@ msgid "Automatic"
 msgstr ""
 
 #. Button hint: go back one screen.
-#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/pairing.cpp, pe/ui/profiles.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
+#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/pairing.cpp, pe/ui/profiles.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
 msgid "Back"
 msgstr ""
 
@@ -294,6 +294,22 @@ msgstr ""
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr ""
 
+#: pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Connected"
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "Connecting..."
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "CONNECTION"
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection failed"
+msgstr ""
+
 #: pe/ui/library.cpp
 msgid "Console mode"
 msgstr ""
@@ -356,6 +372,10 @@ msgstr ""
 
 #: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
 msgid "Could not save. Please try again."
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "Could not start the connection or save its settings."
 msgstr ""
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
@@ -553,6 +573,10 @@ msgstr ""
 
 #: host/fake_services.cpp, settings_store.h
 msgid "English (US)"
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "Enter a UDP port between 1 and 65535."
 msgstr ""
 
 #: eden_services.cpp
@@ -761,6 +785,10 @@ msgstr ""
 msgid "GETTING STARTED"
 msgstr ""
 
+#: pe/ui/multiplayer.cpp
+msgid "Go offline"
+msgstr ""
+
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
 msgstr ""
@@ -837,6 +865,22 @@ msgstr ""
 msgid "Japanese"
 msgstr ""
 
+#: pe/ui/multiplayer.cpp
+msgid "Join a room before launching a game, then choose Local Wireless in the game."
+msgstr ""
+
+#: pe/ui/launcher.cpp
+msgid "Join a room successfully or leave it before starting a game."
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "Join room"
+msgstr ""
+
 #. keys, firmware and roms are folder names (unchanged). TRIANGLE is the controller's triangle button, in capitals.
 #: pe/ui/browse.cpp
 msgid "Keep keys, firmware and roms folders together. TRIANGLE uses the folder shown."
@@ -899,6 +943,22 @@ msgstr ""
 
 #: pe/ui/home.cpp
 msgid "Launch game"
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave / cancel"
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave the room before changing connection details."
+msgstr ""
+
+#: pe/ui/profiles.cpp
+msgid "Leaving the room. Select the profile again when disconnected."
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "Leaving..."
 msgstr ""
 
 #: pe/ui/game_options.cpp
@@ -969,6 +1029,14 @@ msgstr ""
 msgid "Mods"
 msgstr ""
 
+#: pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Multiplayer"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "MULTIPLAYER"
+msgstr ""
+
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Mute"
 msgstr ""
@@ -1007,6 +1075,10 @@ msgstr ""
 #. Label: the folder used the next time the app starts.
 #: pe/ui/settings.cpp
 msgid "NEXT START"
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "Nickname"
 msgstr ""
 
 #: pe/ui/library.cpp
@@ -1114,7 +1186,7 @@ msgstr ""
 msgid "Off"
 msgstr ""
 
-#: pe/ui/settings.cpp
+#: pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Offline"
 msgstr ""
 
@@ -1191,6 +1263,10 @@ msgstr ""
 
 #: pe/ui/browse.cpp
 msgid "Parent folder"
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "Password"
 msgstr ""
 
 #. What a mod is made of: a change to the game's program (not a game update).
@@ -1449,6 +1525,14 @@ msgstr ""
 msgid "ROM missing from the game files folder"
 msgstr ""
 
+#: pe/ui/multiplayer.cpp
+msgid "Room address"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "Room address and UDP port"
+msgstr ""
+
 #: settings_store.h
 msgid "Russian"
 msgstr ""
@@ -1552,7 +1636,7 @@ msgid "Scroll"
 msgstr ""
 
 #. Button hint: choose the highlighted item (not the Select button).
-#: pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/pairing.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
+#: pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/pairing.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
 msgid "Select"
 msgstr ""
 
@@ -1712,6 +1796,10 @@ msgstr ""
 msgid "Syncing save data"
 msgstr ""
 
+#: pe/ui/settings.cpp
+msgid "TAILSCALE"
+msgstr ""
+
 #: eden_services.cpp
 msgid "Taiwan"
 msgstr ""
@@ -1772,6 +1860,10 @@ msgstr ""
 
 #: pe/ui/remote.cpp
 msgid "The game starts when the download is done."
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "The keyboard could not be opened."
 msgstr ""
 
 #: pe/ui/settings.cpp
@@ -1868,6 +1960,10 @@ msgstr ""
 msgid "Turn on or off"
 msgstr ""
 
+#: pe/ui/multiplayer.cpp
+msgid "UDP port"
+msgstr ""
+
 #: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Unavailable"
 msgstr ""
@@ -1931,6 +2027,10 @@ msgstr ""
 
 #: pe/ui/browse.cpp
 msgid "Use extracted firmware NCA files. Choose the folder in Settings, Game files; restart the app after changing it."
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "Use the local UDP forward address"
 msgstr ""
 
 #: pe/ui/browse.cpp

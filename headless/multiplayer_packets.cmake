@@ -184,6 +184,15 @@ file(WRITE "${MULTIPLAYER_OUTPUT}/socket_proxy.cpp.in" "${proxy_source}")
 configure_file("${MULTIPLAYER_OUTPUT}/socket_proxy.cpp.in"
     "${MULTIPLAYER_OUTPUT}/socket_proxy.cpp" COPYONLY)
 
+file(READ "${MULTIPLAYER_SOURCE}/src/core/hle/service/sockets/bsd.cpp" bsd_source)
+multiplayer_replace(bsd_source "#include \"network/network.h\""
+    "#include \"network/network.h\"\n#include \"multiplayer_session.h\"")
+multiplayer_replace(bsd_source "    if (room_member && room_member->IsConnected()) {"
+    [=[    const int room_mode = Eden::Multiplayer::guest_socket_mode.load();
+    if (room_mode == 1 || (room_mode < 0 && room_member && room_member->IsConnected())) {]=])
+file(WRITE "${MULTIPLAYER_OUTPUT}/bsd.cpp.in" "${bsd_source}")
+configure_file("${MULTIPLAYER_OUTPUT}/bsd.cpp.in" "${MULTIPLAYER_OUTPUT}/bsd.cpp" COPYONLY)
+
 if(TARGET network)
     get_target_property(packet_sources network SOURCES)
     list(REMOVE_ITEM packet_sources packet.cpp room_member.cpp)
@@ -195,10 +204,10 @@ if(TARGET network)
 endif()
 if(TARGET core)
     get_target_property(ldn_sources core SOURCES)
-    list(REMOVE_ITEM ldn_sources hle/service/ldn/lan_discovery.cpp internal_network/socket_proxy.cpp)
+    list(REMOVE_ITEM ldn_sources hle/service/ldn/lan_discovery.cpp internal_network/socket_proxy.cpp hle/service/sockets/bsd.cpp)
     set_property(TARGET core PROPERTY SOURCES "${ldn_sources}")
     target_sources(core PRIVATE "${MULTIPLAYER_OUTPUT}/lan_discovery.cpp"
-        "${MULTIPLAYER_OUTPUT}/socket_proxy.cpp")
+        "${MULTIPLAYER_OUTPUT}/socket_proxy.cpp" "${MULTIPLAYER_OUTPUT}/bsd.cpp")
     target_include_directories(core BEFORE PRIVATE "${MULTIPLAYER_OUTPUT}")
     target_include_directories(core PRIVATE "${CMAKE_CURRENT_LIST_DIR}")
     target_link_libraries(core PRIVATE zstd::zstd)

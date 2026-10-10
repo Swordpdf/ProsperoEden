@@ -51,6 +51,7 @@
 
 #include "button_mapping.h"
 #include "storage_paths.h"
+#include "multiplayer.h"
 
 namespace Eden {
 enum class GraphicsBackend { OpenGL, Vulkan };
@@ -736,6 +737,25 @@ inline bool SaveAssetsDir(std::string_view directory, const std::string& file = 
     Settings::Json document = Settings::Load(file);
     document["version"] = 1;
     document["game_files"] = std::string(directory);
+    return Settings::Write(document, file);
+}
+
+inline Multiplayer::Connection LoadRoomConnection(const std::string& file = SettingsFile()) {
+    const auto document = Settings::Load(file);
+    Multiplayer::Connection result;
+    result.host = Settings::String(document, Settings::Json::json_pointer("/multiplayer/host"));
+    result.nickname = Settings::String(document, Settings::Json::json_pointer("/multiplayer/nickname"));
+    const int port = Settings::Int(document, Settings::Json::json_pointer("/multiplayer/port"), 24872);
+    result.port = port > 0 && port <= 65535 ? port : 24872;
+    if (result.host.size() > 253) result.host.clear();
+    if (result.nickname.size() > 20) result.nickname.clear();
+    return result;
+}
+
+inline bool SaveRoomConnection(const Multiplayer::Connection& value,
+                               const std::string& file = SettingsFile()) {
+    auto document = Settings::Load(file);
+    document["multiplayer"] = {{"host", value.host}, {"port", value.port}, {"nickname", value.nickname}};
     return Settings::Write(document, file);
 }
 

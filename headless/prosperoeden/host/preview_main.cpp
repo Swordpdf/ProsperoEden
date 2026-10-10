@@ -504,7 +504,23 @@ void pictures(Stage &s)
     s.shoot("20-game-files-saved");
     s.press({Key::circle});
     s.wait(0.5f);
-    s.press({Key::down, Key::down, Key::down, Key::cross}); // past Downloads and Save sync
+    s.press({Key::down, Key::down, Key::down, Key::cross}); // Multiplayer
+    s.wait(0.8f);
+    s.shoot("C0-multiplayer-offline");
+    s.press({Key::down, Key::down, Key::down, Key::down, Key::cross});
+    s.wait(0.8f);
+    s.shoot("C1-multiplayer-connecting");
+    if (s.services.room.phase != Eden::Multiplayer::Phase::Connecting) s.ok = false;
+    s.services.room = {Eden::Multiplayer::Phase::Connected, "", "Friends' room", {"PlayerPS5", "Desktop player"}};
+    s.wait(0.8f);
+    s.shoot("C2-multiplayer-connected");
+    s.services.room = {Eden::Multiplayer::Phase::Failed, "The connection to the room was lost.", {}, {}};
+    s.wait(0.8f);
+    s.shoot("C3-multiplayer-lost");
+    s.press({Key::square});
+    s.wait(0.5f);
+    if (s.services.room.phase != Eden::Multiplayer::Phase::Idle) s.ok = false;
+    s.press({Key::circle, Key::down, Key::cross});
     s.wait(1.0f);
     s.shoot("21-language");
     s.press({Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down,

@@ -90,6 +90,7 @@ class Launcher
         save_sync,    // a game's save data synced before it starts, or a conflict after (save_sync.cpp)
         sync_setup,   // Settings > Save sync: the profiles and their servers (pairing.cpp)
         pairing,      // a profile paired with a server by a QR code (pairing.cpp)
+        multiplayer,
     };
     // The update dialog's steps: the offer, installing, stopping it, closing for the helper to
     // finish, and a failure.
@@ -250,6 +251,16 @@ class Launcher
 
     // ---- Settings > Save sync and pairing (pairing.cpp) ----
     void open_sync_setup();
+    void open_multiplayer();
+    void press_multiplayer(Key key);
+    void update_multiplayer();
+    void draw_multiplayer(Canvas& c, float open);
+    Eden::Multiplayer::Connection room_connection_;
+    Eden::Multiplayer::Snapshot room_status_;
+    int room_row_ = 0;
+    int room_edit_field_ = 0;
+    std::atomic<bool> room_edit_stop_{false};
+    std::future<std::optional<std::string>> room_edit_;
     // Reads the profiles' servers again (save-sync.json) while Settings shows them.
     void refresh_sync_setup(float dt);
     void press_sync_setup(Key key);

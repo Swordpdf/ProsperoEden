@@ -18,7 +18,7 @@
 class EdenServices final : public pe::ui::Services {
 public:
     // launch_error: why the game chosen last time did not start (empty: nothing to report).
-    explicit EdenServices(std::string launch_error);
+    explicit EdenServices(std::string launch_error, Eden::Multiplayer::RoomClient& rooms);
     // Downloads from the download sources stop while a game runs (the menu is gone then).
     ~EdenServices() override;
 
@@ -103,7 +103,14 @@ public:
 
     bool load_image(const std::string& path, pe::gfx::Image* image) override;
 
+    Eden::Multiplayer::Snapshot room_status() override;
+    Eden::Multiplayer::Connection room_connection() override;
+    bool connect_room(const Eden::Multiplayer::Connection&) override;
+    void leave_room() override;
+    std::optional<std::string> room_text(int, const std::string&, const std::atomic<bool>&) override;
+    bool can_launch_game() override;
 private:
+    Eden::Multiplayer::RoomClient& rooms_;
     int user_ = -1; // the PS5 user in front when the menu opened (negative: unknown)
     std::string launch_error_;
     std::string setup_; // what is missing from keys and firmware; empty when ready

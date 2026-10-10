@@ -41,9 +41,9 @@ Launcher::Launcher(Services &services, Textures &textures, const Fonts &fonts, b
     const bool continue_ready = home_.setup_ready && home_.last_exists;
     home_focus_ = continue_ready ? 0 : home_.setup_ready ? 1 : 2;
     home_springs_[static_cast<std::size_t>(home_focus_)].snap(1.0f);
-    settings_.visible = 11;
-    settings_.pitch = 57.0f;
-    settings_.reset(11, 0);
+    settings_.visible = 12;
+    settings_.pitch = 52.0f;
+    settings_.reset(12, 0);
     section_.snap(1.0f);
     detail_.snap(1.0f);
     cue(home_.launch_failed ? Cue::notify : first_start ? Cue::welcome : Cue::resume);
@@ -52,6 +52,8 @@ Launcher::Launcher(Services &services, Textures &textures, const Fonts &fonts, b
 
 Launcher::~Launcher()
 {
+    room_edit_stop_ = true;
+    if (room_edit_.valid()) room_edit_.wait();
     // The game list may still be reading; it uses the services this launcher was given.
     if (scan_.valid())
         scan_.wait();
@@ -170,6 +172,11 @@ void Launcher::launch(const std::string &file, const std::string &title, const s
 
 void Launcher::start_game(const std::string &file, const std::string &title, const std::string &cover)
 {
+    if (!services_.can_launch_game()) {
+        say(tr("Join a room successfully or leave it before starting a game."), true);
+        cue(Cue::error);
+        return;
+    }
     services_.will_play(file);
     selected_game_ = services_.game_path(file);
     launch_title_ = title;
@@ -203,6 +210,8 @@ void Launcher::press(Key key)
         return press_sources(key);
     if (modal_ == Modal::save_sync)
         return press_save_sync(key);
+    if (modal_ == Modal::multiplayer)
+        return press_multiplayer(key);
     if (modal_ == Modal::sync_setup)
         return press_sync_setup(key);
     if (modal_ == Modal::pairing)
@@ -240,6 +249,7 @@ void Launcher::update(float dt)
     poll_save_sync(dt);
     poll_pairing(dt);
     refresh_sync_setup(dt);
+    update_multiplayer();
     update_controllers(dt);
     transition_.update(dt);
     press_ = std::max(0.0f, press_ - dt / 0.18f);
@@ -503,6 +513,8 @@ void Launcher::draw(gfx::DrawList &list)
             draw_choice(c, opened);
         else if (modal_shown_ == Modal::save_sync)
             draw_save_sync(c, opened);
+        else if (modal_shown_ == Modal::multiplayer)
+            draw_multiplayer(c, opened);
         else if (modal_shown_ == Modal::sync_setup)
             draw_sync_setup(c, opened);
         else if (modal_shown_ == Modal::pairing)

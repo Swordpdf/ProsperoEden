@@ -10,6 +10,9 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <atomic>
+#include <optional>
+#include "../../../multiplayer.h"
 
 namespace pe::ui
 {
@@ -634,6 +637,14 @@ class Services
     {
         return false;
     }
+
+    virtual Eden::Multiplayer::Snapshot room_status() { return {}; }
+    virtual Eden::Multiplayer::Connection room_connection() { return {}; }
+    virtual bool connect_room(const Eden::Multiplayer::Connection&) { return false; }
+    virtual void leave_room() {}
+    virtual std::optional<std::string> room_text(int, const std::string&, const std::atomic<bool>&)
+    { return std::nullopt; }
+    virtual bool can_launch_game() { return true; }
 
     // ---- images ----
     virtual bool load_image(const std::string &path, gfx::Image *image) = 0;

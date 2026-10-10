@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "multiplayer.h"
+#include "multiplayer_session.h"
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <atomic>
@@ -170,7 +173,7 @@ RoomClient::RoomClient() : impl(std::make_unique<Impl>()) {
     auto& p = *impl;
     p.initialized = Network::Init();
     if (!p.initialized) {
-        p.Fail("Multiplayer networking could not be initialized.");
+        p.snapshot.error = "Multiplayer networking could not be initialized.";
         return;
     }
     p.member = Network::GetRoomMember().lock();
@@ -217,14 +220,14 @@ RoomClient::~RoomClient() {
 bool RoomClient::Connect(Connection connection) {
     auto& p = *impl;
     std::lock_guard lock(p.mutex);
-    if (!p.initialized || p.pending || p.disconnect ||
+    if (!p.initialized || guest_socket_mode.load() >= 0 || p.pending || p.disconnect ||
         (p.snapshot.phase != Phase::Idle && p.snapshot.phase != Phase::Failed))
         return false;
     if (!ValidConnection(connection)) {
-        p.snapshot = {Phase::Failed, "Enter a valid host, port and 4–20 character nickname."};
+        p.snapshot = {Phase::Failed, "Enter a valid host, port and 4–20 character nickname.", {}, {}};
         return false;
     }
-    p.snapshot = {Phase::Connecting};
+    p.snapshot = {Phase::Connecting, {}, {}, {}};
     p.requested = std::move(connection);
     p.attempt = std::stop_source{};
     p.pending = true;
@@ -235,9 +238,10 @@ bool RoomClient::Connect(Connection connection) {
 void RoomClient::Leave() {
     auto& p = *impl;
     std::lock_guard lock(p.mutex);
-    if (!p.initialized || p.snapshot.phase == Phase::Idle || p.snapshot.phase == Phase::Disconnecting)
+    if (!p.initialized || guest_socket_mode.load() >= 0 ||
+        p.snapshot.phase == Phase::Idle || p.snapshot.phase == Phase::Disconnecting)
         return;
-    p.snapshot = {Phase::Disconnecting};
+    p.snapshot = {Phase::Disconnecting, {}, {}, {}};
     p.attempt.request_stop();
     p.requested = {};
     p.disconnect = true;
@@ -247,5 +251,23 @@ void RoomClient::Leave() {
 Snapshot RoomClient::GetSnapshot() const {
     std::lock_guard lock(impl->mutex);
     return impl->snapshot;
+}
+
+bool RoomClient::BeginGame() {
+    std::lock_guard lock(impl->mutex);
+    const auto phase = impl->snapshot.phase;
+    if (guest_socket_mode.load() >= 0 || (phase != Phase::Idle && phase != Phase::Connected)) return false;
+    if (phase == Phase::Connected) {
+        const auto state = impl->member->GetState();
+        if (state != Member::State::Joined && state != Member::State::Moderator) return false;
+    }
+    guest_socket_mode = phase == Phase::Connected ? 1 : 0;
+    return true;
+}
+void RoomClient::EndGame() { guest_socket_mode = -1; }
+bool RoomClient::GameConnectionLost() const {
+    if (guest_socket_mode.load() != 1) return false;
+    const auto state = impl->member->GetState();
+    return state != Member::State::Joined && state != Member::State::Moderator;
 }
 } // namespace Eden::Multiplayer

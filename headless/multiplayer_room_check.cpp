@@ -10,6 +10,7 @@
 #include "core/internal_network/socket_proxy.h"
 #include "multiplayer_proxy.h"
 #include "multiplayer.h"
+#include "multiplayer_session.h"
 #include "enet/enet.h"
 
 template <typename Predicate>
@@ -100,6 +101,7 @@ void CheckController(u16 port) {
     invalid.nickname = "x";
     assert(!client.Connect(invalid));
     assert(client.Connect(connection));
+    assert(!client.BeginGame());
     Wait([&] { return client.GetSnapshot().phase == Phase::Failed; });
     assert(client.GetSnapshot().error == "The room password is incorrect.");
     connection.password = "secret";
@@ -108,14 +110,26 @@ void CheckController(u16 port) {
     const auto snapshot = client.GetSnapshot();
     assert(snapshot.room == "Controller test" && snapshot.members == std::vector<std::string>{"PlayerOne"});
     assert(!client.Connect(connection));
+    assert(client.BeginGame());
+    assert(guest_socket_mode == 1 && !client.GameConnectionLost());
+    client.Leave();
+    assert(client.GetSnapshot().phase == Phase::Connected);
+    client.EndGame();
     client.Leave();
     Wait([&] { return client.GetSnapshot().phase == Phase::Idle; });
     assert(client.GetSnapshot().members.empty());
+    assert(client.BeginGame());
+    assert(guest_socket_mode == 0 && !client.Connect(connection));
+    client.EndGame();
     assert(client.Connect(connection));
     Wait([&] { return client.GetSnapshot().phase == Phase::Connected; });
+    assert(client.BeginGame());
     room.Destroy();
     Wait([&] { return client.GetSnapshot().phase == Phase::Failed; });
     assert(client.GetSnapshot().error == "The connection to the room was lost.");
+    assert(client.GameConnectionLost() && guest_socket_mode == 1);
+    assert(!client.Connect(connection));
+    client.EndGame();
     connection.host = "127.0.0.1";
     assert(client.Connect(connection));
     std::this_thread::sleep_for(std::chrono::milliseconds{100});

@@ -2429,6 +2429,7 @@ endif()
                 "${launcher_dir}/pe/ui/remote.cpp"
                 "${launcher_dir}/pe/ui/save_sync.cpp"
                 "${launcher_dir}/pe/ui/pairing.cpp"
+                "${launcher_dir}/pe/ui/multiplayer.cpp"
                 "${launcher_dir}/pe/ui/qr_code.cpp"
                 "${launcher_dir}/pe/ui/update.cpp"
                 "${launcher_dir}/pe/ui/home.cpp"
