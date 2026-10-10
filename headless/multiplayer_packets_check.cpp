@@ -9,8 +9,23 @@
 #include "multiplayer_validation.h"
 #include "multiplayer_ldn.h"
 #include "multiplayer_proxy.h"
+#include "multiplayer_send.h"
 
 int main() {
+    Eden::Multiplayer::RoomSendBudget budget;
+    for (unsigned i = 0; i < 1024; ++i) assert(budget.Add(0));
+    assert(!budget.Add(0));
+    budget.Release(0);
+    assert(budget.Add(0));
+    budget.Reset();
+    const auto maximum = Eden::Multiplayer::MaxRoomPacketBytes;
+    assert(!budget.Add(maximum + 1));
+    for (unsigned i = 0; i < 4; ++i) assert(budget.Add(maximum));
+    assert(!budget.Add(1));
+    budget.Release(maximum);
+    assert(budget.Add(maximum));
+    for (unsigned i = 0; i < 4; ++i) budget.Release(maximum);
+    assert(budget.Add(maximum));
     using Network::Packet;
     const std::vector<u8> bytes{0, 1, 127, 255};
     const std::vector<std::string> strings{"", "PlayerOne", "PlayerTwo"};

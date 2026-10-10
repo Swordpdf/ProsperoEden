@@ -12,6 +12,7 @@
 #include "multiplayer.h"
 #include "multiplayer_session.h"
 #include "enet/enet.h"
+#include "network/packet.h"
 
 template <typename Predicate>
 void Wait(Predicate predicate) {
@@ -27,6 +28,8 @@ void CheckProxySocket() {
                              Network::Protocol::UDP) == Network::Errno::SUCCESS);
     assert(socket.Bind({Network::Domain::INET, {192, 168, 0, 2}, 1234}) == Network::Errno::SUCCESS);
     socket.SetNonBlock(true);
+    const std::vector<u8> oversized(Eden::Multiplayer::MaxProxyPayloadBytes + 1);
+    assert(socket.SendTo(0, oversized, nullptr).second == Network::Errno::MSGSIZE);
     Network::ProxyPacket packet{};
     packet.local_endpoint = {Network::Domain::INET, {192, 168, 0, 1}, 4321};
     packet.remote_endpoint = {Network::Domain::INET, {192, 168, 0, 2}, 1234};
@@ -141,7 +144,7 @@ void CheckController(u16 port) {
     // Destruction must also cancel a join without waiting for its five-second timeout.
 }
 
-void CheckMalformedRoom(u16 port) {
+void CheckTestRoom(u16 port, bool stall) {
     using namespace Eden::Multiplayer;
     RoomClient client;
     ENetAddress address{};
@@ -149,23 +152,55 @@ void CheckMalformedRoom(u16 port) {
     address.port = port;
     auto* server = enet_host_create(&address, 1, Network::NumChannels, 0, 0);
     assert(server);
+    std::atomic<bool> paused{};
     std::jthread replies([&](std::stop_token stop) {
         while (!stop.stop_requested()) {
+            if (paused) {
+                std::this_thread::sleep_for(std::chrono::milliseconds{10});
+                continue;
+            }
             ENetEvent event{};
             if (enet_host_service(server, &event, 10) <= 0) continue;
             if (event.type == ENET_EVENT_TYPE_RECEIVE) {
+                const bool join = event.packet->dataLength && event.packet->data[0] == Network::IdJoinRequest;
                 enet_packet_destroy(event.packet);
-                // Structurally valid, but missing the preceding room/member information.
+                if (!join) continue;
+                if (stall) {
+                    Network::Packet info;
+                    info.Write(u8{Network::IdRoomInformation}).Write(std::string{"Test room"})
+                        .Write(std::string{}).Write(u32{2}).Write(port)
+                        .Write(std::string{}).Write(std::string{}).Write(u32{1})
+                        .Write(std::string{"PlayerOne"}).Write(Network::IPv4Address{192, 168, 0, 1})
+                        .Write(std::string{}).Write(u64{0}).Write(std::string{})
+                        .Write(std::string{}).Write(std::string{}).Write(std::string{});
+                    auto* packet = enet_packet_create(info.GetData(), info.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
+                    assert(enet_peer_send(event.peer, 0, packet) == 0);
+                }
+                // Without room information, the otherwise valid success must be rejected.
                 const u8 reply[]{Network::IdJoinSuccess, 192, 168, 0, 1};
                 auto* packet = enet_packet_create(reply, sizeof(reply), ENET_PACKET_FLAG_RELIABLE);
                 assert(enet_peer_send(event.peer, 0, packet) == 0);
                 enet_host_flush(server);
+                if (stall) paused = true;
             }
         }
     });
     assert(client.Connect({"127.0.0.1", port, "PlayerOne", ""}));
+    if (stall) {
+        Wait([&] { return client.GetSnapshot().phase == Phase::Connected; });
+        auto member = Network::GetRoomMember().lock();
+        Network::ProxyPacket packet{};
+        packet.protocol = Network::Protocol::UDP;
+        packet.data.resize(Eden::Multiplayer::MaxProxyPayloadBytes / 2, 7);
+        // The peer has stopped processing ENet packets, including acknowledgements.
+        for (unsigned i = 0; i < 20 && client.GetSnapshot().phase == Phase::Connected; ++i) {
+            member->SendProxyPacket(packet);
+            std::this_thread::sleep_for(std::chrono::milliseconds{20});
+        }
+    }
     Wait([&] { return client.GetSnapshot().phase == Phase::Failed; });
-    assert(client.GetSnapshot().error == "The room connection failed.");
+    assert(client.GetSnapshot().error == (stall ? "The connection to the room was lost." : "The room connection failed."));
+    paused = false;
     client.Leave();
     Wait([&] { return client.GetSnapshot().phase == Phase::Idle; });
     replies.request_stop();
@@ -224,7 +259,8 @@ int main(int argc, char** argv) {
     }
     Network::Shutdown();
     CheckController(port);
-    CheckMalformedRoom(port);
+    CheckTestRoom(port, false);
+    CheckTestRoom(port, true);
     const auto start = std::chrono::steady_clock::now();
     {
         Eden::Multiplayer::RoomClient client;

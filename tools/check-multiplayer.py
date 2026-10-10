@@ -67,6 +67,7 @@ def main():
             print("Real room: password rejection, retry, two members, LDN broadcast, proxy routing, loss: PASS")
             print("Proxy socket: decompression, queue limits, truncation, partial reads, recovery: PASS")
             print("Room controller: hostname, validation, retry, members, leave, loss, cancellation: PASS")
+            print("Room send budgets: packet/byte/count limits and stalled ENet peer: PASS")
     print("Multiplayer packet round-trip, truncation, allocation bounds and overflow: PASS")
 
 

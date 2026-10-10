@@ -369,6 +369,8 @@ The direct-room feature is complete when a user can enter an endpoint, join, lau
 
 Deferred work: public room discovery, web accounts/tokens for rooms that require them, chat/moderation UI, hosting rooms on PS5, general serverless LAN support, physical Switch interoperability, automatic payload configuration, and networking optimizations without a measured bottleneck. None is necessary to deliver the first interoperable direct-room client.
 
+Issue [#89](https://github.com/blackbearreloaded/ProsperoEden/issues/89) is a future follow-up, explicitly excluded from this implementation. This work addresses [#98](https://github.com/blackbearreloaded/ProsperoEden/issues/98); its acceptance gates do not imply support for #89.
+
 ## 11. Remaining questions to answer through implementation
 
 1. Which native candidate/build inputs are actually current, and does its ENet archive already execute correctly on PS5?

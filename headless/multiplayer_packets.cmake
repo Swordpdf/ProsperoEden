@@ -60,7 +60,7 @@ configure_file("${MULTIPLAYER_OUTPUT}/network/room_member.h.in"
     "${MULTIPLAYER_OUTPUT}/network/room_member.h" COPYONLY)
 file(READ "${MULTIPLAYER_SOURCE}/src/network/room_member.cpp" member_source)
 multiplayer_replace(member_source "#include <atomic>"
-    "#include <atomic>\n#include <chrono>\n#include \"multiplayer_validation.h\"")
+    "#include <atomic>\n#include <chrono>\n#include \"multiplayer_validation.h\"\n#include \"multiplayer_send.h\"")
 multiplayer_replace(member_source [=[                case ENET_EVENT_TYPE_RECEIVE:
                     switch (event.packet->data[0]) {]=] [=[                case ENET_EVENT_TYPE_RECEIVE:
                     if (!Eden::Multiplayer::ValidRoomPacket(
@@ -130,7 +130,53 @@ multiplayer_replace(member_source [=[    room_member_impl->client = nullptr;
     room_member_impl->server = nullptr;
     std::lock_guard lock(room_member_impl->send_list_mutex);
     room_member_impl->send_list.clear();
+    room_member_impl->send_list_budget.Reset();
+    room_member_impl->send_failed = false;
 }]=])
+multiplayer_replace(member_source "    std::vector<Packet> send_list;"
+    "    Eden::Multiplayer::RoomSendBudget send_list_budget, enet_send_budget;\n    std::atomic<bool> send_failed{false};\n    std::vector<Packet> send_list;")
+multiplayer_replace(member_source "    send_list.push_back(std::move(packet));"
+    [=[    if (!IsConnected() || send_failed) return;
+    if (!send_list_budget.Add(packet.GetDataSize())) {
+        send_failed = true;
+        return;
+    }
+    send_list.push_back(std::move(packet));]=])
+multiplayer_replace(member_source "            std::vector<Packet> packets;"
+    [=[            if (send_failed.exchange(false)) {
+                SetState(State::Idle);
+                SetError(Error::LostConnection);
+            }
+            if (!IsConnected()) break;
+            std::vector<Packet> packets;]=])
+multiplayer_replace(member_source "                packets.swap(send_list);"
+    "                packets.swap(send_list);\n                send_list_budget.Reset();")
+multiplayer_replace(member_source [=[                ENetPacket* enetPacket = enet_packet_create(packet.GetData(), packet.GetDataSize(),
+                                                            ENET_PACKET_FLAG_RELIABLE);
+                enet_peer_send(server, 0, enetPacket);]=]
+    [=[                const auto size = packet.GetDataSize();
+                if (!enet_send_budget.Add(size)) {
+                    SetState(State::Idle);
+                    SetError(Error::LostConnection);
+                    break;
+                }
+                ENetPacket* enetPacket = enet_packet_create(packet.GetData(), size, ENET_PACKET_FLAG_RELIABLE);
+                if (!enetPacket) {
+                    enet_send_budget.Release(size);
+                    SetState(State::Idle);
+                    SetError(Error::LostConnection);
+                    break;
+                }
+                enetPacket->userData = &enet_send_budget;
+                enetPacket->freeCallback = [](ENetPacket* sent) {
+                    static_cast<Eden::Multiplayer::RoomSendBudget*>(sent->userData)->Release(sent->dataLength);
+                };
+                if (enet_peer_send(server, 0, enetPacket) != 0) {
+                    enet_packet_destroy(enetPacket);
+                    SetState(State::Idle);
+                    SetError(Error::LostConnection);
+                    break;
+                }]=])
 file(WRITE "${MULTIPLAYER_OUTPUT}/room_member.cpp.in" "${member_source}")
 configure_file("${MULTIPLAYER_OUTPUT}/room_member.cpp.in"
     "${MULTIPLAYER_OUTPUT}/room_member.cpp" COPYONLY)
@@ -160,6 +206,11 @@ configure_file("${MULTIPLAYER_OUTPUT}/core/internal_network/socket_proxy.h.in"
 file(READ "${MULTIPLAYER_SOURCE}/src/core/internal_network/socket_proxy.cpp" proxy_source)
 multiplayer_replace(proxy_source "#include <chrono>"
     "#include <chrono>\n#include \"multiplayer_proxy.h\"")
+multiplayer_replace(proxy_source [=[                                          const SockAddrIn* addr) {
+    ASSERT(flags == 0);]=]
+    [=[                                          const SockAddrIn* addr) {
+    ASSERT(flags == 0);
+    if (message.size() > Eden::Multiplayer::MaxProxyPayloadBytes) return {-1, Errno::MSGSIZE};]=])
 multiplayer_replace(proxy_source [=[    decompressed.data = Common::Compression::DecompressDataZSTD(packet.data);
 
     std::lock_guard guard(packets_mutex);
