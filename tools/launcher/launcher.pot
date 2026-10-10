@@ -171,7 +171,7 @@ msgid "Bilinear"
 msgstr ""
 
 #. Button hint: move through the list.
-#: pe/ui/browse.cpp
+#: pe/ui/browse.cpp, pe/ui/multiplayer.cpp
 msgid "Browse"
 msgstr ""
 
@@ -947,6 +947,10 @@ msgstr ""
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave room"
 msgstr ""
 
 #: pe/ui/multiplayer.cpp

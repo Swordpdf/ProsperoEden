@@ -67,7 +67,9 @@ join-success messages received before member information. Existing callers keep 
 
 The native application now initializes logging and one controller before its launcher loop.
 Settings > Multiplayer offers address, UDP port, nickname and password entry, join/cancel,
-room status and member names. Square returns to offline mode, including after a failed join.
+room status and a scrollable member list with each reported game/version. The connected
+view shows eight members at a time and keeps the scroll position valid when players leave.
+Cross leaves from that view; Square returns to offline mode, including after a failed join.
 Address, port and nickname use the existing per-profile settings store; passwords are omitted.
 Changing profiles requires leaving the room first. The system keyboard runs outside the draw
 thread and is cancelled before launcher destruction.
@@ -108,6 +110,10 @@ The loopback check compiles the modified client against the pinned server source
 links existing, uninstrumented host common/ENet/fmt dependencies. It is a transport test,
 not a game test.
 
+The controller regression also verifies a member's reported game/version appears in the
+snapshot and disappears after an empty game update. Preview coverage includes the final
+page of a 16-member room, a shrinking list and leaving from the connected view.
+
 The pinned standalone `eden-room` executable also builds and passes private loopback
 creation and orderly shutdown. The local reference uses GCC and shared system OpenSSL:
 Clang 18 rejects the upstream TLS flag, and the host lacks an OpenSSL static dependency.
@@ -139,7 +145,9 @@ Read-only console preflight found one active session and one console with releas
 resources; the shared lock was released without deployment or launch. Recheck idle state
 under the lock immediately before any hardware case. The local Windows Tailscale daemon
 is running, but WSL uses a NAT interface; its room server still needs a verified inbound
-route before console joins can be tested.
+route before console joins can be tested. A bounded Windows-to-WSL UDP relay probe received
+no datagrams, and the PC has explicit inbound block rules for Python. Those rules were
+left intact; the test relay exited and no console was contacted during this probe.
 
 No console application has been launched for this work. Neither PS5 multiplayer nor either Tailscale
 integration is qualified yet. Public room browsing and PS5 room hosting remain deferred.

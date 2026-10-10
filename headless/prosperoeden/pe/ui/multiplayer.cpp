@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "pe/ui/launcher.hpp"
+#include <algorithm>
 #include <charconv>
 
 namespace pe::ui {
 using Eden::Multiplayer::Phase;
 using audio::Cue;
+static constexpr int kVisibleRoomMembers = 8;
 
 void Launcher::open_multiplayer() {
     room_connection_ = services_.room_connection();
@@ -24,6 +26,13 @@ void Launcher::press_multiplayer(Key key) {
     if (key == Key::square) {
         services_.leave_room();
         room_connection_.password.clear();
+        return;
+    }
+    if (room_status_.phase == Phase::Connected) {
+        if (key == Key::up || key == Key::down)
+            room_row_ = std::clamp(room_row_ + (key == Key::down ? 1 : -1), 0,
+                std::max(0, static_cast<int>(room_status_.members.size()) - kVisibleRoomMembers));
+        if (key == Key::cross) services_.leave_room();
         return;
     }
     if (key == Key::up || key == Key::down) {
@@ -59,7 +68,14 @@ void Launcher::press_multiplayer(Key key) {
 }
 
 void Launcher::update_multiplayer() {
-    if (modal_ == Modal::multiplayer) room_status_ = services_.room_status();
+    if (modal_ == Modal::multiplayer) {
+        auto next = services_.room_status();
+        if (next.phase != room_status_.phase) room_row_ = 0;
+        room_status_ = std::move(next);
+        if (room_status_.phase == Phase::Connected)
+            room_row_ = std::min(room_row_, std::max(0,
+                static_cast<int>(room_status_.members.size()) - kVisibleRoomMembers));
+    }
     if (!room_edit_.valid() || room_edit_.wait_for(std::chrono::seconds{0}) != std::future_status::ready)
         return;
     std::optional<std::string> answer;
@@ -95,6 +111,24 @@ void Launcher::draw_multiplayer(Canvas& c, float open) {
         !room_status_.error.empty() ? room_status_.error :
         tr("Join a room before launching a game, then choose Local Wireless in the game.");
     text_block(c, notice, 542, 303, theme::kSmall, 28, theme::kCopy, 836, 2);
+    if (room_status_.phase == Phase::Connected) {
+        text_fit(c, room_status_.room, 542, 380, theme::kSmall, theme::kTitle, 836);
+        for (int row = 0; row < kVisibleRoomMembers &&
+             room_row_ + row < static_cast<int>(room_status_.members.size()); ++row)
+            text_fit(c, room_status_.members[room_row_ + row], 542, 430.0f + 44.0f * row,
+                     theme::kSmall, theme::kCopy, 836);
+        if (room_status_.members.size() > kVisibleRoomMembers)
+            text_fit(c, std::to_string(room_row_ + 1) + " - " +
+                std::to_string(std::min(room_row_ + kVisibleRoomMembers,
+                                       static_cast<int>(room_status_.members.size()))) +
+                " / " + std::to_string(room_status_.members.size()),
+                542, 808, theme::kSmall, theme::kCopy, 836);
+        const Hint hints[]{{Pad::updown, TR("Browse")}, {Pad::cross, TR("Leave room")},
+                           {Pad::circle, TR("Back")}};
+        draw_hints(c, hints, 3, 542, 878, theme::kCopy, 836);
+        c.list.pop_opacity();
+        return;
+    }
     const bool idle = room_status_.phase == Phase::Idle || room_status_.phase == Phase::Failed;
     const char* labels[]{TR("Room address"), TR("UDP port"), TR("Nickname"), TR("Password"),
                          idle ? TR("Join room") : TR("Leave / cancel")};
@@ -108,9 +142,6 @@ void Launcher::draw_multiplayer(Canvas& c, float open) {
         text_fit(c, tr(labels[row]), 562, top + 28, theme::kSmall, theme::kTitle, 796);
         text_fit(c, values[row], 562, top + 55, theme::kSmall, theme::kCopy, 796);
     }
-    std::string members = room_status_.room;
-    for (const auto& member : room_status_.members) members += (members.empty() ? "" : " · ") + member;
-    text_block(c, members, 542, 772, theme::kSmall, 28, theme::kCopy, 836, 2);
     const Hint hints[]{{Pad::cross, TR("Select")}, {Pad::square, TR("Go offline")}, {Pad::circle, TR("Back")}};
     draw_hints(c, hints, 3, 542, 878, theme::kCopy, 836);
     c.list.pop_opacity();

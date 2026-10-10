@@ -321,6 +321,13 @@ void CheckController(u16 port) {
     Wait([&] { return client.GetSnapshot().phase == Phase::Connected; });
     const auto snapshot = client.GetSnapshot();
     assert(snapshot.room == "Controller test" && snapshot.members == std::vector<std::string>{"PlayerOne"});
+    auto member = Network::GetRoomMember().lock();
+    assert(member);
+    member->SendGameInfo({"Example game", 1, "1.2.3"});
+    Wait([&] { return client.GetSnapshot().members ==
+        std::vector<std::string>{"PlayerOne - Example game (1.2.3)"}; });
+    member->SendGameInfo({});
+    Wait([&] { return client.GetSnapshot().members == std::vector<std::string>{"PlayerOne"}; });
     assert(!client.Connect(connection));
     assert(client.BeginGame());
     assert(guest_socket_mode == 1 && !client.GameConnectionLost());

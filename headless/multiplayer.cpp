@@ -193,8 +193,14 @@ RoomClient::RoomClient() : impl(std::make_unique<Impl>()) {
         p.snapshot.room = info.name;
         p.snapshot.members.clear();
         // Copy on the receive thread; the upstream member list is not safe to read from the UI.
-        for (const auto& member : p.member->GetMemberInformation())
-            p.snapshot.members.push_back(member.nickname);
+        for (const auto& member : p.member->GetMemberInformation()) {
+            std::string label = member.nickname;
+            if (!member.game_info.name.empty()) {
+                label += " - " + member.game_info.name;
+                if (!member.game_info.version.empty()) label += " (" + member.game_info.version + ")";
+            }
+            p.snapshot.members.push_back(std::move(label));
+        }
     });
     p.worker = std::jthread([&p](std::stop_token stop) { p.Run(stop); });
 }
