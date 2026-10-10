@@ -626,30 +626,19 @@ foreach(bits 32 64)
             "    const auto halt = m_jit->Run();\n    ::Eden::Performance::SampleCpu(m_core_index, 0, ${sample_pc}, GetSvcNumber(), ${sample_fp});\n    return TranslateHaltReason(halt);"
             wrapper "${wrapper}")
         if(bits EQUAL 32)
-            string(REPLACE "u8 DynarmicCallbacks32::MemoryRead8(u32 vaddr) {"
-                "u8 DynarmicCallbacks32::MemoryRead8(u32 vaddr) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].reads);"
-                wrapper "${wrapper}")
-            string(REPLACE "u16 DynarmicCallbacks32::MemoryRead16(u32 vaddr) {"
-                "u16 DynarmicCallbacks32::MemoryRead16(u32 vaddr) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].reads);"
-                wrapper "${wrapper}")
-            string(REPLACE "u32 DynarmicCallbacks32::MemoryRead32(u32 vaddr) {"
-                "u32 DynarmicCallbacks32::MemoryRead32(u32 vaddr) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].reads);"
-                wrapper "${wrapper}")
-            string(REPLACE "u64 DynarmicCallbacks32::MemoryRead64(u32 vaddr) {"
-                "u64 DynarmicCallbacks32::MemoryRead64(u32 vaddr) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].reads);"
-                wrapper "${wrapper}")
-            string(REPLACE "void DynarmicCallbacks32::MemoryWrite8(u32 vaddr, u8 value) {"
-                "void DynarmicCallbacks32::MemoryWrite8(u32 vaddr, u8 value) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].writes);"
-                wrapper "${wrapper}")
-            string(REPLACE "void DynarmicCallbacks32::MemoryWrite16(u32 vaddr, u16 value) {"
-                "void DynarmicCallbacks32::MemoryWrite16(u32 vaddr, u16 value) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].writes);"
-                wrapper "${wrapper}")
-            string(REPLACE "void DynarmicCallbacks32::MemoryWrite32(u32 vaddr, u32 value) {"
-                "void DynarmicCallbacks32::MemoryWrite32(u32 vaddr, u32 value) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].writes);"
-                wrapper "${wrapper}")
-            string(REPLACE "void DynarmicCallbacks32::MemoryWrite64(u32 vaddr, u64 value) {"
-                "void DynarmicCallbacks32::MemoryWrite64(u32 vaddr, u64 value) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].writes);"
-                wrapper "${wrapper}")
+            foreach(counted IN ITEMS "u64 DynarmicCallbacks32::MemoryRead(u32 vaddr, size_t size) {|reads"
+                    "void DynarmicCallbacks32::MemoryWrite(Dynarmic::A32::VAddr vaddr, u64 value, size_t size) {|writes")
+                string(REPLACE "|" ";" counted_parts "${counted}")
+                list(GET counted_parts 0 counted_head)
+                list(GET counted_parts 1 counted_name)
+                string(FIND "${wrapper}" "${counted_head}" counted_at)
+                if(counted_at LESS 0)
+                    message(FATAL_ERROR "Pinned A32 callback changed: ${counted_head}")
+                endif()
+                string(REPLACE "${counted_head}"
+                    "${counted_head}\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].${counted_name});"
+                    wrapper "${wrapper}")
+            endforeach()
             string(REPLACE "bool DynarmicCallbacks32::MemoryWriteExclusive8(u32 vaddr, u8 value, u8 expected) {"
                 "bool DynarmicCallbacks32::MemoryWriteExclusive8(u32 vaddr, u8 value, u8 expected) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].exclusive_writes);"
                 wrapper "${wrapper}")
@@ -680,8 +669,7 @@ foreach(bits 32 64)
             # dev-settings watch=: writes into the watched range reach these callbacks (its
             # pages are marked debug) and are reported with the guest thread (watch.h).
             set(watch_context "m_memory, *m_parent.m_jit, Kernel::GetCurrentThread(m_parent.m_system.Kernel()), m_parent.m_core_index")
-            foreach(write IN ITEMS "MemoryWrite8(u64 vaddr, u8 value)|1|value" "MemoryWrite16(u64 vaddr, u16 value)|2|value"
-                    "MemoryWrite32(u64 vaddr, u32 value)|4|value" "MemoryWrite64(u64 vaddr, u64 value)|8|value"
+            foreach(write IN ITEMS "MemoryWrite(Dynarmic::A64::VAddr vaddr, u64 value, std::size_t size)|size|value"
                     "MemoryWrite128(u64 vaddr, Dynarmic::A64::Vector value)|16|value[0]"
                     "MemoryWriteExclusive8(u64 vaddr, std::uint8_t value, std::uint8_t expected)|1|value"
                     "MemoryWriteExclusive16(u64 vaddr, std::uint16_t value, std::uint16_t expected)|2|value"
