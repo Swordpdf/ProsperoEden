@@ -2143,8 +2143,8 @@ void Initialize() {
     list(APPEND core_sources "${PORT_BUILD_DIR}/network.cpp")
     # Reuse the getifaddrs path instead of newer BSD route-format helpers.
     # Keep its existing zero-gateway fallback; PS5 route discovery is unqualified.
-    list(REMOVE_ITEM core_sources internal_network/network_interface.cpp)
-    file(READ "${PROJECT_SOURCE_DIR}/src/core/internal_network/network_interface.cpp" interfaces_source)
+    list(REMOVE_ITEM core_sources internal_network/network_interface.cpp "${MULTIPLAYER_OUTPUT}/network_interface.cpp")
+    file(READ "${MULTIPLAYER_OUTPUT}/network_interface.cpp" interfaces_source)
     string(REPLACE "defined(__linux__) || defined(__ANDROID__)" "defined(__linux__) || defined(__ANDROID__) || defined(__FreeBSD__)" interfaces_source "${interfaces_source}")
     string(REPLACE "defined(__ANDROID__) || defined(__linux__)" "defined(__ANDROID__) || defined(__linux__) || defined(__FreeBSD__)" interfaces_source "${interfaces_source}")
     string(REPLACE "#ifdef __ANDROID__" "#if defined(__ANDROID__) || defined(__FreeBSD__)" interfaces_source "${interfaces_source}")

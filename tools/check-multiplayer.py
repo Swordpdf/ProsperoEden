@@ -48,12 +48,14 @@ def main():
             cache = args.host_cache.resolve()
             fmt = cache / "source/.cache/cpm/fmt/12.1.0/include"
             enet = cache / "source/.cache/cpm/enet/v1.3.18/include"
+            boost = sorted((cache / "source/.cache/cpm/boost/boost-1.90.0/libs").glob("*/include"))
             executable = output / "room-check"
             subprocess.run([
                 os.environ.get("CXX", "clang++"), "-std=c++20", "-g", "-O1", "-pthread",
                 sanitizer, "-fno-omit-frame-pointer",
                 "-I", str(output / "socket-headers"), "-I", str(output), "-I", str(root / "headless"),
                 "-I", str(source / "src"), "-I", str(fmt), "-I", str(enet),
+                *[arg for path in boost for arg in ("-I", str(path))],
                 str(root / "headless/multiplayer_room_check.cpp"),
                 str(root / "headless/multiplayer.cpp"),
                 str(output / "room_member.cpp"), str(output / "packet.cpp"),
