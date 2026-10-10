@@ -981,10 +981,58 @@ if(PS5_NATIVE)
     string(REPLACE "            nso_file.Read(compressed_data.data(), nso_header.segments_compressed_size[i], nso_header.segments[i].offset);"
         "            auto* destination = codeset.memory.data() + module_start + nso_header.segments[i].location;\n            if (!nso_header.IsSegmentCompressed(i)) {\n                if (nso_file.Read(destination, nso_header.segments[i].size, nso_header.segments[i].offset) != nso_header.segments[i].size) return std::nullopt;\n            } else if (nso_file.Read(compressed_data.data(), nso_header.segments_compressed_size[i], nso_header.segments[i].offset) != nso_header.segments_compressed_size[i]) return std::nullopt;"
         nso_source "${nso_source}")
-    string(REPLACE "DecompressDataLZ4(decompressed_size.data()," "DecompressDataLZ4(destination," nso_source "${nso_source}")
-    string(REPLACE "                ASSERT(r == int(nso_header.segments[i].size));" "                if (r != int(nso_header.segments[i].size)) return std::nullopt;" nso_source "${nso_source}")
-    string(REPLACE "                std::memcpy(codeset.memory.data() + module_start + nso_header.segments[i].location, decompressed_size.data(), nso_header.segments[i].size);" "" nso_source "${nso_source}")
-    string(REPLACE "            } else {\n                std::memcpy(codeset.memory.data() + module_start + nso_header.segments[i].location, compressed_data.data(), nso_header.segments[i].size);" "" nso_source "${nso_source}")
+    # A segment is decoded where it belongs (read there directly when it is not compressed), and
+    # a segment that does not decode ends the load instead of the app.
+    set(old_nso_segment [=[            if (nso_header.IsSegmentCompressed(i)) {
+                if (nso_header.IsZBICCompressed()) {
+                    // ZBIC compression
+                    const int r = Common::Compression::DecompressDataZBIC(
+                        std::span<u8>{decompressed_size}.first(nso_header.segments[i].size),
+                        std::span<const u8>{compressed_data}.first(nso_header.segments_compressed_size[i])
+                    );
+                    ASSERT(r > 0);
+                } else {
+                    // LZ4 compression
+                    int r = Common::Compression::DecompressDataLZ4(
+                        decompressed_size.data(),
+                        nso_header.segments[i].size,
+                        compressed_data.data(),
+                        nso_header.segments_compressed_size[i]
+                    );
+                    ASSERT(r == int(nso_header.segments[i].size));
+                }
+
+                std::memcpy(
+                    codeset.memory.data() + module_start + nso_header.segments[i].location,
+                    decompressed_size.data(),
+                    nso_header.segments[i].size
+                );
+            } else {
+                // Not compressed
+                std::memcpy(
+                    codeset.memory.data() + module_start + nso_header.segments[i].location,
+                    compressed_data.data(),
+                    nso_header.segments[i].size
+                );
+            }
+]=])
+    string(FIND "${nso_source}" "${old_nso_segment}" nso_segment_at)
+    if(nso_segment_at LESS 0)
+        message(FATAL_ERROR "Pinned NSO segment decoding changed")
+    endif()
+    string(REPLACE "${old_nso_segment}" [=[            if (nso_header.IsSegmentCompressed(i)) {
+                if (nso_header.IsZBICCompressed()) {
+                    const int r = Common::Compression::DecompressDataZBIC(
+                        std::span<u8>{destination, nso_header.segments[i].size},
+                        std::span<const u8>{compressed_data}.first(nso_header.segments_compressed_size[i]));
+                    if (r <= 0) return std::nullopt;
+                } else {
+                    const int r = Common::Compression::DecompressDataLZ4(destination, nso_header.segments[i].size,
+                        compressed_data.data(), nso_header.segments_compressed_size[i]);
+                    if (r != int(nso_header.segments[i].size)) return std::nullopt;
+                }
+            }
+]=] nso_source "${nso_source}")
     # Cheats address the game's main module. Eden registers a cheat list for every module that
     # has one, and the last registration wins: a cheat file without a build ID in its name
     # (mods/<title ID>/cheat_<name>.txt) matches every module, so its cheats were applied
