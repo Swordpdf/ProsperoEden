@@ -340,7 +340,7 @@ void CheckController(u16 port) {
     assert((Network::TranslateIPv4(room_interface->subnet_mask) == Network::IPv4Address{255, 255, 0, 0}));
     {
         Service::LDN::LANDiscovery ldn;
-        assert(ldn.Initialize().IsSuccess());
+        assert(ldn.Initialize([] {}).IsSuccess());
         assert(ldn.OpenAccessPoint().IsSuccess());
         Service::LDN::NetworkConfig config{};
         config.node_count_max = 8;
@@ -351,7 +351,42 @@ void CheckController(u16 port) {
         std::reverse(ip.begin(), ip.end());
         assert(info.ldn.nodes[0].ipv4_address == ip);
         assert(info.ldn.node_count == 1);
+        const auto receive = member->BindOnLdnPacketReceived(
+            [&](const auto& packet) { ldn.ReceivePacket(packet); });
+        Network::RoomMember peer;
+        std::atomic<bool> discovered{}, connected{}, destroyed{};
+        const auto peer_receive = peer.BindOnLdnPacketReceived([&](const auto& packet) {
+            if (packet.type == Network::LDNPacketType::DestroyNetwork) destroyed = true;
+            if (packet.type != Network::LDNPacketType::ScanResp &&
+                packet.type != Network::LDNPacketType::SyncNetwork) return;
+            assert(packet.data.size() == sizeof(Service::LDN::NetworkInfo));
+            Service::LDN::NetworkInfo received{};
+            std::memcpy(&received, packet.data.data(), sizeof(received));
+            assert(received.ldn.nodes[0].ipv4_address == ip);
+            if (packet.type == Network::LDNPacketType::ScanResp) discovered = true;
+            if (packet.type == Network::LDNPacketType::SyncNetwork && received.ldn.node_count == 2)
+                connected = true;
+        });
+        peer.Join("LdnPeer", "127.0.0.1", port, 0, Network::NoPreferredIP, "secret");
+        Wait([&] { return peer.GetState() == Network::RoomMember::State::Joined; });
+        peer.SendLdnPacket({Network::LDNPacketType::Scan, peer.GetFakeIpAddress(), {}, true, {}});
+        Wait([&] { return discovered.load(); });
+        Service::LDN::NodeInfo node{};
+        node.ipv4_address = peer.GetFakeIpAddress();
+        std::reverse(node.ipv4_address.begin(), node.ipv4_address.end());
+        node.mac_address.raw = {2, 0, 1, 2, 3, 4};
+        Network::LDNPacket connect{Network::LDNPacketType::Connect, peer.GetFakeIpAddress(),
+                                   member->GetFakeIpAddress(), false, {}};
+        connect.data.resize(sizeof(node));
+        std::memcpy(connect.data.data(), &node, sizeof(node));
+        peer.SendLdnPacket(connect);
+        Wait([&] { return connected.load(); });
         assert(ldn.Finalize().IsSuccess());
+        Wait([&] { return destroyed.load(); });
+        member->Unbind(receive);
+        peer.Unbind(peer_receive);
+        peer.Leave();
+        Wait([&] { return client.GetSnapshot().members == std::vector<std::string>{"PlayerOne"}; });
     }
     member->SendGameInfo({"Example game", 1, "1.2.3"});
     Wait([&] { return client.GetSnapshot().members ==

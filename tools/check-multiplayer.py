@@ -84,6 +84,7 @@ def main():
             print("Generated BSD teardown: shared table survives until final service, closes and clears for next game: PASS")
             print("BSD descriptors: concurrent ownership, duplicate/close, fd reuse, poll buffers and close-during-poll: PASS")
             print("Room controller: hostname, validation, retry, members, leave, loss, cancellation: PASS")
+            print("LDN: virtual IP/subnet without a host adapter, create, peer scan/connect, sync and destroy: PASS")
             print("Room rejection: duplicate nickname, full room, wire protocol mismatch and successful retry: PASS")
             print("Room send budgets: packet/byte/count limits and stalled ENet peer: PASS")
     print("Multiplayer packet round-trip, truncation, allocation bounds and overflow: PASS")
