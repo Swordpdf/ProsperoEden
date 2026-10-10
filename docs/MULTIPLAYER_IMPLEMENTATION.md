@@ -146,11 +146,17 @@ CXX=clang++-18 python3 tools/check-multiplayer.py --source /path/to/pinned/eden 
 
 Read-only console preflight found one active session and one console with released title
 resources; the shared lock was released without deployment or launch. Recheck idle state
-under the lock immediately before any hardware case. The local Windows Tailscale daemon
+under the lock immediately before any hardware case. The idle console has a newer existing
+development installation; it was left untouched. The saved Remote Play host entries point
+to the active console, so input/capture on the idle console is not currently verified.
+The local Windows Tailscale daemon
 is running, but WSL uses a NAT interface; its room server still needs a verified inbound
 route before console joins can be tested. A bounded Windows-to-WSL UDP relay probe received
 no datagrams, and the PC has explicit inbound block rules for Python. Those rules were
 left intact; the test relay exited and no console was contacted during this probe.
+The room-host choice is pending. Hardware qualification needs an approved reachable room
+endpoint and an idle console with a working observation/input path; no existing registration
+or PS5 settings were changed to obtain one.
 
 No console application has been launched for this work. Neither PS5 multiplayer nor either Tailscale
 integration is qualified yet. Public room browsing and PS5 room hosting remain deferred.
