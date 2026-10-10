@@ -1688,7 +1688,12 @@ file(REMOVE "${PORT_BUILD_DIR}/include/video_core/buffer_cache/buffer_cache_base
 # Join the worker before its renderer/context and scheduler are destroyed.
 # C++ members are destroyed in reverse declaration order.
 file(READ "${PROJECT_SOURCE_DIR}/src/video_core/gpu.cpp" gpu_source)
-string(REPLACE ": gpu_thread{system_}\n        , system{system_}" ": system{system_}" gpu_source "${gpu_source}")
+set(gpu_first_members ": system{system_}\n        , gpu_thread{system_}")
+string(FIND "${gpu_source}" "${gpu_first_members}" gpu_first_members_at)
+if(gpu_first_members_at LESS 0)
+    message(FATAL_ERROR "Pinned GPU member order changed")
+endif()
+string(REPLACE "${gpu_first_members}" ": system{system_}" gpu_source "${gpu_source}")
 string(REPLACE ", is_async{is_async_}" ", is_async{is_async_}\n        , gpu_thread{system_}" gpu_source "${gpu_source}")
 string(REPLACE "    // Destruction of thread must be done before all (non trivial)\n    // previous members has been destroyed\n    VideoCommon::GPUThread::ThreadManager gpu_thread;\n" "" gpu_source "${gpu_source}")
 string(REPLACE "    u64 pending_composite_fence{};" "    u64 pending_composite_fence{};\n    VideoCommon::GPUThread::ThreadManager gpu_thread;" gpu_source "${gpu_source}")
@@ -1781,6 +1786,13 @@ if(EDEN_PS5_OPENGL)
         string(REPLACE "    });\n}" "}" gpu_worker "${gpu_worker}")
         string(REPLACE "thread.get_stop_token()" "stop_source.get_token()" gpu_worker "${gpu_worker}")
         string(REPLACE "ThreadManager::~ThreadManager() = default;" "ThreadManager::~ThreadManager() { Stop(); }" gpu_worker "${gpu_worker}")
+        # Eden's own shutdown of its std::jthread worker: the worker here is a pthread, ended by Stop.
+        set(worker_shutdown "void ThreadManager::NotifyShutdown() {\n    if (thread.joinable()) {\n        thread.request_stop();\n        thread.join();\n    }\n}")
+        string(FIND "${gpu_worker}" "${worker_shutdown}" worker_shutdown_at)
+        if(worker_shutdown_at LESS 0)
+            message(FATAL_ERROR "Pinned GPU worker shutdown changed")
+        endif()
+        string(REPLACE "${worker_shutdown}" "void ThreadManager::NotifyShutdown() { Stop(); }" gpu_worker "${gpu_worker}")
         string(REPLACE "        CommandDataContainer next;" "        unsigned dispatches = 0;\n        CommandDataContainer next;" gpu_worker "${gpu_worker}")
         set(dispatch_call "                scheduler.Push(system.GPU(), submit_list->channel, std::move(submit_list->entries));")
         string(REPLACE "${dispatch_call}"
@@ -1835,7 +1847,9 @@ if(EDEN_PS5_OPENGL)
     string(REPLACE "    ~Impl() = default;" "    ~Impl() { gpu_thread.Stop(); if (renderer && Settings::IsOpenGL()) { renderer->Context().MakeCurrent(); glFinish(); } }" gpu_source "${gpu_source}")
     # Join before unique_ptr destruction clears GPU::impl: queued draws call back
     # through GPU::TickWork. NotifyShutdown also protects service-owned state.
-    set(old_gpu_shutdown "    void NotifyShutdown() {\n        std::unique_lock lk{sync_mutex};\n        shutting_down.store(true, std::memory_order::relaxed);\n        sync_cv.notify_all();\n    }")
+    # Eden joins its worker first; here the waiters are woken first, so that a guest thread waiting
+    # on the worker cannot keep it from ending.
+    set(old_gpu_shutdown "    void NotifyShutdown() {\n        gpu_thread.NotifyShutdown();\n        std::unique_lock lk{sync_mutex};\n        shutting_down.store(true, std::memory_order::relaxed);\n        sync_cv.notify_all();\n    }")
     string(FIND "${gpu_source}" "${old_gpu_shutdown}" gpu_shutdown_offset)
     if(gpu_shutdown_offset LESS 0)
         message(FATAL_ERROR "Pinned GPU shutdown changed")
