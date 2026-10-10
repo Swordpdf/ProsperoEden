@@ -70,6 +70,13 @@ if(PS5_NATIVE)
     target_sources(common PRIVATE "${PORT_BUILD_DIR}/emutls.c")
     target_include_directories(common PRIVATE "${COMPILER_RT}")
 endif()
+# ReShade's effect compiler takes alloca from <malloc.h>, which the Payload SDK replaces by an
+# #error. Its own copy of that header, for this target alone.
+if(PS5_NATIVE AND TARGET reshadefx)
+    write_derived("${PORT_BUILD_DIR}/reshadefx-compat/malloc.h"
+        "#pragma once\n#include <stdlib.h>\n#ifndef alloca\n#define alloca __builtin_alloca\n#endif\n")
+    target_include_directories(reshadefx BEFORE PRIVATE "${PORT_BUILD_DIR}/reshadefx-compat")
+endif()
 # Use the already-qualified no-arena allocation contract in the full core.
 get_target_property(common_sources common SOURCES)
 list(REMOVE_ITEM common_sources host_memory.cpp sparse_large_vector.cpp)
