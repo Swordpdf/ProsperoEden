@@ -33,6 +33,9 @@ function(write_derived path content)
     file(WRITE "${path}.in" "${content}")
     configure_file("${path}.in" "${path}" COPYONLY)
 endfunction()
+set(MULTIPLAYER_SOURCE "${PROJECT_SOURCE_DIR}")
+set(MULTIPLAYER_OUTPUT "${PORT_BUILD_DIR}/multiplayer")
+include("${EDEN_PORT_DIR}/multiplayer_packets.cmake")
 # Keep successful JIT invariant checks inline; preserve upstream failure handling.
 # Use a private include root so other core/renderer targets retain their headers.
 file(READ "${PROJECT_SOURCE_DIR}/src/common/assert.h" jit_assert_header)
