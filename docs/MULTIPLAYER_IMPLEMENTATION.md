@@ -13,12 +13,17 @@ predates this checkout; the new work does not include the old development branch
 - Bound ENet's incoming packet/reassembly allocation to 1 MiB for the client.
 - Validate LDN structure lengths, node counts and advertisement lengths before copies;
   reject duplicate/excess station connections.
+- Reject malformed or oversized compressed proxy frames before payload allocation;
+  cap each socket's receive queue at 4 MiB / 1,024 packets, including empty datagrams.
+- Exercise actual proxy sockets for decompression, queue exhaustion, recovery, UDP
+  truncation and TCP partial-read accounting. This does not implement the upstream TCP stubs.
 - Run the actual room server and derived client over loopback: wrong password, retry,
   two members with distinct virtual IPs, LDN broadcast, directed proxy traffic and server loss.
 
-The packet/LDN unit tests run under AddressSanitizer and UndefinedBehaviorSanitizer.
+The packet/LDN and room/proxy test sources run under AddressSanitizer and UndefinedBehaviorSanitizer.
 The loopback check compiles the modified client against the pinned server source and
-links existing host common/ENet/fmt dependencies. It is a transport test, not a game test.
+links existing, uninstrumented host common/ENet/fmt dependencies. It is a transport test,
+not a game test.
 
 ```bash
 python3 tools/check-multiplayer.py --source /path/to/pinned/eden
@@ -28,7 +33,7 @@ python3 tools/check-multiplayer.py --source /path/to/pinned/eden \
 
 ## Remaining before feature qualification
 
-- Bound proxy decompression/queues and qualify cancellation and callback ownership.
+- Qualify cancellation, callback ownership and outgoing queue bounds.
 - Add room initialization, controller lifecycle, join/leave/retry and safe game transitions.
 - Add launcher direct-connect settings and room/member UI with text entry.
 - Build the full host/native candidates and run relevant existing checks.

@@ -87,6 +87,40 @@ file(WRITE "${MULTIPLAYER_OUTPUT}/lan_discovery.cpp.in" "${ldn_source}")
 configure_file("${MULTIPLAYER_OUTPUT}/lan_discovery.cpp.in"
     "${MULTIPLAYER_OUTPUT}/lan_discovery.cpp" COPYONLY)
 
+file(READ "${MULTIPLAYER_SOURCE}/src/core/internal_network/socket_proxy.h" proxy_header)
+multiplayer_replace(proxy_header "    std::queue<ProxyPacket> received_packets;"
+    "    std::queue<ProxyPacket> received_packets;\n    std::size_t received_bytes = 0;")
+file(MAKE_DIRECTORY "${MULTIPLAYER_OUTPUT}/core/internal_network")
+file(WRITE "${MULTIPLAYER_OUTPUT}/core/internal_network/socket_proxy.h.in" "${proxy_header}")
+configure_file("${MULTIPLAYER_OUTPUT}/core/internal_network/socket_proxy.h.in"
+    "${MULTIPLAYER_OUTPUT}/core/internal_network/socket_proxy.h" COPYONLY)
+file(READ "${MULTIPLAYER_SOURCE}/src/core/internal_network/socket_proxy.cpp" proxy_source)
+multiplayer_replace(proxy_source "#include <chrono>"
+    "#include <chrono>\n#include \"multiplayer_proxy.h\"")
+multiplayer_replace(proxy_source [=[    decompressed.data = Common::Compression::DecompressDataZSTD(packet.data);
+
+    std::lock_guard guard(packets_mutex);
+    received_packets.push(decompressed);]=] [=[    if (!Eden::Multiplayer::DecodeProxyPayload(packet.data, decompressed.data)) return;
+
+    std::lock_guard guard(packets_mutex);
+    // A stalled guest must not accumulate unbounded data from a room peer.
+    if (received_packets.size() >= Eden::Multiplayer::MaxProxyQueuePackets ||
+        decompressed.data.size() > Eden::Multiplayer::MaxProxyQueueBytes - received_bytes) return;
+    received_bytes += decompressed.data.size();
+    received_packets.push(std::move(decompressed));]=])
+multiplayer_replace(proxy_source "received_packets.pop();"
+    "received_bytes -= packet.data.size();\n                received_packets.pop();")
+multiplayer_replace(proxy_source [=[            std::vector<u8> numArray(packet.data.size() - max_length);
+            std::copy(packet.data.begin() + max_length, packet.data.end(),
+                      std::back_inserter(numArray));
+            packet.data = numArray;]=] [=[            if (!peek) {
+                packet.data.erase(packet.data.begin(), packet.data.begin() + max_length);
+                received_bytes -= max_length;
+            }]=])
+file(WRITE "${MULTIPLAYER_OUTPUT}/socket_proxy.cpp.in" "${proxy_source}")
+configure_file("${MULTIPLAYER_OUTPUT}/socket_proxy.cpp.in"
+    "${MULTIPLAYER_OUTPUT}/socket_proxy.cpp" COPYONLY)
+
 if(TARGET network)
     get_target_property(packet_sources network SOURCES)
     list(REMOVE_ITEM packet_sources packet.cpp room_member.cpp)
@@ -98,9 +132,11 @@ if(TARGET network)
 endif()
 if(TARGET core)
     get_target_property(ldn_sources core SOURCES)
-    list(REMOVE_ITEM ldn_sources hle/service/ldn/lan_discovery.cpp)
+    list(REMOVE_ITEM ldn_sources hle/service/ldn/lan_discovery.cpp internal_network/socket_proxy.cpp)
     set_property(TARGET core PROPERTY SOURCES "${ldn_sources}")
-    target_sources(core PRIVATE "${MULTIPLAYER_OUTPUT}/lan_discovery.cpp")
+    target_sources(core PRIVATE "${MULTIPLAYER_OUTPUT}/lan_discovery.cpp"
+        "${MULTIPLAYER_OUTPUT}/socket_proxy.cpp")
     target_include_directories(core BEFORE PRIVATE "${MULTIPLAYER_OUTPUT}")
     target_include_directories(core PRIVATE "${CMAKE_CURRENT_LIST_DIR}")
+    target_link_libraries(core PRIVATE zstd::zstd)
 endif()

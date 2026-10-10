@@ -8,6 +8,7 @@
 #include "network/packet.h"
 #include "multiplayer_validation.h"
 #include "multiplayer_ldn.h"
+#include "multiplayer_proxy.h"
 
 int main() {
     using Network::Packet;
@@ -109,4 +110,20 @@ int main() {
     assert(Eden::Multiplayer::ValidLdnPacket(ldn));
     ldn.data.pop_back();
     assert(!Eden::Multiplayer::ValidLdnPacket(ldn));
+    const auto compress = [](const std::vector<u8>& raw) {
+        std::vector<u8> compressed(ZSTD_compressBound(raw.size()));
+        const auto size = ZSTD_compress(compressed.data(), compressed.size(), raw.data(), raw.size(), 1);
+        assert(!ZSTD_isError(size));
+        compressed.resize(size);
+        return compressed;
+    };
+    auto compressed = compress(bytes);
+    assert(Eden::Multiplayer::DecodeProxyPayload(compressed, decoded) && decoded == bytes);
+    for (std::size_t size = 0; size < compressed.size(); ++size)
+        assert(!Eden::Multiplayer::DecodeProxyPayload({compressed.data(), size}, decoded));
+    compressed = compress({});
+    assert(Eden::Multiplayer::DecodeProxyPayload(compressed, decoded) && decoded.empty());
+    compressed = compress(std::vector<u8>(Eden::Multiplayer::MaxProxyPayloadBytes + 1, 0));
+    assert(!Eden::Multiplayer::DecodeProxyPayload(compressed, decoded) && decoded.empty());
+    assert(!Eden::Multiplayer::DecodeProxyPayload(bytes, decoded));
 }

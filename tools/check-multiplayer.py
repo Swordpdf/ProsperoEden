@@ -32,7 +32,7 @@ def main():
             "-I", str(output), "-I", str(source / "src"),
             *[arg for path in includes for arg in ("-I", str(path))],
             str(root / "headless/multiplayer_packets_check.cpp"),
-            str(output / "packet.cpp"), "-o", str(executable),
+            str(output / "packet.cpp"), "-lzstd", "-o", str(executable),
         ], check=True)
         subprocess.run([str(executable)], check=True)
         if args.host_cache:
@@ -42,10 +42,14 @@ def main():
             executable = output / "room-check"
             subprocess.run([
                 os.environ.get("CXX", "clang++"), "-std=c++20", "-g", "-O1", "-pthread",
+                "-fsanitize=address,undefined", "-fno-omit-frame-pointer",
                 "-I", str(output), "-I", str(root / "headless"),
                 "-I", str(source / "src"), "-I", str(fmt), "-I", str(enet),
                 str(root / "headless/multiplayer_room_check.cpp"),
                 str(output / "room_member.cpp"), str(output / "packet.cpp"),
+                str(output / "socket_proxy.cpp"),
+                str(source / "src/core/internal_network/network.cpp"),
+                str(source / "src/core/internal_network/network_interface.cpp"),
                 *[str(source / "src/network" / name) for name in
                   ("network.cpp", "room.cpp", "verify_user.cpp")],
                 str(cache / "build/src/common/libcommon.a"),
@@ -60,6 +64,7 @@ def main():
             environment = dict(os.environ, XDG_DATA_HOME=str(output), XDG_CONFIG_HOME=str(output))
             subprocess.run([str(executable), str(port)], check=True, timeout=40, env=environment)
             print("Real room: password rejection, retry, two members, LDN broadcast, proxy routing, loss: PASS")
+            print("Proxy socket: decompression, queue limits, truncation, partial reads, recovery: PASS")
     print("Multiplayer packet round-trip, truncation, allocation bounds and overflow: PASS")
 
 

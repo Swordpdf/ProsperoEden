@@ -7,6 +7,8 @@
 #include <thread>
 #include "common/logging.h"
 #include "network/network.h"
+#include "core/internal_network/socket_proxy.h"
+#include "multiplayer_proxy.h"
 
 template <typename Predicate>
 void Wait(Predicate predicate) {
@@ -16,11 +18,81 @@ void Wait(Predicate predicate) {
     assert(predicate());
 }
 
+void CheckProxySocket() {
+    Network::ProxySocket socket;
+    assert(socket.Initialize(Network::Domain::INET, Network::Type::DGRAM,
+                             Network::Protocol::UDP) == Network::Errno::SUCCESS);
+    assert(socket.Bind({Network::Domain::INET, {192, 168, 0, 2}, 1234}) == Network::Errno::SUCCESS);
+    socket.SetNonBlock(true);
+    Network::ProxyPacket packet{};
+    packet.local_endpoint = {Network::Domain::INET, {192, 168, 0, 1}, 4321};
+    packet.remote_endpoint = {Network::Domain::INET, {192, 168, 0, 2}, 1234};
+    packet.protocol = Network::Protocol::UDP;
+    const auto payload = [&](const std::vector<u8>& bytes) {
+        packet.data.resize(ZSTD_compressBound(bytes.size()));
+        const auto size = ZSTD_compress(packet.data.data(), packet.data.size(),
+                                       bytes.data(), bytes.size(), 1);
+        assert(!ZSTD_isError(size));
+        packet.data.resize(size);
+    };
+    payload({4, 5, 6});
+    socket.HandleProxyPacket(packet);
+    std::vector<u8> bytes(Eden::Multiplayer::MaxProxyPayloadBytes);
+    Network::SockAddrIn sender{};
+    auto result = socket.RecvFrom(0, bytes, &sender);
+    assert(result.first == 3 && bytes[0] == 4 && bytes[2] == 6 && sender.portno == 4321);
+    packet.data = {1, 2, 3};
+    socket.HandleProxyPacket(packet);
+    assert(socket.RecvFrom(0, bytes, nullptr).second == Network::Errno::AGAIN);
+
+    // Empty datagrams still occupy a queue slot, so both count and byte limits matter.
+    payload({});
+    for (std::size_t i = 0; i < Eden::Multiplayer::MaxProxyQueuePackets + 1; ++i)
+        socket.HandleProxyPacket(packet);
+    for (std::size_t i = 0; i < Eden::Multiplayer::MaxProxyQueuePackets; ++i)
+        assert(socket.RecvFrom(0, bytes, nullptr).first == 0);
+    assert(socket.RecvFrom(0, bytes, nullptr).second == Network::Errno::AGAIN);
+    payload(bytes);
+    const auto capacity = Eden::Multiplayer::MaxProxyQueueBytes / bytes.size();
+    for (std::size_t i = 0; i <= capacity; ++i) socket.HandleProxyPacket(packet);
+    for (std::size_t i = 0; i < capacity; ++i)
+        assert(socket.RecvFrom(0, bytes, nullptr).first == static_cast<s32>(bytes.size()));
+    assert(socket.RecvFrom(0, bytes, nullptr).second == Network::Errno::AGAIN);
+    payload({7});
+    socket.HandleProxyPacket(packet);
+    assert(socket.RecvFrom(0, bytes, nullptr).first == 1 && bytes[0] == 7);
+
+    payload({1, 2, 3});
+    socket.HandleProxyPacket(packet);
+    assert(socket.RecvFrom(0, std::span{bytes}.first(1), nullptr).second == Network::Errno::MSGSIZE);
+    assert(socket.RecvFrom(0, bytes, nullptr).second == Network::Errno::AGAIN);
+
+    Network::ProxySocket stream;
+    assert(stream.Initialize(Network::Domain::INET, Network::Type::STREAM,
+                             Network::Protocol::TCP) == Network::Errno::SUCCESS);
+    assert(stream.Bind(packet.remote_endpoint) == Network::Errno::SUCCESS);
+    stream.SetNonBlock(true);
+    packet.protocol = Network::Protocol::TCP;
+    stream.HandleProxyPacket(packet);
+    // ReceivePacket is called under the socket lock in production; this test is single-threaded.
+    assert(stream.ReceivePacket(Network::FLAG_MSG_PEEK, bytes, nullptr, 1).first == 1);
+    assert(stream.RecvFrom(0, std::span{bytes}.first(1), nullptr).first == 1 && bytes[0] == 1);
+    assert(stream.RecvFrom(0, bytes, nullptr).first == 2 && bytes[0] == 2 && bytes[1] == 3);
+    assert(stream.RecvFrom(0, bytes, nullptr).second == Network::Errno::AGAIN);
+    // A full-size packet must still fit after partial reads and a truncated datagram.
+    packet.protocol = Network::Protocol::UDP;
+    payload(bytes);
+    for (std::size_t i = 0; i < capacity; ++i) socket.HandleProxyPacket(packet);
+    for (std::size_t i = 0; i < capacity; ++i)
+        assert(socket.RecvFrom(0, bytes, nullptr).first == static_cast<s32>(bytes.size()));
+}
+
 int main(int argc, char** argv) {
     assert(argc == 2);
     const auto port = static_cast<u16>(std::strtoul(argv[1], nullptr, 10));
     Common::Log::Initialize();
     assert(Network::Init());
+    CheckProxySocket();
     {
         Network::Room room;
         assert(room.Create("Offline test", "", "127.0.0.1", port, "secret", 2,
