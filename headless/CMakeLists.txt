@@ -95,13 +95,9 @@ function(eden_sparse_replace old new count)
 endfunction()
 eden_sparse_replace("AllocateMemoryPages(alloc_size)" "AllocateSparsePages(alloc_size)" 2)
 eden_sparse_replace("FreeMemoryPages(base_ptr, alloc_size)" "FreeSparsePages(base_ptr, alloc_size)" 2)
+# Eden tests the result; CommitSparsePage has none (it ends the app when memory runs out).
 eden_sparse_replace("mprotect(reinterpret_cast<void*>(page), HostPageSize, PROT_READ | PROT_WRITE)"
-    "CommitSparsePage(page)" 1)
-# ZeroRegion (an unmap) asks whether the page of entry `start / sizeof(T)` was committed where it
-# means the page of entry `start`. A wrong "yes" writes zeroes into a part of the table nothing
-# was ever written to: harmless in a dense table, a fault in a read-only one. A wrong "no" leaves
-# the first entries of the unmapped range as they were.
-eden_sparse_replace("if (IsCommittedPage(start / sizeof(T))) {" "if (IsCommittedPage(start)) {" 1)
+    "(CommitSparsePage(page), 0)" 1)
 eden_sparse_replace("void FreeMemoryPages(void* base, std::size_t size) noexcept;"
     "void FreeMemoryPages(void* base, std::size_t size) noexcept;\nvoid* AllocateSparsePages(std::size_t size) noexcept;\nvoid FreeSparsePages(void* base, std::size_t size) noexcept;\nvoid CommitSparsePage(std::uintptr_t page) noexcept;" 1)
 write_derived("${PORT_BUILD_DIR}/sparse/common/sparse_large_vector.h" "${sparse_header}")
@@ -335,23 +331,10 @@ list(FILTER jit_sources EXCLUDE REGEX "(^|/)opt_passes\\.cpp$")
 set_property(TARGET dynarmic PROPERTY SOURCES "${jit_sources}")
 target_sources(dynarmic PRIVATE "${PORT_BUILD_DIR}/opt_passes.cpp")
 
-# Keep the checked page-table path, but use x86 scaled addressing and avoid a
-# 64-bit mask load for Eden's packed pointer. Apply to both A32 and A64 emitters.
+# Avoid a 64-bit mask load for Eden's packed pointer in the checked page-table path. Apply to
+# both A32 and A64 emitters.
 set(memory_relative "dynarmic/backend/x64/emit_x64_memory.h")
 file(READ "${PROJECT_SOURCE_DIR}/src/dynarmic/src/${memory_relative}" memory_emitter)
-foreach(index IN ITEMS "tmp.cvt64()" "tmp")
-    set(lookup "    code.shl(tmp, int(ctx.conf.page_table_log2_stride));\n    code.mov(page, qword[r14 + ${index}]);")
-    string(FIND "${memory_emitter}" "${lookup}" offset)
-    if(offset LESS 0)
-        message(FATAL_ERROR "Pinned page-table indexing changed")
-    endif()
-    string(REPLACE "${lookup}" [=[    if (ctx.conf.page_table_log2_stride <= 3) {
-        code.mov(page, qword[r14 + tmp * (1 << ctx.conf.page_table_log2_stride)]);
-    } else {
-        code.shl(tmp, int(ctx.conf.page_table_log2_stride));
-        code.mov(page, qword[r14 + tmp]);
-    }]=] memory_emitter "${memory_emitter}")
-endforeach()
 set(pointer_mask "    // mask away attributes\n    if (ctx.conf.page_table_pointer_mask == 0) {")
 set(pointer_end "        code.sar(page, *ctx.conf.page_table_sign_extension);\n    }\n\n    code.jz")
 foreach(anchor IN ITEMS pointer_mask pointer_end)
@@ -1048,22 +1031,10 @@ function(eden_patch source old new)
     set(${source} "${patched}" PARENT_SCOPE)
 endfunction()
 
-# Mods (headless/mods.h). The pinned patch code cannot apply an .ips patch (it looks for the
-# patch's magic in the game's code, and its end marker test never passes) and writes zeros for
-# the text of a .pchtxt string patch, whose record also had a fixed size that a long line
-# overran. Eden fixed these after this pin; the same fixes are made here. Its .pchtxt reader also
-# takes every line as a record or a flag: the credits at the end of a real patch file then wrote
-# over the start of the game's code. Only records and known flags are read here
-# (headless/mods_check.cpp checks all of it).
+# Mods (headless/mods.h). Eden's .pchtxt reader takes every line as a record or a flag: the
+# credits at the end of a real patch file then wrote over the start of the game's code. Only
+# records and known flags are read here (headless/mods_check.cpp checks all of it).
 file(READ "${PROJECT_SOURCE_DIR}/src/core/file_sys/ips_layer.cpp" ips_source)
-eden_patch(ips_source "magic.size() > 3 &&" "magic.size() >= 3 &&")
-eden_patch(ips_source "magic.size() > 4 &&" "magic.size() >= 4 &&")
-eden_patch(ips_source
-    "    auto in_data = in->ReadAllBytes();\n    auto const type = IdentifyMagic(in_data);\n    if (type == IPSFileType::Error)\n        return nullptr;"
-    "    auto const type = IdentifyMagic(ips->ReadBytes(0x5));\n    if (type == IPSFileType::Error)\n        return nullptr;\n    auto in_data = in->ReadAllBytes();\n    if (in_data.empty())\n        return nullptr;")
-eden_patch(ips_source
-    "struct IPSwitchRecord {\n    std::array<uint8_t, 256 - sizeof(size_t)> data;\n    size_t count;\n};"
-    "struct IPSwitchRecord {\n    std::vector<uint8_t> data;\n};")
 set(ips_escape_begin "static IPSwitchRecord EscapeStringSequences(std::string_view sv) {")
 set(ips_escape_end "void IPSwitchCompiler::Parse(")
 string(FIND "${ips_source}" "${ips_escape_begin}" ips_escape_at)
@@ -1128,10 +1099,6 @@ static IPSwitchRecord EscapeStringSequences(std::string_view sv) {
 
 ]=])
 set(ips_source "${ips_before}${ips_escape}${ips_after}")
-eden_patch(ips_source
-    "                    std::memcpy(r.data.data(), hs.data(), hs.size());\n                    r.count = hs.size();"
-    "                    r.data.assign(hs.begin(), hs.end());")
-eden_patch(ips_source "auto replace_size = record.second.count;" "auto replace_size = record.second.data.size();")
 eden_patch(ips_source "        if (line.size() > 2 && line[0] == '@') {\n            switch (line[1]) {"
     "        if (line.size() > 2 && line[0] == '@') {\n            if (!IsPatchFlag(line)) return true;\n            switch (line[1]) {")
 eden_patch(ips_source "        } else if (patches.empty()) {\n            LOG_WARNING(Loader, \"Invalid line not in a patch {}\", line);"
