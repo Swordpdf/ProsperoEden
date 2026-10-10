@@ -4,6 +4,24 @@ Work is based on upstream `main` at `dfda802` (2026-10-10), on branch
 `feature/ldn-rooms`. The source inspection in [the implementation plan](MULTIPLAYER_PLAN.md)
 predates this checkout; the new work does not include the old development branch's changes.
 
+## Latest hardware result
+
+On 2026-10-10, `.30` (FW 6.02) joined the private room with its saved password,
+launched Mario Kart 8 Deluxe 3.0.5, selected Wireless Play, created a room, and
+reached the Mii waiting lobby without the reported communication error. The candidate
+uses the room-assigned virtual IPv4 address and /16 subnet for guest interface queries,
+while preserving the native adapter fallback when offline. The host regression covers
+LDN creation, peer discovery, connection, synchronization and network destruction.
+
+This hardware case used source `540f9a9` with the existing development input runner
+enabled for reliable timed button presses. The normal candidate uses the same networking
+code. Exact package hashes and lifecycle evidence are in `results/multiplayer-development`.
+Title-specific shutdown and runtime release passed; temporary test-control files were
+restored. This qualifies lobby creation only. A second game instance, racing, room-loss
+recovery and the PS5 Tailscale payload remain unqualified.
+
+- 2026-10-10 | LDN hardware | 540f9a9 | FW 6.02 | partial-pass: Mario Kart wireless lobby created; clean teardown | results/multiplayer-development | validate second peer
+
 ## Completed offline
 
 - Preserve Eden's packet format while rejecting invalid lengths before allocation and
