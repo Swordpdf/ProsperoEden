@@ -283,7 +283,7 @@ Configuration procedure, after ordinary room connectivity works:
 
 If the local port is occupied, use another free local port such as 24873 and keep the target at 24872. Change the ProsperoEden connection port to match. No new protocol or guest networking setting is required.
 
-For this outbound-client topology, do not add the room port to the payload's inbound `udpPorts` merely to make it work; that setting serves the opposite direction. Do not use its HTTP proxy for ENet. The normal PS5 network interface should remain selected for guest interface checks; there is no kernel Tailscale interface to select.
+For this outbound-client topology, do not add the room port to the payload's inbound `udpPorts` merely to make it work; that setting serves the opposite direction. Do not use its HTTP proxy for ENet. While joined, guest interface queries must report the room-assigned virtual IPv4 address and subnet; the implementation now supplies this automatically. The native adapter remains the offline fallback. There is no kernel Tailscale interface to select.
 
 Mandatory Tailscale checks:
 

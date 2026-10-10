@@ -180,6 +180,19 @@ hardware milestones above have passed. Keep this PR experimental until gameplay 
 transport qualification are complete. Only `.30` was used for these hardware cases.
 Public room browsing, PS5 room hosting and issue #89 remain separate follow-ups.
 
+### Desktop reference preparation
+
+The Windows host has a GTX 1070 Ti and an existing Mario Kart base game. An isolated
+portable copy of [official Eden 0.2.1](https://git.eden-emu.dev/eden-emu/eden/releases/tag/v0.2.1)
+is downloaded for the next compatibility case. The archive SHA-256 is
+`6c1b53ce325170a026cc0f87098380027dc6170d94ba95f913aab7596fd097cb`;
+the GUI executable SHA-256 is
+`df08b0fe90ec07988e9bfbe598b32a6dbda3e4e81e35ed2120793e42dd67f565`.
+It has an empty portable profile; no existing profile or save was changed.
+The matching update is available on `.30`, but copying it and the existing desktop keys
+into this isolated profile is awaiting explicit authorization. No desktop gameplay was run.
+WSLg currently reports unaccelerated llvmpipe, so native Windows is the reference target.
+
 ## Tailscale source qualification and user guide
 
 The derived client previously passed password rejection, two-member join, LDN broadcast,
