@@ -71,7 +71,7 @@ configure_file("${MULTIPLAYER_OUTPUT}/network/room_member.h.in"
     "${MULTIPLAYER_OUTPUT}/network/room_member.h" COPYONLY)
 file(READ "${MULTIPLAYER_SOURCE}/src/network/room_member.cpp" member_source)
 multiplayer_replace(member_source "#include <atomic>"
-    "#include <atomic>\n#include <chrono>\n#include \"multiplayer_validation.h\"\n#include \"multiplayer_send.h\"")
+    "#include <atomic>\n#include <chrono>\n#include <cerrno>\n#include <cstdio>\n#include \"diagnostics.h\"\n#include \"multiplayer_validation.h\"\n#include \"multiplayer_send.h\"")
 multiplayer_replace(member_source [=[                case ENET_EVENT_TYPE_RECEIVE:
                     switch (event.packet->data[0]) {]=] [=[                case ENET_EVENT_TYPE_RECEIVE:
                     if (!Eden::Multiplayer::ValidRoomPacket(
@@ -84,6 +84,9 @@ multiplayer_replace(member_source [=[                case ENET_EVENT_TYPE_RECEIV
                     switch (event.packet->data[0]) {]=])
 multiplayer_replace(member_source [=[        ASSERT_MSG(room_member_impl->client != nullptr, "Could not create client");]=]
     [=[        if (!room_member_impl->client) {
+            char detail[96];
+            std::snprintf(detail, sizeof(detail), "ENet client creation failed: errno=%d", errno);
+            Eden::Report("multiplayer transport", detail);
             room_member_impl->SetState(State::Idle);
             room_member_impl->SetError(Error::CouldNotConnect);
             return;
@@ -98,6 +101,7 @@ multiplayer_replace(member_source "    enet_address_set_host(&address, server_ad
         return;
     }
     if (enet_address_set_host(&address, server_addr) != 0) {
+        Eden::Report("multiplayer transport", "ENet address conversion failed");
         room_member_impl->SetState(State::Idle);
         room_member_impl->SetError(Error::CouldNotConnect);
         return;
@@ -110,6 +114,15 @@ multiplayer_replace(member_source
     while (!stop.stop_requested() && std::chrono::steady_clock::now() < deadline) {
         net = enet_host_service(room_member_impl->client, &event, 20);
         if (net != 0) break;
+    }
+    if (net <= 0 && !stop.stop_requested()) {
+        const int error = net < 0 ? errno : 0;
+        char detail[192];
+        std::snprintf(detail, sizeof(detail),
+            "ENet handshake: result=%d errno=%d sent_packets=%u received_packets=%u",
+            net, error, room_member_impl->client->totalSentPackets,
+            room_member_impl->client->totalReceivedPackets);
+        Eden::Report("multiplayer transport", detail);
     }
     if (stop.stop_requested()) {
         if (net > 0 && event.type == ENET_EVENT_TYPE_RECEIVE) enet_packet_destroy(event.packet);
