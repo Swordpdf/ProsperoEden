@@ -90,12 +90,13 @@ void RasterizerVulkan::DispatchCompute() {"""),
     ('        std::scoped_lock lock{texture_cache.mutex};\n        texture_cache.WriteMemory(addr, size);\n    }\n    pipeline_cache.InvalidateRegion(addr, size);',
      '        ::Eden::Performance::GuestCacheLock(texture_cache.mutex);\n'
      '        std::lock_guard lock{texture_cache.mutex, std::adopt_lock};\n        texture_cache.WriteMemory(addr, size);\n    }\n    pipeline_cache.InvalidateRegion(addr, size);'),
-    # Hand recorded work to the worker every 64 draws rather than every 8: each hand-off wakes the
-    # worker with a system call (about 16.7k per second and ~7 us each in heavy scenes). A 32 KiB
-    # chunk still dispatches whenever it fills (about 15-25 draws of records); the 4,096-draw flush
-    # is unchanged. Development builds can pick 8-512 draws (dev-settings dispatch_draws=N).
-    ('    static constexpr u32 CHECK_MASK = 7;\n#endif // __ANDROID__\n\n    static_assert(DRAWS_TO_DISPATCH % (CHECK_MASK + 1) == 0);\n',
-     '    const u32 CHECK_MASK = ::Eden::Performance::dispatch_mask.load(std::memory_order_relaxed);\n#endif // __ANDROID__\n\n'),
+    # The upstream code has an __ANDROID__ ifdef for DRAWS_TO_DISPATCH (512 vs 4096) and
+    # CHECK_MASK (3 vs 7). Neither branch applies: replace the whole block. 512 draws per
+    # command buffer submission: 4,096 exceeds the PS5 GPU watchdog timeout in shader-heavy
+    # scenes (VK_ERROR_DEVICE_LOST in Xenoblade 2's cities). CHECK_MASK is the configurable
+    # dispatch interval (dev-settings dispatch_draws=N); default 64 draws between hand-offs.
+    ('#ifdef __ANDROID__\n    static constexpr u32 DRAWS_TO_DISPATCH = 512;\n    static constexpr u32 CHECK_MASK = 3;\n#else\n    static constexpr u32 DRAWS_TO_DISPATCH = 4096;\n    static constexpr u32 CHECK_MASK = 7;\n#endif // __ANDROID__\n\n    static_assert(DRAWS_TO_DISPATCH % (CHECK_MASK + 1) == 0);\n',
+     '    static constexpr u32 DRAWS_TO_DISPATCH = 512;\n    const u32 CHECK_MASK = ::Eden::Performance::dispatch_mask.load(std::memory_order_relaxed);\n\n'),
     # Per-draw count for the GPU-thread report (dispatch time per draw).
     ('    FlushWork();\n    gpu_memory->FlushCaching();\n\n    GraphicsPipeline* const pipeline{pipeline_cache.CurrentGraphicsPipeline()};',
      '    ::Eden::Performance::rasterizer_draw.calls.fetch_add(1, std::memory_order_relaxed);\n    FlushWork();\n    gpu_memory->FlushCaching();\n\n    GraphicsPipeline* const pipeline{pipeline_cache.CurrentGraphicsPipeline()};'),
