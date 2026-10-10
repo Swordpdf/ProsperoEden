@@ -6,6 +6,20 @@ predates this checkout; the new work does not include the old development branch
 
 ## Latest hardware result
 
+The later public-cloud room case passed on `.30` using the server's resolved IPv4
+address and supplied UDP port/password. The host controller joined by hostname; a second
+host join while the PS5 was connected reported two members. The PS5 launcher showed
+Connected and the expected room name. Mario Kart 8 Deluxe 3.0.5 reached its title screen,
+with the native log confirming game startup with room networking. Remote Play keyboard
+input did not advance the title screen, so this case does not qualify cloud lobby creation
+or racing. Both test launches closed and released their runtime layers.
+
+Native hostname resolution failed before the room handshake, whereas the IPv4 control
+passed with the same installed binary. This is an open PS5 DNS defect, not a failed public
+room route or password. The current profile retains the working IPv4 endpoint and password;
+the original configuration is backed up. Private endpoint/configuration evidence is in
+`results/multiplayer-public-room` and `results/multiplayer-public-ipv4` and is not committed.
+
 On 2026-10-10, `.30` (FW 6.02) joined the private room with its saved password,
 launched Mario Kart 8 Deluxe 3.0.5, selected Wireless Play, created a room, and
 reached the Mii waiting lobby without the reported communication error. The candidate
@@ -167,6 +181,8 @@ CXX=clang++-18 python3 tools/check-multiplayer.py --source /path/to/pinned/eden 
 
 ## Remaining before feature qualification
 
+- Fix and qualify native hostname resolution. The public-cloud room joins by IPv4,
+  but the PS5 hostname path fails before attempting the handshake.
 - Run two actual game instances with matching updates, test both host roles, complete a
   race, and verify leaving/rejoining and another game session. The live protocol probe
   does not replace this test or qualify the upstream proxy TCP limitations.

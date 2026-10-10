@@ -24,6 +24,8 @@ and optional room password from the room operator. The usual UDP port is **24872
 1. In ProsperoEden, open **Settings > Multiplayer** before launching a game.
 2. Select **Room address** and enter a numeric IPv4 address or hostname. Enter the port
    separately. IPv6 literals are not supported by this connection form.
+   The current PS5 candidate failed hostname resolution in the public-cloud test; use
+   the server's verified IPv4 address until that native resolver defect is fixed.
 3. Choose a distinct **Nickname**: 4–20 characters using English letters, digits, spaces,
    dots, hyphens or underscores. Enter the room password if required.
 4. Select **Join room**. Wait for **Connected** and check the room/member list.
