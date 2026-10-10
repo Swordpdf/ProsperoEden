@@ -1242,7 +1242,25 @@ set(slab_header "core/hle/kernel/k_slab_heap.h")
 file(READ "${PROJECT_SOURCE_DIR}/src/${slab_header}" slab_source)
 string(REPLACE "    void Free(T* obj) {\n        BaseHeap::Free(obj);"
     "    void Free(T* obj) {\n        std::destroy_at(obj);\n        BaseHeap::Free(obj);" slab_source "${slab_source}")
+# The slab heap's lock and a thread's context guard stay spin locks (headless/kernel_spin_lock.h).
+set(slab_lock "    std::mutex m_lock;\n")
+string(FIND "${slab_source}" "${slab_lock}" slab_lock_at)
+if(slab_lock_at LESS 0)
+    message(FATAL_ERROR "Pinned slab heap lock changed")
+endif()
+string(REPLACE "${slab_lock}" "    ::Eden::KernelSpinLock m_lock;\n" slab_source "${slab_source}")
+string(PREPEND slab_source "#include \"${EDEN_PORT_DIR}/kernel_spin_lock.h\"\n")
 write_derived("${PORT_BUILD_DIR}/include/${slab_header}" "${slab_source}")
+set(thread_header "core/hle/kernel/k_thread.h")
+file(READ "${PROJECT_SOURCE_DIR}/src/${thread_header}" thread_source)
+set(thread_guard "    std::mutex m_context_guard{};\n")
+string(FIND "${thread_source}" "${thread_guard}" thread_guard_at)
+if(thread_guard_at LESS 0)
+    message(FATAL_ERROR "Pinned thread context guard changed")
+endif()
+string(REPLACE "${thread_guard}" "    ::Eden::KernelSpinLock m_context_guard{};\n" thread_source "${thread_source}")
+string(PREPEND thread_source "#include \"${EDEN_PORT_DIR}/kernel_spin_lock.h\"\n")
+write_derived("${PORT_BUILD_DIR}/include/${thread_header}" "${thread_source}")
 
 # PostDestroy can release an owner process and enter the scheduler using the
 # current dummy thread's mutex. Keep that thread alive through this cleanup.
