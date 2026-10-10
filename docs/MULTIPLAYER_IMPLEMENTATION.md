@@ -21,6 +21,11 @@ predates this checkout; the new work does not include the old development branch
   cap each socket's receive queue at 4 MiB / 1,024 packets, including empty datagrams.
 - Exercise actual proxy sockets for decompression, queue exhaustion, recovery, UDP
   truncation and TCP partial-read accounting. This does not implement the upstream TCP stubs.
+- Give each proxy socket its own receive subscription, removed before destruction.
+  Room callbacks no longer iterate BSD's mutable descriptor table or deliver duplicate
+  packets through multiple BSD services/descriptors. Protect endpoint/queue metadata and
+  cross-thread flags; closing a socket clears its queue and stops blocked receives.
+  Real-room tests cover shared references, destruction during traffic and close wakeup.
 - Run the actual room server and derived client over loopback: wrong password, retry,
   two members with distinct virtual IPs, LDN broadcast, directed proxy traffic and server loss.
 - Run the standalone controller against that server: hostname resolution, input validation,
@@ -63,6 +68,12 @@ action; the connected dialog was visually inspected. Native SDK syntax checks pa
 frontend, services, controller and the derived BSD implementation, using cached SDK/dependency
 headers. These are not a full native build or gameplay tests.
 
+The isolated full native build has now linked the Vulkan/OpenGL application and passed
+the build script's required post-build checks (startup, JIT, shutdown, worker placement,
+GPU cancellation and existing lifecycle regressions). It exposed and fixed generated-header
+ordering for the room controller. Native clock/topology calibration now runs once before
+logging and multiplayer workers are created. This is build evidence, not console execution.
+
 The packet/LDN and room/proxy test sources run under AddressSanitizer and UndefinedBehaviorSanitizer.
 The loopback check compiles the modified client against the pinned server source and
 links existing, uninstrumented host common/ENet/fmt dependencies. It is a transport test,
@@ -76,15 +87,14 @@ python3 tools/check-multiplayer.py --source /path/to/pinned/eden \
 
 ## Remaining before feature qualification
 
-- Finish callback ownership and guest socket synchronization: upstream BSD callbacks iterate
-  a static descriptor table while guest calls can change it. Duplicate descriptors and multiple
-  BSD service instances also need exactly-once packet delivery. Route to live socket objects
-  without holding a descriptor lock across blocking guest receive calls.
+- Finish game teardown audit: the pinned BSD descriptor table is static, so verify that game
+  exit releases sockets/subscriptions before a subsequent game. Also audit guest-to-guest
+  descriptor concurrency separately from the eliminated room-thread descriptor traversal.
 - Qualify proxy poll readiness: the pinned proxy has no native descriptor, while upstream
   `Network::Poll` delegates to native poll. The existing direct receive tests do not cover this.
 - Qualify cancellation and bounded queues in the native application under room loss.
 - Qualify the integrated launcher, system keyboard and game transitions in a full application.
-- Build the full host/native candidates and run relevant existing checks.
+- Build the full host candidate and repeat affected native checks as remaining socket fixes land.
 - Validate guest LDN and proxy sockets in a game, then internet room play.
 - Validate holdmysocks' outbound UDP forwarding and investigate the equivalent capability
   in atreus04-GG's payload, following the plan's separate acceptance gates.

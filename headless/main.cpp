@@ -457,6 +457,7 @@ int main(int argc, char** argv) {
 #endif
 #endif
         Common::FS::CreateEdenPaths();
+        Eden::Performance::PlatformChecks();
         Common::Log::Initialize();
         Eden::Multiplayer::RoomClient rooms;
         for (;;) {
@@ -677,10 +678,9 @@ int main(int argc, char** argv) {
         if (Common::FS::GetEdenPath(Common::FS::EdenPath::EdenDir) != user_dir) return 2;
         std::puts("[headless-startup] absolute_paths_ready");
 #endif
-#ifdef PS5_NATIVE
-        if (game) Eden::Performance::PlatformChecks();
-#endif
+#ifndef PS5_NATIVE
         Common::Log::Initialize();
+#endif
         if (game) {
             Common::Log::Filter filter;
             filter.SetClassLevel(Common::Log::Class::Service_FS, Common::Log::Level::Info);

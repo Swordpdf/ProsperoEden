@@ -197,6 +197,14 @@ configure_file("${MULTIPLAYER_OUTPUT}/lan_discovery.cpp.in"
     "${MULTIPLAYER_OUTPUT}/lan_discovery.cpp" COPYONLY)
 
 file(READ "${MULTIPLAYER_SOURCE}/src/core/internal_network/socket_proxy.h" proxy_header)
+multiplayer_replace(proxy_header "#include <mutex>" "#include <mutex>\n#include <atomic>")
+foreach(flag broadcast closed blocking)
+    multiplayer_replace(proxy_header "    bool ${flag} =" "    std::atomic<bool> ${flag} =")
+endforeach()
+multiplayer_replace(proxy_header "    std::atomic<bool> closed = false;" "    std::atomic<bool> closed = true;")
+multiplayer_replace(proxy_header "    u32 receive_timeout = 0;" "    std::atomic<u32> receive_timeout{0};")
+multiplayer_replace(proxy_header "    Protocol protocol;"
+    "    Protocol protocol{};\n    std::weak_ptr<RoomMember> receiving_member;\n    RoomMember::CallbackHandle<ProxyPacket> packet_callback;")
 multiplayer_replace(proxy_header "    std::queue<ProxyPacket> received_packets;"
     "    std::queue<ProxyPacket> received_packets;\n    std::size_t received_bytes = 0;")
 file(MAKE_DIRECTORY "${MULTIPLAYER_OUTPUT}/core/internal_network")
@@ -206,17 +214,43 @@ configure_file("${MULTIPLAYER_OUTPUT}/core/internal_network/socket_proxy.h.in"
 file(READ "${MULTIPLAYER_SOURCE}/src/core/internal_network/socket_proxy.cpp" proxy_source)
 multiplayer_replace(proxy_source "#include <chrono>"
     "#include <chrono>\n#include \"multiplayer_proxy.h\"")
+multiplayer_replace(proxy_source "ProxySocket::~ProxySocket() {"
+    [=[ProxySocket::~ProxySocket() {
+    // Unbind waits for any current callback before socket storage is destroyed.
+    if (auto member = receiving_member.lock()) member->Unbind(packet_callback);]=])
+multiplayer_replace(proxy_source "void ProxySocket::HandleProxyPacket(const ProxyPacket& packet) {"
+    [=[void ProxySocket::HandleProxyPacket(const ProxyPacket& packet) {
+    std::lock_guard guard(packets_mutex);]=])
+multiplayer_replace(proxy_source "    protocol = socket_protocol;"
+    [=[    {
+        std::lock_guard guard(packets_mutex);
+        protocol = socket_protocol;
+        closed = false;
+    }
+    if (auto member = Network::GetRoomMember().lock()) {
+        receiving_member = member;
+        packet_callback = member->BindOnProxyPacketReceived(
+            [this](const ProxyPacket& packet) { ProxySocket::HandleProxyPacket(packet); });
+    }]=])
+multiplayer_replace(proxy_source "Errno ProxySocket::Bind(SockAddrIn addr) {"
+    "Errno ProxySocket::Bind(SockAddrIn addr) {\n    std::lock_guard guard(packets_mutex);")
+multiplayer_replace(proxy_source "    const auto timeout = receive_timeout == 0 ? 5000 : receive_timeout;"
+    "    const auto configured_timeout = receive_timeout.load();\n    const auto timeout = configured_timeout == 0 ? 5000 : configured_timeout;")
+multiplayer_replace(proxy_source "            if (received_packets.size() > 0) {"
+    "            if (closed) return {-1, Errno::BADF};\n            if (received_packets.size() > 0) {")
 multiplayer_replace(proxy_source [=[                                          const SockAddrIn* addr) {
     ASSERT(flags == 0);]=]
     [=[                                          const SockAddrIn* addr) {
     ASSERT(flags == 0);
-    if (message.size() > Eden::Multiplayer::MaxProxyPayloadBytes) return {-1, Errno::MSGSIZE};]=])
+    if (message.size() > Eden::Multiplayer::MaxProxyPayloadBytes) return {-1, Errno::MSGSIZE};
+    std::lock_guard guard(packets_mutex);
+    if (closed) return {-1, Errno::BADF};
+    if (!addr) return {-1, Errno::INVAL};]=])
 multiplayer_replace(proxy_source [=[    decompressed.data = Common::Compression::DecompressDataZSTD(packet.data);
 
     std::lock_guard guard(packets_mutex);
     received_packets.push(decompressed);]=] [=[    if (!Eden::Multiplayer::DecodeProxyPayload(packet.data, decompressed.data)) return;
 
-    std::lock_guard guard(packets_mutex);
     // A stalled guest must not accumulate unbounded data from a room peer.
     if (received_packets.size() >= Eden::Multiplayer::MaxProxyQueuePackets ||
         decompressed.data.size() > Eden::Multiplayer::MaxProxyQueueBytes - received_bytes) return;
@@ -231,11 +265,47 @@ multiplayer_replace(proxy_source [=[            std::vector<u8> numArray(packet.
                 packet.data.erase(packet.data.begin(), packet.data.begin() + max_length);
                 received_bytes -= max_length;
             }]=])
+multiplayer_replace(proxy_source "Errno ProxySocket::Close() {"
+    [=[Errno ProxySocket::Close() {
+    std::lock_guard guard(packets_mutex);
+    received_packets = {};
+    received_bytes = 0;]=])
+multiplayer_replace(proxy_source "    fd = INVALID_SOCKET;\n    closed = true;" "    closed = true;")
+multiplayer_replace(proxy_source "    return fd != INVALID_SOCKET;" "    return !closed;")
 file(WRITE "${MULTIPLAYER_OUTPUT}/socket_proxy.cpp.in" "${proxy_source}")
 configure_file("${MULTIPLAYER_OUTPUT}/socket_proxy.cpp.in"
     "${MULTIPLAYER_OUTPUT}/socket_proxy.cpp" COPYONLY)
 
+file(READ "${MULTIPLAYER_SOURCE}/src/core/hle/service/sockets/bsd.h" bsd_header)
+multiplayer_replace(bsd_header [=[    /// Callback to parse and handle a received wifi packet.
+    void OnProxyPacketReceived(const Network::ProxyPacket& packet);]=] "")
+multiplayer_replace(bsd_header [=[    // Callback identifier for the OnProxyPacketReceived event.
+    Network::RoomMember::CallbackHandle<Network::ProxyPacket> proxy_packet_received;]=] "")
+file(MAKE_DIRECTORY "${MULTIPLAYER_OUTPUT}/core/hle/service/sockets")
+file(WRITE "${MULTIPLAYER_OUTPUT}/core/hle/service/sockets/bsd.h.in" "${bsd_header}")
+configure_file("${MULTIPLAYER_OUTPUT}/core/hle/service/sockets/bsd.h.in"
+    "${MULTIPLAYER_OUTPUT}/core/hle/service/sockets/bsd.h" COPYONLY)
 file(READ "${MULTIPLAYER_SOURCE}/src/core/hle/service/sockets/bsd.cpp" bsd_source)
+multiplayer_replace(bsd_source [=[void BSD_USA::OnProxyPacketReceived(const Network::ProxyPacket& packet) {
+    for (auto& optional_descriptor : file_descriptors) {
+        if (!optional_descriptor.has_value()) {
+            continue;
+        }
+        FileDescriptor& descriptor = *optional_descriptor;
+        descriptor.socket.get()->HandleProxyPacket(packet);
+    }
+}]=] "")
+multiplayer_replace(bsd_source [=[BSD_USA::~BSD_USA() {
+    if (auto room_member = Network::GetRoomMember().lock()) {
+        room_member->Unbind(proxy_packet_received);
+    }
+}]=] "BSD_USA::~BSD_USA() = default;")
+multiplayer_replace(bsd_source [=[    if (auto room_member = Network::GetRoomMember().lock()) {
+        proxy_packet_received = room_member->BindOnProxyPacketReceived(
+            [this](const Network::ProxyPacket& packet) { OnProxyPacketReceived(packet); });
+    } else {
+        LOG_ERROR(Service, "Network isn't initialized");
+    }]=] "    // Proxy sockets own one receive subscription each, independent of BSD descriptors.")
 multiplayer_replace(bsd_source "#include \"network/network.h\""
     "#include \"network/network.h\"\n#include \"multiplayer_session.h\"")
 multiplayer_replace(bsd_source "    if (room_member && room_member->IsConnected()) {"

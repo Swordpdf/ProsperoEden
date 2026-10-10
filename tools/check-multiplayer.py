@@ -66,6 +66,7 @@ def main():
             subprocess.run([str(executable), str(port)], check=True, timeout=40, env=environment)
             print("Real room: password rejection, retry, two members, LDN broadcast, proxy routing, loss: PASS")
             print("Proxy socket: decompression, queue limits, truncation, partial reads, recovery: PASS")
+            print("Proxy ownership: real-room delivery, shared references, concurrent destruction, close wakeup: PASS")
             print("Room controller: hostname, validation, retry, members, leave, loss, cancellation: PASS")
             print("Room send budgets: packet/byte/count limits and stalled ENet peer: PASS")
     print("Multiplayer packet round-trip, truncation, allocation bounds and overflow: PASS")

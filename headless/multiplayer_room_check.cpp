@@ -91,6 +91,14 @@ void CheckProxySocket() {
     for (std::size_t i = 0; i < capacity; ++i) socket.HandleProxyPacket(packet);
     for (std::size_t i = 0; i < capacity; ++i)
         assert(socket.RecvFrom(0, bytes, nullptr).first == static_cast<s32>(bytes.size()));
+    socket.SetNonBlock(false);
+    Network::Errno closed_result{};
+    const auto close_start = std::chrono::steady_clock::now();
+    std::jthread receive([&] { closed_result = socket.RecvFrom(0, bytes, nullptr).second; });
+    socket.Close();
+    receive.join();
+    assert(closed_result == Network::Errno::BADF);
+    assert(std::chrono::steady_clock::now() - close_start < std::chrono::seconds{2});
 }
 
 void CheckController(u16 port) {
@@ -142,6 +150,69 @@ void CheckController(u16 port) {
     assert(std::chrono::steady_clock::now() - start < std::chrono::seconds{2});
     assert(client.Connect(connection));
     // Destruction must also cancel a join without waiting for its five-second timeout.
+}
+
+void CheckSocketDelivery(u16 port) {
+    using namespace Eden::Multiplayer;
+    RoomClient client;
+    Network::Room room;
+    assert(room.Create("Socket delivery", "", "127.0.0.1", port, "", 2,
+                      "", {}, std::make_unique<Network::VerifyUser::NullBackend>()));
+    assert(client.Connect({"127.0.0.1", port, "PlayerOne", ""}));
+    Wait([&] { return client.GetSnapshot().phase == Phase::Connected; });
+    Network::RoomMember peer;
+    peer.Join("PlayerTwo", "127.0.0.1", port);
+    Wait([&] { return peer.GetState() == Network::RoomMember::State::Joined; });
+    Network::ProxyPacket packet{};
+    packet.local_endpoint = {Network::Domain::INET, peer.GetFakeIpAddress(), 4321};
+    packet.remote_endpoint = {Network::Domain::INET,
+                             Network::GetRoomMember().lock()->GetFakeIpAddress(), 1234};
+    packet.protocol = Network::Protocol::UDP;
+    const u8 data[]{4, 5, 6};
+    packet.data.resize(ZSTD_compressBound(sizeof(data)));
+    packet.data.resize(ZSTD_compress(packet.data.data(), packet.data.size(), data, sizeof(data), 1));
+    const auto make_socket = [&] {
+        auto socket = std::make_shared<Network::ProxySocket>();
+        socket->Initialize(Network::Domain::INET, Network::Type::DGRAM, Network::Protocol::UDP);
+        socket->Bind(packet.remote_endpoint);
+        socket->SetNonBlock(true);
+        return socket;
+    };
+    auto socket = make_socket();
+    auto duplicate = socket;
+    assert(socket->IsOpened());
+    peer.SendProxyPacket(packet);
+    std::array<u8, 3> bytes{};
+    bool received = false;
+    Wait([&] {
+        if (!received) received = socket->RecvFrom(0, bytes, nullptr).first == 3;
+        return received;
+    });
+    assert(bytes == (std::array<u8, 3>{4, 5, 6}));
+    assert(duplicate->RecvFrom(0, bytes, nullptr).second == Network::Errno::AGAIN);
+    socket->Close();
+    assert(!duplicate->IsOpened());
+    assert(duplicate->RecvFrom(0, bytes, nullptr).second == Network::Errno::BADF);
+    duplicate.reset();
+    socket.reset();
+    // Destruction must unbind safely while the room thread is delivering packets.
+    std::jthread traffic([&](std::stop_token stop) {
+        while (!stop.stop_requested()) {
+            peer.SendProxyPacket(packet);
+            std::this_thread::sleep_for(std::chrono::milliseconds{1});
+        }
+    });
+    for (int i = 0; i < 50; ++i) {
+        auto transient = make_socket();
+        std::this_thread::sleep_for(std::chrono::milliseconds{2});
+        transient->Close();
+    }
+    traffic.request_stop();
+    traffic.join();
+    peer.Leave();
+    client.Leave();
+    Wait([&] { return client.GetSnapshot().phase == Phase::Idle; });
+    room.Destroy();
 }
 
 void CheckTestRoom(u16 port, bool stall) {
@@ -259,6 +330,7 @@ int main(int argc, char** argv) {
     }
     Network::Shutdown();
     CheckController(port);
+    CheckSocketDelivery(port);
     CheckTestRoom(port, false);
     CheckTestRoom(port, true);
     const auto start = std::chrono::steady_clock::now();
