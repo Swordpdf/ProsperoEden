@@ -300,7 +300,7 @@ ProsperoEden should not read Tailscale auth keys, modify payload settings automa
 
 ### 7.3 Secondary candidate: atreus04-GG/ps5tailscale
 
-The [pinned README](https://github.com/atreus04-GG/ps5tailscale/blob/d99261c21b678d9637a92c88168e1f4a72563040/README.md) describes PS5-resident Remote Play proxies and explicitly excludes system-wide VPN behavior. A general configurable outbound UDP forward for other apps is not established by the inspected documentation. Keep this candidate **unqualified for ProsperoEden room access** until that path is demonstrated.
+The [pinned README](https://github.com/atreus04-GG/ps5tailscale/blob/d99261c21b678d9637a92c88168e1f4a72563040/README.md) describes PS5-resident Remote Play proxies and explicitly excludes system-wide VPN behavior. Source review now confirms the missing facility at this pin: [`libtailscale_auth_probe.c`](https://github.com/atreus04-GG/ps5tailscale/blob/d99261c21b678d9637a92c88168e1f4a72563040/src/libtailscale_auth_probe.c#L699) starts the Remote Play proxy, then explicitly skips outbound dialing. The [libtailscale patch](https://github.com/atreus04-GG/ps5tailscale/blob/d99261c21b678d9637a92c88168e1f4a72563040/patches/libtailscale-59d4bb8-ps5.patch#L450) listens inside tsnet on fixed Remote Play ports and sends accepted traffic to the PS5's native LAN address. It does not expose a configurable native-loopback listener dialing an arbitrary tailnet UDP target. Classify this revision as **unsupported for this room topology**, not as a failed PS5 multiplayer test.
 
 Investigation branch:
 

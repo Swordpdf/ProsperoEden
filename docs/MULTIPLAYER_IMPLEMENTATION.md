@@ -50,6 +50,9 @@ predates this checkout; the new work does not include the old development branch
   wrong-password retry, copied membership, leave/rejoin, room loss, join cancellation and
   destruction during a pending join. A raw ENet server verifies out-of-order join-success
   rejection. Cancellation and pending-join destruction complete within the two-second test limit.
+- Verify duplicate-nickname and full-room failures against the real room server, plus a
+  protocol-version mismatch supplied over ENet. Each reports its specific error and permits
+  a successful later connection after correcting the conflict or using a compatible server.
 
 ## Controller and launcher integration
 
@@ -137,8 +140,8 @@ CXX=clang++-18 python3 tools/check-multiplayer.py --source /path/to/pinned/eden 
 - Qualify the integrated launcher, system keyboard and game transitions in a full application.
 - Repeat affected build/package checks if hardware findings require further changes.
 - Validate guest LDN and proxy sockets in a game, then internet room play.
-- Validate holdmysocks' outbound UDP forwarding and investigate the equivalent capability
-  in atreus04-GG's payload, following the plan's separate acceptance gates.
+- Validate holdmysocks' outbound UDP forwarding on hardware. Source review confirms that
+  the pinned atreus04-GG payload lacks this facility; adding it is optional separate work.
 - Test console lifecycle, regressions and performance, only after confirming a console is idle.
 
 Read-only console preflight found one active session and one console with released title
@@ -152,3 +155,16 @@ left intact; the test relay exited and no console was contacted during this prob
 No console application has been launched for this work. Neither PS5 multiplayer nor either Tailscale
 integration is qualified yet. Public room browsing and PS5 room hosting remain deferred.
 Issue #89 is explicitly reserved for a separate future follow-up; this PR addresses #98.
+
+## Tailscale source qualification and user guide
+
+The [experimental setup guide](MULTIPLAYER.md) documents room connection, recovery and the
+holdmysocks forwarding configuration without advertising untested hardware support.
+Pinned source review confirms `newForwarder(d.dialTailnet, ...)` connects local UDP rules
+through `tsnet.Server.Dial`; `startUDP` supplies the native listener and per-client relay.
+The atreus04-GG revision instead configures fixed inbound Remote Play listeners and
+explicitly skips outbound dialing. Its required local forward is absent at that pin.
+
+Neither payload was executed. No Go toolchain was found in the current Windows/WSL
+environment, so the payload's Go component tests have not run here. This is source-level
+evidence only; it does not qualify tsnet transport, PS5 sandbox access or gameplay.

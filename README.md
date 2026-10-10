@@ -16,6 +16,10 @@ This is an early alpha. Video, audio, controller input, and saves have been conf
 
 The complete ProsperoEden source is in this repository: the PS5 frontend and launcher in `headless/`, and the build and packaging tools in `tools/`. To build it yourself, run `make` on Linux (Ubuntu 26.04; WSL works). It fetches every dependency at its pinned revision and writes the release files to `dist/`; `make help` lists the other targets. See [docs/BUILDING.md](docs/BUILDING.md). A release ZIP built by GitHub Actions can be checked with `gh attestation verify <ZIP> -R blackbearreloaded/ProsperoEden` (GitHub CLI); this covers releases built from now on (after v1.000.090), not earlier ones.
 
+Work on local-wireless room multiplayer is experimental. See the [setup guide and current
+limitations](docs/MULTIPLAYER.md) and [validation status](docs/MULTIPLAYER_IMPLEMENTATION.md);
+PS5 gameplay and Tailscale forwarding are not yet qualified.
+
 ## Project foundation
 
 > [!IMPORTANT]

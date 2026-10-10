@@ -423,8 +423,47 @@ void CheckSocketDelivery(u16 port) {
     room.Destroy();
 }
 
-void CheckTestRoom(u16 port, bool stall) {
+void CheckRejectedRoom(u16 port) {
     using namespace Eden::Multiplayer;
+    RoomClient client;
+    Network::Room room;
+    assert(room.Create("Rejection test", "", "127.0.0.1", port, "", 2,
+                      "", {}, std::make_unique<Network::VerifyUser::NullBackend>()));
+    Network::RoomMember occupied, second;
+    std::atomic<std::size_t> members{};
+    const auto info = occupied.BindOnRoomInformationChanged([&](const auto&) {
+        members = occupied.GetMemberInformation().size();
+    });
+    occupied.Join("Occupied", "127.0.0.1", port, 0, Network::NoPreferredIP, "");
+    Wait([&] { return occupied.GetState() == Network::RoomMember::State::Joined; });
+    assert(client.Connect({"127.0.0.1", port, "Occupied", ""}));
+    Wait([&] { return client.GetSnapshot().phase == Phase::Failed; });
+    assert(client.GetSnapshot().error == "That nickname is already in use.");
+    assert(client.Connect({"127.0.0.1", port, "Available", ""}));
+    Wait([&] { return client.GetSnapshot().phase == Phase::Connected; });
+    client.Leave();
+    Wait([&] { return client.GetSnapshot().phase == Phase::Idle && members == 1; });
+    second.Join("SecondPlayer", "127.0.0.1", port, 0, Network::NoPreferredIP, "");
+    Wait([&] { return members == 2; });
+    assert(client.Connect({"127.0.0.1", port, "Available", ""}));
+    Wait([&] { return client.GetSnapshot().phase == Phase::Failed; });
+    assert(client.GetSnapshot().error == "The room is full.");
+    second.Leave();
+    Wait([&] { return members == 1; });
+    assert(client.Connect({"127.0.0.1", port, "Available", ""}));
+    Wait([&] { return client.GetSnapshot().phase == Phase::Connected; });
+    client.Leave();
+    Wait([&] { return client.GetSnapshot().phase == Phase::Idle; });
+    occupied.Leave();
+    occupied.Unbind(info);
+    room.Destroy();
+}
+
+enum class TestRoom { OutOfOrder, Stalled, VersionMismatch };
+
+void CheckTestRoom(u16 port, TestRoom mode) {
+    using namespace Eden::Multiplayer;
+    const bool stall = mode == TestRoom::Stalled;
     RoomClient client;
     ENetAddress address{};
     assert(enet_address_set_host_ip(&address, "127.0.0.1") == 0);
@@ -444,6 +483,14 @@ void CheckTestRoom(u16 port, bool stall) {
                 const bool join = event.packet->dataLength && event.packet->data[0] == Network::IdJoinRequest;
                 enet_packet_destroy(event.packet);
                 if (!join) continue;
+                if (mode == TestRoom::VersionMismatch) {
+                    Network::Packet reply;
+                    reply.Write(u8{Network::IdVersionMismatch}).Write(u32{Network::network_version + 1});
+                    auto* packet = enet_packet_create(reply.GetData(), reply.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
+                    assert(enet_peer_send(event.peer, 0, packet) == 0);
+                    enet_host_flush(server);
+                    continue;
+                }
                 if (stall) {
                     Network::Packet info;
                     info.Write(u8{Network::IdRoomInformation}).Write(std::string{"Test room"})
@@ -478,13 +525,24 @@ void CheckTestRoom(u16 port, bool stall) {
         }
     }
     Wait([&] { return client.GetSnapshot().phase == Phase::Failed; });
-    assert(client.GetSnapshot().error == (stall ? "The connection to the room was lost." : "The room connection failed."));
+    assert(client.GetSnapshot().error == (stall ? "The connection to the room was lost." :
+        mode == TestRoom::VersionMismatch ? "The room uses a different protocol version." : "The room connection failed."));
     paused = false;
     client.Leave();
     Wait([&] { return client.GetSnapshot().phase == Phase::Idle; });
     replies.request_stop();
     replies.join();
     enet_host_destroy(server);
+    if (mode == TestRoom::VersionMismatch) {
+        Network::Room compatible;
+        assert(compatible.Create("Compatible retry", "", "127.0.0.1", port, "", 2,
+                                 "", {}, std::make_unique<Network::VerifyUser::NullBackend>()));
+        assert(client.Connect({"127.0.0.1", port, "PlayerOne", ""}));
+        Wait([&] { return client.GetSnapshot().phase == Phase::Connected; });
+        client.Leave();
+        Wait([&] { return client.GetSnapshot().phase == Phase::Idle; });
+        compatible.Destroy();
+    }
 }
 
 int main(int argc, char** argv) {
@@ -544,8 +602,10 @@ int main(int argc, char** argv) {
     Network::Shutdown();
     CheckController(port);
     CheckSocketDelivery(port);
-    CheckTestRoom(port, false);
-    CheckTestRoom(port, true);
+    CheckRejectedRoom(port);
+    CheckTestRoom(port, TestRoom::OutOfOrder);
+    CheckTestRoom(port, TestRoom::Stalled);
+    CheckTestRoom(port, TestRoom::VersionMismatch);
     const auto start = std::chrono::steady_clock::now();
     {
         Eden::Multiplayer::RoomClient client;
