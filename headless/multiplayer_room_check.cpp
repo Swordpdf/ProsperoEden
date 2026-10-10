@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <thread>
 #include "common/logging.h"
+#include "common/assert.h"
 #include "network/network.h"
 #include "core/internal_network/socket_proxy.h"
 #include "multiplayer_proxy.h"
@@ -13,6 +14,41 @@
 #include "multiplayer_session.h"
 #include "enet/enet.h"
 #include "network/packet.h"
+
+// Compile the generated production destructor without the unrelated IPC framework.
+namespace Service::Sockets {
+class BSD_USA {
+public:
+    struct FileDescriptor { std::shared_ptr<Network::SocketBase> socket; };
+    static inline std::atomic<unsigned> live_instances{};
+    static inline std::array<std::optional<FileDescriptor>, 128> file_descriptors{};
+    BSD_USA() { ++live_instances; }
+    ~BSD_USA();
+};
+#include "bsd_lifetime.cpp"
+}
+
+void CheckBsdLifetime() {
+    using Service::Sockets::BSD_USA;
+    auto first = std::make_unique<BSD_USA>();
+    auto second = std::make_unique<BSD_USA>();
+    auto last = std::make_unique<BSD_USA>();
+    auto socket = std::make_shared<Network::ProxySocket>();
+    socket->Initialize(Network::Domain::INET, Network::Type::DGRAM, Network::Protocol::UDP);
+    BSD_USA::file_descriptors[0] = BSD_USA::FileDescriptor{socket};
+    BSD_USA::file_descriptors[1] = BSD_USA::FileDescriptor{socket};
+    first.reset();
+    second.reset();
+    assert(socket->IsOpened() && BSD_USA::file_descriptors[0]);
+    last.reset();
+    assert(!socket->IsOpened() && BSD_USA::live_instances == 0);
+    for (const auto& entry : BSD_USA::file_descriptors) assert(!entry);
+    std::weak_ptr<Network::ProxySocket> released = socket;
+    socket.reset();
+    assert(released.expired());
+    BSD_USA next_game;
+    for (const auto& entry : BSD_USA::file_descriptors) assert(!entry);
+}
 
 template <typename Predicate>
 void Wait(Predicate predicate) {
@@ -99,6 +135,74 @@ void CheckProxySocket() {
     receive.join();
     assert(closed_result == Network::Errno::BADF);
     assert(std::chrono::steady_clock::now() - close_start < std::chrono::seconds{2});
+}
+
+void CheckProxyPoll() {
+    using namespace Network;
+    ProxySocket proxy;
+    proxy.Initialize(Domain::INET, Type::DGRAM, Protocol::UDP);
+    const SockAddrIn endpoint{Domain::INET, {127, 0, 0, 1}, 1234};
+    proxy.Bind(endpoint);
+    std::vector<PollFD> fds{{&proxy, PollEvents::In, {}}};
+    assert(Poll(fds, 0).first == 0 && fds[0].revents == PollEvents{});
+    fds[0].events = PollEvents::Out;
+    assert(Poll(fds, 0).first == 1 && fds[0].revents == PollEvents::Out);
+    fds[0].events = PollEvents::In;
+    const auto start = std::chrono::steady_clock::now();
+    assert(Poll(fds, 20).first == 0);
+    assert(std::chrono::steady_clock::now() - start >= std::chrono::milliseconds{20});
+    assert(std::chrono::steady_clock::now() - start < std::chrono::seconds{2});
+
+    ProxyPacket packet{};
+    packet.remote_endpoint = endpoint;
+    packet.protocol = Protocol::UDP;
+    const std::array<u8, 1> bytes{42};
+    packet.data.resize(ZSTD_compressBound(bytes.size()));
+    packet.data.resize(ZSTD_compress(packet.data.data(), packet.data.size(), bytes.data(), bytes.size(), 1));
+    std::jthread arrival([&] {
+        std::this_thread::sleep_for(std::chrono::milliseconds{20});
+        proxy.HandleProxyPacket(packet);
+    });
+    assert(Poll(fds, -1).first == 1 && fds[0].revents == PollEvents::In);
+    arrival.join();
+    assert(Poll(fds, 0).first == 1); // Poll never consumes the packet.
+    std::array<u8, 1> received{};
+    assert(proxy.RecvFrom(0, received, nullptr).first == 1 && received == bytes);
+    assert(Poll(fds, 0).first == 0);
+
+    Socket native, sender;
+    assert(native.Initialize(Domain::INET, Type::DGRAM, Protocol::UDP) == Errno::SUCCESS);
+    assert(sender.Initialize(Domain::INET, Type::DGRAM, Protocol::UDP) == Errno::SUCCESS);
+    assert(native.Bind({Domain::INET, {127, 0, 0, 1}, 0}) == Errno::SUCCESS);
+    const auto [address, address_error] = native.GetSockName();
+    assert(address_error == Errno::SUCCESS);
+    fds.push_back({&native, PollEvents::In, {}});
+    assert(sender.SendTo(0, bytes, &address).first == 1);
+    assert(Poll(fds, 1000).first == 1);
+    assert(fds[0].revents == PollEvents{} && fds[1].revents == PollEvents::In);
+    assert(native.RecvFrom(0, received, nullptr).first == 1);
+    proxy.HandleProxyPacket(packet);
+    assert(sender.SendTo(0, bytes, &address).first == 1);
+    assert(Poll(fds, 1000).first == 2);
+    assert(proxy.RecvFrom(0, received, nullptr).first == 1);
+    assert(native.RecvFrom(0, received, nullptr).first == 1);
+    assert(Poll(fds, 0).first == 0); // No stale readiness from the previous native poll.
+    std::vector<PollFD> native_only{{&native, PollEvents::In, {}}};
+    assert(Poll(native_only, 0).first == 0);
+
+    std::jthread interrupt([] {
+        std::this_thread::sleep_for(std::chrono::milliseconds{20});
+        CancelPendingSocketOperations();
+    });
+    assert(Poll(fds, -1).first == 0);
+    interrupt.join();
+    RestartSocketOperations();
+    std::jthread close([&] {
+        std::this_thread::sleep_for(std::chrono::milliseconds{20});
+        proxy.Close();
+    });
+    assert(Poll(fds, -1).first == 1 && fds[0].revents == PollEvents::Nval);
+    close.join();
 }
 
 void CheckController(u16 port) {
@@ -283,8 +387,11 @@ int main(int argc, char** argv) {
     assert(argc == 2);
     const auto port = static_cast<u16>(std::strtoul(argv[1], nullptr, 10));
     Common::Log::Initialize();
+    Network::NetworkInstance socket_network;
     assert(Network::Init());
     CheckProxySocket();
+    CheckBsdLifetime();
+    CheckProxyPoll();
     {
         Network::Room room;
         assert(room.Create("Offline test", "", "127.0.0.1", port, "secret", 2,

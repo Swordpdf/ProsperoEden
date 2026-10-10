@@ -2090,8 +2090,8 @@ ${fs_service}")
     write_derived("${PORT_BUILD_DIR}/filesystem.cpp" "${fs_service}")
     list(REMOVE_ITEM core_sources hle/service/filesystem/filesystem.cpp)
     list(APPEND core_sources "${PORT_BUILD_DIR}/filesystem.cpp")
-    list(REMOVE_ITEM core_sources internal_network/network.cpp)
-    file(READ "${PROJECT_SOURCE_DIR}/src/core/internal_network/network.cpp" network_source)
+    list(REMOVE_ITEM core_sources internal_network/network.cpp "${MULTIPLAYER_OUTPUT}/socket_network.cpp")
+    file(READ "${MULTIPLAYER_OUTPUT}/socket_network.cpp" network_source)
     string(REPLACE "namespace Network {" "namespace Network {\n#ifndef IPPROTO_DCCP\nconstexpr int IPPROTO_DCCP = 33;\n#endif" network_source "${network_source}")
     # Native pipes can be created but fail their first byte write with ENOMEM.
     # Preserve Eden's poll/write/read wakeup design using a local socket pair.
@@ -2299,7 +2299,7 @@ target_link_libraries(eden-headless PRIVATE core eden-pad)
 # A game's text entry on the PS5's own on-screen keyboard (system_keyboard.h, keyboard_applet.h).
 target_sources(eden-headless PRIVATE "${EDEN_PORT_DIR}/system_keyboard.cpp")
 target_sources(eden-headless PRIVATE "${EDEN_PORT_DIR}/multiplayer.cpp")
-target_include_directories(eden-headless BEFORE PRIVATE "${MULTIPLAYER_OUTPUT}")
+target_include_directories(eden-headless BEFORE PRIVATE "${MULTIPLAYER_SOCKET_HEADERS}" "${MULTIPLAYER_OUTPUT}")
 if(PS5_NATIVE)
     target_link_libraries(eden-headless PRIVATE
         "${sdk}/target/lib/libSceImeDialog.so" "${sdk}/target/lib/libSceSysmodule.so"

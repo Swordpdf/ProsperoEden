@@ -26,6 +26,16 @@ predates this checkout; the new work does not include the old development branch
   packets through multiple BSD services/descriptors. Protect endpoint/queue metadata and
   cross-thread flags; closing a socket clears its queue and stops blocked receives.
   Real-room tests cover shared references, destruction during traffic and close wakeup.
+- Implement proxy queue readiness through `Network::Poll`, including mixed native/proxy
+  descriptors, finite/infinite waits, close notifications and the existing shutdown interrupt.
+  Native-only polls retain the original path. Proxy polls bound native waits to 1 ms; their
+  scheduling cost still needs console measurement. The native derivation retains main's
+  socketpair interrupt implementation rather than replacing it with upstream pipe handling.
+- Clear BSD's shared descriptor table when its final service is destroyed, closing sockets
+  before releasing references. An offline fixture compiles the generated destructor with
+  real proxy sockets and a minimal stand-in for the IPC class; it verifies the table survives
+  earlier service destruction and is empty for the next game. Full game teardown remains
+  a console acceptance gate.
 - Run the actual room server and derived client over loopback: wrong password, retry,
   two members with distinct virtual IPs, LDN broadcast, directed proxy traffic and server loss.
 - Run the standalone controller against that server: hostname resolution, input validation,
@@ -74,6 +84,11 @@ GPU cancellation and existing lifecycle regressions). It exposed and fixed gener
 ordering for the room controller. Native clock/topology calibration now runs once before
 logging and multiplayer workers are created. This is build evidence, not console execution.
 
+An additional Ninja dependency audit caught four cached object/header mismatches after
+socket class overrides were introduced. The socket headers now use a distinct include root
+to invalidate those objects. Both build wrappers require every active consumer of the five
+modified multiplayer headers to have used the derived declaration.
+
 The packet/LDN and room/proxy test sources run under AddressSanitizer and UndefinedBehaviorSanitizer.
 The loopback check compiles the modified client against the pinned server source and
 links existing, uninstrumented host common/ENet/fmt dependencies. It is a transport test,
@@ -87,11 +102,8 @@ python3 tools/check-multiplayer.py --source /path/to/pinned/eden \
 
 ## Remaining before feature qualification
 
-- Finish game teardown audit: the pinned BSD descriptor table is static, so verify that game
-  exit releases sockets/subscriptions before a subsequent game. Also audit guest-to-guest
-  descriptor concurrency separately from the eliminated room-thread descriptor traversal.
-- Qualify proxy poll readiness: the pinned proxy has no native descriptor, while upstream
-  `Network::Poll` delegates to native poll. The existing direct receive tests do not cover this.
+- Audit guest-to-guest descriptor concurrency separately from the eliminated room-thread
+  descriptor traversal; qualify socket cleanup and poll behavior in actual game transitions.
 - Qualify cancellation and bounded queues in the native application under room loss.
 - Qualify the integrated launcher, system keyboard and game transitions in a full application.
 - Build the full host candidate and repeat affected native checks as remaining socket fixes land.

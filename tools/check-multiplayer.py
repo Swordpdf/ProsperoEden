@@ -36,6 +36,10 @@ def main():
         ], check=True)
         subprocess.run([str(executable)], check=True)
         if args.host_cache:
+            bsd = (output / "bsd.cpp").read_text()
+            destructor = bsd.split("BSD_USA::~BSD_USA() {", 1)[1].split(
+                "std::unique_lock<std::mutex> BSD_USA::LockService()", 1)[0]
+            (output / "bsd_lifetime.cpp").write_text("BSD_USA::~BSD_USA() {" + destructor)
             cache = args.host_cache.resolve()
             fmt = cache / "source/.cache/cpm/fmt/12.1.0/include"
             enet = cache / "source/.cache/cpm/enet/v1.3.18/include"
@@ -43,13 +47,13 @@ def main():
             subprocess.run([
                 os.environ.get("CXX", "clang++"), "-std=c++20", "-g", "-O1", "-pthread",
                 "-fsanitize=address,undefined", "-fno-omit-frame-pointer",
-                "-I", str(output), "-I", str(root / "headless"),
+                "-I", str(output / "socket-headers"), "-I", str(output), "-I", str(root / "headless"),
                 "-I", str(source / "src"), "-I", str(fmt), "-I", str(enet),
                 str(root / "headless/multiplayer_room_check.cpp"),
                 str(root / "headless/multiplayer.cpp"),
                 str(output / "room_member.cpp"), str(output / "packet.cpp"),
                 str(output / "socket_proxy.cpp"),
-                str(source / "src/core/internal_network/network.cpp"),
+                str(output / "socket_network.cpp"),
                 str(source / "src/core/internal_network/network_interface.cpp"),
                 *[str(source / "src/network" / name) for name in
                   ("network.cpp", "room.cpp", "verify_user.cpp")],
@@ -67,6 +71,8 @@ def main():
             print("Real room: password rejection, retry, two members, LDN broadcast, proxy routing, loss: PASS")
             print("Proxy socket: decompression, queue limits, truncation, partial reads, recovery: PASS")
             print("Proxy ownership: real-room delivery, shared references, concurrent destruction, close wakeup: PASS")
+            print("Proxy poll: timeout, readiness, mixed native sockets, shutdown interrupt, close: PASS")
+            print("Generated BSD teardown: shared table survives until final service, closes and clears for next game: PASS")
             print("Room controller: hostname, validation, retry, members, leave, loss, cancellation: PASS")
             print("Room send budgets: packet/byte/count limits and stalled ENet peer: PASS")
     print("Multiplayer packet round-trip, truncation, allocation bounds and overflow: PASS")

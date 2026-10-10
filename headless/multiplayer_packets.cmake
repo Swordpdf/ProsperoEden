@@ -196,7 +196,30 @@ file(WRITE "${MULTIPLAYER_OUTPUT}/lan_discovery.cpp.in" "${ldn_source}")
 configure_file("${MULTIPLAYER_OUTPUT}/lan_discovery.cpp.in"
     "${MULTIPLAYER_OUTPUT}/lan_discovery.cpp" COPYONLY)
 
+set(MULTIPLAYER_SOCKET_HEADERS "${MULTIPLAYER_OUTPUT}/socket-headers")
+# Remove the prior generated location: quoted includes search beside the derived .cpp first.
+file(REMOVE "${MULTIPLAYER_OUTPUT}/core/internal_network/sockets.h"
+    "${MULTIPLAYER_OUTPUT}/core/internal_network/socket_proxy.h"
+    "${MULTIPLAYER_OUTPUT}/core/hle/service/sockets/bsd.h")
+file(MAKE_DIRECTORY "${MULTIPLAYER_SOCKET_HEADERS}/core/internal_network")
+file(READ "${MULTIPLAYER_SOURCE}/src/core/internal_network/sockets.h" sockets_header)
+multiplayer_replace(sockets_header "    virtual bool IsOpened() const = 0;"
+    [=[    virtual bool IsOpened() const = 0;
+    virtual std::optional<PollEvents> PollProxy(PollEvents events) { return std::nullopt; }]=])
+file(WRITE "${MULTIPLAYER_SOCKET_HEADERS}/core/internal_network/sockets.h.in" "${sockets_header}")
+configure_file("${MULTIPLAYER_SOCKET_HEADERS}/core/internal_network/sockets.h.in"
+    "${MULTIPLAYER_SOCKET_HEADERS}/core/internal_network/sockets.h" COPYONLY)
+file(READ "${MULTIPLAYER_SOURCE}/src/core/internal_network/network.cpp" socket_network)
+multiplayer_replace(socket_network "#include <algorithm>" "#include <algorithm>\n#include <chrono>")
+multiplayer_replace(socket_network "std::pair<s32, Errno> Poll(std::vector<PollFD>& pollfds, s32 timeout) {"
+    "static std::pair<s32, Errno> PollNative(std::vector<PollFD>& pollfds, s32 timeout) {")
+multiplayer_replace(socket_network "Socket::~Socket() {" "#include \"multiplayer_poll.inc\"\n\nSocket::~Socket() {")
+file(WRITE "${MULTIPLAYER_OUTPUT}/socket_network.cpp.in" "${socket_network}")
+configure_file("${MULTIPLAYER_OUTPUT}/socket_network.cpp.in" "${MULTIPLAYER_OUTPUT}/socket_network.cpp" COPYONLY)
+
 file(READ "${MULTIPLAYER_SOURCE}/src/core/internal_network/socket_proxy.h" proxy_header)
+multiplayer_replace(proxy_header "    bool IsOpened() const override;"
+    "    bool IsOpened() const override;\n    std::optional<PollEvents> PollProxy(PollEvents events) override;")
 multiplayer_replace(proxy_header "#include <mutex>" "#include <mutex>\n#include <atomic>")
 foreach(flag broadcast closed blocking)
     multiplayer_replace(proxy_header "    bool ${flag} =" "    std::atomic<bool> ${flag} =")
@@ -207,10 +230,9 @@ multiplayer_replace(proxy_header "    Protocol protocol;"
     "    Protocol protocol{};\n    std::weak_ptr<RoomMember> receiving_member;\n    RoomMember::CallbackHandle<ProxyPacket> packet_callback;")
 multiplayer_replace(proxy_header "    std::queue<ProxyPacket> received_packets;"
     "    std::queue<ProxyPacket> received_packets;\n    std::size_t received_bytes = 0;")
-file(MAKE_DIRECTORY "${MULTIPLAYER_OUTPUT}/core/internal_network")
-file(WRITE "${MULTIPLAYER_OUTPUT}/core/internal_network/socket_proxy.h.in" "${proxy_header}")
-configure_file("${MULTIPLAYER_OUTPUT}/core/internal_network/socket_proxy.h.in"
-    "${MULTIPLAYER_OUTPUT}/core/internal_network/socket_proxy.h" COPYONLY)
+file(WRITE "${MULTIPLAYER_SOCKET_HEADERS}/core/internal_network/socket_proxy.h.in" "${proxy_header}")
+configure_file("${MULTIPLAYER_SOCKET_HEADERS}/core/internal_network/socket_proxy.h.in"
+    "${MULTIPLAYER_SOCKET_HEADERS}/core/internal_network/socket_proxy.h" COPYONLY)
 file(READ "${MULTIPLAYER_SOURCE}/src/core/internal_network/socket_proxy.cpp" proxy_source)
 multiplayer_replace(proxy_source "#include <chrono>"
     "#include <chrono>\n#include \"multiplayer_proxy.h\"")
@@ -272,19 +294,32 @@ multiplayer_replace(proxy_source "Errno ProxySocket::Close() {"
     received_bytes = 0;]=])
 multiplayer_replace(proxy_source "    fd = INVALID_SOCKET;\n    closed = true;" "    closed = true;")
 multiplayer_replace(proxy_source "    return fd != INVALID_SOCKET;" "    return !closed;")
+multiplayer_replace(proxy_source "bool ProxySocket::IsOpened() const {"
+    [=[std::optional<PollEvents> ProxySocket::PollProxy(PollEvents events) {
+    std::lock_guard guard(packets_mutex);
+    if (closed) return PollEvents::Nval;
+    auto ready = events & PollEvents::Out;
+    if (!received_packets.empty()) ready |= events & (PollEvents::In | PollEvents::RdNorm);
+    return ready;
+}
+
+bool ProxySocket::IsOpened() const {]=])
 file(WRITE "${MULTIPLAYER_OUTPUT}/socket_proxy.cpp.in" "${proxy_source}")
 configure_file("${MULTIPLAYER_OUTPUT}/socket_proxy.cpp.in"
     "${MULTIPLAYER_OUTPUT}/socket_proxy.cpp" COPYONLY)
 
 file(READ "${MULTIPLAYER_SOURCE}/src/core/hle/service/sockets/bsd.h" bsd_header)
+multiplayer_replace(bsd_header "#include <memory>" "#include <memory>\n#include <atomic>")
+multiplayer_replace(bsd_header "    static inline std::array<std::optional<FileDescriptor>, MAX_FD> file_descriptors{};"
+    "    static inline std::atomic<unsigned> live_instances{};\n    static inline std::array<std::optional<FileDescriptor>, MAX_FD> file_descriptors{};")
 multiplayer_replace(bsd_header [=[    /// Callback to parse and handle a received wifi packet.
     void OnProxyPacketReceived(const Network::ProxyPacket& packet);]=] "")
 multiplayer_replace(bsd_header [=[    // Callback identifier for the OnProxyPacketReceived event.
     Network::RoomMember::CallbackHandle<Network::ProxyPacket> proxy_packet_received;]=] "")
-file(MAKE_DIRECTORY "${MULTIPLAYER_OUTPUT}/core/hle/service/sockets")
-file(WRITE "${MULTIPLAYER_OUTPUT}/core/hle/service/sockets/bsd.h.in" "${bsd_header}")
-configure_file("${MULTIPLAYER_OUTPUT}/core/hle/service/sockets/bsd.h.in"
-    "${MULTIPLAYER_OUTPUT}/core/hle/service/sockets/bsd.h" COPYONLY)
+file(MAKE_DIRECTORY "${MULTIPLAYER_SOCKET_HEADERS}/core/hle/service/sockets")
+file(WRITE "${MULTIPLAYER_SOCKET_HEADERS}/core/hle/service/sockets/bsd.h.in" "${bsd_header}")
+configure_file("${MULTIPLAYER_SOCKET_HEADERS}/core/hle/service/sockets/bsd.h.in"
+    "${MULTIPLAYER_SOCKET_HEADERS}/core/hle/service/sockets/bsd.h" COPYONLY)
 file(READ "${MULTIPLAYER_SOURCE}/src/core/hle/service/sockets/bsd.cpp" bsd_source)
 multiplayer_replace(bsd_source [=[void BSD_USA::OnProxyPacketReceived(const Network::ProxyPacket& packet) {
     for (auto& optional_descriptor : file_descriptors) {
@@ -299,13 +334,22 @@ multiplayer_replace(bsd_source [=[BSD_USA::~BSD_USA() {
     if (auto room_member = Network::GetRoomMember().lock()) {
         room_member->Unbind(proxy_packet_received);
     }
-}]=] "BSD_USA::~BSD_USA() = default;")
+}]=] [=[BSD_USA::~BSD_USA() {
+    const auto previous = live_instances.fetch_sub(1);
+    ASSERT(previous > 0);
+    if (previous != 1) return;
+    // All BSD services are gone; no descriptor may survive into the next game.
+    for (auto& entry : file_descriptors) {
+        if (entry && entry->socket && entry->socket->IsOpened()) entry->socket->Close();
+        entry.reset();
+    }
+}]=])
 multiplayer_replace(bsd_source [=[    if (auto room_member = Network::GetRoomMember().lock()) {
         proxy_packet_received = room_member->BindOnProxyPacketReceived(
             [this](const Network::ProxyPacket& packet) { OnProxyPacketReceived(packet); });
     } else {
         LOG_ERROR(Service, "Network isn't initialized");
-    }]=] "    // Proxy sockets own one receive subscription each, independent of BSD descriptors.")
+    }]=] "    ++live_instances; // Proxy sockets own their receive subscriptions.")
 multiplayer_replace(bsd_source "#include \"network/network.h\""
     "#include \"network/network.h\"\n#include \"multiplayer_session.h\"")
 multiplayer_replace(bsd_source "    if (room_member && room_member->IsConnected()) {"
@@ -325,11 +369,11 @@ if(TARGET network)
 endif()
 if(TARGET core)
     get_target_property(ldn_sources core SOURCES)
-    list(REMOVE_ITEM ldn_sources hle/service/ldn/lan_discovery.cpp internal_network/socket_proxy.cpp hle/service/sockets/bsd.cpp)
+    list(REMOVE_ITEM ldn_sources hle/service/ldn/lan_discovery.cpp internal_network/socket_proxy.cpp internal_network/network.cpp hle/service/sockets/bsd.cpp)
     set_property(TARGET core PROPERTY SOURCES "${ldn_sources}")
     target_sources(core PRIVATE "${MULTIPLAYER_OUTPUT}/lan_discovery.cpp"
-        "${MULTIPLAYER_OUTPUT}/socket_proxy.cpp" "${MULTIPLAYER_OUTPUT}/bsd.cpp")
-    target_include_directories(core BEFORE PRIVATE "${MULTIPLAYER_OUTPUT}")
+        "${MULTIPLAYER_OUTPUT}/socket_proxy.cpp" "${MULTIPLAYER_OUTPUT}/socket_network.cpp" "${MULTIPLAYER_OUTPUT}/bsd.cpp")
+    target_include_directories(core BEFORE PRIVATE "${MULTIPLAYER_SOCKET_HEADERS}" "${MULTIPLAYER_OUTPUT}")
     target_include_directories(core PRIVATE "${CMAKE_CURRENT_LIST_DIR}")
     target_link_libraries(core PRIVATE zstd::zstd)
 endif()
