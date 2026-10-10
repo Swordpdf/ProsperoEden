@@ -18,6 +18,8 @@
 #include "multiplayer_descriptors.h"
 #include "enet/enet.h"
 #include "network/packet.h"
+#include "core/internal_network/network_interface.h"
+#include "core/hle/service/ldn/lan_discovery.h"
 
 static std::atomic<bool> reject_host_lookup{};
 extern "C" int __real_enet_address_set_host(ENetAddress*, const char*);
@@ -330,6 +332,27 @@ void CheckController(u16 port) {
     assert(snapshot.room == "Controller test" && snapshot.members == std::vector<std::string>{"PlayerOne"});
     auto member = Network::GetRoomMember().lock();
     assert(member);
+    const auto previous_interface = Settings::values.network_interface.GetValue();
+    Settings::values.network_interface.SetValue("missing-host-adapter-for-room-test");
+    const auto room_interface = Network::GetSelectedNetworkInterface();
+    assert(room_interface && room_interface->kind == Network::HostAdapterKind::Wifi);
+    assert(Network::TranslateIPv4(room_interface->ip_address) == member->GetFakeIpAddress());
+    assert((Network::TranslateIPv4(room_interface->subnet_mask) == Network::IPv4Address{255, 255, 0, 0}));
+    {
+        Service::LDN::LANDiscovery ldn;
+        assert(ldn.Initialize().IsSuccess());
+        assert(ldn.OpenAccessPoint().IsSuccess());
+        Service::LDN::NetworkConfig config{};
+        config.node_count_max = 8;
+        assert(ldn.CreateNetwork({}, {}, config).IsSuccess());
+        Service::LDN::NetworkInfo info{};
+        assert(ldn.GetNetworkInfo(info).IsSuccess());
+        auto ip = member->GetFakeIpAddress();
+        std::reverse(ip.begin(), ip.end());
+        assert(info.ldn.nodes[0].ipv4_address == ip);
+        assert(info.ldn.node_count == 1);
+        assert(ldn.Finalize().IsSuccess());
+    }
     member->SendGameInfo({"Example game", 1, "1.2.3"});
     Wait([&] { return client.GetSnapshot().members ==
         std::vector<std::string>{"PlayerOne - Example game (1.2.3)"}; });
@@ -343,6 +366,8 @@ void CheckController(u16 port) {
     client.EndGame();
     client.Leave();
     Wait([&] { return client.GetSnapshot().phase == Phase::Idle; });
+    assert(!Network::GetSelectedNetworkInterface());
+    Settings::values.network_interface.SetValue(previous_interface);
     assert(client.GetSnapshot().members.empty());
     assert(client.BeginGame());
     assert(guest_socket_mode == 0 && !client.Connect(connection));

@@ -270,6 +270,8 @@ bool RoomClient::BeginGame() {
         if (state != Member::State::Joined && state != Member::State::Moderator) return false;
     }
     guest_socket_mode = phase == Phase::Connected ? 1 : 0;
+    Eden::Report("multiplayer", phase == Phase::Connected ?
+        "Starting game with room networking" : "Starting game offline");
     return true;
 }
 void RoomClient::EndGame() { guest_socket_mode = -1; }

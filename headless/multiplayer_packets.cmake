@@ -243,6 +243,26 @@ multiplayer_replace(socket_network "Socket::~Socket() {" "#include \"multiplayer
 file(WRITE "${MULTIPLAYER_OUTPUT}/socket_network.cpp.in" "${socket_network}")
 configure_file("${MULTIPLAYER_OUTPUT}/socket_network.cpp.in" "${MULTIPLAYER_OUTPUT}/socket_network.cpp" COPYONLY)
 
+file(READ "${MULTIPLAYER_SOURCE}/src/core/internal_network/network_interface.cpp" interface_source)
+multiplayer_replace(interface_source "#include <algorithm>"
+    "#include <algorithm>\n#include <cstring>\n#include \"network/network.h\"")
+multiplayer_replace(interface_source "std::optional<Network::NetworkInterface> GetSelectedNetworkInterface() {"
+    [=[std::optional<Network::NetworkInterface> GetSelectedNetworkInterface() {
+    // Room addresses belong to the virtual /16, independent of host adapter discovery.
+    if (auto member = GetRoomMember().lock(); member && member->IsConnected()) {
+        NetworkInterface iface{};
+        iface.name = "Eden room";
+        iface.kind = HostAdapterKind::Wifi;
+        const auto ip = member->GetFakeIpAddress();
+        const IPv4Address mask{255, 255, 0, 0};
+        std::memcpy(&iface.ip_address, ip.data(), ip.size());
+        std::memcpy(&iface.subnet_mask, mask.data(), mask.size());
+        return iface;
+    }]=])
+file(WRITE "${MULTIPLAYER_OUTPUT}/network_interface.cpp.in" "${interface_source}")
+configure_file("${MULTIPLAYER_OUTPUT}/network_interface.cpp.in"
+    "${MULTIPLAYER_OUTPUT}/network_interface.cpp" COPYONLY)
+
 file(READ "${MULTIPLAYER_SOURCE}/src/core/internal_network/socket_proxy.h" proxy_header)
 multiplayer_replace(proxy_header "    bool IsOpened() const override;"
     "    bool IsOpened() const override;\n    std::optional<PollEvents> PollProxy(PollEvents events) override;")
@@ -408,10 +428,11 @@ if(TARGET network)
 endif()
 if(TARGET core)
     get_target_property(ldn_sources core SOURCES)
-    list(REMOVE_ITEM ldn_sources hle/service/ldn/lan_discovery.cpp internal_network/socket_proxy.cpp internal_network/network.cpp hle/service/sockets/bsd.cpp)
+    list(REMOVE_ITEM ldn_sources hle/service/ldn/lan_discovery.cpp internal_network/socket_proxy.cpp internal_network/network.cpp internal_network/network_interface.cpp hle/service/sockets/bsd.cpp)
     set_property(TARGET core PROPERTY SOURCES "${ldn_sources}")
     target_sources(core PRIVATE "${MULTIPLAYER_OUTPUT}/lan_discovery.cpp"
-        "${MULTIPLAYER_OUTPUT}/socket_proxy.cpp" "${MULTIPLAYER_OUTPUT}/socket_network.cpp" "${MULTIPLAYER_OUTPUT}/bsd.cpp")
+        "${MULTIPLAYER_OUTPUT}/socket_proxy.cpp" "${MULTIPLAYER_OUTPUT}/socket_network.cpp"
+        "${MULTIPLAYER_OUTPUT}/network_interface.cpp" "${MULTIPLAYER_OUTPUT}/bsd.cpp")
     target_include_directories(core BEFORE PRIVATE "${MULTIPLAYER_SOCKET_HEADERS}" "${MULTIPLAYER_OUTPUT}")
     target_include_directories(core PRIVATE "${CMAKE_CURRENT_LIST_DIR}")
     target_link_libraries(core PRIVATE zstd::zstd)

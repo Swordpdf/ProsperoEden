@@ -60,7 +60,7 @@ def main():
                 str(output / "socket_proxy.cpp"),
                 str(source / "src/core/hle/service/sockets/sockets_translate.cpp"),
                 str(output / "socket_network.cpp"),
-                str(source / "src/core/internal_network/network_interface.cpp"),
+                str(output / "network_interface.cpp"), str(output / "lan_discovery.cpp"),
                 *[str(source / "src/network" / name) for name in
                   ("network.cpp", "room.cpp", "verify_user.cpp")],
                 str(cache / "build/src/common/libcommon.a"),
