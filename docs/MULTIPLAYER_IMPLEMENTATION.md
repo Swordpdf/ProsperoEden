@@ -168,9 +168,19 @@ to the stopped console remained on a loading screen. The observation client was 
 no candidate was deployed and no console controller input was sent. No existing registration
 or PS5 settings were changed.
 
-No console application has been launched for this work. Neither PS5 multiplayer nor either Tailscale
-integration is qualified yet. Public room browsing and PS5 room hosting remain deferred.
+The operator has since launched the candidate on `.30` and tested room entry. Neither PS5
+multiplayer nor either Tailscale integration is qualified yet. Public room browsing and
+PS5 room hosting remain deferred.
 Issue #89 is explicitly reserved for a separate future follow-up; this PR addresses #98.
+
+On 2026-10-10, the operator confirmed the password keyboard fix and retried with saved
+room credentials. The `a8484b1` diagnostic build reported `ENet address conversion failed`
+before the handshake while the LAN room server was listening. The controller had already
+accepted the numeric IPv4 address; upstream ENet then called `getaddrinfo` again and returned
+failure before trying numeric parsing. The derived client now tries `enet_address_set_host_ip`
+first, retaining hostname fallback. The room regression forces hostname lookup failure during
+numeric joins, including wrong-password rejection and successful two-member retry. Native
+socket traffic, room joining and gameplay still require successful console tests.
 
 - 2026-10-10 | Hardware preparation | 1aae996 | FW 6.02 | partial-pass: deployed; all 66 package files verified in raw FTP mode | results/multiplayer-deploy | operator test pending
 

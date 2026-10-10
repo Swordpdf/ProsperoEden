@@ -66,6 +66,7 @@ def main():
                 str(cache / "build/src/common/libcommon.a"),
                 str(cache / "build/_deps/enet-build/libenet.a"),
                 str(cache / "build/_deps/fmt-build/libfmt.a"),
+                "-Wl,--wrap=enet_address_set_host",
                 "-lzstd", "-lssl", "-lcrypto", "-lz", "-lbrotlienc", "-lbrotlidec",
                 "-lbrotlicommon", "-o", str(executable),
             ], check=True)

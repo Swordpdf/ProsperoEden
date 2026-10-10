@@ -100,7 +100,9 @@ multiplayer_replace(member_source "    enet_address_set_host(&address, server_ad
         room_member_impl->SetState(State::Idle);
         return;
     }
-    if (enet_address_set_host(&address, server_addr) != 0) {
+    // The controller already resolves IPv4; avoid a second platform DNS lookup.
+    if (enet_address_set_host_ip(&address, server_addr) != 0 &&
+        enet_address_set_host(&address, server_addr) != 0) {
         Eden::Report("multiplayer transport", "ENet address conversion failed");
         room_member_impl->SetState(State::Idle);
         room_member_impl->SetError(Error::CouldNotConnect);

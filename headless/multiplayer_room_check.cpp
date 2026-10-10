@@ -19,6 +19,13 @@
 #include "enet/enet.h"
 #include "network/packet.h"
 
+static std::atomic<bool> reject_host_lookup{};
+extern "C" int __real_enet_address_set_host(ENetAddress*, const char*);
+extern "C" int __wrap_enet_address_set_host(ENetAddress* address, const char* name) {
+    if (reject_host_lookup.load()) return -1;
+    return __real_enet_address_set_host(address, name);
+}
+
 // Compile production BSD operations without the unrelated IPC framework.
 namespace Service::Sockets {
 class BSD_USA {
@@ -561,6 +568,8 @@ int main(int argc, char** argv) {
         assert(room.Create("Offline test", "", "127.0.0.1", port, "secret", 2,
                            "", {}, std::make_unique<Network::VerifyUser::NullBackend>()));
         Network::RoomMember first, second;
+        // Reproduce the console resolver failure even for a numeric address.
+        reject_host_lookup = true;
         std::atomic<bool> rejected{}, scanned{}, proxied{}, lost{};
         const auto errors = first.BindOnError([&](const auto& error) {
             if (error == Network::RoomMember::Error::WrongPassword) rejected = true;
@@ -575,6 +584,7 @@ int main(int argc, char** argv) {
             return member.GetState() == Network::RoomMember::State::Joined;
         };
         Wait([&] { return joined(first) && joined(second); });
+        reject_host_lookup = false;
         assert(first.GetFakeIpAddress() != second.GetFakeIpAddress());
         const auto ldn_callback = second.BindOnLdnPacketReceived([&](const auto& packet) {
             scanned = packet.type == Network::LDNPacketType::Scan && packet.broadcast;
