@@ -102,6 +102,15 @@ function(eden_sparse_replace old new count)
 endfunction()
 eden_sparse_replace("AllocateMemoryPages(alloc_size)" "AllocateSparsePages(alloc_size)" 2)
 eden_sparse_replace("FreeMemoryPages(base_ptr, alloc_size)" "FreeSparsePages(base_ptr, alloc_size)" 2)
+# Eden defines the host page size, its bit count and its mask as three inline variables, the last
+# two computed from the first. Each inline variable has an initializer of its own, and on the
+# PS5 they do not run in the order of the header: the bit count and the mask were computed from
+# a page size that was still zero, and every committed page then set a bit far outside the
+# vector's bitmap, in whatever the heap kept next to it. Each one asks the system itself.
+eden_sparse_replace("inline const u64 HostPageBits = std::countr_zero(HostPageSize);"
+    "inline const u64 HostPageBits = std::countr_zero(static_cast<u64>(sysconf(_SC_PAGESIZE)));" 1)
+eden_sparse_replace("inline const u64 HostPageMask = ~(HostPageSize - 1);"
+    "inline const u64 HostPageMask = ~(static_cast<u64>(sysconf(_SC_PAGESIZE)) - 1);" 1)
 # Eden tests the result; CommitSparsePage has none (it ends the app when memory runs out).
 eden_sparse_replace("mprotect(reinterpret_cast<void*>(page), HostPageSize, PROT_READ | PROT_WRITE)"
     "(CommitSparsePage(page), 0)" 1)
