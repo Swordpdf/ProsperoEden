@@ -108,6 +108,13 @@ The loopback check compiles the modified client against the pinned server source
 links existing, uninstrumented host common/ENet/fmt dependencies. It is a transport test,
 not a game test.
 
+The pinned standalone `eden-room` executable also builds and passes private loopback
+creation and orderly shutdown. The local reference uses GCC and shared system OpenSSL:
+Clang 18 rejects the upstream TLS flag, and the host lacks an OpenSSL static dependency.
+Those are reference-host build adaptations, with no room-source or protocol changes.
+Use the CLI's long options; its advertised `-b` ban-list shorthand is absent from the
+pinned short-option parser and can leave argument processing stuck.
+
 ```bash
 python3 tools/check-multiplayer.py --source /path/to/pinned/eden
 python3 tools/check-multiplayer.py --source /path/to/pinned/eden \
@@ -128,6 +135,12 @@ CXX=clang++-18 python3 tools/check-multiplayer.py --source /path/to/pinned/eden 
   in atreus04-GG's payload, following the plan's separate acceptance gates.
 - Test console lifecycle, regressions and performance, only after confirming a console is idle.
 
-No console has been used for this work. Neither PS5 multiplayer nor either Tailscale
+Read-only console preflight found one active session and one console with released title
+resources; the shared lock was released without deployment or launch. Recheck idle state
+under the lock immediately before any hardware case. The local Windows Tailscale daemon
+is running, but WSL uses a NAT interface; its room server still needs a verified inbound
+route before console joins can be tested.
+
+No console application has been launched for this work. Neither PS5 multiplayer nor either Tailscale
 integration is qualified yet. Public room browsing and PS5 room hosting remain deferred.
 Issue #89 is explicitly reserved for a separate future follow-up; this PR addresses #98.
