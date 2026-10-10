@@ -2,7 +2,10 @@
 
 Implementation and validation plan for [ProsperoEden issue #98](https://github.com/blackbearreloaded/ProsperoEden/issues/98).
 
-Prepared: 2026-10-10. Status: proposed implementation; source inspection completed, no multiplayer builds or console tests performed for this plan.
+Prepared: 2026-10-10. Implementation is based on upstream `main` at `dfda802`, on
+`feature/ldn-rooms`. See [implementation status](MULTIPLAYER_IMPLEMENTATION.md) for
+completed offline validation and remaining hardware gates. Issue #89 is a separate
+future follow-up and is excluded from this work.
 
 ## 1. Outcome and scope
 
@@ -21,7 +24,7 @@ The approach follows [Eden's multiplayer model](https://github.com/eden-emulator
 
 ## 2. Evidence and corrections to the initial discussion
 
-### Source baseline
+### Initial investigation baseline
 
 | Item | Inspected baseline |
 |---|---|
@@ -32,7 +35,12 @@ The approach follows [Eden's multiplayer model](https://github.com/eden-emulator
 | holdmysocks Tailscale | `e4986b4d52af6a63f9be14d9de616d267c566de1` |
 | atreus04-GG Tailscale | `d99261c21b678d9637a92c88168e1f4a72563040` |
 
-The development tree already had unrelated changes when inspected. This plan does not change them. The WSL source location recorded in `AGENTS.md` was unavailable during this investigation; the local pinned source above was used. Confirm the actual source/build/SDK paths and candidate hashes before implementation. A source finding is not proof of the installed binary's behavior.
+The development tree already had unrelated changes when inspected. They remain untouched.
+Implementation uses an isolated worktree based on upstream `main` at `dfda802`, with the
+same pinned Eden revision above; it does not build on the development branch. The WSL
+source location recorded in `AGENTS.md` was unavailable during the initial investigation;
+the local pinned source above was used. Verify candidate hashes before deployment.
+A source finding is not proof of the installed binary's behavior.
 
 ### What is already present
 

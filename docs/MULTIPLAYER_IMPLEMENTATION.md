@@ -97,6 +97,11 @@ socket class overrides were introduced. The socket headers now use a distinct in
 to invalidate those objects. Both build wrappers require every active consumer of the five
 modified multiplayer headers to have used the derived declaration.
 
+The full host build and required integration suite now pass, including the updated room-loss
+stop-deadline check, profile/settings, saves, devices, keyboard and audio regressions. The
+optional live RomM/Docker check was not requested and remains skipped. An isolated native
+package also passes inventory, fixture, import and alignment checks; it has not been deployed.
+
 The packet/LDN and room/proxy test sources run under AddressSanitizer and UndefinedBehaviorSanitizer.
 The expanded room/proxy/BSD suite also passed ThreadSanitizer using clang 18.
 The loopback check compiles the modified client against the pinned server source and
@@ -117,7 +122,7 @@ CXX=clang++-18 python3 tools/check-multiplayer.py --source /path/to/pinned/eden 
   existing upstream proxy TCP limitations; offline concurrency tests do not prove game compatibility.
 - Qualify cancellation and bounded queues in the native application under room loss.
 - Qualify the integrated launcher, system keyboard and game transitions in a full application.
-- Build the full host candidate and repeat affected native checks as remaining socket fixes land.
+- Repeat affected build/package checks if hardware findings require further changes.
 - Validate guest LDN and proxy sockets in a game, then internet room play.
 - Validate holdmysocks' outbound UDP forwarding and investigate the equivalent capability
   in atreus04-GG's payload, following the plan's separate acceptance gates.
