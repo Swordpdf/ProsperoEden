@@ -107,6 +107,8 @@ public:
     Eden::Multiplayer::RoomDirectory public_rooms(const std::atomic<bool>& stop) override;
     Eden::Multiplayer::Connection room_connection() override;
     bool connect_room(const Eden::Multiplayer::Connection&) override;
+    bool connect_public_room(const Eden::Multiplayer::Connection&) override;
+    void remember_room(const Eden::Multiplayer::Connection&, bool private_room) override;
     void leave_room() override;
     std::optional<std::string> room_text(int, const std::string&, const std::atomic<bool>&) override;
     bool can_launch_game() override;

@@ -11,7 +11,13 @@ The nickname row opens the existing keyboard. Joining uses the existing room con
 
 The browser clears the saved private password before selecting a public endpoint and prompts
 for a new password only when needed. Browsing or cancelling does not save connection settings.
-The selected connection is saved only when Join is requested, matching the existing private flow.
+Joining a public room does not change the saved private room: only the nickname is shared
+between the two. The private room form is saved as each field is entered, so it survives
+closing the app before a join. Directory entries with a non-public IPv4 address (loopback,
+private, carrier-grade NAT, link-local, multicast, broadcast) are rejected; malformed UTF-8 in
+the response is replaced rather than failing the whole list; rooms are listed compatible
+first, then by player count; Left/Right moves a page at a time and a refresh keeps the cursor
+on the same room.
 Directory failure is distinct from joining failure; a failed refresh retains the previous list.
 
 No ENet changes. Search/ownership filters, account login, public hosting,

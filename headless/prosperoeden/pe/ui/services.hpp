@@ -644,6 +644,11 @@ class Services
     { return {{}, "Public rooms are unavailable."}; }
     virtual Eden::Multiplayer::Connection room_connection() { return {}; }
     virtual bool connect_room(const Eden::Multiplayer::Connection&) { return false; }
+    // Joins a room from the public directory. The saved private room stays as it is; only the
+    // nickname is shared between the two.
+    virtual bool connect_public_room(const Eden::Multiplayer::Connection&) { return false; }
+    // Keeps what was typed across restarts: the whole private room form, or only the nickname.
+    virtual void remember_room(const Eden::Multiplayer::Connection&, bool /*private_room*/) {}
     virtual void leave_room() {}
     virtual std::optional<std::string> room_text(int, const std::string&, const std::atomic<bool>&)
     { return std::nullopt; }

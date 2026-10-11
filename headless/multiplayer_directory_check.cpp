@@ -20,7 +20,33 @@ int main(int argc, char** argv) {
     wrong["port"] = -1; assert(parse(wrong).rooms.empty());
     wrong["port"] = 1.5; assert(parse(wrong).rooms.empty());
     wrong = room; wrong["address"] = "::1"; assert(parse(wrong).rooms.empty());
+    for (const char* address : {"127.0.0.1", "10.1.2.3", "172.16.0.1", "172.31.255.255", "192.168.1.10",
+                                "100.64.0.1", "169.254.1.1", "0.0.0.0", "224.0.0.1", "255.255.255.255"}) {
+        wrong = room; wrong["address"] = address; assert(parse(wrong).rooms.empty());
+    }
+    for (const char* address : {"172.15.255.255", "172.32.0.1", "100.63.255.255", "100.128.0.1", "8.8.8.8"}) {
+        wrong = room; wrong["address"] = address; assert(parse(wrong).rooms.size() == 1);
+    }
     wrong = room; wrong["name"] = std::string(513, 'a'); assert(parse(wrong).rooms.empty());
+    // One room's malformed name must not cost the list: it is repaired, the other room is intact.
+    {
+        auto text = json{{"rooms", json::array({room, room})}}.dump();
+        text.replace(text.find("Example"), 7, "Ex\xFF\xC0mp\xE0\x80");
+        const auto repaired = ParseRoomDirectory(text, 1);
+        assert(repaired.error.empty() && repaired.rooms.size() == 2 && repaired.rejected == 0);
+        assert(repaired.rooms[0].name == "Ex??mp??" && repaired.rooms[1].name == "Example"); // sorted by name
+    }
+    // Compatible rooms first, then the busiest, then by name.
+    {
+        auto quiet = room, busy = room, other = room;
+        quiet["name"] = "A quiet";
+        busy["name"] = "Z busy"; busy["players"] = json::array({json::object(), json::object()});
+        other["name"] = "A other protocol"; other["netVersion"] = 4;
+        other["players"] = json::array({json::object(), json::object(), json::object()});
+        const auto sorted = ParseRoomDirectory(json{{"rooms", json::array({other, quiet, busy})}}.dump(), 1);
+        assert(sorted.rooms.size() == 3 && sorted.rooms[0].name == "Z busy" && sorted.rooms[0].players == 2);
+        assert(sorted.rooms[1].name == "A quiet" && sorted.rooms[2].name == "A other protocol");
+    }
     wrong = room; wrong["players"] = "bad"; assert(parse(wrong).rooms.empty());
     wrong = room; wrong["hasPassword"] = "false"; assert(parse(wrong).rooms.empty());
     assert(!ParseRoomDirectory("{", 1).error.empty());

@@ -67,6 +67,11 @@ void Launcher::press_multiplayer(Key key) {
                                    static_cast<int>(room_directory_.rooms.size()));
             cue(Cue::focus);
         }
+        if (key == Key::left || key == Key::right) { // a page at a time: public lists are long
+            room_row_ = std::clamp(room_row_ + (key == Key::right ? 6 : -6), 0,
+                                   static_cast<int>(room_directory_.rooms.size()));
+            cue(Cue::focus);
+        }
         if (key != Key::cross) return;
         if (room_row_ > 0) {
             const auto& room = room_directory_.rooms[room_row_ - 1];
@@ -75,7 +80,7 @@ void Launcher::press_multiplayer(Key key) {
             room_connection_.port = room.port;
             room_connection_.password.clear();
             if (!room.password) {
-                if (!services_.connect_room(room_connection_))
+                if (!services_.connect_public_room(room_connection_))
                     say(tr("Could not start the connection or save its settings."), true);
                 return;
             }
@@ -132,10 +137,27 @@ void Launcher::update_multiplayer() {
         try { result = room_directory_request_.get(); }
         catch (const std::exception&) { result.error = "Could not download public rooms."; }
         if (!room_directory_stop_.load()) {
+            // While the list is on screen the cursor stays on the room it was on: a refresh
+            // reorders rooms as players come and go. Elsewhere room_row_ belongs to another view.
+            const bool browsing = modal_ == Modal::multiplayer && room_page_ == RoomPage::public_rooms &&
+                room_status_.phase != Phase::Connected && room_status_.phase != Phase::Connecting &&
+                room_status_.phase != Phase::Disconnecting;
+            const auto key_of = [](const Eden::Multiplayer::PublicRoom& room) {
+                return room.address + ":" + std::to_string(room.port);
+            };
+            std::string selected;
+            if (browsing && room_row_ > 0 && room_row_ <= static_cast<int>(room_directory_.rooms.size()))
+                selected = key_of(room_directory_.rooms[room_row_ - 1]);
             if (result.error.empty()) room_directory_ = std::move(result);
             else room_directory_.error = std::move(result.error);
             room_directory_loaded_ = true;
-            room_row_ = 0;
+            if (browsing) {
+                const int count = static_cast<int>(room_directory_.rooms.size());
+                room_row_ = std::min(room_row_, count);
+                for (int i = 0; !selected.empty() && i < count; ++i) {
+                    if (key_of(room_directory_.rooms[i]) == selected) { room_row_ = i + 1; break; }
+                }
+            }
         }
         if (room_directory_refresh_ && modal_ == Modal::multiplayer && room_page_ == RoomPage::public_rooms)
             refresh_public_rooms();
@@ -174,9 +196,13 @@ void Launcher::update_multiplayer() {
     case 2: room_connection_.nickname = *answer; break;
     case 3: room_connection_.password = *answer; break;
     }
+    // Saved as typed, so the form survives closing the app before a join. A public room's
+    // address and password are never saved: they would replace the private room.
+    if (room_page_ == RoomPage::private_room) services_.remember_room(room_connection_, true);
+    else if (room_edit_field_ == 2) services_.remember_room(room_connection_, false);
     if (room_password_join_) {
         room_password_join_ = false;
-        if (!services_.connect_room(room_connection_))
+        if (!services_.connect_public_room(room_connection_))
             say(tr("Could not start the connection or save its settings."), true);
         room_connection_.password.clear();
     }
@@ -239,8 +265,9 @@ void Launcher::draw_public_rooms(Canvas& c) {
         draw_room_error(c, room_status_.error);
     }
     else text_block(c, notice, 542, 814, theme::kSmall, 26, theme::kCopy, 836, 2);
-    const Hint hints[]{{Pad::cross, TR("Select")}, {Pad::triangle, TR("Refresh")}, {Pad::circle, TR("Back")}};
-    draw_hints(c, hints, 3, 542, 890, theme::kCopy, 836);
+    const Hint hints[]{{Pad::cross, TR("Select")}, {Pad::leftright, TR("Page")}, {Pad::triangle, TR("Refresh")},
+                       {Pad::circle, TR("Back")}};
+    draw_hints(c, hints, 4, 542, 890, theme::kCopy, 836);
 }
 
 void Launcher::draw_multiplayer(Canvas& c, float open) {

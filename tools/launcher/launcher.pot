@@ -1265,7 +1265,7 @@ msgid "Output resolution"
 msgstr ""
 
 #. Button hint: jump a page of the list (L1 / R1).
-#: pe/ui/browse.cpp, pe/ui/update.cpp
+#: pe/ui/browse.cpp, pe/ui/multiplayer.cpp, pe/ui/update.cpp
 msgid "Page"
 msgstr ""
 

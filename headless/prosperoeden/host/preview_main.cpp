@@ -524,6 +524,8 @@ void pictures(Stage &s)
     s.wait(0.8f);
     check_room(s.services.last_room_connection.host == "192.0.2.1", "selected endpoint");
     check_room(s.services.last_room_connection.password.empty(), "private password isolated");
+    check_room(s.services.saved_room.host == "127.0.0.1" && s.services.saved_room.port == 24872 &&
+               s.services.saved_room.password == "private-secret", "public join keeps the saved private room");
     s.press({Key::square, Key::circle});
     s.press({Key::down, Key::cross});
     s.wait(0.8f);

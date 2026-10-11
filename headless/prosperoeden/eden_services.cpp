@@ -486,6 +486,20 @@ bool EdenServices::connect_room(const Eden::Multiplayer::Connection& connection)
     if (!Eden::SaveRoomConnection(connection)) return false;
     return rooms_.Connect(connection);
 }
+void EdenServices::remember_room(const Eden::Multiplayer::Connection& connection, bool private_room) {
+    if (private_room) {
+        (void)Eden::SaveRoomConnection(connection);
+        return;
+    }
+    auto saved = Eden::LoadRoomConnection();
+    if (saved.nickname == connection.nickname) return;
+    saved.nickname = connection.nickname;
+    (void)Eden::SaveRoomConnection(saved);
+}
+bool EdenServices::connect_public_room(const Eden::Multiplayer::Connection& connection) {
+    remember_room(connection, false);
+    return rooms_.Connect(connection);
+}
 void EdenServices::leave_room() { rooms_.Leave(); }
 bool EdenServices::can_launch_game() {
     const auto phase = rooms_.GetSnapshot().phase;
