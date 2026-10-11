@@ -39,6 +39,24 @@ def main():
             str(output / "packet.cpp"), "-lzstd", "-o", str(executable),
         ], check=True)
         subprocess.run([str(executable)], check=True)
+        logging_source = output / "logging-check.cpp"
+        logging_source.write_text('''#include "multiplayer_logging.h"
+int main() {
+    using namespace Eden::Multiplayer;
+    Debug("hidden initially");
+    Eden::Report("multiplayer", "ordinary error");
+    SetDetailedLogging(true);
+    Debug("enabled detail");
+    SetDetailedLogging(false);
+    Debug("hidden after toggle");
+}
+''')
+        logging_check = output / "logging-check"
+        subprocess.run([os.environ.get("CXX", "clang++"), "-std=c++20", "-I", str(root / "headless"),
+                        str(logging_source), "-o", str(logging_check)], check=True)
+        logged = subprocess.run([str(logging_check)], capture_output=True, text=True, check=True)
+        assert logged.stderr == ("[ProsperoEden] multiplayer: ordinary error\n"
+                                 "[ProsperoEden] multiplayer debug: enabled detail\n")
         if args.host_cache:
             bsd = (output / "bsd.cpp").read_text()
             destructor = bsd.split("BSD_USA::~BSD_USA() {", 1)[1].split(
@@ -75,11 +93,22 @@ def main():
                 "-lzstd", "-lssl", "-lcrypto", "-lz", "-lbrotlienc", "-lbrotlidec",
                 "-lbrotlicommon", "-o", str(executable),
             ], check=True)
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe:
-                probe.bind(("127.0.0.1", 0))
-                port = probe.getsockname()[1]
             environment = dict(os.environ, XDG_DATA_HOME=str(output), XDG_CONFIG_HOME=str(output))
-            subprocess.run([str(executable), str(port)], check=True, timeout=40, env=environment)
+            for detailed in (False, True):
+                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe:
+                    probe.bind(("127.0.0.1", 0))
+                    port = probe.getsockname()[1]
+                run = subprocess.run([str(executable), str(port), *(["debug"] if detailed else [])],
+                                     capture_output=True, text=True, timeout=40, env=environment)
+                if run.returncode:
+                    print(run.stdout, run.stderr)
+                    run.check_returncode()
+                assert ("multiplayer debug:" in run.stderr) == detailed
+                assert ("Transport: rtt_ms=" in run.stderr) == detailed
+                assert ("Hostname lookup result=0 usable_ipv4=1" in run.stderr) == detailed
+                assert "The room password is incorrect." in run.stderr
+                assert not any(value in run.stderr for value in ("secret", "PlayerOne", "localhost", "127.0.0.1"))
+            print("Multiplayer logs: default off, live toggle, normal errors, transport details and privacy: PASS")
             print("Real room: password rejection, retry, two members, LDN broadcast, proxy routing, loss: PASS")
             print("Proxy socket: decompression, queue limits, truncation, partial reads, recovery: PASS")
             print("Proxy ownership: real-room delivery, shared references, concurrent destruction, close wakeup: PASS")

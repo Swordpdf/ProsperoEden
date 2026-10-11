@@ -4,6 +4,7 @@
 #include "assets_dir.h"
 #include "crash_report.h"
 #include "diagnostics.h"
+#include "multiplayer_logging.h"
 #include "metadata_bridge.h"
 #include "mods.h"
 #include "profiles.h"
@@ -980,6 +981,7 @@ bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     speed.skip_invalidation = preferences.skip_invalidation;
     const bool saved = Eden::SavePreferences(value) && Eden::SavePerformance(0, speed);
     if (!saved) Eden::Report("settings", "Could not write preferences");
+    if (saved) Eden::Multiplayer::SetDetailedLogging(value.detailed_logging);
     return saved;
 }
 

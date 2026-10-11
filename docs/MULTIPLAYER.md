@@ -52,6 +52,22 @@ traffic or changes to ENet. This measures the server path, not latency to anothe
 Packet retransmission follows ENet's existing reliable transport. A full disconnect returns
 to the launcher; seamless mid-game reconnection is not supported.
 
+## Collect multiplayer diagnostics
+
+Enable **Settings > Diagnostics > Detailed logging**, then reproduce the room join or
+in-game issue. For multiplayer, the setting takes effect immediately, including before launching
+a game. Collect `/data/prosperoeden/logs/stderr.log`; detailed multiplayer lines have the
+`[ProsperoEden] multiplayer debug:` prefix. Include
+`/data/prosperoeden/user/log/eden_log.txt` for an in-game issue as well. Copy the logs before
+restarting the app, which starts a new `stderr.log`.
+
+Details include lookup/join stages, connection state, transport errors and a summary at most
+every five seconds with server RTT, sent/received packet totals and ENet receive-buffer usage.
+Room passwords, tokens, addresses, player names and packet contents are not logged by these
+diagnostics. With Detailed logging off, concise errors and game-start messages remain.
+**Write logs at once** uses the existing app-wide setting and takes effect on the next app
+start; it is not required for ordinary connection troubleshooting.
+
 ## Private server example
 
 Use an Eden `eden-room` executable whose revision is recorded for the test. Initial

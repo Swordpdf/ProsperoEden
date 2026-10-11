@@ -31,6 +31,18 @@ remain within the guaranteed 128 bytes. Console display validation is still pend
 
 - 2026-10-10 | ping overlay | 8123fe3 | .30 FW 6.02 | pass: deployed, all 66 file hashes verified | results/multiplayer-ping-deploy | operator display test
 
+## Multiplayer logging
+
+Multiplayer diagnostic details now follow the saved Detailed logging preference at startup
+and immediately after a successful Settings save. Launcher joins use the existing Report
+writer because Eden's game logger is not yet running. Normal errors remain visible;
+detailed lookup/handshake/state messages and five-second transport summaries are optional.
+The summaries contain no credentials, endpoints, player names or packet contents. The
+existing Write logs at once setting applies through the same stderr writer. Console
+validation of this logging update is pending; the installed ping build predates it.
+Native build/checks and real-room ASan/UBSan tests with logging on and off passed, including
+live log-gate toggling, normal errors, detailed DNS/transport output and credential checks.
+
 ## Latest hardware result
 
 The operator subsequently confirmed creating a Mario Kart lobby while connected to the

@@ -76,10 +76,25 @@ multiplayer_replace(member_source "    ENetHost* client = nullptr;"
     "    std::atomic<int> ping_ms{-1};\n    ENetHost* client = nullptr;")
 multiplayer_replace(member_source "        if (state != new_state) {"
     "        if (new_state != State::Joined && new_state != State::Moderator) ping_ms = -1;\n        if (state != new_state) {")
+multiplayer_replace(member_source "    loop_thread.emplace([&](std::stop_token stoken) {"
+    "    loop_thread.emplace([&](std::stop_token stoken) {\n        auto next_diagnostic = std::chrono::steady_clock::time_point{};")
 multiplayer_replace(member_source "            enet_host_flush(client);"
     [=[            // Read ENet's measurement only on the thread that owns the peer.
-            if (server && (state == State::Joined || state == State::Moderator))
+            if (server && (state == State::Joined || state == State::Moderator)) {
                 ping_ms = static_cast<int>(std::min(server->roundTripTime, enet_uint32{9999}));
+                if (Eden::Multiplayer::detailed_logging.load()) {
+                    const auto now = std::chrono::steady_clock::now();
+                    if (now >= next_diagnostic) {
+                        char detail[192];
+                        std::snprintf(detail, sizeof(detail),
+                            "Transport: rtt_ms=%u sent_packets=%u received_packets=%u enet_waiting_bytes=%zu",
+                            server->roundTripTime, client->totalSentPackets,
+                            client->totalReceivedPackets, server->totalWaitingData);
+                        Eden::Multiplayer::Debug(detail);
+                        next_diagnostic = now + std::chrono::seconds{5};
+                    }
+                }
+            }
             enet_host_flush(client);]=])
 multiplayer_replace(member_source "        Disconnect();"
     "        ping_ms = -1;\n        Disconnect();")
@@ -93,11 +108,12 @@ int RoomMember::GetPingMilliseconds() const {
 }
 ]=])
 multiplayer_replace(member_source "#include <atomic>"
-    "#include <atomic>\n#include <algorithm>\n#include <chrono>\n#include <cerrno>\n#include <cstdio>\n#include \"diagnostics.h\"\n#include \"multiplayer_validation.h\"\n#include \"multiplayer_send.h\"")
+    "#include <atomic>\n#include <algorithm>\n#include <chrono>\n#include <cerrno>\n#include <cstdio>\n#include \"multiplayer_logging.h\"\n#include \"multiplayer_validation.h\"\n#include \"multiplayer_send.h\"")
 multiplayer_replace(member_source [=[                case ENET_EVENT_TYPE_RECEIVE:
                     switch (event.packet->data[0]) {]=] [=[                case ENET_EVENT_TYPE_RECEIVE:
                     if (!Eden::Multiplayer::ValidRoomPacket(
                             {event.packet->data, event.packet->dataLength})) {
+                        Eden::Multiplayer::Debug("Rejected malformed room packet");
                         enet_packet_destroy(event.packet);
                         SetState(State::Idle);
                         SetError(Error::UnknownError);
@@ -108,7 +124,7 @@ multiplayer_replace(member_source [=[        ASSERT_MSG(room_member_impl->client
     [=[        if (!room_member_impl->client) {
             char detail[96];
             std::snprintf(detail, sizeof(detail), "ENet client creation failed: errno=%d", errno);
-            Eden::Report("multiplayer transport", detail);
+            Eden::Multiplayer::Debug(detail);
             room_member_impl->SetState(State::Idle);
             room_member_impl->SetError(Error::CouldNotConnect);
             return;
@@ -125,7 +141,7 @@ multiplayer_replace(member_source "    enet_address_set_host(&address, server_ad
     // The controller already resolves IPv4; avoid a second platform DNS lookup.
     if (enet_address_set_host_ip(&address, server_addr) != 0 &&
         enet_address_set_host(&address, server_addr) != 0) {
-        Eden::Report("multiplayer transport", "ENet address conversion failed");
+        Eden::Multiplayer::Debug("ENet address conversion failed");
         room_member_impl->SetState(State::Idle);
         room_member_impl->SetError(Error::CouldNotConnect);
         return;
@@ -146,7 +162,7 @@ multiplayer_replace(member_source
             "ENet handshake: result=%d errno=%d sent_packets=%u received_packets=%u",
             net, error, room_member_impl->client->totalSentPackets,
             room_member_impl->client->totalReceivedPackets);
-        Eden::Report("multiplayer transport", detail);
+        Eden::Multiplayer::Debug(detail);
     }
     if (stop.stop_requested()) {
         if (net > 0 && event.type == ENET_EVENT_TYPE_RECEIVE) enet_packet_destroy(event.packet);
@@ -186,6 +202,7 @@ multiplayer_replace(member_source "    std::vector<Packet> send_list;"
 multiplayer_replace(member_source "    send_list.push_back(std::move(packet));"
     [=[    if (!IsConnected() || send_failed) return;
     if (!send_list_budget.Add(packet.GetDataSize())) {
+        Eden::Multiplayer::Debug("Outgoing room queue limit exceeded");
         send_failed = true;
         return;
     }
@@ -204,12 +221,14 @@ multiplayer_replace(member_source [=[                ENetPacket* enetPacket = en
                 enet_peer_send(server, 0, enetPacket);]=]
     [=[                const auto size = packet.GetDataSize();
                 if (!enet_send_budget.Add(size)) {
+                    Eden::Multiplayer::Debug("Outstanding ENet send budget exceeded");
                     SetState(State::Idle);
                     SetError(Error::LostConnection);
                     break;
                 }
                 ENetPacket* enetPacket = enet_packet_create(packet.GetData(), size, ENET_PACKET_FLAG_RELIABLE);
                 if (!enetPacket) {
+                    Eden::Multiplayer::Debug("Room packet allocation failed");
                     enet_send_budget.Release(size);
                     SetState(State::Idle);
                     SetError(Error::LostConnection);
@@ -220,6 +239,7 @@ multiplayer_replace(member_source [=[                ENetPacket* enetPacket = en
                     static_cast<Eden::Multiplayer::RoomSendBudget*>(sent->userData)->Release(sent->dataLength);
                 };
                 if (enet_peer_send(server, 0, enetPacket) != 0) {
+                    Eden::Multiplayer::Debug("ENet send failed");
                     enet_packet_destroy(enetPacket);
                     SetState(State::Idle);
                     SetError(Error::LostConnection);

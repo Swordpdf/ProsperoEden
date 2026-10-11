@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "multiplayer.h"
 #include "multiplayer_session.h"
+#include "multiplayer_logging.h"
 #include "diagnostics.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -48,6 +49,7 @@ bool ValidConnection(const Connection& connection) {
 }
 struct Resolution {
     std::atomic<bool> done{};
+    int error{};
     std::string address;
 };
 } // namespace
@@ -82,19 +84,24 @@ struct RoomClient::Impl {
 
     std::string Resolve(const std::string& host, std::stop_token stop) {
         in_addr numeric{};
-        if (inet_pton(AF_INET, host.c_str(), &numeric) == 1) return host;
+        if (inet_pton(AF_INET, host.c_str(), &numeric) == 1) {
+            Debug("Numeric IPv4 address; skipping hostname lookup");
+            return host;
+        }
         if (resolution && !resolution->done.load()) {
             Fail("A previous address lookup is still running. Retry later or use an IPv4 address.");
             return {};
         }
         const auto result = std::make_shared<Resolution>();
+        Debug("Hostname lookup started");
         // libc DNS cannot be cancelled. At most one lookup survives cancellation; it owns no client state.
         std::thread([result, host] {
             addrinfo hints{};
             hints.ai_family = AF_INET;
             hints.ai_socktype = SOCK_DGRAM;
             addrinfo* addresses = nullptr;
-            if (getaddrinfo(host.c_str(), nullptr, &hints, &addresses) == 0) {
+            result->error = getaddrinfo(host.c_str(), nullptr, &hints, &addresses);
+            if (result->error == 0) {
                 char text[INET_ADDRSTRLEN]{};
                 if (addresses && inet_ntop(AF_INET,
                     &reinterpret_cast<sockaddr_in*>(addresses->ai_addr)->sin_addr, text, sizeof(text)))
@@ -107,17 +114,31 @@ struct RoomClient::Impl {
         const auto deadline = std::chrono::steady_clock::now() + 5s;
         while (!stop.stop_requested() && !resolution->done.load() &&
                std::chrono::steady_clock::now() < deadline) std::this_thread::sleep_for(20ms);
-        if (stop.stop_requested()) return {};
-        if (!resolution->done.load() || resolution->address.empty()) {
+        if (stop.stop_requested()) {
+            Debug("Hostname lookup cancelled");
+            return {};
+        }
+        const bool resolved = resolution->done.load();
+        if (resolved) {
+            char detail[96];
+            std::snprintf(detail, sizeof(detail), "Hostname lookup result=%d usable_ipv4=%d",
+                          resolution->error, !resolution->address.empty());
+            Debug(detail);
+        } else {
+            Debug("Hostname lookup timed out");
+        }
+        if (!resolved || resolution->address.empty()) {
             Fail("The room address could not be resolved. Check the hostname or use an IPv4 address.");
             return {};
         }
+        Debug("Hostname lookup succeeded");
         return resolution->address;
     }
 
     void Join(Connection connection, std::stop_token stop) {
         const auto address = Resolve(connection.host, stop);
         if (address.empty() || stop.stop_requested()) return;
+        Debug("Room handshake started");
         member->Join(connection.nickname, address.c_str(), connection.port, 0,
                      Network::NoPreferredIP, connection.password, "", stop);
         connection.password.clear();
@@ -180,6 +201,7 @@ RoomClient::RoomClient() : impl(std::make_unique<Impl>()) {
     }
     p.member = Network::GetRoomMember().lock();
     p.states = p.member->BindOnStateChanged([&p](const Member::State& state) {
+        Debug(Network::GetStateStr(state));
         std::lock_guard lock(p.mutex);
         if (p.snapshot.phase == Phase::Disconnecting) return;
         if (p.snapshot.error.empty() &&
@@ -236,6 +258,7 @@ bool RoomClient::Connect(Connection connection) {
         return false;
     }
     p.snapshot = {Phase::Connecting, {}, {}, {}};
+    Debug("Join requested");
     p.requested = std::move(connection);
     p.attempt = std::stop_source{};
     p.pending = true;
@@ -250,6 +273,7 @@ void RoomClient::Leave() {
         p.snapshot.phase == Phase::Idle || p.snapshot.phase == Phase::Disconnecting)
         return;
     p.snapshot = {Phase::Disconnecting, {}, {}, {}};
+    Debug("Leave requested");
     p.attempt.request_stop();
     p.requested = {};
     p.disconnect = true;

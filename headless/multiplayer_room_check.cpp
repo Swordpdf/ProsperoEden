@@ -7,6 +7,7 @@
 #include <cstring>
 #include <thread>
 #include "common/logging.h"
+#include "multiplayer_logging.h"
 #include "common/assert.h"
 #include "common/settings.h"
 #include "core/hle/service/sockets/sockets_translate.h"
@@ -617,7 +618,8 @@ void CheckTestRoom(u16 port, TestRoom mode) {
 }
 
 int main(int argc, char** argv) {
-    assert(argc == 2);
+    assert(argc == 2 || argc == 3);
+    Eden::Multiplayer::SetDetailedLogging(argc == 3);
     const auto port = static_cast<u16>(std::strtoul(argv[1], nullptr, 10));
     Common::Log::Initialize();
     Network::NetworkInstance socket_network;

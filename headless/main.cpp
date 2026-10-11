@@ -38,6 +38,7 @@
 #include "hud.h"
 #include "display_refresh.h"
 #include "log_flusher.h"
+#include "multiplayer_logging.h"
 #include "mods.h"
 #include "controller_applet.h"
 #include "error_applet.h"
@@ -459,6 +460,7 @@ int main(int argc, char** argv) {
         Common::FS::CreateEdenPaths();
         Eden::Performance::PlatformChecks();
         Common::Log::Initialize();
+        Eden::Multiplayer::SetDetailedLogging(Eden::LoadPreferences().detailed_logging);
         Eden::Multiplayer::RoomClient rooms;
         for (;;) {
         Eden::StopLimit::End();  // whatever game ran before is gone
