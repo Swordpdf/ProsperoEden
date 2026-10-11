@@ -287,6 +287,22 @@ void Pad::Consume(std::size_t player, std::span<const ps5::pad::Data> samples) {
         engine->SetButtonState(player, kGame[touch_button],
             (create_free && (pressed & kButtonCreate) != 0) || slot.select_held || slot.select_pulse > 0);
     };
+    // Whether the DualSense button mapped to a game button is down (the analog triggers count
+    // from the threshold; the touchpad as set_touch has it).
+    const auto down = [&](int game, u32 buttons, bool left, bool right) {
+        const int pad = mapping[game];
+        if (pad == pad_touchpad)
+            return (create_free && (buttons & kButtonCreate) != 0) || slot.select_held || slot.select_pulse > 0;
+        return (buttons & kPad[pad]) != 0 || (pad == pad_l2 && left) || (pad == pad_r2 && right);
+    };
+    // A single Joy-Con held upright has Minus or Plus, not both: what presses either presses
+    // the one it has. Applied after every set_touch, which sets the touchpad's button alone.
+    const auto set_menu = [&](u32 buttons, bool left, bool right) {
+        if (grip != Grip::upright_left && grip != Grip::upright_right) return;
+        engine->SetButtonState(player, grip == Grip::upright_left ? Button::ButtonMinus : Button::ButtonPlus,
+                               down(game_minus, buttons, left, right) || down(game_plus, buttons, left, right));
+    };
+    bool last_left = false, last_right = false;  // the triggers of the poll's last sample
     const auto axis = [this](u8 raw) {
         const float x = (static_cast<int>(raw) - 128) / (raw < 128 ? 128.0f : 127.0f);
         return std::abs(x) <= deadzone ? 0.0f :
@@ -340,9 +356,43 @@ void Pad::Consume(std::size_t player, std::span<const ps5::pad::Data> samples) {
                                                         (pad == pad_l2 && left) || (pad == pad_r2 && right));
         }
         set_touch(sample.buttons);
+        last_left = left;
+        last_right = right;
         float left_x = axis(sample.left_stick.x), left_y = -axis(sample.left_stick.y);
         float right_x = axis(sample.right_stick.x), right_y = -axis(sample.right_stick.y);
-        if (grip != Grip::usual) {
+        if (grip == Grip::upright_left || grip == Grip::upright_right) {
+            // A single Joy-Con held upright. The game reads only what that Joy-Con has: one
+            // stick, four buttons (a left Joy-Con's arrows, where Right is the game's A, Down
+            // its B, Up its X and Left its Y; a right Joy-Con's A, B, X and Y), two shoulder
+            // buttons, Minus or Plus (set_menu), and the stick's click. Each of them is pressed
+            // by both of the DualSense's: the arrow and the button mapped to that place, L and
+            // R, ZL and ZR, Plus and Minus, either stick.
+            const auto held = [&](int game) { return down(game, sample.buttons, left, right); };
+            const auto arrow = [&](ButtonMask mask) { return (sample.buttons & mask) != 0; };
+            const bool upright_left = grip == Grip::upright_left;
+            engine->SetButtonState(player, upright_left ? Button::ButtonUp : Button::ButtonX,
+                                   arrow(kButtonUp) || held(game_x));
+            engine->SetButtonState(player, upright_left ? Button::ButtonRight : Button::ButtonA,
+                                   arrow(kButtonRight) || held(game_a));
+            engine->SetButtonState(player, upright_left ? Button::ButtonDown : Button::ButtonB,
+                                   arrow(kButtonDown) || held(game_b));
+            engine->SetButtonState(player, upright_left ? Button::ButtonLeft : Button::ButtonY,
+                                   arrow(kButtonLeft) || held(game_y));
+            engine->SetButtonState(player, upright_left ? Button::TriggerL : Button::TriggerR,
+                                   held(game_l) || held(game_r));
+            engine->SetButtonState(player, upright_left ? Button::TriggerZL : Button::TriggerZR,
+                                   held(game_zl) || held(game_zr));
+            set_menu(sample.buttons, left, right);
+            engine->SetButtonState(player, upright_left ? Button::StickL : Button::StickR,
+                                   held(game_left_stick) || held(game_right_stick));
+            if (right_x * right_x + right_y * right_y > left_x * left_x + left_y * left_y) {
+                left_x = right_x;
+                left_y = right_y;
+            } else {
+                right_x = left_x;
+                right_y = left_y;
+            }
+        } else if (grip != Grip::usual) {
             // A single Joy-Con held sideways: its game reads the stick and the four buttons by
             // where they are in that grip. The left one lies with its top to the left, the right
             // one with its top to the right; the DualSense is held as usual, so what it sends is
@@ -399,5 +449,6 @@ void Pad::Consume(std::size_t player, std::span<const ps5::pad::Data> samples) {
         slot.select_held = true;
     if (slot.select_pulse > 0) --slot.select_pulse;
     set_touch(last_buttons);
+    set_menu(last_buttons, last_left, last_right);
 }
 }
