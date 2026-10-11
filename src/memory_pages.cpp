@@ -241,11 +241,19 @@ SparseRange* SparseRangeOf(std::uintptr_t address) {
 }
 
 #ifdef PS5_NATIVE
+// From as high in the pool as there is room (src/direct_memory.c): what is committed this way,
+// the heap's pieces, stays for good, while a game's memory and its graphics come and go below.
+extern "C" int eden_direct_high(std::size_t size, std::size_t alignment, int type, std::int64_t* start);
+// Where the system puts it: a 2 MiB block of this file's, which a session gives back.
+extern "C" int eden_direct_low(std::size_t size, std::size_t alignment, int type, std::int64_t* start);
+#endif
+
+#ifdef PS5_NATIVE
 std::int64_t zero_block = -1;
 
 // A 2 MiB block of direct memory, zeroed through a mapping of its own that is gone again.
 bool ZeroedBlock(std::int64_t* physical) {
-    if (sceKernelAllocateDirectMemory(0, sceKernelGetDirectMemorySize(), SparseSlot, SparseSlot, 12, physical) != 0)
+    if (eden_direct_low(SparseSlot, SparseSlot, 12, physical) != 0)
         return false;
     void* view = reinterpret_cast<void*>(cpu_mapping_hint);
     if (sceKernelMapDirectMemory(&view, SparseSlot, PROT_READ | PROT_WRITE, 0, *physical, SparseSlot) != 0) {
@@ -499,12 +507,6 @@ void* ReserveMemoryRange(std::size_t size) noexcept {
     return address == MAP_FAILED ? nullptr : address;
 #endif
 }
-
-#ifdef PS5_NATIVE
-// From as high in the pool as there is room (src/direct_memory.c): what is committed this way,
-// the heap's pieces, stays for good, while a game's memory and its graphics come and go below.
-extern "C" int eden_direct_high(std::size_t size, std::size_t alignment, int type, std::int64_t* start);
-#endif
 
 bool CommitMemoryRange(void* address, std::size_t size) noexcept {
     if (address == nullptr || size == 0 || size % LargePage != 0 ||
