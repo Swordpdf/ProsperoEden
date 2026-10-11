@@ -425,6 +425,11 @@ if(TARGET network)
         "${MULTIPLAYER_OUTPUT}/room_member.cpp")
     target_include_directories(network BEFORE PUBLIC "${MULTIPLAYER_OUTPUT}")
     target_include_directories(network PRIVATE "${CMAKE_CURRENT_LIST_DIR}")
+    # Direct-mode ccache can miss a new header shadowing one in the upstream tree.
+    if(CMAKE_CXX_COMPILER_LAUNCHER)
+        set_property(TARGET network PROPERTY CXX_COMPILER_LAUNCHER
+            "${CMAKE_COMMAND};-E;env;CCACHE_EXTRAFILES=${MULTIPLAYER_OUTPUT}/network/room_member.h:${MULTIPLAYER_OUTPUT}/network/packet.h;${CMAKE_CXX_COMPILER_LAUNCHER}")
+    endif()
 endif()
 if(TARGET core)
     get_target_property(ldn_sources core SOURCES)

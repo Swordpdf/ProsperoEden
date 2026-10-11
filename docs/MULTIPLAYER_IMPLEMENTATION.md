@@ -1,8 +1,18 @@
 # Local wireless rooms: implementation status
 
-Work is based on upstream `main` at `dfda802` (2026-10-10), on branch
+Work is rebased onto upstream `main` at `351057f` (2026-10-10), on branch
 `feature/ldn-rooms`. The source inspection in [the implementation plan](MULTIPLAYER_PLAN.md)
 predates this checkout; the new work does not include the old development branch's changes.
+
+## Rebase and CI cache correction
+
+The rebase includes Eden `67bada77` and upstream's display and Vulkan fixes. CI run
+38097079300 linked successfully but the multiplayer header audit rejected two network
+objects that depended on the original `room_member.h`. A focused reproduction confirmed
+that ccache direct mode can reuse that dependency after a generated header starts
+shadowing it. The network compiler launcher now hashes the generated room-member and
+packet headers as extra cache inputs. Warm-cache shadowing and subsequent header-change
+checks pass; the post-build header audit remains mandatory.
 
 ## Latest hardware result
 
