@@ -29,6 +29,8 @@ The native build and mandatory checks, formatting, bounded values, disconnect cl
 real-room sanitizer tests and both shader compilations passed. The glyph capacity is 28 and the Vulkan push constants
 remain within the guaranteed 128 bytes. Console display validation is still pending.
 
+- 2026-10-10 | ping overlay | 8123fe3 | .30 FW 6.02 | pass: deployed, all 66 file hashes verified | results/multiplayer-ping-deploy | operator display test
+
 ## Latest hardware result
 
 The operator subsequently confirmed creating a Mario Kart lobby while connected to the
