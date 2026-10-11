@@ -108,7 +108,7 @@ int RoomMember::GetPingMilliseconds() const {
 }
 ]=])
 multiplayer_replace(member_source "#include <atomic>"
-    "#include <atomic>\n#include <algorithm>\n#include <chrono>\n#include <cerrno>\n#include <cstdio>\n#include \"multiplayer_logging.h\"\n#include \"multiplayer_validation.h\"\n#include \"multiplayer_send.h\"")
+    "#include <atomic>\n#include <algorithm>\n#include <chrono>\n#include <cerrno>\n#include <cstdio>\n#include \"multiplayer_logging.h\"\n#include \"multiplayer_validation.h\"\n#include \"multiplayer_send.h\"\n#include \"multiplayer_nonblocking.h\"")
 multiplayer_replace(member_source [=[                case ENET_EVENT_TYPE_RECEIVE:
                     switch (event.packet->data[0]) {]=] [=[                case ENET_EVENT_TYPE_RECEIVE:
                     if (!Eden::Multiplayer::ValidRoomPacket(
@@ -130,7 +130,20 @@ multiplayer_replace(member_source [=[        ASSERT_MSG(room_member_impl->client
             return;
         }
         room_member_impl->client->maximumPacketSize = Eden::Multiplayer::MaxRoomPacketBytes;
-        room_member_impl->client->maximumWaitingData = Eden::Multiplayer::MaxRoomPacketBytes;]=])
+        room_member_impl->client->maximumWaitingData = Eden::Multiplayer::MaxRoomPacketBytes;
+        // ENet ignores a failed fcntl(O_NONBLOCK); a blocking socket stalls the member loop.
+        if (!Eden::Multiplayer::MakeSocketNonBlocking(room_member_impl->client->socket)) {
+            char detail[96];
+            std::snprintf(detail, sizeof(detail),
+                "Room socket could not be made non-blocking: errno=%d", errno);
+            Eden::Multiplayer::Debug(detail);
+            enet_host_destroy(room_member_impl->client);
+            room_member_impl->client = nullptr;
+            room_member_impl->SetState(State::Idle);
+            room_member_impl->SetError(Error::CouldNotConnect);
+            return;
+        }
+        Eden::Multiplayer::Debug("Room socket is non-blocking");]=])
 multiplayer_replace(member_source "const std::string& password, const std::string& token) {"
     "const std::string& password, const std::string& token, std::stop_token stop) {")
 multiplayer_replace(member_source "    enet_address_set_host(&address, server_addr);"
