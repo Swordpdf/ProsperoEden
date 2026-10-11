@@ -38,4 +38,21 @@ After teardown restore the normal package from the same source revision and veri
 
 Source revision, package hashes, screenshots, request logs, configuration hash comparison,
 and lifecycle receipts belong in `results/public-room-browser/`. No proprietary assets or
-credentials belong in this document. Hardware result pending.
+credentials belong in this document.
+
+## Current result
+
+Local application candidate: `28e668d` (on `local/public-room-browser`; not pushed).
+Parser/HTTP ASan/UBSan checks, existing remote/download/save-sync checks, launcher preview,
+native build and required audits passed. Both normal and development-capture packages passed
+freeze/inventory/hash verification.
+
+- Normal eboot SHA-256: `b026426fb796ee8ae3c4b871f2525d6ccd01cee36222393ca43af6d11f027748`.
+- Diagnostic eboot SHA-256: `72f93729fcb4dde069dfd0f5c3393ba6cfb6a9e92d40123ae9d7408517c0638b`.
+
+Console testing is deferred at the user's explicit request. Preflight initially found the app
+running; after the exact title was closed, it reopened during backup, so the second idle check
+stopped deployment before package replacement. No diagnostic launch or public room join occurred.
+The environment lock was released. Do not resume console work without new user authorization.
+
+- 2026-10-10 | G1 | 28e668d | .30 | no-run: title reopened during deployment preflight; testing deferred by user | results/public-room-browser/ | retain local packages
