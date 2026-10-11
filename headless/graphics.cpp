@@ -36,6 +36,9 @@ extern "C" void eden_glapi_tls_context_init() {}
 extern "C" int sceSystemServiceHideSplashScreen(void);
 #endif
 
+namespace Common {
+void MemorySteps(unsigned long long* count, unsigned long long* nanoseconds) noexcept;  // src/memory_pages.cpp
+}
 namespace Eden {
 #ifdef EDEN_PS5_VULKAN
 void PresentVulkanLoading(VideoCore::RendererBase& renderer);
@@ -663,6 +666,41 @@ void GraphicsWindow::OnFrameDisplayed() {
             // frames that came within one refresh of a 120 Hz output.
             static std::array<unsigned, 5> interval_hist{};
             const double interval_ms = (now - frame_sample_last) * 1000.0;
+            {
+                // A long frame: what the time since the frame before went into. Memory taken from
+                // the system always; the Vulkan part when the costs are counted (long-frames.txt
+                // or cost-run.txt in the app folder). Costs on other threads are in it too.
+                static constexpr const char* names[]{"graphics_pipeline", "compute_pipeline", "submit",
+                    "fence_wait", "semaphore_wait", "device_idle", "guest_fence", "buffer_sync", "texture_sync",
+                    "present_sync", "descriptor_sync", "range_reuse", "astc_submit", "texture_gc",
+                    "texture_cpu_download", "texture_async_release", "pipeline_ready_wait", "shader_prepare",
+                    "pipeline_cache_save", "shader_pool_reset", "shader_cfg", "shader_ir", "shader_spirv",
+                    "shader_module"};
+                static std::array<unsigned long long, 24> last_ns{}, last_calls{};
+                static unsigned long long last_steps = 0, last_step_ns = 0;
+                std::array<unsigned long long, 24> ns{}, calls{};
+                for (std::size_t i = 0; i < ns.size(); ++i) {
+                    ns[i] = Eden::Performance::vulkan_api[i].nanoseconds.load(std::memory_order_relaxed);
+                    calls[i] = Eden::Performance::vulkan_api[i].calls.load(std::memory_order_relaxed);
+                }
+                unsigned long long steps = 0, step_ns = 0;
+                ::Common::MemorySteps(&steps, &step_ns);
+                if (interval_ms >= 80.0) {
+                    char line[640];
+                    int length = std::snprintf(line, sizeof(line), "EDEN_LONG_FRAME ms=%.0f frame=%u at=%.2f memory_steps=%llu memory_ms=%.0f",
+                                               interval_ms, frame_total, now, steps - last_steps,
+                                               static_cast<double>(step_ns - last_step_ns) / 1e6);
+                    for (std::size_t i = 0; i < ns.size() && length > 0 && length < 560; ++i)
+                        if (ns[i] - last_ns[i] >= 2'000'000)
+                            length += std::snprintf(line + length, sizeof(line) - static_cast<std::size_t>(length), " %s=%.0f/%llu",
+                                                    names[i], static_cast<double>(ns[i] - last_ns[i]) / 1e6, calls[i] - last_calls[i]);
+                    std::puts(line);
+                }
+                last_ns = ns;
+                last_calls = calls;
+                last_steps = steps;
+                last_step_ns = step_ns;
+            }
             ++interval_hist[interval_ms < 12.5 ? 4 : interval_ms < 20.0 ? 0 : interval_ms < 36.0 ? 1 :
                             interval_ms < 52.0 ? 2 : 3];
 #endif

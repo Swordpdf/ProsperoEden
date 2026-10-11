@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include <chrono>
 #include <array>
 #include <atomic>
 #include <cerrno>
@@ -98,7 +99,27 @@ const Header& header_of(const void* pointer, std::size_t page) {
 // PS5 direct memory is real memory from the first byte: there is no page the system fills in
 // when it is first touched. A block from here is dense and zeroed. What must not be dense (the
 // guest page tables, the heap) uses the two families below.
+namespace {
+// Memory taken from the system while the app runs: how often, and how long the taking, the
+// mapping and the clearing took together (a 128 MiB piece of the heap is cleared whole).
+std::atomic<unsigned long long> memory_steps{0}, memory_step_ns{0};
+struct MemoryStep {
+    std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+    ~MemoryStep() {
+        memory_steps.fetch_add(1, std::memory_order_relaxed);
+        memory_step_ns.fetch_add(static_cast<unsigned long long>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now() - start).count()), std::memory_order_relaxed);
+    }
+};
+} // namespace
+
+void MemorySteps(unsigned long long* count, unsigned long long* nanoseconds) noexcept {
+    *count = memory_steps.load(std::memory_order_relaxed);
+    *nanoseconds = memory_step_ns.load(std::memory_order_relaxed);
+}
+
 void* AllocateMemoryPages(std::size_t size) noexcept {
+    const MemoryStep step;
     const long page = sysconf(_SC_PAGESIZE);
     const std::size_t lead = page > 0 ? lead_size(size, static_cast<std::size_t>(page)) : 0;
     const auto total = page > 0 ? allocation_size(size, page, lead) : 0;
@@ -509,6 +530,7 @@ void* ReserveMemoryRange(std::size_t size) noexcept {
 }
 
 bool CommitMemoryRange(void* address, std::size_t size) noexcept {
+    const MemoryStep step;
     if (address == nullptr || size == 0 || size % LargePage != 0 ||
         reinterpret_cast<std::uintptr_t>(address) % LargePage != 0)
         return false;
