@@ -536,6 +536,8 @@ void pictures(Stage &s)
         {"PlayerPS5 - Mario Kart 8 Deluxe (3.0.3)", "Desktop player - Mario Kart 8 Deluxe (3.0.3)"}};
     s.wait(0.8f);
     s.shoot("C2-multiplayer-connected");
+    s.press({Key::circle, Key::down, Key::cross});
+    s.shoot("C2a-private-while-connected");
     for (int i = 3; i <= 16; ++i) s.services.room.members.push_back("Player " + std::to_string(i));
     s.wait(0.2f);
     for (int i = 0; i < 20; ++i) s.press({Key::down});

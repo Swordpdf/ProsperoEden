@@ -138,7 +138,7 @@ void Launcher::update_multiplayer() {
         auto next = services_.room_status();
         if (next.phase != room_status_.phase) room_row_ = 0;
         room_status_ = std::move(next);
-        if (room_status_.phase == Phase::Connected)
+        if (room_status_.phase == Phase::Connected && room_page_ != RoomPage::choice)
             room_row_ = std::min(room_row_, std::max(0,
                 static_cast<int>(room_status_.members.size()) - kVisibleRoomMembers));
     }
