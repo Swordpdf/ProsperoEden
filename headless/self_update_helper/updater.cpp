@@ -688,6 +688,17 @@ int run(const Environment &environment, const Io &io)
         return 1;
     }
     refresh_registered(environment, title, target);
+    // The files the update replaced are kept as the previous version, so that it can be put
+    // back by hand if the new one misbehaves. Only the latest one is kept.
+    if (!environment.previous.empty())
+    {
+        const std::string kept = environment.previous + "/" + title + "-backup";
+        if (make_directory(environment.previous) && remove_tree(kept) &&
+            move_tree(work + "/backup", kept))
+            session.log("version " + installed + " is kept in " + kept);
+        else
+            session.log("version " + installed + " could not be kept in " + kept);
+    }
     clean();
     session.log("updated " + title + " to " + available);
     if (environment.notify)

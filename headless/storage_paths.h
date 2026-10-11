@@ -3,8 +3,11 @@
 // first thing in main) the app uses real console paths:
 //   app folder     the install location, normally /data/homebrew/PPSA99008
 //   data           /data/prosperoeden: config/ (prosperoeden.json), logs/, covers/, user/
-// Without it (no resident service or local elfldr, or the request failed) the sandbox paths
-// stay: /app0 and /download0.
+// Without it (no resident service or local elfldr, or the request failed) the app has no data:
+// it reads the app folder as /app0, keeps only its logs in /download0, and the launcher says
+// that it has no access. It used to keep a second set of settings and saves in /download0
+// then, and a console where access came and went showed one set or the other: saves and
+// settings seemed to be gone.
 #pragma once
 #include <cstdio>
 #include <string>
@@ -53,10 +56,11 @@ inline const std::string& AppDir() {
 inline std::string AppFile(std::string_view name) { return AppDir() + "/" + std::string(name); }
 
 // Settings, logs, covers and Eden's user folder.
-inline std::string ConfigDir() { return FilesystemAccess() ? std::string{kDataDir} + "/config" : "/download0/prosperoeden"; }
+inline std::string ConfigDir() { return std::string{kDataDir} + "/config"; }
+// The logs alone have a place in the sandbox: they are how a start without access is looked into.
 inline std::string LogsDir() { return FilesystemAccess() ? std::string{kDataDir} + "/logs" : "/download0/eden-headless-g7"; }
-inline std::string CoversDir() { return FilesystemAccess() ? std::string{kDataDir} + "/covers" : "/download0/prosperoeden/covers"; }
-inline std::string UserDir() { return FilesystemAccess() ? std::string{kDataDir} + "/user" : "/download0/eden-headless-g7/user"; }
+inline std::string CoversDir() { return std::string{kDataDir} + "/covers"; }
+inline std::string UserDir() { return std::string{kDataDir} + "/user"; }
 inline std::string ConfigFile(std::string_view name) { return ConfigDir() + "/" + std::string(name); }
 inline std::string LogFile(std::string_view name) { return LogsDir() + "/" + std::string(name); }
 

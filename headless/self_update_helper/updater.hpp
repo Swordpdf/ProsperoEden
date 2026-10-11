@@ -34,6 +34,10 @@ struct Environment
     std::function<void(unsigned milliseconds)> sleep;
     std::function<void(const std::string &message)> notify;
     std::function<void(const std::string &line)> log;
+    // Where the version an update replaces is kept, as <previous>/<TITLEID>-backup (the one
+    // before it is removed): the files the new version took the place of, as they were. The
+    // folder's parent must exist. Empty: the replaced files are deleted.
+    std::string previous;
     // How long the app may take to close after "apply".
     unsigned exit_wait_ms = 120000;
     // Left alone for this long after the app is gone, before its files are touched.

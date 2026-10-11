@@ -5,11 +5,11 @@
       "name": "eden",
       "about": "Eden emulator source at the pinned commit (GitHub mirror archive)",
       "kind": "archive",
-      "url": "https://github.com/eden-emulator/mirror/archive/5f142c7926d0c7fcbbd0ce30794d72f638a43b2a.tar.gz",
-      "sha256": "35ec0bb96b197181e66c0aeb8f44f0ff05334be832c631c50a4f1e271277285f",
-      "save": ".deps/eden-5f142c79.tar.gz",
+      "url": "https://github.com/eden-emulator/mirror/archive/67bada77f8a43a90da2e94e89b8e7da73c256989.tar.gz",
+      "sha256": "d42b6fb492c65eb5e98ab72a786dff01fd64384d073a739b9c9ff475414366ee",
+      "save": ".deps/eden-67bada77.tar.gz",
       "extract": ".deps",
-      "creates": ".deps/mirror-5f142c7926d0c7fcbbd0ce30794d72f638a43b2a/CMakeLists.txt"
+      "creates": ".deps/mirror-67bada77f8a43a90da2e94e89b8e7da73c256989/CMakeLists.txt"
     },
     {
       "name": "ffmpeg",
@@ -87,11 +87,11 @@
     },
     {
       "name": "lapy-owned-helper",
-      "about": "Lapy one-shot elfldr owned-root helper with the donor-release and 32-byte credential-attribute fixes",
+      "about": "Lapy one-shot elfldr owned-root helper with guarded target lifetime and balanced vnode ownership",
       "kind": "git",
       "url": "https://github.com/blackbearreloaded/PS5-Lapy-JB-Daemon.git",
-      "commit": "c3bdfe3a399366d8eacfc580f20b19fd03b16ca3",
-      "path": ".deps/PS5-Lapy-JB-Daemon-c3bdfe3"
+      "commit": "57fcc19b7f57e46c823d6f2a6c6233ebf3288079",
+      "path": ".deps/PS5-Lapy-JB-Daemon-57fcc19"
     },
     {
       "name": "lapy-payload-sdk",
@@ -122,7 +122,7 @@
       "about": "Mihawk's PS5_Vulkan: the RADV build and link recipes",
       "kind": "git",
       "url": "https://github.com/mihawk-99/PS5_Vulkan.git",
-      "commit": "3f3ee69607013b345d2baa6d6a37c86745649a08",
+      "commit": "5b5e4fc2d80fdb67a4f61ba9e6a8a424026bb8a5",
       "path": "../mihawk-vulkan-review"
     },
     {
@@ -130,7 +130,7 @@
       "about": "Mihawk's PS5 Mesa (RADV) source",
       "kind": "git",
       "url": "https://github.com/mihawk-99/PS5_Mesa.git",
-      "commit": "0b2d6d1a61d9bbf89cf8beb88a696144f67c61f8",
+      "commit": "7b59ef27c1b09b9671bc4153c41940c3155c3af2",
       "path": "../mihawk-mesa-review"
     },
     {
@@ -138,7 +138,7 @@
       "about": "Mihawk's PS5 Payload SDK fork used to build RADV",
       "kind": "git",
       "url": "https://github.com/mihawk-99/PS5_PayloadSDK.git",
-      "commit": "95c08f27386fc698f6bbe21dde3030140a41d10b",
+      "commit": "b83202be73e930050e00de0f1b4d9ec46c0391bf",
       "path": "../mihawk-sdk-review"
     }
   ]

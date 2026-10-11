@@ -504,13 +504,88 @@ void pictures(Stage &s)
     s.shoot("20-game-files-saved");
     s.press({Key::circle});
     s.wait(0.5f);
-    s.press({Key::down, Key::down, Key::down, Key::cross}); // past Downloads and Save sync
+    s.press({Key::down, Key::down, Key::down, Key::cross}); // Multiplayer
+    s.wait(0.8f);
+    s.shoot("B0-multiplayer-choice");
+    s.press({Key::cross});
+    s.wait(0.8f);
+    s.shoot("B1-public-rooms");
+    const auto check_room = [&](bool condition, const char* label) {
+        if (!condition) { std::fprintf(stderr, "Room preview failed: %s\n", label); s.ok = false; }
+    };
+    s.press({Key::down, Key::down, Key::down, Key::cross});
+    check_room(s.services.room.phase == Eden::Multiplayer::Phase::Idle, "incompatible join blocked");
+    s.shoot("B2-public-incompatible");
+    s.press({Key::up, Key::cross}); // Password dialog cancelled by preview service.
+    s.shoot("B3-public-password-cancelled");
+    s.wait(0.8f);
+    check_room(s.services.last_room_connection.host.empty(), "cancelled password does not join");
+    s.press({Key::up, Key::cross});
+    s.wait(0.8f);
+    check_room(s.services.last_room_connection.host == "192.0.2.1", "selected endpoint");
+    check_room(s.services.last_room_connection.password.empty(), "private password isolated");
+    check_room(s.services.saved_room.host == "127.0.0.1" && s.services.saved_room.port == 24872 &&
+               s.services.saved_room.password == "private-secret", "public join keeps the saved private room");
+    s.press({Key::square, Key::circle});
+    s.press({Key::down, Key::cross});
+    s.wait(0.8f);
+    s.shoot("C0-multiplayer-offline");
+    s.press({Key::down, Key::down, Key::down, Key::down, Key::cross});
+    s.wait(0.8f);
+    s.shoot("C1-multiplayer-connecting");
+    if (s.services.room.phase != Eden::Multiplayer::Phase::Connecting) s.ok = false;
+    s.services.room = {Eden::Multiplayer::Phase::Connected, "", "Friends' room",
+        {"PlayerPS5 - Mario Kart 8 Deluxe (3.0.3)", "Desktop player - Mario Kart 8 Deluxe (3.0.3)"}};
+    s.wait(0.8f);
+    s.shoot("C2-multiplayer-connected");
+    s.press({Key::circle, Key::down, Key::cross});
+    s.shoot("C2a-private-while-connected");
+    for (int i = 3; i <= 16; ++i) s.services.room.members.push_back("Player " + std::to_string(i));
+    s.wait(0.2f);
+    for (int i = 0; i < 20; ++i) s.press({Key::down});
+    s.shoot("C2b-multiplayer-members-bottom");
+    s.services.room.members.resize(2);
+    s.wait(0.2f);
+    s.shoot("C2c-multiplayer-members-shrink");
+    s.press({Key::cross});
+    if (s.services.room.phase != Eden::Multiplayer::Phase::Idle) s.ok = false;
+    s.services.room = {Eden::Multiplayer::Phase::Failed, "Connection lost. Check your internet connection, then rejoin the room before restarting Local Wireless in the game.", {}, {}};
+    s.wait(0.8f);
+    s.shoot("C3-multiplayer-lost");
+    s.services.room.error = "Room join timed out. The server connection opened, but room acceptance did not finish. Retry; if it repeats, ask the host to check the server log.";
+    s.wait(7.0f); // Failure remains visible after transient notices expire.
+    s.shoot("C3a-private-timeout");
+    check_room(s.services.room.phase == Eden::Multiplayer::Phase::Failed, "failure persists");
+    s.press({Key::circle});
+    s.shoot("C3b-choice-timeout");
+    s.press({Key::cross});
+    s.wait(0.8f);
+    s.shoot("C3c-public-timeout");
+    s.services.room.error = "Incorrect password. Enter the room password again; it is case-sensitive.";
+    s.wait(0.8f);
+    s.shoot("C3d-public-password");
+    s.press({Key::circle, Key::down, Key::cross});
+    s.press({Key::square});
+    s.wait(0.5f);
+    if (s.services.room.phase != Eden::Multiplayer::Phase::Idle) s.ok = false;
+    s.press({Key::circle, Key::circle, Key::down, Key::cross});
     s.wait(1.0f);
     s.shoot("21-language");
     s.press({Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down,
              Key::down, Key::down, Key::cross});
     s.wait(0.8f);
     s.shoot("22-language-chosen");
+
+    s.services.room = {Eden::Multiplayer::Phase::Connected, "", "Friends' room", {"PlayerPS5"}};
+    s.restart();
+    s.wait(1.0f);
+    s.shoot("C4-home-room-connected");
+    s.services.room = {};
+    s.wait(0.5f);
+    s.shoot("C5-home-room-disconnected");
+    s.press({Key::up, Key::right, Key::cross});
+    s.wait(0.8f);
+    s.shoot("C6-settings-multiplayer-off");
 
     // Two profiles: the home screen names who is playing.
     s.services.add_profile();

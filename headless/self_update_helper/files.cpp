@@ -215,6 +215,47 @@ bool list_files(const std::string &folder, std::size_t limit, std::vector<std::s
     }
 }
 
+bool move_tree(const std::string &from, const std::string &to)
+{
+    if (kind(from) != Kind::directory || kind(to) != Kind::absent)
+        return false;
+    if (rename(from.c_str(), to.c_str()) == 0)
+        return true;
+    if (errno != EXDEV)
+        return false;
+    // Another drive: copy. collect() lists a folder after what it holds, so the folders are
+    // made in the other order.
+    std::vector<std::string> files, folders;
+    bool ok = collect(from, 0, files, folders);
+    const auto mode_of = [](const std::string &path, mode_t fallback)
+    {
+        struct stat info
+        {
+        };
+        return lstat(path.c_str(), &info) == 0 ? static_cast<mode_t>(info.st_mode & 0777)
+                                               : fallback;
+    };
+    for (auto folder = folders.rbegin(); ok && folder != folders.rend(); ++folder)
+    {
+        const std::string made = to + folder->substr(from.size());
+        ok = mkdir(made.c_str(), 0755) == 0 && chmod(made.c_str(), mode_of(*folder, 0755)) == 0;
+    }
+    for (std::size_t i = 0; ok && i < files.size(); ++i)
+    {
+        if (kind(files[i]) != Kind::file)
+            continue; // a link or a special file: not followed, not kept
+        const std::string copy = to + files[i].substr(from.size());
+        ok = copy_file(files[i], copy) && chmod(copy.c_str(), mode_of(files[i], 0644)) == 0;
+    }
+    if (!ok)
+    {
+        (void)remove_tree(to);
+        return false;
+    }
+    (void)remove_tree(from);
+    return true;
+}
+
 bool remove_tree(const std::string &path)
 {
     std::vector<std::string> files, folders;

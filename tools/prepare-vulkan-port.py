@@ -90,12 +90,13 @@ void RasterizerVulkan::DispatchCompute() {"""),
     ('        std::scoped_lock lock{texture_cache.mutex};\n        texture_cache.WriteMemory(addr, size);\n    }\n    pipeline_cache.InvalidateRegion(addr, size);',
      '        ::Eden::Performance::GuestCacheLock(texture_cache.mutex);\n'
      '        std::lock_guard lock{texture_cache.mutex, std::adopt_lock};\n        texture_cache.WriteMemory(addr, size);\n    }\n    pipeline_cache.InvalidateRegion(addr, size);'),
-    # Hand recorded work to the worker every 64 draws rather than every 8: each hand-off wakes the
-    # worker with a system call (about 16.7k per second and ~7 us each in heavy scenes). A 32 KiB
-    # chunk still dispatches whenever it fills (about 15-25 draws of records); the 4,096-draw flush
-    # is unchanged. Development builds can pick 8-512 draws (dev-settings dispatch_draws=N).
-    ('    static constexpr u32 CHECK_MASK = 7;\n#endif // __ANDROID__\n\n    static_assert(DRAWS_TO_DISPATCH % (CHECK_MASK + 1) == 0);\n',
-     '    const u32 CHECK_MASK = ::Eden::Performance::dispatch_mask.load(std::memory_order_relaxed);\n#endif // __ANDROID__\n\n'),
+    # The upstream code has an __ANDROID__ ifdef for DRAWS_TO_DISPATCH (512 vs 4096) and
+    # CHECK_MASK (3 vs 7). Neither branch applies: replace the whole block. 512 draws per
+    # command buffer submission: 4,096 exceeds the PS5 GPU watchdog timeout in shader-heavy
+    # scenes (VK_ERROR_DEVICE_LOST in Xenoblade 2's cities). CHECK_MASK is the configurable
+    # dispatch interval (dev-settings dispatch_draws=N); default 64 draws between hand-offs.
+    ('#ifdef __ANDROID__\n    static constexpr u32 DRAWS_TO_DISPATCH = 512;\n    static constexpr u32 CHECK_MASK = 3;\n#else\n    static constexpr u32 DRAWS_TO_DISPATCH = 4096;\n    static constexpr u32 CHECK_MASK = 7;\n#endif // __ANDROID__\n\n    static_assert(DRAWS_TO_DISPATCH % (CHECK_MASK + 1) == 0);\n',
+     '    static constexpr u32 DRAWS_TO_DISPATCH = 512;\n    const u32 CHECK_MASK = ::Eden::Performance::dispatch_mask.load(std::memory_order_relaxed);\n\n'),
     # Per-draw count for the GPU-thread report (dispatch time per draw).
     ('    FlushWork();\n    gpu_memory->FlushCaching();\n\n    GraphicsPipeline* const pipeline{pipeline_cache.CurrentGraphicsPipeline()};',
      '    ::Eden::Performance::rasterizer_draw.calls.fetch_add(1, std::memory_order_relaxed);\n    FlushWork();\n    gpu_memory->FlushCaching();\n\n    GraphicsPipeline* const pipeline{pipeline_cache.CurrentGraphicsPipeline()};'),
@@ -908,82 +909,91 @@ for name, index, expected in (
     text = '#include "performance.h"\n' + text
     if not path.exists() or path.read_text() != text:
         path.write_text(text)
+# Eden loads these shaders when the renderer starts, whether frames are to be generated or not:
+# the reasons are only written when the setting is on, or every session without the user's
+# Lossless.dll would say so.
 adapt('src/video_core/renderer_vulkan/present/lsfg_shaders.cpp', 'vulkan_lsfg_shaders.cpp', [
     ('#include "video_core/vulkan_common/vulkan_device.h"',
-     '#include <string>\n#include "video_core/vulkan_common/vulkan_device.h"\n#include "diagnostics.h"'),
-    ('''    if (!device.IsVulkanMemoryModelSupported() || !device.HasNullDescriptor()) {
+     '#include <string>\n#include "common/settings.h"\n#include "video_core/vulkan_common/vulkan_device.h"\n#include "diagnostics.h"'),
+    ("""    if (!device.IsVulkanMemoryModelSupported() || !device.HasNullDescriptor() ||
+        !device.IsFloat16Supported()) {
         return;
-    }''',
-     '''    if (!device.IsVulkanMemoryModelSupported() || !device.HasNullDescriptor()) {
-        Eden::Report("framegen",
-                     ("device features: vulkanMemoryModel=" +
-                      std::to_string(device.IsVulkanMemoryModelSupported()) + " nullDescriptor=" +
-                      std::to_string(device.HasNullDescriptor()) +
-                      " -- both are required, and dev-settings.txt null_descriptor=off turns "
-                      "the second one off").c_str());
+    }""",
+     """    const bool wanted = Settings::values.frame_gen.GetValue();
+    if (!device.IsVulkanMemoryModelSupported() || !device.HasNullDescriptor() ||
+        !device.IsFloat16Supported()) {
+        if (wanted)
+            Eden::Report("framegen",
+                         ("device features: vulkanMemoryModel=" +
+                          std::to_string(device.IsVulkanMemoryModelSupported()) + " nullDescriptor=" +
+                          std::to_string(device.HasNullDescriptor()) + " float16=" +
+                          std::to_string(device.IsFloat16Supported()) +
+                          " -- all are required, and dev-settings.txt null_descriptor=off turns "
+                          "the second one off").c_str());
         return;
-    }'''),
-    ('''    VideoCore::FrameGen::ShaderModules code;
-    if (VideoCore::FrameGen::LoadShaderModules(code, allow_fp16, prefer_fp16) !=
-        VideoCore::FrameGen::LosslessStatus::Ok) {
+    }"""),
+    ("""    VideoCore::FrameGen::ShaderModules code;
+    if (VideoCore::FrameGen::LoadShaderModules(code) != VideoCore::FrameGen::LosslessStatus::Ok) {
         return;
-    }''',
-     '''    VideoCore::FrameGen::ShaderModules code;
-    const VideoCore::FrameGen::LosslessStatus status =
-        VideoCore::FrameGen::LoadShaderModules(code, allow_fp16, prefer_fp16);
+    }""",
+     """    VideoCore::FrameGen::ShaderModules code;
+    const VideoCore::FrameGen::LosslessStatus status = VideoCore::FrameGen::LoadShaderModules(code);
     if (status != VideoCore::FrameGen::LosslessStatus::Ok) {
-        Eden::Report("framegen",
-                     ("Lossless.dll " + VideoCore::FrameGen::GetLosslessDllPath().string() +
-                      " status=" + std::to_string(static_cast<u32>(status)) +
-                      " (0 ok, 1 not installed, 2 unreadable, 3 not a PE, 4 no shaders in it, "
-                      "5 translation failed, 6 cache unusable)").c_str());
+        if (wanted)
+            Eden::Report("framegen",
+                         ("Lossless.dll " + VideoCore::FrameGen::GetLosslessDllPath().string() +
+                          " status=" + std::to_string(static_cast<u32>(status)) +
+                          " (0 ok, 1 not installed, 2 unreadable, 3 not a PE, 4 no shaders in it, "
+                          "5 translation failed, 6 cache unusable)").c_str());
         return;
-    }'''),
-    ('''    valid = true;''',
-     '''    valid = true;
-    Eden::Report("framegen",
-                 ("shaders ready: " + std::to_string(code.size()) + " modules, fp16 allowed=" +
-                  std::to_string(allow_fp16) + " preferred=" + std::to_string(prefer_fp16))
-                     .c_str());'''),
+    }"""),
+    ("""    valid = true;""",
+     """    valid = true;
+    if (wanted)
+        Eden::Report("framegen", ("shaders ready: " + std::to_string(code.size()) + " modules").c_str());"""),
 ])
-# One member, so that "frames are being generated" is said once per session rather than once per
-# process: this object is built per renderer, and the renderer is built per game session.
+# Two members, so that "frames are being generated" and "this image cannot take them" are said once
+# per session rather than once per process or once per frame: this object is built per renderer,
+# and the renderer is built per game session.
 adapt('src/video_core/renderer_vulkan/present/frame_gen.h',
       'include/video_core/renderer_vulkan/present/frame_gen.h', [
-    ('    bool dumped{};', '    bool dumped{};\n    bool generation_reported{};'),
+    ('    bool dumped{};', '    bool dumped{};\n    bool generation_reported{};\n    bool storage_reported{};'),
 ])
 adapt('src/video_core/renderer_vulkan/present/frame_gen.cpp', 'vulkan_frame_gen.cpp', [
     ('#include "video_core/vulkan_common/vulkan_device.h"',
      '#include "video_core/vulkan_common/vulkan_device.h"\n#include "diagnostics.h"'),
-    ('''    if (!frame->storage_view) {
+    ("""    if (!shaders->IsValid()) {
         unavailable = true;
         return;
-    }''',
-     '''    if (!frame->storage_view) {
-        Eden::Report("framegen",
-                     "the frame image has no storage view: the swapchain format lacks "
-                     "VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT, so frames cannot be generated");
+    }""",
+     """    if (!shaders->IsValid()) {
+        Eden::Report("framegen", "LsfgShaders is not valid; see the lines above");
         unavailable = true;
         return;
-    }'''),
-    ('''        if (!shaders->IsValid()) {
-            unavailable = true;
-            return;
-        }''',
-     '''        if (!shaders->IsValid()) {
-            Eden::Report("framegen", "LsfgShaders is not valid; see the lines above");
-            unavailable = true;
-            return;
-        }'''),
+    }"""),
+    ("""    if (!frame->storage_view) {
+        warm_streak = 0;
+        return;
+    }""",
+     """    if (!frame->storage_view) {
+        if (!storage_reported) {
+            storage_reported = true;
+            Eden::Report("framegen",
+                         "the frame image has no storage view: the swapchain format lacks "
+                         "VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT, so frames cannot be generated");
+        }
+        warm_streak = 0;
+        return;
+    }"""),
     # The gates above only say why it is not running; this says that it is.
-    ('''    generated = warm && warm_streak >= LSFG_RECURRENCE_FRAMES && plan.generations > 0;''',
-     '''    generated = warm && warm_streak >= LSFG_RECURRENCE_FRAMES && plan.generations > 0;
+    ("""    generated = warm && warm_streak >= LSFG_RECURRENCE_FRAMES && plan.generations > 0;""",
+     """    generated = warm && warm_streak >= LSFG_RECURRENCE_FRAMES && plan.generations > 0;
     if (generated && !generation_reported) {
         generation_reported = true;
         Eden::Report("framegen",
                      ("generating " + std::to_string(plan.generations) +
                       " extra frame(s) per guest frame").c_str());
-    }'''),
+    }"""),
 ])
 shader_header = '#pragma once\n#include <cstdint>\n'
 for stage in ('vert', 'frag'):

@@ -30,6 +30,36 @@ class FakeServices final : public ui::Services
     bool import_available = true;
     ui::SaveSource import_source = ui::SaveSource::ryujinx;
     unsigned connected_controllers = 0b0011;
+    Eden::Multiplayer::Snapshot room;
+    Eden::Multiplayer::Connection last_room_connection;
+    Eden::Multiplayer::Connection saved_room{"127.0.0.1", 24872, "PlayerPS5", "private-secret"};
+    Eden::Multiplayer::RoomDirectory directory{{
+        {"Community racing", "Mario Kart 8 Deluxe", "192.0.2.1", 24872, 3, 8, false, true},
+        {"Friends' island", "Animal Crossing: New Horizons", "192.0.2.2", 24872, 2, 8, true, true},
+        {"Another protocol", "Other game", "192.0.2.3", 24872, 0, 8, false, false}}, {}, 0};
+    Eden::Multiplayer::RoomDirectory public_rooms(const std::atomic<bool>&) override { return directory; }
+    Eden::Multiplayer::Snapshot room_status() override { return room; }
+    Eden::Multiplayer::Connection room_connection() override { return saved_room; }
+    void remember_room(const Eden::Multiplayer::Connection& connection, bool private_room) override {
+        if (private_room) saved_room = connection;
+        else saved_room.nickname = connection.nickname;
+    }
+    bool connect_public_room(const Eden::Multiplayer::Connection& connection) override {
+        remember_room(connection, false);
+        last_room_connection = connection;
+        room = {Eden::Multiplayer::Phase::Connecting, {}, {}, {}};
+        return true;
+    }
+    bool connect_room(const Eden::Multiplayer::Connection& connection) override {
+        saved_room = connection;
+        last_room_connection = connection;
+        room = {Eden::Multiplayer::Phase::Connecting, {}, {}, {}};
+        return true;
+    }
+    void leave_room() override { room = {}; }
+    bool can_launch_game() override {
+        return room.phase == Eden::Multiplayer::Phase::Idle || room.phase == Eden::Multiplayer::Phase::Connected;
+    }
 
     ui::Home home() override;
     std::string clock() override

@@ -4,6 +4,8 @@
 #include "assets_dir.h"
 #include "crash_report.h"
 #include "diagnostics.h"
+#include "multiplayer_logging.h"
+#include "network/room.h"
 #include "metadata_bridge.h"
 #include "mods.h"
 #include "profiles.h"
@@ -17,8 +19,11 @@
 #include "remote/save_sync.h"
 #include "save_sync_config.h"
 #include "version.h"
+#include "../system_keyboard.h"
+#include "common/string_util.h"
 
 #include <algorithm>
+#include <stdexcept>
 #include <cctype>
 #include <cstddef>
 #include <cstdio>
@@ -468,7 +473,58 @@ std::string ProfileName(const std::string& key) {
 }
 } // namespace
 
-EdenServices::EdenServices(std::string launch_error) : launch_error_(std::move(launch_error)) {
+Eden::Multiplayer::Snapshot EdenServices::room_status() { return rooms_.GetSnapshot(); }
+Eden::Multiplayer::RoomDirectory EdenServices::public_rooms(const std::atomic<bool>& stop) {
+    return Eden::Multiplayer::FetchRoomDirectory(Network::network_version, stop);
+}
+Eden::Multiplayer::Connection EdenServices::room_connection() {
+    auto result = Eden::LoadRoomConnection();
+    if (result.nickname.empty()) result.nickname = "PlayerPS5";
+    return result;
+}
+bool EdenServices::connect_room(const Eden::Multiplayer::Connection& connection) {
+    if (!Eden::SaveRoomConnection(connection)) return false;
+    return rooms_.Connect(connection);
+}
+void EdenServices::remember_room(const Eden::Multiplayer::Connection& connection, bool private_room) {
+    if (private_room) {
+        (void)Eden::SaveRoomConnection(connection);
+        return;
+    }
+    auto saved = Eden::LoadRoomConnection();
+    if (saved.nickname == connection.nickname) return;
+    saved.nickname = connection.nickname;
+    (void)Eden::SaveRoomConnection(saved);
+}
+bool EdenServices::connect_public_room(const Eden::Multiplayer::Connection& connection) {
+    remember_room(connection, false);
+    return rooms_.Connect(connection);
+}
+void EdenServices::leave_room() { rooms_.Leave(); }
+bool EdenServices::can_launch_game() {
+    const auto phase = rooms_.GetSnapshot().phase;
+    return phase == Eden::Multiplayer::Phase::Idle || phase == Eden::Multiplayer::Phase::Connected;
+}
+std::optional<std::string> EdenServices::room_text(int field, const std::string& initial,
+                                                const std::atomic<bool>& stop) {
+    if (field < 0 || field > 3) return std::nullopt;
+    const char16_t* titles[]{u"Room address", u"UDP port", u"Nickname", u"Room password"};
+    const std::size_t limits[]{253, 5, 20, 128};
+    Eden::TextRequest request;
+    request.title = titles[field];
+    request.initial = Common::UTF8ToUTF16(initial);
+    request.max_length = limits[field];
+    request.numbers = field == 1;
+    request.password = field == 3;
+    const auto answer = Eden::AskSystemKeyboard(request, stop);
+    if (answer.outcome == Eden::TextOutcome::unavailable)
+        throw std::runtime_error("The system keyboard is unavailable");
+    if (answer.outcome != Eden::TextOutcome::accepted) return std::nullopt;
+    return Common::UTF16ToUTF8(answer.text);
+}
+
+EdenServices::EdenServices(std::string launch_error, Eden::Multiplayer::RoomClient& rooms)
+    : rooms_(rooms), launch_error_(std::move(launch_error)) {
     (void)mkdir(Eden::ConfigDir().c_str(), 0777);
     // Who is playing (profiles.h): the profile this PS5 user chose last, else the one chosen last.
     (void)sceUserServiceInitialize(nullptr); // already done by the controller code: refused, harmless
@@ -510,8 +566,12 @@ EdenServices::~EdenServices() {
 pe::ui::Home EdenServices::home() {
     const std::lock_guard lock(bridge_);
     pe::ui::Home home;
-    home.setup_ready = setup_.empty();
-    if (!home.setup_ready) {
+    home.setup_ready = setup_.empty() && Eden::FilesystemAccess();
+    if (!Eden::FilesystemAccess()) {
+        // No data is kept anywhere else (storage_paths.h): say so, and start nothing.
+        home.status = fill(tr("ProsperoEden could not get access to the console's storage, so it cannot read your settings, saves and games. Nothing was changed. Close ProsperoEden and open it again. (Code {0})"),
+                           {std::to_string(Eden::FilesystemAccessStatus())});
+    } else if (!home.setup_ready) {
         home.status = fill(tr("Setup required: {0} Open Settings, Game files to choose the folder that holds your "
                               "keys, firmware and roms folders (or add the files to {1}), then reopen ProsperoEden."),
                            {SetupMessage(setup_), Eden::AssetsDir()});
@@ -747,6 +807,7 @@ std::vector<pe::ui::Profile> EdenServices::profiles() {
 }
 
 bool EdenServices::choose_profile(int index) {
+    if (rooms_.GetSnapshot().phase != Eden::Multiplayer::Phase::Idle) return false;
     const auto who = Eden::Profiles::Resolve(user_);
     if (index < 0 || index >= static_cast<int>(who.profiles.size())) return false;
     const auto& profile = who.profiles[static_cast<std::size_t>(index)];
@@ -938,6 +999,7 @@ bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     speed.skip_invalidation = preferences.skip_invalidation;
     const bool saved = Eden::SavePreferences(value) && Eden::SavePerformance(0, speed);
     if (!saved) Eden::Report("settings", "Could not write preferences");
+    if (saved) Eden::Multiplayer::SetDetailedLogging(value.detailed_logging);
     return saved;
 }
 

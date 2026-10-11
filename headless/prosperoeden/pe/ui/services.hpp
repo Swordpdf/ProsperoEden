@@ -10,6 +10,10 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <atomic>
+#include <optional>
+#include "../../../multiplayer.h"
+#include "../../../multiplayer_directory.h"
 
 namespace pe::ui
 {
@@ -634,6 +638,21 @@ class Services
     {
         return false;
     }
+
+    virtual Eden::Multiplayer::Snapshot room_status() { return {}; }
+    virtual Eden::Multiplayer::RoomDirectory public_rooms(const std::atomic<bool>&)
+    { return {{}, "Public rooms are unavailable."}; }
+    virtual Eden::Multiplayer::Connection room_connection() { return {}; }
+    virtual bool connect_room(const Eden::Multiplayer::Connection&) { return false; }
+    // Joins a room from the public directory. The saved private room stays as it is; only the
+    // nickname is shared between the two.
+    virtual bool connect_public_room(const Eden::Multiplayer::Connection&) { return false; }
+    // Keeps what was typed across restarts: the whole private room form, or only the nickname.
+    virtual void remember_room(const Eden::Multiplayer::Connection&, bool /*private_room*/) {}
+    virtual void leave_room() {}
+    virtual std::optional<std::string> room_text(int, const std::string&, const std::atomic<bool>&)
+    { return std::nullopt; }
+    virtual bool can_launch_game() { return true; }
 
     // ---- images ----
     virtual bool load_image(const std::string &path, gfx::Image *image) = 0;

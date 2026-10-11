@@ -10,11 +10,15 @@
 
 **ProsperoEden is an unofficial PlayStation 5 port of [Eden](https://github.com/eden-emulator/mirror)** - an accurate, high-performance emulator. All credit for the emulator core belongs to the Eden project and its contributors. ProsperoEden is not affiliated with or endorsed by the Eden team or Sony.
 
-This is an early alpha. Video, audio, controller input, and saves have been confirmed working. Compatibility and performance will vary between games. The current release is **v1.000.100**.
+This is an early alpha. Video, audio, controller input, and saves have been confirmed working. Compatibility and performance will vary between games. The current release is **v1.000.110**.
 
 ## Source code
 
 The complete ProsperoEden source is in this repository: the PS5 frontend and launcher in `headless/`, and the build and packaging tools in `tools/`. To build it yourself, run `make` on Linux (Ubuntu 26.04; WSL works). It fetches every dependency at its pinned revision and writes the release files to `dist/`; `make help` lists the other targets. See [docs/BUILDING.md](docs/BUILDING.md). A release ZIP built by GitHub Actions can be checked with `gh attestation verify <ZIP> -R blackbearreloaded/ProsperoEden` (GitHub CLI); this covers releases built from now on (after v1.000.090), not earlier ones.
+
+Local-wireless multiplayer through Eden rooms is new in v1.000.110 and experimental. See the
+[setup guide and current limitations](docs/MULTIPLAYER.md) and the
+[validation status](docs/MULTIPLAYER_IMPLEMENTATION.md); Tailscale forwarding is not yet qualified.
 
 ## Project foundation
 
@@ -126,6 +130,7 @@ ProsperoEden keeps its own data in `/data/prosperoeden`, separately from the gam
 ├── backup/save-sync/                   # save data the save sync replaced, the last three per game
 ├── covers/                             # cached game covers
 ├── logs/                               # current and previous session logs, crash reports
+├── previous-version/PPSA99008-backup/  # the version the last self-update replaced
 └── user/                               # every profile's saves, and emulator user data
     └── lossless/Lossless.dll           # optional: your copy, for frame generation
 ```
@@ -134,19 +139,33 @@ The app itself stays in `/data/homebrew/PPSA99008`; see [Updating](#updating).
 
 ProsperoEden does not include keys, firmware, games, or other copyrighted console data. Dump these files from hardware and software you own. Do not download or redistribute them.
 
+This is the only place it keeps them. If ProsperoEden cannot get access to the console's storage when it starts, the home screen says so and no game can be started; your data is untouched, and closing ProsperoEden and opening it again is the first thing to try. Earlier versions kept a second set of settings and saves in the app's own sandbox in that case, which made saves and settings seem to disappear on consoles where access came and went.
+
+Keys, firmware and games that an early version kept inside the app's folder (`/data/homebrew/PPSA99008/assets`) are moved to `/data/prosperoeden` the first time this version starts, so that replacing the app cannot remove them.
+
 ### Updating
 
 Close ProsperoEden first. Your settings, saves, covers and logs are in `/data/prosperoeden`, outside the app, so an update keeps them. Afterwards the About screen shows the version that is running.
 
 Once each time it opens, ProsperoEden asks [homebrew.page](https://homebrew.page/ps5) which release of it is listed there. The request carries the app's title ID and nothing else. If the listed release is newer than the one running, a dialog offers it, with its version and download size:
 
-- **Update now** downloads the release ZIP from its GitHub release, checks it against the SHA-256 in the catalog's signed list, and unpacks it beside the app. A ring shows how far it is and the time left; Circle cancels, and nothing has changed until the end. Then ProsperoEden closes, the update helper (`self-updater.elf`, sent to the console's payload loader on port 9021) replaces the app's files, and the console shows a notification. Open ProsperoEden again to use the new version.
+- **Update now** downloads the release ZIP from its GitHub release, checks it against the SHA-256 in the catalog's signed list, and unpacks it beside the app. A ring shows how far it is and the time left; Circle cancels, and nothing has changed until the end. Then ProsperoEden closes, the update helper (`self-updater.elf`, sent to the console's payload loader on port 9021) replaces the app's files, and the console shows a notification. Open ProsperoEden again to use the new version. The version it replaced is kept; see [Going back to the previous version](#going-back-to-the-previous-version).
 - **What's new** (when the release has notes) shows what changes in it before you decide: the release notes as homebrew.page lists them. Up/Down scroll, L1/R1 jump a page, Cross updates and Circle goes back to the offer. Triangle opens them from the offer too.
 - **Skip** keeps the version you have. The dialog shows again the next time ProsperoEden opens, not when you come back from a game.
 
 If the download or the unpacking fails, the dialog says why and offers **Try again**; the app stays as it was. Without a network, or without an answer, nothing is shown. When ProsperoEden cannot install the release itself (no payload loader, or an install it cannot find), the menu says **Update available** at the top right for ten seconds instead, and the steps below still work:
 
 - **Folder install.** Copy the `PPSA99008` folder from the new release ZIP over `/data/homebrew/PPSA99008`, replacing the files it has, then start ProsperoEden. Files you put there yourself, such as `language.txt`, stay.
+
+### Going back to the previous version
+
+When ProsperoEden updates itself, the files of the version it replaces are kept in `/data/prosperoeden/previous-version/PPSA99008-backup`, until the next update replaces them in turn. If a new version misbehaves, you can put the previous one back:
+
+1. Close ProsperoEden.
+2. Copy everything inside `/data/prosperoeden/previous-version/PPSA99008-backup` over the app's folder (`/data/homebrew/PPSA99008`), replacing the files it has, for example over FTP.
+3. Start ProsperoEden. The About screen shows the version that is running.
+
+The update will be offered again the next time ProsperoEden opens; choose **Skip** to stay on the version you put back. Settings, saves and game files are not part of this: they stay as they are. An update done by hand, by copying a release over the app's folder, keeps no previous version.
 
 ### Moving save data
 
@@ -336,6 +355,20 @@ The launcher follows the language the PS5 is set to: Arabic, Chinese (simplified
 
 Earlier versions read everything from `/data/homebrew/PPSA99008/assets/`. That folder keeps working until you choose a game files folder, and settings are migrated automatically on first launch. To move to the new layout, move `assets/keys`, `assets/firmware` and `assets/roms` into any folder, then select it in **Settings > Game files**. The release ZIP contains no user files, so copy its app files over your installation without deleting your own data.
 
+## Changes in v1.000.110
+
+- **Multiplayer through Eden rooms (new, experimental).** ProsperoEden can join an Eden room, so a game's Local Wireless mode reaches other players over the internet: other PS5 consoles running ProsperoEden, and Eden on a PC. Open **Settings > Multiplayer**, join a room, then start the game and choose its Local Wireless mode. The home screen shows when a room is connected, the game overlay shows the delay to the room in milliseconds, and when the connection is lost the game closes and the launcher says why. See the [setup guide](https://github.com/blackbearreloaded/ProsperoEden/blob/main/docs/MULTIPLAYER.md).
+- **Private room.** Enter a room's address, UDP port, a nickname and its password. They are saved as you type them, and joining a public room does not replace them. Enter the room's IPv4 address: looking up a hostname does not work on the console yet.
+- **Public rooms.** A list of the rooms in Eden's public directory, with each room's game, how many players it has and whether it asks for a password. Rooms you can join come first, the busiest at the top; Left and Right move a page at a time and Triangle refreshes. Rooms that use another protocol version are marked and cannot be joined.
+- **For a stable multiplayer session**, everyone needs the same game and the same update of it, and the player who hosts the lobby should use 1x resolution with frame generation off. A host that cannot hold full speed ends the session for everyone.
+- **Connection problems are explained.** When a room cannot be joined, a panel says what happened and what to try: a wrong password, a full room, a room that did not answer, a name already in use. **Settings > Diagnostics** has the detailed log to send with a report.
+- **Self-update keeps the version it replaces.** After an update, the previous version's files stay in `/data/prosperoeden/previous-version/PPSA99008-backup` until the next update. See [Going back to the previous version](#going-back-to-the-previous-version).
+- **One place for your data.** Settings, saves and covers are only ever in `/data/prosperoeden`. When ProsperoEden could not get access to the console's storage at a start, it used to carry on with empty settings and no saves, which looked as if they had been lost; it now says so on the home screen and starts no game. Keys, firmware and games that an early version kept inside the app's folder are moved to `/data/prosperoeden` at the first start, so that replacing the app cannot remove them.
+- **120 Hz holds on a display with a variable refresh rate.** With **Refresh rate** at 120 Hz, such a display was read as not having switched and the output went back to 60 Hz.
+- **No more lost graphics device in shader-heavy scenes.** Long scenes could stop a game with `VK_ERROR_DEVICE_LOST`; draws are now handed to the GPU in smaller batches. Contributed by [Bauls Deep](https://github.com/bawsdeep).
+- **Eden updated** to its revision of 8 October (`67bada77`), together with the Vulkan driver (Mesa), its tools and the Payload SDK.
+- **The helper that gives ProsperoEden access to storage** no longer reads a title's kernel data after that title has exited during its start.
+
 ## Changes in v1.000.100
 
 - **Frame generation (new).** Between two pictures a game draws, ProsperoEden can show one made up from them, so a 30 FPS game looks like 60. It is in **Settings > Video** and in each game's own settings, works with the Vulkan renderer, and needs your own copy of Lossless Scaling: without its `Lossless.dll` the settings are greyed out. See [Frame generation](#frame-generation). Contributed by [gyn7561](https://github.com/gyn7561).
@@ -506,10 +539,12 @@ verifies the upstream-generated manifest, and includes the resulting ELF in the 
 The donor-release and firmware 13.60 fixes pinned here were merged upstream in
 [PS5-Lapy-JB-Daemon PR #48](https://github.com/mpereiraesaa/PS5-Lapy-JB-Daemon/pull/48) and
 [PR #49](https://github.com/mpereiraesaa/PS5-Lapy-JB-Daemon/pull/49).
-The previous `54a095c` helper passed five automated launch/elevate/close cycles on firmware 6.02
-and five on 12.70 with root access, balanced donor references, clean helper exits, and no fatal
-signal, app crash, coredump, nonsleeping-lock warning, or kernel panic in the captured kernel-log
-windows. The new `c3bdfe3` helper still requires attended qualification runs.
+The pinned `57fcc19` helper also includes the guarded target-lifetime and fail-closed accounting
+changes from [PR #50](https://github.com/mpereiraesaa/PS5-Lapy-JB-Daemon/pull/50). The previous
+`54a095c` helper passed five automated launch/elevate/close cycles on firmware 6.02 and five on
+12.70 with root access and balanced donor references. The pinned helper completed the target-exit
+stress and a full one-shot elevation on firmware 12.70; it still requires an attended
+ProsperoEden qualification run on firmware 6.02.
 
 ## Thanks
 
@@ -521,6 +556,7 @@ Thank you to the people who test ProsperoEden on their own consoles and report w
 - **BunkinBacon**, for helping with testing.
 - **Cold** ([GitHub](https://github.com/JMUtechnologies)), for helping with testing.
 - **Bauls Deep** ([GitHub](https://github.com/bawsdeep)), for helping with testing.
+- **OverkillLabs**, for helping with testing.
 
 And to the people who contribute code:
 

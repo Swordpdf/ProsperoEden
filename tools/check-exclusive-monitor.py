@@ -51,7 +51,7 @@ int main() {
     assert(value == workers * iterations);
 }
 '''.replace('LOCK', lock).replace('MONITOR', monitor)
-boost = cache / 'source/.cache/cpm/boost/boost-1.90.0'
+boost = cache / 'source/.cache/cpm/boost/1.92.0'
 includes = ['-I' + str(dynarmic)] + ['-I' + str(p) for p in sorted(boost.glob('libs/*/include'))]
 assert len(includes) > 1
 with tempfile.TemporaryDirectory(prefix='eden-monitor-') as tmp:

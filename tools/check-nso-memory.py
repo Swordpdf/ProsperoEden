@@ -15,6 +15,7 @@ code=r'''
 #include <cstring>
 #include <cstdint>
 #include <cassert>
+#include <span>
 #include <lz4.h>
 using u8=uint8_t; using u32=uint32_t; using u32_le=u32; using u64=uint64_t;
 constexpr u32 NSO_ARGUMENT_DATA_ALLOCATION_SIZE=4096;
@@ -24,10 +25,12 @@ namespace Settings { struct Arg {std::string value; const std::string& GetValue(
 struct PatchManager { bool patched{}; bool HasNSOPatch(int,const std::string&)const{return patched;} };
 struct Memory {size_t address{},length{};bool fail{};bool ZeroBlock(size_t a,size_t n){address=a;length=n;return !fail;}} memory;
 struct Process {Memory& GetMemory(){return memory;}} process;
+// No ZBIC encoder here: a segment that does not decode must end the load.
+namespace Common::Compression {int DecompressDataZBIC(std::span<u8>,std::span<const u8>){return 0;}}
 namespace Common::Compression {int DecompressDataLZ4(u8* d,size_t n,const u8*s,size_t m){return LZ4_decompress_safe((const char*)s,(char*)d,m,n);}}
 int constructions=0;
 namespace Kernel {struct CodeSet { struct Segment {size_t addr{},offset{};u32 size{};}; std::vector<u8>memory;std::array<Segment,3>segments; CodeSet(){++constructions;} Segment&DataSegment(){return segments[2];}};}
-struct Header {struct Segment {u32 offset,location,size,bss_size;};std::array<Segment,3>segments;std::array<u32,3>segments_compressed_size;u32 flags{};int build_id{};bool IsSegmentCompressed(size_t i)const{return flags&(1u<<i);}};
+struct Header {struct Segment {u32 offset,location,size,bss_size;};std::array<Segment,3>segments;std::array<u32,3>segments_compressed_size;u32 flags{};int build_id{};bool zbic{};bool IsZBICCompressed()const{return zbic;}bool IsSegmentCompressed(size_t i)const{return flags&(1u<<i);}};
 struct File {std::vector<u8>bytes;bool short_read{};std::string GetName()const{return "test";}size_t GetSize()const{return bytes.size();}size_t Read(u8*d,size_t n,size_t o)const {if(short_read)return 0;assert(o+n<=bytes.size());memcpy(d,bytes.data()+o,n);return n;}};
 std::vector<u8> image;
 size_t staging_size{},staging_capacity{};
@@ -57,6 +60,7 @@ int main(){
  assert(load(h,f,true)==size && image==reference);
  f.short_read=true;assert(!load(h,f,true));f.short_read=false;
  h.segments_compressed_size[0]=1;assert(!load(h,f,true));
+ h.segments_compressed_size[0]=n;h.zbic=true;assert(!load(h,f,true));h.zbic=false;
  h.flags=0;h.segments[0].offset=0;h.segments_compressed_size[0]=4;
  h.segments[2].bss_size=1800u*1024*1024;int before=constructions;
  assert(load(h,f,false) && constructions==before); // No large allocation for layout.

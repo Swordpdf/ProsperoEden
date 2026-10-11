@@ -1,0 +1,36 @@
+name: Build cache
+
+# Publishes the ccache of a build as the snapshot that later builds start from: ccache-u24.tar,
+# a file of the build-cache release. It runs after a "Release build" run that was started by hand
+# on main with "snapshot" ticked (that run leaves the cache as its ccache-snapshot artifact).
+# The build workflow itself never replaces a file of a release.
+on:
+  workflow_run:
+    workflows: ["Release build"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    name: Publish the ccache snapshot
+    if: >-
+      github.event.workflow_run.event == 'workflow_dispatch' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == github.event.repository.default_branch
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Replace the snapshot in the build-cache release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          if ! gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name ccache-snapshot --dir snapshot; then
+            echo "That run kept no snapshot (the box was not ticked)."
+            exit 0
+          fi
+          gh release upload build-cache snapshot/ccache-u24.tar --clobber --repo "$GITHUB_REPOSITORY"

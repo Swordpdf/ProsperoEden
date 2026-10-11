@@ -20,9 +20,10 @@ The package includes `lapy.elf`, `lapy-manifest.json`, and Lapy's MIT license. I
 locally implemented kernel mutation code. A jailbreak environment with an ELF loader on port
 9021 is required when a resident Lapy service is not already available.
 
-Upstream has validated the helper lifecycle on firmware 12.02. Other SDK-supported firmware,
-including ProsperoEden's firmware 6.02 test console, remains experimental until it completes
-repeat launch, gameplay, clean-exit, and root-balance testing.
+The previous donor-release helper passed repeated lifecycle tests on firmware 6.02 and 12.70.
+The pinned target-lifetime helper completed its exit-race stress and a full one-shot elevation on
+firmware 12.70. Other SDK-supported firmware, including ProsperoEden's firmware 6.02 test console,
+remains experimental for this exact pin until it completes an attended launch and clean-exit test.
 
 Credits: Lapy was created by [ArkSama](https://github.com/ArkSama), and the cooperative helper
 used here comes from

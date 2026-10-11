@@ -33,6 +33,9 @@ function(write_derived path content)
     file(WRITE "${path}.in" "${content}")
     configure_file("${path}.in" "${path}" COPYONLY)
 endfunction()
+set(MULTIPLAYER_SOURCE "${PROJECT_SOURCE_DIR}")
+set(MULTIPLAYER_OUTPUT "${PORT_BUILD_DIR}/multiplayer")
+include("${EDEN_PORT_DIR}/multiplayer_packets.cmake")
 # Keep successful JIT invariant checks inline; preserve upstream failure handling.
 # Use a private include root so other core/renderer targets retain their headers.
 file(READ "${PROJECT_SOURCE_DIR}/src/common/assert.h" jit_assert_header)
@@ -70,6 +73,13 @@ if(PS5_NATIVE)
     target_sources(common PRIVATE "${PORT_BUILD_DIR}/emutls.c")
     target_include_directories(common PRIVATE "${COMPILER_RT}")
 endif()
+# ReShade's effect compiler takes alloca from <malloc.h>, which the Payload SDK replaces by an
+# #error. Its own copy of that header, for this target alone.
+if(PS5_NATIVE AND TARGET reshadefx)
+    write_derived("${PORT_BUILD_DIR}/reshadefx-compat/malloc.h"
+        "#pragma once\n#include <stdlib.h>\n#ifndef alloca\n#define alloca __builtin_alloca\n#endif\n")
+    target_include_directories(reshadefx BEFORE PRIVATE "${PORT_BUILD_DIR}/reshadefx-compat")
+endif()
 # Use the already-qualified no-arena allocation contract in the full core.
 get_target_property(common_sources common SOURCES)
 list(REMOVE_ITEM common_sources host_memory.cpp sparse_large_vector.cpp)
@@ -95,13 +105,18 @@ function(eden_sparse_replace old new count)
 endfunction()
 eden_sparse_replace("AllocateMemoryPages(alloc_size)" "AllocateSparsePages(alloc_size)" 2)
 eden_sparse_replace("FreeMemoryPages(base_ptr, alloc_size)" "FreeSparsePages(base_ptr, alloc_size)" 2)
+# Eden defines the host page size, its bit count and its mask as three inline variables, the last
+# two computed from the first. Each inline variable has an initializer of its own, and on the
+# PS5 they do not run in the order of the header: the bit count and the mask were computed from
+# a page size that was still zero, and every committed page then set a bit far outside the
+# vector's bitmap, in whatever the heap kept next to it. Each one asks the system itself.
+eden_sparse_replace("inline const u64 HostPageBits = std::countr_zero(HostPageSize);"
+    "inline const u64 HostPageBits = std::countr_zero(static_cast<u64>(sysconf(_SC_PAGESIZE)));" 1)
+eden_sparse_replace("inline const u64 HostPageMask = ~(HostPageSize - 1);"
+    "inline const u64 HostPageMask = ~(static_cast<u64>(sysconf(_SC_PAGESIZE)) - 1);" 1)
+# Eden tests the result; CommitSparsePage has none (it ends the app when memory runs out).
 eden_sparse_replace("mprotect(reinterpret_cast<void*>(page), HostPageSize, PROT_READ | PROT_WRITE)"
-    "CommitSparsePage(page)" 1)
-# ZeroRegion (an unmap) asks whether the page of entry `start / sizeof(T)` was committed where it
-# means the page of entry `start`. A wrong "yes" writes zeroes into a part of the table nothing
-# was ever written to: harmless in a dense table, a fault in a read-only one. A wrong "no" leaves
-# the first entries of the unmapped range as they were.
-eden_sparse_replace("if (IsCommittedPage(start / sizeof(T))) {" "if (IsCommittedPage(start)) {" 1)
+    "(CommitSparsePage(page), 0)" 1)
 eden_sparse_replace("void FreeMemoryPages(void* base, std::size_t size) noexcept;"
     "void FreeMemoryPages(void* base, std::size_t size) noexcept;\nvoid* AllocateSparsePages(std::size_t size) noexcept;\nvoid FreeSparsePages(void* base, std::size_t size) noexcept;\nvoid CommitSparsePage(std::uintptr_t page) noexcept;" 1)
 write_derived("${PORT_BUILD_DIR}/sparse/common/sparse_large_vector.h" "${sparse_header}")
@@ -335,29 +350,27 @@ list(FILTER jit_sources EXCLUDE REGEX "(^|/)opt_passes\\.cpp$")
 set_property(TARGET dynarmic PROPERTY SOURCES "${jit_sources}")
 target_sources(dynarmic PRIVATE "${PORT_BUILD_DIR}/opt_passes.cpp")
 
-# Keep the checked page-table path, but use x86 scaled addressing and avoid a
-# 64-bit mask load for Eden's packed pointer. Apply to both A32 and A64 emitters.
+# Avoid a 64-bit mask load for Eden's packed pointer in the checked page-table path. Apply to
+# both A32 and A64 emitters.
 set(memory_relative "dynarmic/backend/x64/emit_x64_memory.h")
 file(READ "${PROJECT_SOURCE_DIR}/src/dynarmic/src/${memory_relative}" memory_emitter)
-foreach(index IN ITEMS "tmp.cvt64()" "tmp")
-    set(lookup "    code.shl(tmp, int(ctx.conf.page_table_log2_stride));\n    code.mov(page, qword[r14 + ${index}]);")
-    string(FIND "${memory_emitter}" "${lookup}" offset)
-    if(offset LESS 0)
-        message(FATAL_ERROR "Pinned page-table indexing changed")
-    endif()
-    string(REPLACE "${lookup}" [=[    if (ctx.conf.page_table_log2_stride <= 3) {
-        code.mov(page, qword[r14 + tmp * (1 << ctx.conf.page_table_log2_stride)]);
-    } else {
-        code.shl(tmp, int(ctx.conf.page_table_log2_stride));
-        code.mov(page, qword[r14 + tmp]);
-    }]=] memory_emitter "${memory_emitter}")
-endforeach()
 set(pointer_mask "    // mask away attributes\n    if (ctx.conf.page_table_pointer_mask == 0) {")
-set(pointer_end "        code.sar(page, *ctx.conf.page_table_sign_extension);\n    }\n\n    code.jz")
-foreach(anchor IN ITEMS pointer_mask pointer_end)
-    string(FIND "${memory_emitter}" "${${anchor}}" offset)
-    if(offset LESS 0)
-        message(FATAL_ERROR "Pinned page-table pointer decoding changed")
+# The A32 and the A64 lookup end their own sign extension differently; each closes the else.
+set(pointer_end_a32 "        code.sar(page, 63 - int(*ctx.conf.page_table_sign_extension));\n    }\n")
+set(pointer_end_a64 "        code.sar(page, *ctx.conf.page_table_sign_extension);\n    }\n")
+foreach(anchor IN ITEMS pointer_mask pointer_end_a32 pointer_end_a64)
+    string(REPLACE "${${anchor}}" "" without "${memory_emitter}")
+    string(LENGTH "${memory_emitter}" before)
+    string(LENGTH "${without}" after)
+    string(LENGTH "${${anchor}}" each)
+    math(EXPR found "(${before} - ${after}) / ${each}")
+    if(anchor STREQUAL "pointer_mask")
+        set(expected 2)
+    else()
+        set(expected 1)
+    endif()
+    if(NOT found EQUAL expected)
+        message(FATAL_ERROR "Pinned page-table pointer decoding changed: ${found} of ${anchor}, expected ${expected}")
     endif()
 endforeach()
 string(REPLACE "${pointer_mask}" [=[    // Eden packs pointer bits 12..55. Sign extension removes the upper
@@ -370,8 +383,9 @@ string(REPLACE "${pointer_mask}" [=[    // Eden packs pointer bits 12..55. Sign 
     } else {
     // mask away attributes
     if (ctx.conf.page_table_pointer_mask == 0) {]=] memory_emitter "${memory_emitter}")
-string(REPLACE "${pointer_end}" "        code.sar(page, *ctx.conf.page_table_sign_extension);\n    }\n    }\n\n    code.jz"
-    memory_emitter "${memory_emitter}")
+foreach(anchor IN ITEMS pointer_end_a32 pointer_end_a64)
+    string(REPLACE "${${anchor}}" "${${anchor}}    }\n" memory_emitter "${memory_emitter}")
+endforeach()
 # The packed-pointer decoder above uses only immediates. Like upstream's
 # unmasked absolute-offset path, it can reuse the index register for the page.
 # Relative offsets and other pointer formats still need two scratch registers.
@@ -631,30 +645,19 @@ foreach(bits 32 64)
             "    const auto halt = m_jit->Run();\n    ::Eden::Performance::SampleCpu(m_core_index, 0, ${sample_pc}, GetSvcNumber(), ${sample_fp});\n    return TranslateHaltReason(halt);"
             wrapper "${wrapper}")
         if(bits EQUAL 32)
-            string(REPLACE "u8 DynarmicCallbacks32::MemoryRead8(u32 vaddr) {"
-                "u8 DynarmicCallbacks32::MemoryRead8(u32 vaddr) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].reads);"
-                wrapper "${wrapper}")
-            string(REPLACE "u16 DynarmicCallbacks32::MemoryRead16(u32 vaddr) {"
-                "u16 DynarmicCallbacks32::MemoryRead16(u32 vaddr) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].reads);"
-                wrapper "${wrapper}")
-            string(REPLACE "u32 DynarmicCallbacks32::MemoryRead32(u32 vaddr) {"
-                "u32 DynarmicCallbacks32::MemoryRead32(u32 vaddr) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].reads);"
-                wrapper "${wrapper}")
-            string(REPLACE "u64 DynarmicCallbacks32::MemoryRead64(u32 vaddr) {"
-                "u64 DynarmicCallbacks32::MemoryRead64(u32 vaddr) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].reads);"
-                wrapper "${wrapper}")
-            string(REPLACE "void DynarmicCallbacks32::MemoryWrite8(u32 vaddr, u8 value) {"
-                "void DynarmicCallbacks32::MemoryWrite8(u32 vaddr, u8 value) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].writes);"
-                wrapper "${wrapper}")
-            string(REPLACE "void DynarmicCallbacks32::MemoryWrite16(u32 vaddr, u16 value) {"
-                "void DynarmicCallbacks32::MemoryWrite16(u32 vaddr, u16 value) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].writes);"
-                wrapper "${wrapper}")
-            string(REPLACE "void DynarmicCallbacks32::MemoryWrite32(u32 vaddr, u32 value) {"
-                "void DynarmicCallbacks32::MemoryWrite32(u32 vaddr, u32 value) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].writes);"
-                wrapper "${wrapper}")
-            string(REPLACE "void DynarmicCallbacks32::MemoryWrite64(u32 vaddr, u64 value) {"
-                "void DynarmicCallbacks32::MemoryWrite64(u32 vaddr, u64 value) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].writes);"
-                wrapper "${wrapper}")
+            foreach(counted IN ITEMS "u64 DynarmicCallbacks32::MemoryRead(u32 vaddr, size_t size) {|reads"
+                    "void DynarmicCallbacks32::MemoryWrite(Dynarmic::A32::VAddr vaddr, u64 value, size_t size) {|writes")
+                string(REPLACE "|" ";" counted_parts "${counted}")
+                list(GET counted_parts 0 counted_head)
+                list(GET counted_parts 1 counted_name)
+                string(FIND "${wrapper}" "${counted_head}" counted_at)
+                if(counted_at LESS 0)
+                    message(FATAL_ERROR "Pinned A32 callback changed: ${counted_head}")
+                endif()
+                string(REPLACE "${counted_head}"
+                    "${counted_head}\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].${counted_name});"
+                    wrapper "${wrapper}")
+            endforeach()
             string(REPLACE "bool DynarmicCallbacks32::MemoryWriteExclusive8(u32 vaddr, u8 value, u8 expected) {"
                 "bool DynarmicCallbacks32::MemoryWriteExclusive8(u32 vaddr, u8 value, u8 expected) {\n    ::Eden::Performance::CountJit(::Eden::Performance::jit_callbacks[m_parent.m_core_index].exclusive_writes);"
                 wrapper "${wrapper}")
@@ -685,8 +688,7 @@ foreach(bits 32 64)
             # dev-settings watch=: writes into the watched range reach these callbacks (its
             # pages are marked debug) and are reported with the guest thread (watch.h).
             set(watch_context "m_memory, *m_parent.m_jit, Kernel::GetCurrentThread(m_parent.m_system.Kernel()), m_parent.m_core_index")
-            foreach(write IN ITEMS "MemoryWrite8(u64 vaddr, u8 value)|1|value" "MemoryWrite16(u64 vaddr, u16 value)|2|value"
-                    "MemoryWrite32(u64 vaddr, u32 value)|4|value" "MemoryWrite64(u64 vaddr, u64 value)|8|value"
+            foreach(write IN ITEMS "MemoryWrite(Dynarmic::A64::VAddr vaddr, u64 value, std::size_t size)|size|value"
                     "MemoryWrite128(u64 vaddr, Dynarmic::A64::Vector value)|16|value[0]"
                     "MemoryWriteExclusive8(u64 vaddr, std::uint8_t value, std::uint8_t expected)|1|value"
                     "MemoryWriteExclusive16(u64 vaddr, std::uint16_t value, std::uint16_t expected)|2|value"
@@ -991,10 +993,58 @@ if(PS5_NATIVE)
     string(REPLACE "            nso_file.Read(compressed_data.data(), nso_header.segments_compressed_size[i], nso_header.segments[i].offset);"
         "            auto* destination = codeset.memory.data() + module_start + nso_header.segments[i].location;\n            if (!nso_header.IsSegmentCompressed(i)) {\n                if (nso_file.Read(destination, nso_header.segments[i].size, nso_header.segments[i].offset) != nso_header.segments[i].size) return std::nullopt;\n            } else if (nso_file.Read(compressed_data.data(), nso_header.segments_compressed_size[i], nso_header.segments[i].offset) != nso_header.segments_compressed_size[i]) return std::nullopt;"
         nso_source "${nso_source}")
-    string(REPLACE "DecompressDataLZ4(decompressed_size.data()," "DecompressDataLZ4(destination," nso_source "${nso_source}")
-    string(REPLACE "                ASSERT(r == int(nso_header.segments[i].size));" "                if (r != int(nso_header.segments[i].size)) return std::nullopt;" nso_source "${nso_source}")
-    string(REPLACE "                std::memcpy(codeset.memory.data() + module_start + nso_header.segments[i].location, decompressed_size.data(), nso_header.segments[i].size);" "" nso_source "${nso_source}")
-    string(REPLACE "            } else {\n                std::memcpy(codeset.memory.data() + module_start + nso_header.segments[i].location, compressed_data.data(), nso_header.segments[i].size);" "" nso_source "${nso_source}")
+    # A segment is decoded where it belongs (read there directly when it is not compressed), and
+    # a segment that does not decode ends the load instead of the app.
+    set(old_nso_segment [=[            if (nso_header.IsSegmentCompressed(i)) {
+                if (nso_header.IsZBICCompressed()) {
+                    // ZBIC compression
+                    const int r = Common::Compression::DecompressDataZBIC(
+                        std::span<u8>{decompressed_size}.first(nso_header.segments[i].size),
+                        std::span<const u8>{compressed_data}.first(nso_header.segments_compressed_size[i])
+                    );
+                    ASSERT(r > 0);
+                } else {
+                    // LZ4 compression
+                    int r = Common::Compression::DecompressDataLZ4(
+                        decompressed_size.data(),
+                        nso_header.segments[i].size,
+                        compressed_data.data(),
+                        nso_header.segments_compressed_size[i]
+                    );
+                    ASSERT(r == int(nso_header.segments[i].size));
+                }
+
+                std::memcpy(
+                    codeset.memory.data() + module_start + nso_header.segments[i].location,
+                    decompressed_size.data(),
+                    nso_header.segments[i].size
+                );
+            } else {
+                // Not compressed
+                std::memcpy(
+                    codeset.memory.data() + module_start + nso_header.segments[i].location,
+                    compressed_data.data(),
+                    nso_header.segments[i].size
+                );
+            }
+]=])
+    string(FIND "${nso_source}" "${old_nso_segment}" nso_segment_at)
+    if(nso_segment_at LESS 0)
+        message(FATAL_ERROR "Pinned NSO segment decoding changed")
+    endif()
+    string(REPLACE "${old_nso_segment}" [=[            if (nso_header.IsSegmentCompressed(i)) {
+                if (nso_header.IsZBICCompressed()) {
+                    const int r = Common::Compression::DecompressDataZBIC(
+                        std::span<u8>{destination, nso_header.segments[i].size},
+                        std::span<const u8>{compressed_data}.first(nso_header.segments_compressed_size[i]));
+                    if (r <= 0) return std::nullopt;
+                } else {
+                    const int r = Common::Compression::DecompressDataLZ4(destination, nso_header.segments[i].size,
+                        compressed_data.data(), nso_header.segments_compressed_size[i]);
+                    if (r != int(nso_header.segments[i].size)) return std::nullopt;
+                }
+            }
+]=] nso_source "${nso_source}")
     # Cheats address the game's main module. Eden registers a cheat list for every module that
     # has one, and the last registration wins: a cheat file without a build ID in its name
     # (mods/<title ID>/cheat_<name>.txt) matches every module, so its cheats were applied
@@ -1048,22 +1098,10 @@ function(eden_patch source old new)
     set(${source} "${patched}" PARENT_SCOPE)
 endfunction()
 
-# Mods (headless/mods.h). The pinned patch code cannot apply an .ips patch (it looks for the
-# patch's magic in the game's code, and its end marker test never passes) and writes zeros for
-# the text of a .pchtxt string patch, whose record also had a fixed size that a long line
-# overran. Eden fixed these after this pin; the same fixes are made here. Its .pchtxt reader also
-# takes every line as a record or a flag: the credits at the end of a real patch file then wrote
-# over the start of the game's code. Only records and known flags are read here
-# (headless/mods_check.cpp checks all of it).
+# Mods (headless/mods.h). Eden's .pchtxt reader takes every line as a record or a flag: the
+# credits at the end of a real patch file then wrote over the start of the game's code. Only
+# records and known flags are read here (headless/mods_check.cpp checks all of it).
 file(READ "${PROJECT_SOURCE_DIR}/src/core/file_sys/ips_layer.cpp" ips_source)
-eden_patch(ips_source "magic.size() > 3 &&" "magic.size() >= 3 &&")
-eden_patch(ips_source "magic.size() > 4 &&" "magic.size() >= 4 &&")
-eden_patch(ips_source
-    "    auto in_data = in->ReadAllBytes();\n    auto const type = IdentifyMagic(in_data);\n    if (type == IPSFileType::Error)\n        return nullptr;"
-    "    auto const type = IdentifyMagic(ips->ReadBytes(0x5));\n    if (type == IPSFileType::Error)\n        return nullptr;\n    auto in_data = in->ReadAllBytes();\n    if (in_data.empty())\n        return nullptr;")
-eden_patch(ips_source
-    "struct IPSwitchRecord {\n    std::array<uint8_t, 256 - sizeof(size_t)> data;\n    size_t count;\n};"
-    "struct IPSwitchRecord {\n    std::vector<uint8_t> data;\n};")
 set(ips_escape_begin "static IPSwitchRecord EscapeStringSequences(std::string_view sv) {")
 set(ips_escape_end "void IPSwitchCompiler::Parse(")
 string(FIND "${ips_source}" "${ips_escape_begin}" ips_escape_at)
@@ -1128,10 +1166,6 @@ static IPSwitchRecord EscapeStringSequences(std::string_view sv) {
 
 ]=])
 set(ips_source "${ips_before}${ips_escape}${ips_after}")
-eden_patch(ips_source
-    "                    std::memcpy(r.data.data(), hs.data(), hs.size());\n                    r.count = hs.size();"
-    "                    r.data.assign(hs.begin(), hs.end());")
-eden_patch(ips_source "auto replace_size = record.second.count;" "auto replace_size = record.second.data.size();")
 eden_patch(ips_source "        if (line.size() > 2 && line[0] == '@') {\n            switch (line[1]) {"
     "        if (line.size() > 2 && line[0] == '@') {\n            if (!IsPatchFlag(line)) return true;\n            switch (line[1]) {")
 eden_patch(ips_source "        } else if (patches.empty()) {\n            LOG_WARNING(Loader, \"Invalid line not in a patch {}\", line);"
@@ -1220,7 +1254,25 @@ set(slab_header "core/hle/kernel/k_slab_heap.h")
 file(READ "${PROJECT_SOURCE_DIR}/src/${slab_header}" slab_source)
 string(REPLACE "    void Free(T* obj) {\n        BaseHeap::Free(obj);"
     "    void Free(T* obj) {\n        std::destroy_at(obj);\n        BaseHeap::Free(obj);" slab_source "${slab_source}")
+# The slab heap's lock and a thread's context guard stay spin locks (headless/kernel_spin_lock.h).
+set(slab_lock "    std::mutex m_lock;\n")
+string(FIND "${slab_source}" "${slab_lock}" slab_lock_at)
+if(slab_lock_at LESS 0)
+    message(FATAL_ERROR "Pinned slab heap lock changed")
+endif()
+string(REPLACE "${slab_lock}" "    ::Eden::KernelSpinLock m_lock;\n" slab_source "${slab_source}")
+string(PREPEND slab_source "#include \"${EDEN_PORT_DIR}/kernel_spin_lock.h\"\n")
 write_derived("${PORT_BUILD_DIR}/include/${slab_header}" "${slab_source}")
+set(thread_header "core/hle/kernel/k_thread.h")
+file(READ "${PROJECT_SOURCE_DIR}/src/${thread_header}" thread_source)
+set(thread_guard "    std::mutex m_context_guard{};\n")
+string(FIND "${thread_source}" "${thread_guard}" thread_guard_at)
+if(thread_guard_at LESS 0)
+    message(FATAL_ERROR "Pinned thread context guard changed")
+endif()
+string(REPLACE "${thread_guard}" "    ::Eden::KernelSpinLock m_context_guard{};\n" thread_source "${thread_source}")
+string(PREPEND thread_source "#include \"${EDEN_PORT_DIR}/kernel_spin_lock.h\"\n")
+write_derived("${PORT_BUILD_DIR}/include/${thread_header}" "${thread_source}")
 
 # PostDestroy can release an owner process and enter the scheduler using the
 # current dummy thread's mutex. Keep that thread alive through this cleanup.
@@ -1721,7 +1773,12 @@ file(REMOVE "${PORT_BUILD_DIR}/include/video_core/buffer_cache/buffer_cache_base
 # Join the worker before its renderer/context and scheduler are destroyed.
 # C++ members are destroyed in reverse declaration order.
 file(READ "${PROJECT_SOURCE_DIR}/src/video_core/gpu.cpp" gpu_source)
-string(REPLACE ": gpu_thread{system_}\n        , system{system_}" ": system{system_}" gpu_source "${gpu_source}")
+set(gpu_first_members ": system{system_}\n        , gpu_thread{system_}")
+string(FIND "${gpu_source}" "${gpu_first_members}" gpu_first_members_at)
+if(gpu_first_members_at LESS 0)
+    message(FATAL_ERROR "Pinned GPU member order changed")
+endif()
+string(REPLACE "${gpu_first_members}" ": system{system_}" gpu_source "${gpu_source}")
 string(REPLACE ", is_async{is_async_}" ", is_async{is_async_}\n        , gpu_thread{system_}" gpu_source "${gpu_source}")
 string(REPLACE "    // Destruction of thread must be done before all (non trivial)\n    // previous members has been destroyed\n    VideoCommon::GPUThread::ThreadManager gpu_thread;\n" "" gpu_source "${gpu_source}")
 string(REPLACE "    u64 pending_composite_fence{};" "    u64 pending_composite_fence{};\n    VideoCommon::GPUThread::ThreadManager gpu_thread;" gpu_source "${gpu_source}")
@@ -1814,6 +1871,13 @@ if(EDEN_PS5_OPENGL)
         string(REPLACE "    });\n}" "}" gpu_worker "${gpu_worker}")
         string(REPLACE "thread.get_stop_token()" "stop_source.get_token()" gpu_worker "${gpu_worker}")
         string(REPLACE "ThreadManager::~ThreadManager() = default;" "ThreadManager::~ThreadManager() { Stop(); }" gpu_worker "${gpu_worker}")
+        # Eden's own shutdown of its std::jthread worker: the worker here is a pthread, ended by Stop.
+        set(worker_shutdown "void ThreadManager::NotifyShutdown() {\n    if (thread.joinable()) {\n        thread.request_stop();\n        thread.join();\n    }\n}")
+        string(FIND "${gpu_worker}" "${worker_shutdown}" worker_shutdown_at)
+        if(worker_shutdown_at LESS 0)
+            message(FATAL_ERROR "Pinned GPU worker shutdown changed")
+        endif()
+        string(REPLACE "${worker_shutdown}" "void ThreadManager::NotifyShutdown() { Stop(); }" gpu_worker "${gpu_worker}")
         string(REPLACE "        CommandDataContainer next;" "        unsigned dispatches = 0;\n        CommandDataContainer next;" gpu_worker "${gpu_worker}")
         set(dispatch_call "                scheduler.Push(system.GPU(), submit_list->channel, std::move(submit_list->entries));")
         string(REPLACE "${dispatch_call}"
@@ -1868,7 +1932,9 @@ if(EDEN_PS5_OPENGL)
     string(REPLACE "    ~Impl() = default;" "    ~Impl() { gpu_thread.Stop(); if (renderer && Settings::IsOpenGL()) { renderer->Context().MakeCurrent(); glFinish(); } }" gpu_source "${gpu_source}")
     # Join before unique_ptr destruction clears GPU::impl: queued draws call back
     # through GPU::TickWork. NotifyShutdown also protects service-owned state.
-    set(old_gpu_shutdown "    void NotifyShutdown() {\n        std::unique_lock lk{sync_mutex};\n        shutting_down.store(true, std::memory_order::relaxed);\n        sync_cv.notify_all();\n    }")
+    # Eden joins its worker first; here the waiters are woken first, so that a guest thread waiting
+    # on the worker cannot keep it from ending.
+    set(old_gpu_shutdown "    void NotifyShutdown() {\n        gpu_thread.NotifyShutdown();\n        std::unique_lock lk{sync_mutex};\n        shutting_down.store(true, std::memory_order::relaxed);\n        sync_cv.notify_all();\n    }")
     string(FIND "${gpu_source}" "${old_gpu_shutdown}" gpu_shutdown_offset)
     if(gpu_shutdown_offset LESS 0)
         message(FATAL_ERROR "Pinned GPU shutdown changed")
@@ -2024,8 +2090,8 @@ ${fs_service}")
     write_derived("${PORT_BUILD_DIR}/filesystem.cpp" "${fs_service}")
     list(REMOVE_ITEM core_sources hle/service/filesystem/filesystem.cpp)
     list(APPEND core_sources "${PORT_BUILD_DIR}/filesystem.cpp")
-    list(REMOVE_ITEM core_sources internal_network/network.cpp)
-    file(READ "${PROJECT_SOURCE_DIR}/src/core/internal_network/network.cpp" network_source)
+    list(REMOVE_ITEM core_sources internal_network/network.cpp "${MULTIPLAYER_OUTPUT}/socket_network.cpp")
+    file(READ "${MULTIPLAYER_OUTPUT}/socket_network.cpp" network_source)
     string(REPLACE "namespace Network {" "namespace Network {\n#ifndef IPPROTO_DCCP\nconstexpr int IPPROTO_DCCP = 33;\n#endif" network_source "${network_source}")
     # Native pipes can be created but fail their first byte write with ENOMEM.
     # Preserve Eden's poll/write/read wakeup design using a local socket pair.
@@ -2077,8 +2143,8 @@ void Initialize() {
     list(APPEND core_sources "${PORT_BUILD_DIR}/network.cpp")
     # Reuse the getifaddrs path instead of newer BSD route-format helpers.
     # Keep its existing zero-gateway fallback; PS5 route discovery is unqualified.
-    list(REMOVE_ITEM core_sources internal_network/network_interface.cpp)
-    file(READ "${PROJECT_SOURCE_DIR}/src/core/internal_network/network_interface.cpp" interfaces_source)
+    list(REMOVE_ITEM core_sources internal_network/network_interface.cpp "${MULTIPLAYER_OUTPUT}/network_interface.cpp")
+    file(READ "${MULTIPLAYER_OUTPUT}/network_interface.cpp" interfaces_source)
     string(REPLACE "defined(__linux__) || defined(__ANDROID__)" "defined(__linux__) || defined(__ANDROID__) || defined(__FreeBSD__)" interfaces_source "${interfaces_source}")
     string(REPLACE "defined(__ANDROID__) || defined(__linux__)" "defined(__ANDROID__) || defined(__linux__) || defined(__FreeBSD__)" interfaces_source "${interfaces_source}")
     string(REPLACE "#ifdef __ANDROID__" "#if defined(__ANDROID__) || defined(__FreeBSD__)" interfaces_source "${interfaces_source}")
@@ -2212,6 +2278,10 @@ else()
         "${EDEN_PORT_DIR}/update_check_check.cpp" "${EDEN_PORT_DIR}/update_check/update_check.c")
     target_compile_definitions(eden-update-check PRIVATE UPDATE_CHECK_NO_NETWORK=1)
     target_compile_options(eden-update-check PRIVATE -UNDEBUG)
+    # The self-update helper keeps the version it replaces: moving it to where it is kept.
+    add_executable(eden-update-files-check
+        "${EDEN_PORT_DIR}/self_update_files_check.cpp" "${EDEN_PORT_DIR}/self_update_helper/files.cpp")
+    target_include_directories(eden-update-files-check PRIVATE "${EDEN_PORT_DIR}")
 endif()
 target_include_directories(eden-headless PRIVATE "${PROJECT_SOURCE_DIR}/src")
 # The app version has one home, sce_sys/param.json (contentVersion), which the package carries as
@@ -2228,6 +2298,8 @@ target_include_directories(eden-headless PRIVATE "${PORT_BUILD_DIR}/version")
 target_link_libraries(eden-headless PRIVATE core eden-pad)
 # A game's text entry on the PS5's own on-screen keyboard (system_keyboard.h, keyboard_applet.h).
 target_sources(eden-headless PRIVATE "${EDEN_PORT_DIR}/system_keyboard.cpp")
+target_sources(eden-headless PRIVATE "${EDEN_PORT_DIR}/multiplayer.cpp")
+target_include_directories(eden-headless BEFORE PRIVATE "${MULTIPLAYER_SOCKET_HEADERS}" "${MULTIPLAYER_OUTPUT}")
 if(PS5_NATIVE)
     target_link_libraries(eden-headless PRIVATE
         "${sdk}/target/lib/libSceImeDialog.so" "${sdk}/target/lib/libSceSysmodule.so"
@@ -2336,6 +2408,7 @@ endif()
         target_include_directories(eden-headless PRIVATE "${launcher_dir}" "${PORT_ROOT}/third_party")
         if(EDEN_PS5_OPENGL)
             set(launcher_sources
+                "${EDEN_PORT_DIR}/multiplayer_directory.cpp"
                 "${launcher_dir}/frontend.cpp"
                 "${launcher_dir}/eden_services.cpp"
                 "${launcher_dir}/pe/audio/mixer.cpp"
@@ -2358,6 +2431,7 @@ endif()
                 "${launcher_dir}/pe/ui/remote.cpp"
                 "${launcher_dir}/pe/ui/save_sync.cpp"
                 "${launcher_dir}/pe/ui/pairing.cpp"
+                "${launcher_dir}/pe/ui/multiplayer.cpp"
                 "${launcher_dir}/pe/ui/qr_code.cpp"
                 "${launcher_dir}/pe/ui/update.cpp"
                 "${launcher_dir}/pe/ui/home.cpp"

@@ -37,7 +37,7 @@ static_assert(sizeof(ImeResult) == 16);
 
 constexpr std::uint16_t kImeDialogModule = 0x0096;
 constexpr std::uint32_t kCommonDialogAlreadyInitialized = 0x80b80002u;
-constexpr std::int32_t kTypeNumber = 4;
+constexpr std::int32_t kTypeBasicLatin = 1, kTypeNumber = 4;
 constexpr std::uint32_t kOptionPassword = 0x4;
 constexpr std::int32_t kAlignCenter = 1;
 constexpr int kStatusNone = 0, kStatusRunning = 1, kStatusFinished = 2;
@@ -117,7 +117,8 @@ TextAnswer AskSystemKeyboard(const TextRequest& request, const std::atomic<bool>
     std::vector<std::uint16_t> text = Units(request.initial, limit);
     const std::vector<std::uint16_t> title = Units(request.title, 127);
     const std::vector<std::uint16_t> placeholder = Units(request.placeholder, 127);
-    param.type = request.numbers ? kTypeNumber : 0;
+    // Password masking is invalid with the default multilingual keyboard type.
+    param.type = request.numbers ? kTypeNumber : request.password ? kTypeBasicLatin : 0;
     param.option = request.password ? kOptionPassword : 0;
     param.max_text_length = static_cast<std::uint32_t>(limit);
     param.input_text_buffer = text.data();

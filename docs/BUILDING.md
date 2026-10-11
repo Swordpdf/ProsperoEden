@@ -17,15 +17,17 @@ The app package includes an exact-title one-shot helper built from the pinned up
 manifest, ELF hash, protocol hash, title and required retry feature are checked before packaging.
 At runtime a resident Lapy service gets the first bounded opportunity; otherwise ProsperoEden
 sends the packaged helper to the local ELF loader on TCP port 9021. Without that loader or a
-resident service, ProsperoEden falls back to its sandbox paths.
+resident service, ProsperoEden has no access to its data and says so; it keeps no second copy of it in its sandbox.
 
 The pinned commit includes the donor-release and firmware 13.60 corrections merged in
 [PS5-Lapy-JB-Daemon PR #48](https://github.com/mpereiraesaa/PS5-Lapy-JB-Daemon/pull/48) and
-[PR #49](https://github.com/mpereiraesaa/PS5-Lapy-JB-Daemon/pull/49).
+[PR #49](https://github.com/mpereiraesaa/PS5-Lapy-JB-Daemon/pull/49), plus the guarded
+target-lifetime and fail-closed accounting changes from
+[PR #50](https://github.com/mpereiraesaa/PS5-Lapy-JB-Daemon/pull/50).
 The previous `54a095c` pin passed five automated launch/elevate/close cycles on both firmware 6.02
-and 12.70. Each run proved root `/data` access, reaped and balanced donors, a clean helper exit, and
-no fatal signal, app crash, coredump, nonsleeping-lock warning, or kernel panic in its captured
-kernel-log window. The new `c3bdfe3` helper still requires attended qualification runs.
+and 12.70 with root `/data` access and balanced donors. The pinned `57fcc19` helper completed the
+target-exit stress and a full one-shot elevation on firmware 12.70; it still requires an attended
+ProsperoEden qualification run on firmware 6.02.
 
 The first build takes a while (RADV and Eden are large). Later builds reuse everything that
 already exists: the dependencies, this checkout's build cache in
@@ -76,7 +78,7 @@ Downloads are cached in `~/.cache/prosperoeden-deps` (`PROSPEROEDEN_DEPS_CACHE`)
 
 Inside this repository, in `.deps/`:
 
-- **Eden** at commit `5f142c7926d0c7fcbbd0ce30794d72f638a43b2a` (GitHub mirror archive), with
+- **Eden** at commit `67bada77f8a43a90da2e94e89b8e7da73c256989` (GitHub mirror archive), with
   Eden's own hash-pinned packages, which its configure step downloads. ProsperoEden does not
   modify Eden's files: the PS5 frontend in `headless/` replaces and derives sources at
   configure time (`headless/inject.cmake`).
@@ -186,6 +188,11 @@ these caches builds everything on four cores and takes about an hour. Should a b
 the build step's limit (315 minutes), ccache is still saved, and running the workflow again
 continues from there. A pull request starts from `main`'s caches and, when it builds, saves no
 ccache of its own.
+
+GitHub drops a cache that nobody used for a week, and `main` is only built by hand, so ccache has
+a second source: `ccache-u24.tar`, a file of the `build-cache` release. A run that finds no ccache
+downloads it. To replace it, start the workflow on `main` by hand with "snapshot" ticked;
+`.github/workflows/build-cache.yml` then publishes that run's ccache.
 
 `tools/ci/build-release.sh` still accepts `EDEN_DEV_CHECKOUT` (a development checkout whose
 dependencies are reused instead of fetched) for a build on your own machine.

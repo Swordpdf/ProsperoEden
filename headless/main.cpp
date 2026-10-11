@@ -14,6 +14,8 @@
 #include "boot_trace.h"
 #ifdef PS5_NATIVE
 #include "elevation/elevation.hpp"
+#include <cerrno>
+#include <cstring>
 #include <sys/stat.h>
 #endif
 #ifdef EDEN_DEV_VULKAN
@@ -36,6 +38,7 @@
 #include "hud.h"
 #include "display_refresh.h"
 #include "log_flusher.h"
+#include "multiplayer_logging.h"
 #include "mods.h"
 #include "controller_applet.h"
 #include "error_applet.h"
@@ -157,6 +160,43 @@ static void MigrateSandboxData() {
 }
 #endif
 
+#ifdef PS5_NATIVE
+// Game files an early version kept inside the app's folder (assets/ with keys, firmware and
+// roms) move to /data/prosperoeden, where replacing the app cannot take them away: an update
+// that replaces the whole folder left the app without its keys and games. Both are on /data, so
+// it is a rename of each folder. Nothing moves unless all of it can: a folder chosen in Settings,
+// or anything already in /data/prosperoeden, leaves everything where it is.
+static void MoveGameFilesOutOfTheApp() {
+    const std::string from = std::string{Eden::kInstallDir} + "/assets", to = Eden::kDefaultAssetsDir;
+    const std::string saved = Eden::LoadSavedAssetsDir();
+    if ((!saved.empty() && saved != from) || !Eden::FileExists(from + "/keys/prod.keys") ||
+        Eden::FileExists(to + "/keys/prod.keys"))
+        return;
+    static constexpr const char* kFolders[] = {"keys", "firmware", "roms", "updates", "mods", "ryujinx", "save-import"};
+    (void)mkdir(to.c_str(), 0777);
+    for (const char* folder : kFolders) {
+        const std::string target = to + "/" + folder;
+        if (Eden::DirectoryExists(from + "/" + folder) && rmdir(target.c_str()) != 0 && errno != ENOENT) {
+            Eden::Report("game files", ("Left in the app's folder: " + target + " already holds files").c_str());
+            return;
+        }
+    }
+    int moved = 0;
+    for (const char* folder : kFolders) {
+        const std::string source = from + "/" + folder, target = to + "/" + folder;
+        if (!Eden::DirectoryExists(source)) continue;
+        if (std::rename(source.c_str(), target.c_str()) != 0) {
+            Eden::Report("game files", ("Could not move " + source + " to " + target + ": " + std::strerror(errno)).c_str());
+            continue;
+        }
+        ++moved;
+    }
+    if (!saved.empty()) (void)Eden::SaveAssetsDir(to);
+    Eden::Report("game files", (std::to_string(moved) + " folders moved from " + from + " to " + to +
+                                ", where an update of the app leaves them alone").c_str());
+}
+#endif
+
 // A game that has single Joy-Cons held sideways (their hold type, set by the game) is played on a
 // DualSense held as usual: the pad then turns the stick, the button places and the motion by a
 // quarter for each player who has such a Joy-Con (Pad::Grip). Asked a few times a second.
@@ -205,6 +245,11 @@ int main(int argc, char** argv) {
         // the packaged exact-title upstream helper is sent to the local elfldr. ProsperoEden
         // contains no locally implemented kernel mutation code. If neither path works, the app
         // keeps its sandbox paths.
+#if defined(EDEN_DEV_PROFILE)
+        // Development: a start without access, to see what the launcher says then.
+        if (access("/app0/no-filesystem-access.txt", F_OK) == 0) Eden::FilesystemAccessStatus() = 99;
+        else
+#endif
         Eden::FilesystemAccessStatus() = static_cast<int>(elevation::request(elevation::Capability::filesystem));
         Eden::BootTrace::Line("filesystem access returned status=%d, uid %d/%d gid %d/%d", Eden::FilesystemAccessStatus(),
                               static_cast<int>(getuid()), static_cast<int>(geteuid()), static_cast<int>(getgid()),
@@ -220,7 +265,10 @@ int main(int argc, char** argv) {
         // root, which may set its group.
         if (getegid() != getgid() && setegid(getgid()) != 0)
             Eden::Report("filesystem access", "Could not match the effective group; RADV's disk cache stays off");
-        if (Eden::FilesystemAccess()) MigrateSandboxData();
+        if (Eden::FilesystemAccess()) {
+            MigrateSandboxData();
+            MoveGameFilesOutOfTheApp();
+        }
         for (const auto& folder : {Eden::UserDir(), Eden::ConfigDir(), Eden::CoversDir(), Eden::LogsDir()}) {
             std::error_code folder_error;
             std::filesystem::create_directories(folder, folder_error);
@@ -409,6 +457,11 @@ int main(int argc, char** argv) {
         }
 #endif
 #endif
+        Common::FS::CreateEdenPaths();
+        Eden::Performance::PlatformChecks();
+        Common::Log::Initialize();
+        Eden::Multiplayer::SetDetailedLogging(Eden::LoadPreferences().detailed_logging);
+        Eden::Multiplayer::RoomClient rooms;
         for (;;) {
         Eden::StopLimit::End();  // whatever game ran before is gone
 #ifdef EDEN_PS5_OPENGL
@@ -474,11 +527,11 @@ int main(int argc, char** argv) {
             throw std::runtime_error("Development ROM not found");
         } else {
             Eden::BootTrace::Line("opening the launcher");
-            selected_game = SelectProsperoEdenGame(launch_error);
+            selected_game = SelectProsperoEdenGame(rooms, launch_error);
         }
 #else
         Eden::BootTrace::Line("opening the launcher");
-        selected_game = SelectProsperoEdenGame(launch_error);
+        selected_game = SelectProsperoEdenGame(rooms, launch_error);
 #endif
         Eden::BootTrace::Line("launcher closed: %s", selected_game.empty() ? "no game (quit)" : "a game was chosen");
         }
@@ -495,6 +548,8 @@ int main(int argc, char** argv) {
         }
         try {
         launch_error.clear();
+        if (!rooms.BeginGame()) throw std::runtime_error("Join a room successfully or leave it before starting a game.");
+        SCOPE_EXIT { rooms.EndGame(); };
 #ifdef EDEN_DEV_VULKAN
         Eden::Performance::vulkan_cost_enabled = std::filesystem::exists(Eden::AppFile("cost-run.txt"));
         const bool performance_run = std::filesystem::exists(Eden::AppFile("performance-run.txt"));
@@ -625,10 +680,9 @@ int main(int argc, char** argv) {
         if (Common::FS::GetEdenPath(Common::FS::EdenPath::EdenDir) != user_dir) return 2;
         std::puts("[headless-startup] absolute_paths_ready");
 #endif
-#ifdef PS5_NATIVE
-        if (game) Eden::Performance::PlatformChecks();
-#endif
+#ifndef PS5_NATIVE
         Common::Log::Initialize();
+#endif
         if (game) {
             Common::Log::Filter filter;
             filter.SetClassLevel(Common::Log::Class::Service_FS, Common::Log::Level::Info);
@@ -1152,6 +1206,7 @@ int main(int argc, char** argv) {
                     bool exited = false;
                     bool captured = false;
                     bool return_to_menu = false;
+                    bool room_lost = false;
                     std::exception_ptr failure;
                     std::string guest_fault;
                 };
@@ -1520,11 +1575,16 @@ int main(int argc, char** argv) {
 #else
                         (void)pad->TakeHudToggle();
 #endif
-                        if (pad->TakeReturnToMenu()) {
+                        bool room_lost = false;
+#ifdef PS5_NATIVE
+                        room_lost = rooms.GameConnectionLost();
+#endif
+                        if (pad->TakeReturnToMenu() || room_lost) {
                             // From here the player is waiting to leave (stop_limit.h).
                             Eden::StopLimit::Begin();
                             std::lock_guard lock(completion->mutex);
                             completion->return_to_menu = true;
+                            completion->room_lost = room_lost;
                             completion->wake.notify_one();
                             break;
                         }
@@ -1627,6 +1687,10 @@ int main(int argc, char** argv) {
                     completion->wake.wait_for(lock, std::chrono::milliseconds(wait_ms), completed);
                     const bool guest_exited = completion->exited;
                     return_to_menu = completion->return_to_menu;
+#ifdef PS5_NATIVE
+                    if (completion->room_lost)
+                        launch_error = "The room connection was lost. Rejoin from Multiplayer before launching again.";
+#endif
                     session_seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - session_start).count();
                     if (!guest_exited && !game) {
                         std::fputs("Guest exit timed out\n", stderr);

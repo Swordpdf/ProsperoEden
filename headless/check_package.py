@@ -118,7 +118,8 @@ if __name__ == '__main__':
                 paths += [ROOT / 'build/vulkan-isolated' / name for name in
                           ('libps5vk.a', 'libpsbc.a', 'manifest.json')]
             paths.append(ROOT / 'build/stubs/libSceAgcDriver.so')
-        old = json.loads((ROOT / 'CANDIDATE.json').read_text())
+        legacy_receipt = ROOT / 'CANDIDATE.json'
+        old = json.loads(legacy_receipt.read_text()) if legacy_receipt.exists() else {'files': {}}
         previous = {p: old['files']['dist/PPSA99121/' + p]
                     for p in BASE_REQUIRED - {'core-homebrew.nro'}
                     if 'dist/PPSA99121/' + p in old['files']}

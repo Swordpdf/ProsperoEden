@@ -12,7 +12,7 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 TITLE = "PPSA99008"
-LAPY = ROOT / ".deps/PS5-Lapy-JB-Daemon-c3bdfe3"
+LAPY = ROOT / ".deps/PS5-Lapy-JB-Daemon-57fcc19"
 PS5LOG = ROOT / ".deps/lapy-ps5log-1ae1f918"
 SDK = ROOT / ".deps/lapy-ps5-payload-sdk-v0.42"
 SOURCE = LAPY / f"build/owned_root_helper-{TITLE}"

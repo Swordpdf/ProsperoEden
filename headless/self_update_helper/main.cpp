@@ -57,6 +57,8 @@ int main()
     environment.drives = self_update::default_drives();
     environment.space = free_space;
     environment.notify = notify;
+    // The version an update replaces stays here until the next update.
+    environment.previous = "/data/prosperoeden/previous-version";
     environment.log = [](const std::string &line)
     { (void)klog_puts(("[self-update] " + line).c_str()); };
     const self_update::Io io{[](void *data, std::size_t size)

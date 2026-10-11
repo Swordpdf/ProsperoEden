@@ -44,22 +44,23 @@ videoout_unref(void)
    if (closed == 0) {
       /* Successful close ends display ownership, including pending flips.
        * Never release scanout memory when close fails. */
-      if (out->buffers) {
-         const size_t bytes = VIDEOOUT_BUFFERS * VIDEOOUT_BUFFER_BYTES;
+      for (uint32_t i = 0; i < out->set_count; i++) {
+         struct wsi_videoout_set *const set = &out->sets[i];
+         if (!set->buffers)
+            continue;
 #if defined(__PROSPERO__)
-         if (sceKernelMunmap(out->buffers, bytes) == 0) {
-            if (sceKernelReleaseDirectMemory(out->physical, bytes) != 0)
+         if (sceKernelMunmap(set->buffers, set->bytes) == 0) {
+            if (sceKernelReleaseDirectMemory(set->physical, set->bytes) != 0)
                fprintf(stderr, "wsi/videoout: scanout direct-memory release failed\n");
          } else {
             fprintf(stderr, "wsi/videoout: scanout unmap failed; retaining allocation\n");
          }
 #else
-         munmap(out->buffers, bytes);
+         munmap(set->buffers, set->bytes);
 #endif
       }
-      out->buffers = NULL;
-      out->physical = -1;
-      out->registered = false;
+      memset(out->sets, 0, sizeof(out->sets));
+      out->set_count = 0;
       out->handle = -1;
       out->opened = false;
       out->high_frame_rate = false;

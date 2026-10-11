@@ -22,7 +22,8 @@ assert main.count('Eden::StopLimit::Begin();') == 3, 'the shortcut (while loadin
 loading = main.index('if (pad->TakeReturnToMenu() || asked) {')
 assert main.index('Eden::StopLimit::Begin();', loading) < main.index('left_while_loading = true;', loading) < main.index('loaded = system.Load(')
 assert main.index('system.Run();') < main.index('load_watch.request_stop();') < main.index('if (left_while_loading) {') < main.index('std::jthread input_worker;')
-shortcut = main.index('if (pad->TakeReturnToMenu()) {')
+shortcut = main.index('if (pad->TakeReturnToMenu() || room_lost) {')
+assert main.index('room_lost = rooms.GameConnectionLost();') < shortcut
 assert main.index('Eden::StopLimit::Begin();', shortcut) < main.index('completion->return_to_menu = true;', shortcut)
 stop = main.index('Eden::StopLimit::Begin();', shortcut + 200)
 assert stop < main.index('jit_list.Finish();') < main.index('system.ShutdownMainProcess();', stop)

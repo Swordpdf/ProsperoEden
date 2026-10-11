@@ -65,15 +65,34 @@ struct Memory : std::conditional_t<a32, A32::UserCallbacks, A64::UserCallbacks> 
         require(std::memcmp(&result, reinterpret_cast<const uint8_t*>(value.data()) + offset, sizeof result) == 0);
         ++writes;
     }
-    uint8_t MemoryRead8(Address at) { return Read<uint8_t>(at); }
-    uint16_t MemoryRead16(Address at) { return Read<uint16_t>(at); }
-    uint32_t MemoryRead32(Address at) { return Read<uint32_t>(at); }
-    uint64_t MemoryRead64(Address at) { return Read<uint64_t>(at); }
+    // The JIT's callback takes the size; the checks below keep one function per size.
+    uint64_t MemoryRead(Address at, std::size_t size) override {
+        switch (size) {
+        case 1: return MemoryRead8(at);
+        case 2: return MemoryRead16(at);
+        case 4: return MemoryRead32(at);
+        case 8: return MemoryRead64(at);
+        default: std::abort();
+        }
+    }
+    void MemoryWrite(Address at, uint64_t v, std::size_t size) override {
+        switch (size) {
+        case 1: return MemoryWrite8(at, static_cast<uint8_t>(v));
+        case 2: return MemoryWrite16(at, static_cast<uint16_t>(v));
+        case 4: return MemoryWrite32(at, static_cast<uint32_t>(v));
+        case 8: return MemoryWrite64(at, v);
+        default: std::abort();
+        }
+    }
+    virtual uint8_t MemoryRead8(Address at) { return Read<uint8_t>(at); }
+    virtual uint16_t MemoryRead16(Address at) { return Read<uint16_t>(at); }
+    virtual uint32_t MemoryRead32(Address at) { return Read<uint32_t>(at); }
+    virtual uint64_t MemoryRead64(Address at) { return Read<uint64_t>(at); }
     A64::Vector MemoryRead128(Address at) { return Read<A64::Vector>(at); }
-    void MemoryWrite8(Address at, uint8_t v) { Write(at, v); }
-    void MemoryWrite16(Address at, uint16_t v) { Write(at, v); }
-    void MemoryWrite32(Address at, uint32_t v) { Write(at, v); }
-    void MemoryWrite64(Address at, uint64_t v) { Write(at, v); }
+    virtual void MemoryWrite8(Address at, uint8_t v) { Write(at, v); }
+    virtual void MemoryWrite16(Address at, uint16_t v) { Write(at, v); }
+    virtual void MemoryWrite32(Address at, uint32_t v) { Write(at, v); }
+    virtual void MemoryWrite64(Address at, uint64_t v) { Write(at, v); }
     void MemoryWrite128(Address at, A64::Vector v) { Write(at, v); }
     template<class T> bool ExclusiveWrite(Address at, T v, T expected) {
         require(std::memcmp(&expected, value.data(), sizeof expected) == 0);

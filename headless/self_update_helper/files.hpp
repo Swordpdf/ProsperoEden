@@ -27,6 +27,10 @@ bool read_small(const std::string &path, std::size_t limit, std::string &body);
 bool copy_file(const std::string &from, const std::string &to);
 // The names of the regular files directly in a folder; at most limit of them.
 bool list_files(const std::string &folder, std::size_t limit, std::vector<std::string> &names);
+// Moves a folder to a place where nothing is: a rename when both are on one drive, otherwise a
+// copy of its folders and regular files (links are left out) with their modes, and then the
+// removal of the original. On failure nothing is left at to and from is as it was.
+bool move_tree(const std::string &from, const std::string &to);
 // Removes a file or a whole folder without following links. True when nothing
 // is left at path, including when nothing was there.
 bool remove_tree(const std::string &path);

@@ -1,7 +1,7 @@
 {
-  "eden_commit": "5f142c7926d0c7fcbbd0ce30794d72f638a43b2a",
+  "eden_commit": "67bada77f8a43a90da2e94e89b8e7da73c256989",
   "archives": {
-    "eden-5f142c79.tar.gz": "35ec0bb96b197181e66c0aeb8f44f0ff05334be832c631c50a4f1e271277285f",
+    "eden-67bada77.tar.gz": "d42b6fb492c65eb5e98ab72a786dff01fd64384d073a739b9c9ff475414366ee",
     "fmt-12.1.0.tar.gz": "ea7de4299689e12b6dddd392f9896f08fb0777ac7168897a244a6d6085043fea",
     "xbyak-7.40.1.tar.gz": "2af7aee286b0ce94422b7894de4308d26eba06ef63c1c80a3bd9719b5d798fe2",
     "libboost1.90-dev_1.90.0-6ubuntu1_amd64.deb": "7b89698c907fd5d33ccd439674fa53803139923822181c87b910579827aca379",

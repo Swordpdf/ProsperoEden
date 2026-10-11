@@ -118,8 +118,8 @@ int remote_http_run(const remote_http_request *request, remote_http_result *resu
 #endif
     (void)curl_easy_setopt(t.easy, CURLOPT_URL, request->url);
     (void)curl_easy_setopt(t.easy, CURLOPT_USERAGENT, "ProsperoEden/1");
-    (void)curl_easy_setopt(t.easy, CURLOPT_PROTOCOLS_STR, "http,https");
-    (void)curl_easy_setopt(t.easy, CURLOPT_REDIR_PROTOCOLS_STR, "http,https");
+    (void)curl_easy_setopt(t.easy, CURLOPT_PROTOCOLS_STR, request->https_only ? "https" : "http,https");
+    (void)curl_easy_setopt(t.easy, CURLOPT_REDIR_PROTOCOLS_STR, request->https_only ? "https" : "http,https");
     /* A reverse proxy in front of a server may redirect; curl keeps the Authorization header to the
      * first host only (CURLOPT_UNRESTRICTED_AUTH stays off). */
     (void)curl_easy_setopt(t.easy, CURLOPT_FOLLOWLOCATION, 1L);
@@ -139,6 +139,11 @@ int remote_http_run(const remote_http_request *request, remote_http_result *resu
         headers = curl_slist_append(headers, line);
     }
     headers = curl_slist_append(headers, "Accept: application/json, */*");
+    if (request->api_version != NULL)
+    {
+        (void)snprintf(line, sizeof(line), "api-version: %s", request->api_version);
+        headers = curl_slist_append(headers, line);
+    }
     if (request->body != NULL)
     {
         (void)snprintf(line, sizeof(line), "Content-Type: %s",

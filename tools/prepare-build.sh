@@ -22,12 +22,20 @@ scratch=$(cat .local/headless-cache)
 [[ "$(cat "$scratch/owner")" == "$root" ]] || { echo "Build cache $scratch belongs to another checkout" >&2; exit 1; }
 
 eden="$scratch/source"
-if [[ ! -f $eden/CMakeLists.txt ]]; then
+eden_archive=eden-67bada77.tar.gz
+# A tree unpacked from another archive is the source of another Eden revision: it is unpacked
+# again (Eden's package cache, downloads only, is kept). A tree left from before an update of
+# the pin was built as if it were the new one, and what Eden had changed went unseen.
+if [[ ! -f $eden/CMakeLists.txt || $(cat "$eden/.unpacked-from" 2>/dev/null) != "$eden_archive" ]]; then
     step "Eden source"
+    if [[ -d $eden/.cache ]]; then rm -rf "$scratch/source-cache" && mv "$eden/.cache" "$scratch/source-cache"; fi
+    rm -rf "$eden"
     mkdir -p "$eden"
-    tar -xzf .deps/eden-5f142c79.tar.gz --strip-components=1 -C "$eden"
+    tar -xzf ".deps/$eden_archive" --strip-components=1 -C "$eden"
+    if [[ -d $scratch/source-cache ]]; then mv "$scratch/source-cache" "$eden/.cache"; fi
+    printf '%s\n' "$eden_archive" > "$eden/.unpacked-from"
 fi
-printf '%s\n' '5f142c7926d0c7fcbbd0ce30794d72f638a43b2a' > "$eden/GIT-COMMIT"
+printf '%s\n' '67bada77f8a43a90da2e94e89b8e7da73c256989' > "$eden/GIT-COMMIT"
 printf '%s\n' 'ps5-headless' > "$eden/GIT-REFSPEC"
 # Optional: seed Eden's package cache from another checkout's (CI reuses a development cache).
 if [[ -n ${EDEN_CPM_CACHE_SEED:-} && ! -d $eden/.cache/cpm ]]; then

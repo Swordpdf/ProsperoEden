@@ -14,16 +14,16 @@ def replace(old, new):
     assert text.count(old) == 1, f'Pinned WSI anchor changed: {old[:70]}'
     text = text.replace(old, new)
 
-replace('   bool opened;\n', '   unsigned owners;\n   bool closing, stop, registered;\n   int64_t physical;\n   bool opened;\n')
-replace('   .handle = -1,', '   .handle = -1,\n   .physical = -1,')
+replace('   bool opened;\n', '   unsigned owners;\n   bool closing, stop;\n   bool opened;\n')
+# A set of framebuffers per output size: each remembers the memory to give back.
+replace('      uint8_t *buffers;\n   } sets[VIDEOOUT_SIZES];',
+        '      uint8_t *buffers;\n      int64_t physical;\n      size_t bytes;\n   } sets[VIDEOOUT_SIZES];')
 replace('static int\nsceVideoOutSetFlipRate', 'static int\nsceVideoOutClose(int32_t handle)\n{\n   return 0;\n}\n\nstatic int\nsceVideoOutSetFlipRate')
-replace('   if (out->buffers)\n      return VK_SUCCESS;',
-        '   if (out->buffers)\n      return out->registered ? VK_SUCCESS : VK_ERROR_INITIALIZATION_FAILED;')
-replace('   buffers = address;', '   buffers = address;\n   out->physical = physical;')
-replace('   int result = sceVideoOutSetFlipRate',
-        '   /* Track partial registration too: final-owner cleanup must release it. */\n   out->buffers = buffers;\n   int result = sceVideoOutSetFlipRate')
-replace('   out->buffers = buffers;\n   return VK_SUCCESS;',
-        '   out->registered = true;\n   return VK_SUCCESS;')
+replace('   uint8_t *buffers = NULL;\n#if defined(__PROSPERO__)\n   int64_t physical = -1;',
+        '   uint8_t *buffers = NULL;\n   int64_t physical = -1;\n#if defined(__PROSPERO__)')
+replace('   out->sets[index] = (struct wsi_videoout_set){.size = size, .buffers = buffers};',
+        '   out->sets[index] = (struct wsi_videoout_set){.size = size, .buffers = buffers, .physical = physical,\n'
+        '                                                .bytes = bytes};')
 replace('      while (out->queue_count == 0)\n         cnd_wait(&out->changed, &out->lock);',
         '      while (out->queue_count == 0 && !out->stop)\n         cnd_wait(&out->changed, &out->lock);\n      if (out->queue_count == 0 && out->stop) {\n         mtx_unlock(&out->lock);\n         return 0;\n      }')
 replace('VkResult\nwsi_display_init_wsi',
@@ -31,21 +31,20 @@ replace('VkResult\nwsi_display_init_wsi',
 # 120 Hz: the app asks for it per game session (headless/display_refresh.h). The pinned source
 # decides from the package's param.json, which the app cannot read once it has left the sandbox,
 # and for the whole run; the package declares the capability (tools/package-headless-native.sh).
-replace('''   FILE *const file = fopen("/app0/sce_sys/param.json", "rb");
-   if (file == NULL)
-      return false;
-   char text[16384];
-   const size_t length = fread(text, 1, sizeof(text) - 1, file);
-   fclose(file);
-   text[length] = '\\0';
-   const char *at = strstr(text, "\\"attribute3\\"");
-   if (at == NULL || (at = strchr(at, ':')) == NULL)
-      return false;
-   const unsigned long value = strtoul(at + 1, NULL, 0);
-   return (value & VIDEOOUT_ATTRIBUTE3_HIGH_FRAME_RATE) == VIDEOOUT_ATTRIBUTE3_HIGH_FRAME_RATE;
-''', '''   const char *const asked = getenv("EDEN_VIDEOOUT_120HZ");
-   return asked != NULL && asked[0] == '1';
-''')
+declares = 'videoout_title_declares_high_frame_rate(void)\n{\n'
+assert text.count(declares) == 1, 'Pinned WSI anchor changed: the 120 Hz declaration'
+body_start = text.index(declares) + len(declares)
+body_end = text.index('\n}\n', body_start)
+assert 'param.json' in text[body_start:body_end], 'Pinned WSI anchor changed: the 120 Hz declaration reads param.json'
+text = (text[:body_start] + '   const char *const asked = getenv("EDEN_VIDEOOUT_120HZ");\n'
+        '   return asked != NULL && asked[0] == \'1\';' + text[body_end:])
+# The pinned source takes the 120 Hz output back unless a vblank then comes about every 8.3 ms.
+# On a display with a variable refresh rate that is wrong: before the first frame is shown it
+# idles at the bottom of its range (a vblank every 20.87 ms, 48 Hz, in two reports), the output
+# went back to 59.94 Hz, and a game could not have 120 Hz at all. Only a display that stayed at
+# 59.94 Hz (a vblank about every 16.7 ms) gives the mode back.
+replace('         if (period > VIDEOOUT_HIGH_REFRESH_LIMIT_NS) {',
+        '         if (period > UINT64_C(15000000) && period < UINT64_C(18500000)) {')
 # Say so when the display follows, as the pinned source does when it does not.
 replace('''                    (double)period / 1e6);
          }

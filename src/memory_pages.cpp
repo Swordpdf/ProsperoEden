@@ -457,6 +457,20 @@ void CommitSparsePage(std::uintptr_t page) noexcept {
     range->owned[slot].store(true, std::memory_order_release);
 }
 
+// Eden gives back a table page once a guest unmapped all of it, and expects zeroes there
+// afterwards. A slot's block is shared by every page of the slot, so the page is zeroed and the
+// block stays: a later CommitSparsePage for it finds the slot owned. A page of a slot that was
+// never written is the shared block of zeroes, read-only, and is left alone.
+void DecommitVectorPage(std::uintptr_t page) noexcept {
+    const long size = sysconf(_SC_PAGESIZE);
+    if (size <= 0) std::abort();
+    if (SparseRange* range = SparseRangeOf(page)) {
+        const std::size_t slot = (page - range->begin.load(std::memory_order_relaxed)) / SparseSlot;
+        if (!range->owned[slot].load(std::memory_order_acquire)) return;
+    }
+    std::memset(reinterpret_cast<void*>(page), 0, static_cast<std::size_t>(size));
+}
+
 // Address space the sparse tables span, and the memory they hold (for the log).
 void SparseUsage(std::size_t* reserved, std::size_t* committed) noexcept {
     *reserved = sparse_reserved.load(std::memory_order_relaxed);

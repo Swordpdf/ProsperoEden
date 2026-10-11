@@ -106,6 +106,11 @@ void Launcher::press_profiles(Key key)
             cue(Cue::focus);
             return;
         }
+        if (services_.room_status().phase != Eden::Multiplayer::Phase::Idle) {
+            services_.leave_room();
+            say(tr("Leaving the room. Select the profile again when disconnected."));
+            return;
+        }
         if (!services_.choose_profile(row))
         {
             say(tr("Could not save. Please try again."), true);
