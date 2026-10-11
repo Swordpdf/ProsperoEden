@@ -2302,7 +2302,7 @@ void Initialize() {
         "${EDEN_PORT_DIR}/heap_pages.cpp" "${EDEN_PORT_DIR}/performance.cpp"
         "${EDEN_PORT_DIR}/crash_report.cpp" "${EDEN_PORT_DIR}/stop_limit.cpp"
         "${EDEN_PORT_DIR}/elevation/elevation.cpp"
-        "${eden_app_crt}" "${PORT_ROOT}/src/lifecycle.c"
+        "${eden_app_crt}" "${PORT_ROOT}/src/lifecycle.c" "${PORT_ROOT}/src/direct_trace.c"
         "${PORT_BUILD_DIR}/app_heap.c")
     target_compile_definitions(eden-headless PRIVATE PS5_NATIVE=1)
     set_property(TARGET eden-headless APPEND PROPERTY LINK_DEPENDS

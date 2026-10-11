@@ -340,6 +340,7 @@ extern "C" void ps5_opengl_heap_snapshot(const char* phase, unsigned iteration);
 extern "C" unsigned eden_heap_arenas_created(void) __attribute__((weak));
 extern "C" std::size_t eden_heap_committed(void) __attribute__((weak));
 extern "C" std::size_t eden_heap_large_held(unsigned* blocks) __attribute__((weak));
+extern "C" void eden_direct_trace_dump(const char* phase) __attribute__((weak));
 #ifdef PS5_NATIVE
 extern "C" std::int64_t sceKernelGetDirectMemorySize();
 extern "C" std::int32_t sceKernelAvailableDirectMemorySize(std::int64_t, std::int64_t, std::size_t, std::int64_t*,
@@ -438,6 +439,7 @@ void ReportSessionMemory(const char* phase, unsigned session) {
                     static_cast<long long>((stretches[i].end - stretches[i].start) >> 20), stretches[i].type,
                     stretches[i].parts);
 #endif
+    if (eden_direct_trace_dump) eden_direct_trace_dump(phase);
     std::fflush(stdout);
 }
 
