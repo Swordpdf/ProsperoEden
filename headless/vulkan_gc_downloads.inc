@@ -37,21 +37,34 @@
                 const bool dirty = IsDownloadable(image) && False(image.flags & ImageFlagBits::BadOverlap);
                 if ((!aggressive_mode && True(image.flags & ImageFlagBits::CostlyLoad)) ||
                     (!DirtyEvictions() && dirty)) return false;
-                // A clean image has nothing to copy back, and an image that does not fit the
-                // remaining byte budget keeps the drain it already had in Cleanup. Neither may
-                // end the lookahead: stopping here left every later dirty image to Cleanup's
-                // per-image drain, one GPU pipeline wait each, where this loop would have spent
-                // a single wait on all of them. Skip them and keep looking.
-                if (!dirty || image.unswizzled_size_bytes > kBatchBytes - bytes) return false;
-                // Aliased, overlapping and MSAA images stay with Cleanup: their copies are not
-                // independent of the state that eviction updates. A scaled image is copied here
-                // as Cleanup copies it, by the same call (it is scaled down for the copy): at a
-                // resolution above 1x nearly every image the GPU wrote is scaled, and leaving
-                // them out left a pass of sixty images with sixty waits, half a second in which
-                // no frame was shown.
-                if (!image.aliased_images.empty() || !image.overlapping_images.empty() ||
-                    image.info.num_samples != 1 || gc_downloads.size() == kBatchImages)
+                // A clean image has nothing to copy back, and an image larger than a whole batch
+                // keeps the wait of its own that it has in Cleanup. Neither ends the lookahead:
+                // stopping there left every later dirty image to Cleanup, one wait each.
+                if (!dirty) return false;
+                if (image.unswizzled_size_bytes > kBatchBytes) {
+                    ++::Eden::Performance::gc_why[::Eden::Performance::kGcOversize];
+                    return false;
+                }
+                // A full batch ends it. Cleanup asks for the next batch at the first image this
+                // one did not take (TakePrefetched), so a batch is always the next images to go.
+                if (gc_downloads.size() == kBatchImages ||
+                    image.unswizzled_size_bytes > kBatchBytes - bytes) {
+                    ++::Eden::Performance::gc_why[::Eden::Performance::kGcFull];
                     return true;
+                }
+                // Every image Cleanup would copy is copied here, by the same call: scaled ones
+                // (scaled down for the copy), multisampled ones, and images that share guest
+                // memory with others (aliases and overlaps). A copy reads its own image on the
+                // GPU, and nothing between two evictions writes to an image; what an eviction
+                // updates (the links between such images, their flags) decides which images go,
+                // not what a copy holds, and guest memory is still written in Cleanup's order.
+                // DownloadMemory(cpu_addr, size) batches the images of a region the same way.
+                // Leaving the sharing ones out left a large open-world game at 2x, where nearly
+                // every image the collector freed shared memory with another, with sixty waits
+                // for sixty images: half a second in which no frame was shown.
+                ++::Eden::Performance::gc_why[!image.aliased_images.empty() || !image.overlapping_images.empty()
+                                                ? ::Eden::Performance::kGcBatchedShared
+                                                : ::Eden::Performance::kGcBatched];
                 auto map = runtime.DownloadStagingBuffer(image.unswizzled_size_bytes, true);
                 // Pin until CPU publication, even if later recording submits work.
                 gc_downloads.emplace_back(id, map);
@@ -61,8 +74,11 @@
                 usage -= ReclaimedBytes(image);
                 // The original policy changes at these thresholds. Stop looking
                 // ahead here so we never copy a texture that it would retain.
-                return usage < (aggressive_mode || ::Eden::Performance::KeepDirtyTextures() ? critical_memory
-                                                                                           : expected_memory);
+                const bool enough = usage < (aggressive_mode || ::Eden::Performance::KeepDirtyTextures()
+                                                 ? critical_memory
+                                                 : expected_memory);
+                if (enough) ++::Eden::Performance::gc_why[::Eden::Performance::kGcEnough];
+                return enough;
             });
             if (!gc_downloads.empty()) {
                 // One drain for the whole batch; the image count is the reported payload.
@@ -94,9 +110,13 @@
     const auto TakePrefetched = [&](ImageId id, Image& image) {
         if (UsePrefetched(id, image)) return true;
         if constexpr (std::is_same_v<Runtime, Vulkan::TextureCacheRuntime>) {
-            if (!gc_downloads.empty()) return false;
+            if (!gc_downloads.empty()) {
+                ++::Eden::Performance::gc_why[::Eden::Performance::kGcAloneHeld];
+                return false;
+            }
             PrefetchDownloads();
-            return UsePrefetched(id, image);
+            if (UsePrefetched(id, image)) return true;
+            ++::Eden::Performance::gc_why[::Eden::Performance::kGcAloneEmpty];
         }
         return false;
     };

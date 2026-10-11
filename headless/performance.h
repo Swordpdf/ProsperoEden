@@ -95,6 +95,19 @@ inline Totals gpu_fence_drain, gpu_present_wait, gpu_queue_full;
 // lookahead stopped). calls = drains, requested_bytes = images covered: one drain per image in the
 // unbatched case is the stall to drive out.
 inline Totals gc_batched_drain, gc_unbatched_drain;
+// What the collector's lookahead did with the images it met, and why an image still waited
+// alone (vulkan_gc_downloads.inc). Counted always: a handful of additions in a collector run.
+enum GcWhy : unsigned {
+    kGcBatched,       // copied in a batch
+    kGcBatchedShared, // copied in a batch, and it shares guest memory with another image
+    kGcOversize,      // larger than a whole batch: left to its own wait
+    kGcFull,          // the batch was full: the lookahead ended
+    kGcEnough,        // enough would be freed: the lookahead ended
+    kGcAloneHeld,     // waited alone: the batch still held other images
+    kGcAloneEmpty,    // waited alone: a new batch did not take it
+    kGcWhyCount,
+};
+inline std::array<std::atomic<unsigned long long>, kGcWhyCount> gc_why{};
 // Guest threads entering the GPU caches: CPU writes to tracked pages and flush-area lookups.
 inline Totals guest_cpu_write, guest_cpu_read;
 // Those entries take the buffer and texture cache locks, which the GPU thread holds for one draw at
