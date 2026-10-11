@@ -197,9 +197,11 @@ static void MoveGameFilesOutOfTheApp() {
 }
 #endif
 
-// A game that has single Joy-Cons held sideways (their hold type, set by the game) is played on a
-// DualSense held as usual: the pad then turns the stick, the button places and the motion by a
-// quarter for each player who has such a Joy-Con (Pad::Grip). Asked a few times a second.
+// A player who has a single Joy-Con plays it on a whole DualSense (Pad::Grip): the pad presses
+// that Joy-Con's buttons and moves its stick from both halves. When the game has single Joy-Cons
+// held sideways (their hold type, set by the game), the DualSense is still held as usual, and
+// the pad also turns the stick, the button places and the motion by a quarter. Asked a few
+// times a second.
 static void UpdateGrips(Core::System& system, Eden::Pad& pad) {
     using Grip = Eden::Pad::Grip;
     static unsigned calls = 0;
@@ -216,16 +218,19 @@ static void UpdateGrips(Core::System& system, Eden::Pad& pad) {
     }
     for (std::size_t index = 0; index < Eden::Pad::kMaxPlayers; ++index) {
         const auto style = system.HIDCore().GetEmulatedControllerByIndex(index)->GetNpadStyleIndex();
-        const Grip grip = !sideways ? Grip::usual :
-                          style == Core::HID::NpadStyleIndex::JoyconLeft ? Grip::sideways_left :
-                          style == Core::HID::NpadStyleIndex::JoyconRight ? Grip::sideways_right : Grip::usual;
+        const Grip grip =
+            style == Core::HID::NpadStyleIndex::JoyconLeft ? (sideways ? Grip::sideways_left : Grip::upright_left) :
+            style == Core::HID::NpadStyleIndex::JoyconRight ? (sideways ? Grip::sideways_right : Grip::upright_right) :
+                                                              Grip::usual;
         pad.SetGrip(index, grip);
         if (grip == last[index]) continue;
         last[index] = grip;
         Eden::Report("controllers", ("Player " + std::to_string(index + 1) +
                                      (grip == Grip::usual ? ": controller as usual" :
                                       grip == Grip::sideways_left ? ": a left Joy-Con held sideways, turned for a DualSense held as usual" :
-                                                                    ": a right Joy-Con held sideways, turned for a DualSense held as usual")).c_str());
+                                      grip == Grip::sideways_right ? ": a right Joy-Con held sideways, turned for a DualSense held as usual" :
+                                      grip == Grip::upright_left ? ": a left Joy-Con held upright; the shapes are its four buttons, the arrows and either stick its stick" :
+                                                                   ": a right Joy-Con held upright; the shapes are its four buttons, the arrows and either stick its stick")).c_str());
     }
 }
 

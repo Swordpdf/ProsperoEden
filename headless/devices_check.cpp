@@ -412,6 +412,67 @@ void CheckPad() {
             sample.acceleration = {}; sample.angular_velocity = {}; sample.timestamp_us = 0;
             sample.buttons = 0; sample.connected = 0; consume(); sample.connected = 1; consume();
             std::puts("Single Joy-Con held sideways: button places, either stick and motion turned for both sides PASS");
+
+            // A single Joy-Con held upright: nothing is turned, and the whole DualSense is that
+            // Joy-Con. A left one's four buttons are its arrows (13 Up, 14 Right, 15 Down,
+            // 12 Left), pressed by the shapes at the same places; the shapes still press A, B,
+            // X and Y, which a left Joy-Con has not. The DualSense's arrows press none of them:
+            // they move the stick.
+            const auto near = [](float value, float wanted) { return std::abs(value - wanted) < 0.001f; };
+            const auto tilted = [&](ButtonMask mask, int axis_x, float x, float y) {
+                sample.buttons = mask; consume();
+                return near(pad.Engine().GetAxis({}, axis_x), x) && near(pad.Engine().GetAxis({}, axis_x + 1), y);
+            };
+            const auto others = [&](ButtonMask mask, int button) {
+                sample.buttons = mask; consume();
+                return pad.Engine().GetButton({}, button);
+            };
+            pad.SetGrip(0, Grip::upright_left);
+            CHECK(pressed(kButtonUp, {})); CHECK(pressed(kButtonRight, {}));
+            CHECK(pressed(kButtonDown, {})); CHECK(pressed(kButtonLeft, {}));
+            CHECK(pressed(kButtonTriangle, {13, 2})); CHECK(pressed(kButtonCircle, {14, 0}));
+            CHECK(pressed(kButtonCross, {15, 1})); CHECK(pressed(kButtonSquare, {12, 3}));
+            CHECK(tilted(kButtonUp, 0, 0, 1)); CHECK(tilted(kButtonRight, 0, 1, 0));
+            CHECK(tilted(kButtonDown, 0, 0, -1)); CHECK(tilted(kButtonLeft, 0, -1, 0));
+            CHECK(tilted(kButtonUp | kButtonRight, 0, 0.7071f, 0.7071f)); CHECK(tilted(0, 0, 0, 0));
+            // Its L (6), ZL (8), Minus (11) and stick click (4) from either side of the DualSense.
+            CHECK(others(kButtonR1, 6)); CHECK(others(kButtonL1, 6)); CHECK(others(kButtonOptions, 11));
+            CHECK(others(kButtonR3, 4)); CHECK(others(kButtonL3, 4)); CHECK(!others(0, 6)); CHECK(!others(0, 11));
+            sample.buttons = 0; sample.triggers.r2 = 255; consume();
+            CHECK(pad.Engine().GetButton({}, 8));
+            sample.triggers.r2 = 0; consume();
+            CHECK(!pad.Engine().GetButton({}, 8));
+            sample.left_stick = {128, 128}; sample.right_stick = {255, 128}; consume(); // right, other stick
+            CHECK(pad.Engine().GetAxis({}, 0) == 1); CHECK(pad.Engine().GetAxis({}, 1) == 0);
+            sample.left_stick = {128, 0}; sample.right_stick = {128, 128}; consume(); // up
+            CHECK(pad.Engine().GetAxis({}, 0) == 0); CHECK(pad.Engine().GetAxis({}, 1) == 1);
+            sample.left_stick = {128, 128};
+
+            // A right one's four buttons are A (0), B (1), X (2) and Y (3), pressed by the
+            // shapes and by the arrows at the same places; its stick is the right one.
+            pad.SetGrip(0, Grip::upright_right);
+            CHECK(pressed(kButtonTriangle, {2})); CHECK(pressed(kButtonCircle, {0}));
+            CHECK(pressed(kButtonCross, {1})); CHECK(pressed(kButtonSquare, {3}));
+            // The arrows stay the arrows, which a right Joy-Con has not, and move its stick.
+            CHECK(pressed(kButtonUp, {13})); CHECK(pressed(kButtonRight, {14}));
+            CHECK(pressed(kButtonDown, {15})); CHECK(pressed(kButtonLeft, {12}));
+            CHECK(tilted(kButtonUp, 2, 0, 1)); CHECK(tilted(kButtonLeft, 2, -1, 0));
+            CHECK(tilted(kButtonDown | kButtonLeft, 2, -0.7071f, -0.7071f)); CHECK(tilted(0, 2, 0, 0));
+            // Its R (7), ZR (9), Plus (10) and stick click (5).
+            CHECK(others(kButtonL1, 7)); CHECK(others(kButtonR1, 7)); CHECK(others(kButtonCreate, 10));
+            CHECK(others(kButtonOptions, 10)); CHECK(others(kButtonL3, 5)); CHECK(!others(0, 7)); CHECK(!others(0, 10));
+            sample.buttons = 0; sample.triggers.l2 = 255; consume();
+            CHECK(pad.Engine().GetButton({}, 9));
+            sample.triggers.l2 = 0; consume();
+            sample.left_stick = {128, 0}; consume(); // up, on the stick a right Joy-Con has not
+            CHECK(pad.Engine().GetAxis({}, 2) == 0); CHECK(pad.Engine().GetAxis({}, 3) == 1);
+            sample.left_stick = {255, 128}; consume(); // right
+            CHECK(pad.Engine().GetAxis({}, 2) == 1); CHECK(pad.Engine().GetAxis({}, 3) == 0);
+            sample.left_stick = {128, 128};
+
+            pad.SetGrip(0, Grip::usual);
+            sample.buttons = 0; sample.connected = 0; consume(); sample.connected = 1; consume();
+            std::puts("Single Joy-Con held upright: its four buttons from the shapes, its stick from the arrows and either stick, shoulder buttons PASS");
         }
 
         // Rumble: both guest sides on one DualSense; low band -> large motor, high band -> small.
