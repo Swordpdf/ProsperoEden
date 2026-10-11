@@ -1348,7 +1348,9 @@ string(REPLACE "${wait_begin}" [=[    void KThread::BeginWait(KernelCore& kernel
 
         // No name lookup here: this runs under the scheduler lock, and a thread's name lives in
         // guest memory. Every thread that matters sends requests, so the IPC path names it.
-        ::Eden::Performance::WaitBegin(GetThreadId(), ::Eden::Performance::NowNs());
+        // Counted in development builds only (performance.h, dev_marks).
+        if (::Eden::Performance::dev_marks.load(std::memory_order_relaxed))
+            ::Eden::Performance::WaitBegin(GetThreadId(), ::Eden::Performance::NowNs());
     }]=] thread_source "${thread_source}")
 
 set(wait_end [=[    void KThread::SetState(KernelCore& kernel, ThreadState state) {
@@ -1364,8 +1366,9 @@ string(REPLACE "${wait_end}" [=[    void KThread::SetState(KernelCore& kernel, T
         KScopedSchedulerLock sl{kernel};
         // Close any wait this thread was under. SetState is the only place the reason is cleared,
         // so reading it here attributes the wait to the reason it ran under (performance.h).
+        const bool marks = ::Eden::Performance::dev_marks.load(std::memory_order_relaxed);
         if (const auto wait_reason = this->GetWaitReasonForDebugging();
-            wait_reason != ThreadWaitReasonForDebugging::None) {
+            marks && wait_reason != ThreadWaitReasonForDebugging::None) {
             const auto* waker = GetCurrentThreadPointer(kernel);
             ::Eden::Performance::WaitEnd(GetThreadId(), static_cast<unsigned>(wait_reason),
                                          ::Eden::Performance::NowNs(),
@@ -1377,7 +1380,7 @@ string(REPLACE "${wait_end}" [=[    void KThread::SetState(KernelCore& kernel, T
         // Only the transition into Runnable is stamped: a thread already running that gets
         // re-marked Runnable must not report its own remaining execution as time spent waiting to
         // be scheduled (performance.h).
-        if ((old_state & ThreadState::Mask) != ThreadState::Runnable &&
+        if (marks && (old_state & ThreadState::Mask) != ThreadState::Runnable &&
             (state & ThreadState::Mask) == ThreadState::Runnable) {
             ::Eden::Performance::NoteRunnable(GetThreadId(), ::Eden::Performance::NowNs());
         }]=] thread_source "${thread_source}")

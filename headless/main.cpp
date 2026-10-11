@@ -561,7 +561,7 @@ int main(int argc, char** argv) {
         const bool performance_run = std::filesystem::exists(Eden::AppFile("performance-run.txt"));
 #ifdef EDEN_DEV_PROFILE
         Eden::Performance::texture_budget_log = true;  // EDEN_VULKAN_TEXTURE_BUDGET every 300 frames
-        Eden::Performance::draw_marks = true;          // the phases of a draw, in the EDEN_DEV_ lines
+        Eden::Performance::dev_marks = true;           // a draw's phases and guest thread waits (EDEN_DEV_ lines)
         // Optional 20 Hz GPU-thread PC samples. The handler must exist before the
         // GPU thread registers, which unblocks SIGUSR2 only while sampling is on.
         const bool pc_sample_run = std::filesystem::exists(Eden::AppFile("pc-sample.txt"));
