@@ -680,6 +680,33 @@ void GraphicsWindow::OnFrameDisplayed() {
                 static unsigned long long last_steps = 0, last_step_ns = 0;
                 // The texture collector's waits for the GPU: for a batch of images, and for one.
                 static std::array<unsigned long long, 5> last_gc{};
+                // The game's side of the frame: the GPU thread without work, guest threads waiting
+                // for services, for the GPU and for a buffer, guest memory the GPU caches had to
+                // be asked for, block compilation, and what each guest core spent inside the JIT
+                // and on its CPU. Then what the collector's lookahead did (performance.h, GcWhy).
+                namespace Perf = Eden::Performance;
+                const auto ns_of = [](const Perf::Totals& totals) {
+                    return totals.nanoseconds.load(std::memory_order_relaxed);
+                };
+                unsigned long long compile_ns = 0;
+                for (const auto& core : Perf::compilation) compile_ns += ns_of(core);
+                static std::array<unsigned long long, 16> last_game{};
+                const std::array<unsigned long long, 16> game{
+                    ns_of(Perf::gpu_queue_wait), ns_of(Perf::guest_ipc_wait),
+                    Perf::guest_ipc_wait.calls.load(std::memory_order_relaxed), ns_of(Perf::guest_cpu_read),
+                    ns_of(Perf::guest_cpu_write), ns_of(Perf::guest_sync_wait), ns_of(Perf::guest_dequeue_wait),
+                    ns_of(Perf::guest_fs_storage), compile_ns, ns_of(Perf::core_run[0]), ns_of(Perf::core_run[1]),
+                    ns_of(Perf::core_run[2]),
+                    static_cast<unsigned long long>(Perf::core_cpu[0].load(std::memory_order_relaxed)),
+                    static_cast<unsigned long long>(Perf::core_cpu[1].load(std::memory_order_relaxed)),
+                    static_cast<unsigned long long>(Perf::core_cpu[2].load(std::memory_order_relaxed)), 0};
+                static std::array<unsigned long long, Perf::kGcWhyCount> last_why{};
+                std::array<unsigned long long, Perf::kGcWhyCount> why{};
+                bool why_changed = false;
+                for (std::size_t i = 0; i < why.size(); ++i) {
+                    why[i] = Perf::gc_why[i].load(std::memory_order_relaxed);
+                    why_changed |= why[i] != last_why[i];
+                }
                 const auto& batched = Eden::Performance::gc_batched_drain;
                 const auto& single = Eden::Performance::gc_unbatched_drain;
                 const std::array<unsigned long long, 5> gc{
@@ -694,22 +721,36 @@ void GraphicsWindow::OnFrameDisplayed() {
                 unsigned long long steps = 0, step_ns = 0;
                 ::Common::MemorySteps(&steps, &step_ns);
                 if (interval_ms >= 80.0) {
-                    char line[640];
+                    char line[1280];
                     int length = std::snprintf(line, sizeof(line), "EDEN_LONG_FRAME ms=%.0f frame=%u at=%.2f memory_steps=%llu memory_ms=%.0f",
                                                interval_ms, frame_total, now, steps - last_steps,
                                                static_cast<double>(step_ns - last_step_ns) / 1e6);
-                    for (std::size_t i = 0; i < ns.size() && length > 0 && length < 560; ++i)
+                    for (std::size_t i = 0; i < ns.size() && length > 0 && length < 700; ++i)
                         if (ns[i] - last_ns[i] >= 2'000'000)
                             length += std::snprintf(line + length, sizeof(line) - static_cast<std::size_t>(length), " %s=%.0f/%llu",
                                                     names[i], static_cast<double>(ns[i] - last_ns[i]) / 1e6, calls[i] - last_calls[i]);
-                    if (length > 0 && length < 560 && (gc[1] != last_gc[1] || gc[4] != last_gc[4]))
+                    if (length > 0 && length < 760 && (gc[1] != last_gc[1] || gc[4] != last_gc[4]))
                         length += std::snprintf(line + length, sizeof(line) - static_cast<std::size_t>(length),
                                                 " gc_batches=%.0f/%llu gc_batch_images=%llu gc_single=%.0f/%llu",
                                                 static_cast<double>(gc[0] - last_gc[0]) / 1e6, gc[1] - last_gc[1],
                                                 gc[2] - last_gc[2], static_cast<double>(gc[3] - last_gc[3]) / 1e6,
                                                 gc[4] - last_gc[4]);
+                    const auto ms = [&](std::size_t i) { return static_cast<double>(game[i] - last_game[i]) / 1e6; };
+                    if (length > 0 && length < 900)
+                        length += std::snprintf(line + length, sizeof(line) - static_cast<std::size_t>(length),
+                                                " gpu_idle=%.0f ipc=%.0f/%llu read=%.0f write=%.0f sync=%.0f dequeue=%.0f"
+                                                " storage=%.0f compile=%.0f run=%.0f/%.0f/%.0f cpu=%.0f/%.0f/%.0f",
+                                                ms(0), ms(1), game[2] - last_game[2], ms(3), ms(4), ms(5), ms(6), ms(7),
+                                                ms(8), ms(9), ms(10), ms(11), ms(12), ms(13), ms(14));
+                    if (why_changed && length > 0 && length < 1100)
+                        length += std::snprintf(line + length, sizeof(line) - static_cast<std::size_t>(length),
+                                                " gc_why=%llu/%llu/%llu/%llu/%llu/%llu/%llu", why[0] - last_why[0],
+                                                why[1] - last_why[1], why[2] - last_why[2], why[3] - last_why[3],
+                                                why[4] - last_why[4], why[5] - last_why[5], why[6] - last_why[6]);
                     std::puts(line);
                 }
+                last_game = game;
+                last_why = why;
                 last_gc = gc;
                 last_ns = ns;
                 last_calls = calls;

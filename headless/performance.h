@@ -46,6 +46,11 @@ enum class CpuPhase : unsigned { Kernel, Guest, Idle };
 struct alignas(64) CpuState { std::atomic<CpuPhase> phase{}; };
 inline std::array<CpuState, 4> cpu_state{};
 void SampleCpu(unsigned core, unsigned long long thread, unsigned long long pc, unsigned svc, unsigned fpcr);
+// Development: what a guest core spent inside the JIT (time and entries), and its host thread's
+// CPU time as the thread last read it (at most once a millisecond). A long frame's line prints
+// what they grew by (graphics.cpp): a core that was inside the JIT all the frame long and used
+// the CPU for it was computing, one that used none was held up below the game.
+void CoreRan(unsigned core, long long start_ns);
 struct alignas(64) Totals {
     std::atomic<unsigned long long> calls{}, nanoseconds{}, requested_bytes{};
 };
@@ -95,6 +100,8 @@ inline Totals gpu_fence_drain, gpu_present_wait, gpu_queue_full;
 // lookahead stopped). calls = drains, requested_bytes = images covered: one drain per image in the
 // unbatched case is the stall to drive out.
 inline Totals gc_batched_drain, gc_unbatched_drain;
+inline std::array<Totals, 4> core_run;
+inline std::array<std::atomic<long long>, 4> core_cpu{};
 // What the collector's lookahead did with the images it met, and why an image still waited
 // alone (vulkan_gc_downloads.inc). Counted always: a handful of additions in a collector run.
 enum GcWhy : unsigned {

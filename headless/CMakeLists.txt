@@ -645,7 +645,7 @@ foreach(bits 32 64)
         # is time spent runnable-but-unscheduled. After Run() it would also count the slice the
         # thread then executes, which for a main loop is the larger half of the reading.
         string(REPLACE "    return TranslateHaltReason(m_jit->Run());"
-            "    const auto guest_tid = thread ? thread->GetThreadId() : 0;\n    ::Eden::Performance::NoteRunning(guest_tid, ::Eden::Performance::NowNs());\n    const auto halt = m_jit->Run();\n    ::Eden::Performance::SampleCpu(m_core_index, guest_tid, ${sample_pc}, GetSvcNumber(), ${sample_fp});\n    return TranslateHaltReason(halt);"
+            "    const auto guest_tid = thread ? thread->GetThreadId() : 0;\n    const long long run_start = ::Eden::Performance::NowNs();\n    ::Eden::Performance::NoteRunning(guest_tid, run_start);\n    const auto halt = m_jit->Run();\n    ::Eden::Performance::CoreRan(m_core_index, run_start);\n    ::Eden::Performance::SampleCpu(m_core_index, guest_tid, ${sample_pc}, GetSvcNumber(), ${sample_fp});\n    return TranslateHaltReason(halt);"
             wrapper "${wrapper}")
         string(FIND "${wrapper}" "NoteRunning(guest_tid" note_running_at)
         if(note_running_at LESS 0)

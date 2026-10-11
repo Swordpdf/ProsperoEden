@@ -781,6 +781,10 @@ int main(int argc, char** argv) {
                 } else if (entry == "cpu_accuracy=unsafe") {
                     // Dynarmic's unsafe FP shortcuts on top of Auto (reduced-error estimates, inaccurate NaN).
                     Settings::values.cpu_accuracy = Settings::CpuAccuracy::Unsafe;
+                } else if (entry == "marks=off") {
+                    // A run at the speed of a release build: a draw's phase marks and the timing
+                    // of guest thread waits cost about 3 ms a frame in a large game.
+                    Eden::Performance::dev_marks = false;
                 } else if (entry == "replay=off") {
                     // The profile title takes controller and runner input instead of the timed replay.
                 } else if (entry == "large_pages=off" || entry == "sparse_tables=off" || entry == "heap=whole") {

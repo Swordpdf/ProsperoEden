@@ -753,6 +753,19 @@ void RegisterWorker(const char* name) {
 #endif
 }
 
+void CoreRan(unsigned core, long long start_ns) {
+    if (core >= core_run.size()) return;
+    const long long now = NowNs();
+    core_run[core].nanoseconds.fetch_add(static_cast<unsigned long long>(now > start_ns ? now - start_ns : 0),
+                                         std::memory_order_relaxed);
+    core_run[core].calls.fetch_add(1, std::memory_order_relaxed);
+    static thread_local long long cpu_read_at = 0;
+    if (owner_cpu_clock_valid && now - cpu_read_at >= 1'000'000) {
+        cpu_read_at = now;
+        core_cpu[core].store(ClockNs(CLOCK_THREAD_CPUTIME_ID), std::memory_order_relaxed);
+    }
+}
+
 void SampleCpu(unsigned core, unsigned long long thread, unsigned long long pc, unsigned svc, unsigned fpcr) {
     const auto epoch = sample_epoch.load(std::memory_order_relaxed);
     if (sampled_epoch.at(core) == epoch) return;
