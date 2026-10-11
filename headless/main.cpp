@@ -1167,6 +1167,8 @@ int main(int argc, char** argv) {
         }
         {
 #ifdef EDEN_PS5_OPENGL
+            static unsigned memory_session = 0;
+            Eden::Performance::ReportSessionMemory("start", ++memory_session);
             Eden::BootTrace::Line("opening the graphics window (%s)", backend == Eden::GraphicsBackend::Vulkan ? "Vulkan" : "OpenGL");
             Eden::GraphicsWindow window(backend == Eden::GraphicsBackend::Vulkan);
             Eden::BootTrace::Line("graphics window open");
@@ -1790,6 +1792,7 @@ int main(int argc, char** argv) {
             }
         }
         passed("core_destroyed");
+        Eden::Performance::ReportSessionMemory("end", 0);
         if (devices && pad) {
             pad.reset();
             LOG_INFO(Frontend, "EDEN_DEVICE_FRONTEND_PASS");

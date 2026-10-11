@@ -378,6 +378,10 @@ inline std::array<JitCallbacks, 4> jit_callbacks{};
 inline void CountJit(std::atomic<unsigned long long>& counter) {
     counter.fetch_add(1, std::memory_order_relaxed);
 }
+// What a game session finds and what it leaves of the memory the CPU shares with the GPU: a
+// summary line and the taken stretches of the pool (stdout). Called before a session's graphics
+// start and after everything of the session is gone, so two sessions of one run can be compared.
+void ReportSessionMemory(const char* phase, unsigned session);
 // GPU thread only (Vulkan frame report): cumulative GPU-thread idle/dispatch/wait
 // totals with the owner's CPU clock, then a guest-core CPU snapshot.
 void ReportGpuThread(unsigned frame);

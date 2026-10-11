@@ -393,6 +393,54 @@ void RecordHle(const char* service, unsigned command, long long ns) {
     entry.second += static_cast<unsigned long long>(ns > 0 ? ns : 0);
 }
 
+void ReportSessionMemory(const char* phase, unsigned session) {
+    unsigned large_blocks = 0;
+    const std::size_t large = eden_heap_large_held ? eden_heap_large_held(&large_blocks) : 0;
+    std::size_t table_span = 0, table_held = 0;
+    ::Common::SparseUsage(&table_span, &table_held);
+    long long total = 0, free_bytes = -1;
+    std::size_t largest = 0;
+    unsigned regions = 0;
+#ifdef PS5_NATIVE
+    // Taken stretches of the pool: neighbours of one type count as one.
+    struct Stretch { std::int64_t start, end; std::int32_t type; unsigned parts; };
+    static Stretch stretches[96];
+    unsigned count = 0;
+    total = sceKernelGetDirectMemorySize();
+    if (total > 0) {
+        std::int64_t start = 0, taken = 0, offset = 0;
+        (void)sceKernelAvailableDirectMemorySize(0, total, 0x4000, &start, &largest);
+        DirectMemoryRegion region{};
+        while (offset < total && regions < 8192 &&
+               sceKernelDirectMemoryQuery(offset, 1, &region, sizeof(region)) == 0 && region.end > offset) {
+            taken += region.end - region.start;
+            if (count != 0 && stretches[count - 1].end == region.start && stretches[count - 1].type == region.type) {
+                stretches[count - 1].end = region.end;
+                ++stretches[count - 1].parts;
+            } else if (count < std::size(stretches)) {
+                stretches[count++] = {region.start, region.end, region.type, 1};
+            }
+            offset = region.end;
+            ++regions;
+        }
+        if (regions != 0) free_bytes = total - taken;
+    }
+#endif
+    std::printf("EDEN_SESSION_MEMORY phase=%s session=%u total=%lld free=%lld largest_free=%zu regions=%u "
+                "heap_pieces=%zu heap_large=%zu large_blocks=%u tables=%zu\n",
+                phase, session, total, free_bytes, largest, regions,
+                eden_heap_committed ? eden_heap_committed() : std::size_t{0}, large, large_blocks, table_held);
+#ifdef PS5_NATIVE
+    for (unsigned i = 0; i < count; ++i)
+        std::printf("EDEN_SESSION_MEMORY_MAP phase=%s session=%u start=%llx end=%llx mib=%lld type=%d parts=%u\n",
+                    phase, session, static_cast<unsigned long long>(stretches[i].start),
+                    static_cast<unsigned long long>(stretches[i].end),
+                    static_cast<long long>((stretches[i].end - stretches[i].start) >> 20), stretches[i].type,
+                    stretches[i].parts);
+#endif
+    std::fflush(stdout);
+}
+
 void ReportGpuThread(unsigned frame) {
     // Heap growth and arena use over the run (allocation failures abort the title).
     ps5_opengl_heap_snapshot("vulkan_report", frame);
