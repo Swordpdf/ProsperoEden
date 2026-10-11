@@ -77,8 +77,23 @@ int main() {
     assert(Eden::MakeHudSnapshot(clock, 0).glyphs == Eden::HudText("VLK F-- S-- W--"));
     clock.fps = 1000000;
     clock.worst_ms = 1000000;
-    assert(Eden::MakeHudSnapshot(clock, 1000000).width <= 24 * 16 + 24);
-    static_assert(sizeof(Eden::HudSnapshot) == 112);
+    assert(Eden::MakeHudSnapshot(clock, 1000000).width <= 28 * 16 + 24);
+    static_assert(sizeof(Eden::HudSnapshot) == 128);
+    clock.fps = 60;
+    clock.worst_ms = 17;
+    for (const char* backend : {"OGL", "VLK"}) {
+        const auto online = Eden::FormatHudText(clock, 100, backend, 42);
+        assert(std::string_view(online.data()).ends_with(" W17 P42"));
+        assert(std::string_view(Eden::FormatHudText(clock, 100, backend, 0).data()).ends_with(" P0"));
+        assert(std::string_view(Eden::FormatHudText(clock, 100, backend, -1).data()).ends_with(" W17"));
+    }
+    const auto online = Eden::MakeHudSnapshot(guest, shown, 100, 119.88, 9999);
+    assert(online.glyphs == Eden::HudText("VLK N60 F120 S100 W17 P9999"));
+    assert(online.width == std::string_view("VLK N60 F120 S100 W17 P9999").size() * 16 + 24);
+    clock.fps = clock.worst_ms = 1000000;
+    const auto bounded = Eden::FormatHudText(clock, 1000000, "VLK", 1000000);
+    assert(std::string_view(bounded.data()).size() <= 28);
+    assert(std::string_view(bounded.data()).ends_with(" P9999"));
     // The loading scene is drawn from the time alone: milliseconds since it began, plus one.
     assert(Eden::MakeLoadingSnapshot(0).loading == 1 && Eden::MakeLoadingSnapshot(0).width != 0);
     assert(Eden::MakeLoadingSnapshot(2.5).loading == 2501);

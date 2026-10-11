@@ -46,6 +46,12 @@ launcher before changing rooms. If the room connection fails during play, the im
 requests the normal return-to-menu path. This recovery passed on `.30` from a Mario Kart
 8 Deluxe 3.0.5 wireless lobby; recovery during an active race remains unqualified.
 
+The game overlay adds **P42** for a room-server round-trip time of 42 milliseconds while
+connected (display capped at 9999). It uses ENet's existing measurement, with no extra ping
+traffic or changes to ENet. This measures the server path, not latency to another player.
+Packet retransmission follows ENet's existing reliable transport. A full disconnect returns
+to the launcher; seamless mid-game reconnection is not supported.
+
 ## Private server example
 
 Use an Eden `eden-room` executable whose revision is recorded for the test. Initial

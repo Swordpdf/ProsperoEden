@@ -78,8 +78,8 @@ inline uint32_t HudGlyph(char c) {
     default: return 0;
     }
 }
-inline std::array<uint32_t, 24> HudText(std::string_view text) {
-    std::array<uint32_t, 24> glyphs{};
+inline std::array<uint32_t, 28> HudText(std::string_view text) {
+    std::array<uint32_t, 28> glyphs{};
     for (size_t i = 0; i < text.size() && i < glyphs.size(); ++i)
         glyphs[i] = HudGlyph(text[i]);
     return glyphs;
@@ -88,10 +88,11 @@ inline std::array<uint32_t, 24> HudText(std::string_view text) {
 // they are scaled to the picture, and `width` then carries the picture's height to the shader
 // (vulkan_hud_draw.inc).
 struct HudSnapshot {
-    std::array<uint32_t, 24> glyphs{};
+    std::array<uint32_t, 28> glyphs{};
     uint32_t width{};
     uint32_t x{28}, y{30}, loading{};
 };
+static_assert(sizeof(HudSnapshot) == 128); // Vulkan guarantees at least 128 push-constant bytes.
 // What a game's start is doing, for the loading screen (loading_scene.glsl draws it: the steps
 // one under the other and a progress bar). main.cpp says which step the start is at; the bar's
 // share of each step is an estimate, except while shaders are built, where it is counted. Within
@@ -153,7 +154,8 @@ inline std::array<uint32_t, 24> State() {
 // picture, set where it is drawn (vulkan_hud_draw.inc); the glyphs' words carry the state.
 inline HudSnapshot MakeLoadingSnapshot(double seconds) {
     HudSnapshot snapshot{};
-    snapshot.glyphs = Loading::State();
+    const auto state = Loading::State();
+    std::copy(state.begin(), state.end(), snapshot.glyphs.begin());
     snapshot.width = 1920;
     snapshot.x = 1920;
     snapshot.y = 1080;
@@ -178,31 +180,38 @@ struct LoadingPace {
 // the frames it adds do not go through OnFrameDisplayed(), which runs once per guest frame), and
 // never reads above `refresh`, the output's own rate: a display shows no more than that, however
 // many frames it is handed. refresh 0: not known, no limit.
-inline std::array<char, 25> FormatHudText(const HudClock& clock, const HudClock& output,
-                                          double speed, const char* backend, double refresh = 0) {
-    std::array<char, 25> text{};
+inline std::array<char, 29> FormatHudText(const HudClock& clock, const HudClock& output,
+                                          double speed, const char* backend, double refresh = 0,
+                                          int ping_ms = -1) {
+    std::array<char, 29> text{};
+    const size_t limit = ping_ms < 0 ? text.size() : text.size() - 6;
     if (clock.fps < 0) {
-        std::snprintf(text.data(), text.size(), "%s F-- S-- W--", backend);
-        return text;
+        std::snprintf(text.data(), limit, "%s F-- S-- W--", backend);
+    } else {
+        const double shown = output.fps < 0 ? clock.fps : refresh > 0 ? std::min(output.fps, refresh) : output.fps;
+        if (shown < clock.fps + 1.5)
+            std::snprintf(text.data(), limit, "%s F%.0f S%.0f W%.0f", backend, clock.fps, speed, clock.worst_ms);
+        else
+            std::snprintf(text.data(), limit, "%s N%.0f F%.0f S%.0f W%.0f", backend, clock.fps, shown, speed,
+                          clock.worst_ms);
     }
-    const double shown = output.fps < 0 ? clock.fps : refresh > 0 ? std::min(output.fps, refresh) : output.fps;
-    if (shown < clock.fps + 1.5)
-        std::snprintf(text.data(), text.size(), "%s F%.0f S%.0f W%.0f", backend, clock.fps, speed, clock.worst_ms);
-    else
-        std::snprintf(text.data(), text.size(), "%s N%.0f F%.0f S%.0f W%.0f", backend, clock.fps, shown, speed,
-                      clock.worst_ms);
+    if (ping_ms >= 0) {
+        const auto length = std::string_view{text.data()}.size();
+        std::snprintf(text.data() + length, text.size() - length, " P%d", std::min(ping_ms, 9999));
+    }
     return text;
 }
 inline HudSnapshot MakeHudSnapshot(const HudClock& clock, const HudClock& output, double speed,
-                                   double refresh = 0) {
-    const auto text = FormatHudText(clock, output, speed, "VLK", refresh);
+                                   double refresh = 0, int ping_ms = -1) {
+    const auto text = FormatHudText(clock, output, speed, "VLK", refresh, ping_ms);
     const std::string_view value{text.data()};
     return {HudText(value), static_cast<uint32_t>(value.size() * 16 + 24)};
 }
 // The OpenGL renderer has no frame generation: what it presents is the guest's own rate, so both
 // numbers come from one clock. Callers that cannot have an output clock use these.
-inline std::array<char, 25> FormatHudText(const HudClock& clock, double speed, const char* backend) {
-    return FormatHudText(clock, clock, speed, backend);
+inline std::array<char, 29> FormatHudText(const HudClock& clock, double speed, const char* backend,
+                                        int ping_ms = -1) {
+    return FormatHudText(clock, clock, speed, backend, 0, ping_ms);
 }
 inline HudSnapshot MakeHudSnapshot(const HudClock& clock, double speed) {
     return MakeHudSnapshot(clock, clock, speed);

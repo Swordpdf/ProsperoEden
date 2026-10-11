@@ -63,6 +63,8 @@ file(WRITE "${MULTIPLAYER_OUTPUT}/packet.cpp.in" "${packet_source}")
 configure_file("${MULTIPLAYER_OUTPUT}/packet.cpp.in" "${MULTIPLAYER_OUTPUT}/packet.cpp" COPYONLY)
 
 file(READ "${MULTIPLAYER_SOURCE}/src/network/room_member.h" member_header)
+multiplayer_replace(member_header "    State GetState() const;"
+    "    State GetState() const;\n    int GetPingMilliseconds() const;")
 multiplayer_replace(member_header "#include <functional>" "#include <functional>\n#include <stop_token>")
 multiplayer_replace(member_header "const std::string& password = \"\", const std::string& token = \"\");"
     "const std::string& password = \"\", const std::string& token = \"\",\n              std::stop_token stop = {});")
@@ -70,8 +72,28 @@ file(WRITE "${MULTIPLAYER_OUTPUT}/network/room_member.h.in" "${member_header}")
 configure_file("${MULTIPLAYER_OUTPUT}/network/room_member.h.in"
     "${MULTIPLAYER_OUTPUT}/network/room_member.h" COPYONLY)
 file(READ "${MULTIPLAYER_SOURCE}/src/network/room_member.cpp" member_source)
+multiplayer_replace(member_source "    ENetHost* client = nullptr;"
+    "    std::atomic<int> ping_ms{-1};\n    ENetHost* client = nullptr;")
+multiplayer_replace(member_source "        if (state != new_state) {"
+    "        if (new_state != State::Joined && new_state != State::Moderator) ping_ms = -1;\n        if (state != new_state) {")
+multiplayer_replace(member_source "            enet_host_flush(client);"
+    [=[            // Read ENet's measurement only on the thread that owns the peer.
+            if (server && (state == State::Joined || state == State::Moderator))
+                ping_ms = static_cast<int>(std::min(server->roundTripTime, enet_uint32{9999}));
+            enet_host_flush(client);]=])
+multiplayer_replace(member_source "        Disconnect();"
+    "        ping_ms = -1;\n        Disconnect();")
+string(APPEND member_source [=[
+namespace Network {
+int RoomMember::GetPingMilliseconds() const {
+    const auto state = GetState();
+    return state == State::Joined || state == State::Moderator ?
+        room_member_impl->ping_ms.load() : -1;
+}
+}
+]=])
 multiplayer_replace(member_source "#include <atomic>"
-    "#include <atomic>\n#include <chrono>\n#include <cerrno>\n#include <cstdio>\n#include \"diagnostics.h\"\n#include \"multiplayer_validation.h\"\n#include \"multiplayer_send.h\"")
+    "#include <atomic>\n#include <algorithm>\n#include <chrono>\n#include <cerrno>\n#include <cstdio>\n#include \"diagnostics.h\"\n#include \"multiplayer_validation.h\"\n#include \"multiplayer_send.h\"")
 multiplayer_replace(member_source [=[                case ENET_EVENT_TYPE_RECEIVE:
                     switch (event.packet->data[0]) {]=] [=[                case ENET_EVENT_TYPE_RECEIVE:
                     if (!Eden::Multiplayer::ValidRoomPacket(

@@ -332,6 +332,8 @@ void CheckController(u16 port) {
     assert(snapshot.room == "Controller test" && snapshot.members == std::vector<std::string>{"PlayerOne"});
     auto member = Network::GetRoomMember().lock();
     assert(member);
+    Wait([&] { return member->GetPingMilliseconds() >= 0; });
+    assert(member->GetPingMilliseconds() <= 9999);
     const auto previous_interface = Settings::values.network_interface.GetValue();
     Settings::values.network_interface.SetValue("missing-host-adapter-for-room-test");
     const auto room_interface = Network::GetSelectedNetworkInterface();
@@ -402,6 +404,7 @@ void CheckController(u16 port) {
     client.Leave();
     Wait([&] { return client.GetSnapshot().phase == Phase::Idle; });
     assert(!Network::GetSelectedNetworkInterface());
+    assert(member->GetPingMilliseconds() == -1);
     Settings::values.network_interface.SetValue(previous_interface);
     assert(client.GetSnapshot().members.empty());
     assert(client.BeginGame());
@@ -414,6 +417,7 @@ void CheckController(u16 port) {
     Wait([&] { return client.GetSnapshot().phase == Phase::Failed; });
     assert(client.GetSnapshot().error == "The connection to the room was lost.");
     assert(client.GameConnectionLost() && guest_socket_mode == 1);
+    assert(member->GetPingMilliseconds() == -1);
     assert(!client.Connect(connection));
     client.EndGame();
     connection.host = "127.0.0.1";

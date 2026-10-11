@@ -14,6 +14,21 @@ shadowing it. The network compiler launcher now hashes the generated room-member
 packet headers as extra cache inputs. Warm-cache shadowing and subsequent header-change
 checks pass; the post-build header audit remains mandatory.
 
+The rebased native build and mandatory checks passed, including the header audit. Packet
+and real-room ASan/UBSan tests passed after rebuilding host libraries for the new Eden
+settings layout; the test now reads Boost's version from Eden's dependency manifest.
+
+## Server ping overlay
+
+The OpenGL and Vulkan game overlays append `P42` for a 42 ms room-server round trip.
+The Eden room receive thread copies ENet's existing measurement into an atomic field;
+the renderer never reads the live ENet peer. Leaving or losing the room removes the
+reading. ENet source, retransmission, timeouts and wire behavior are unchanged.
+
+The native build and mandatory checks, formatting, bounded values, disconnect clearing,
+real-room sanitizer tests and both shader compilations passed. The glyph capacity is 28 and the Vulkan push constants
+remain within the guaranteed 128 bytes. Console display validation is still pending.
+
 ## Latest hardware result
 
 The operator subsequently confirmed creating a Mario Kart lobby while connected to the

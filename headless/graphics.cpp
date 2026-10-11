@@ -16,6 +16,7 @@
 #include <cstring>
 #include <time.h>
 #include "hud.h"
+#include "network/network.h"
 #include "loading_scene_glsl.h"
 #include "preferences.h"
 #include "diagnostics.h"
@@ -40,6 +41,10 @@ namespace Eden {
 void PresentVulkanLoading(VideoCore::RendererBase& renderer);
 #endif
 namespace {
+int RoomPingMilliseconds() {
+    const auto member = Network::GetRoomMember().lock();
+    return member ? member->GetPingMilliseconds() : -1;
+}
 // What the loading screen's time carries for reduced motion (loading_scene.glsl): 1000 when the
 // player turned it on in Settings > Accessibility, read once.
 double LoadingCalm() {
@@ -309,7 +314,7 @@ public:
             speed_percent = stats.emulation_speed * 100.0;
             last_stats = now;
         }
-        const auto text = FormatHudText(clock, speed_percent, "OGL");
+        const auto text = FormatHudText(clock, speed_percent, "OGL", RoomPingMilliseconds());
         if (hud_enabled.load(std::memory_order_relaxed)) DrawHud(text.data(), false);
         Check(eglSwapBuffers(display, surface), "eglSwapBuffers");
     }
@@ -407,11 +412,11 @@ private:
             const char* sources[]{
                 "#version 330 core\nvoid main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);"
                 "gl_Position=vec4(p*2.0-1.0,0.0,1.0);}",
-                "#version 330 core\nuniform uint glyphs[24]; uniform ivec2 origin; uniform int startup;"
+                "#version 330 core\nuniform uint glyphs[28]; uniform ivec2 origin; uniform int startup;"
                 "uniform float cell; out vec4 color;"
                 "void main(){ivec2 p=ivec2(gl_FragCoord.xy)-origin; bool ink=false;"
                 "if(p.x>=0&&p.y>=0){ivec2 c=ivec2(vec2(p)/cell);int i=c.x/4;int x=c.x%4;"
-                "if(i<24&&x<3&&c.y<5) ink=((glyphs[i]>>uint(c.y*3+2-x))&1u)!=0u;}"
+                "if(i<28&&x<3&&c.y<5) ink=((glyphs[i]>>uint(c.y*3+2-x))&1u)!=0u;}"
                 "color=startup!=0?(ink?vec4(0.7216,0.9490,0.0471,1.0):vec4(0.0196,0.0392,0.0039,1.0))"
                 ":(ink?vec4(0.9,0.95,1.0,1.0):vec4(0.025,0.04,0.075,0.5));}"};
             for (unsigned i = 0; i < 2; ++i) {
@@ -640,7 +645,8 @@ void GraphicsWindow::OnFrameDisplayed() {
         }
         vulkan_hud =
             MakeHudSnapshot(vulkan_hud_clock, vulkan_hud_output_clock, vulkan_hud_speed,
-                            Eden::Display::output_millihertz.load(std::memory_order_relaxed) / 1000.0);
+                            Eden::Display::output_millihertz.load(std::memory_order_relaxed) / 1000.0,
+                            RoomPingMilliseconds());
 #endif
         ++frame_total;
         if (frame_sample_start < 0) {
