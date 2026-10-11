@@ -6,6 +6,10 @@ predates this checkout; the new work does not include the old development branch
 
 ## Latest hardware result
 
+The operator subsequently confirmed creating a Mario Kart lobby while connected to the
+public server. This establishes operator-observed lobby creation; no second game joined
+and no race was completed.
+
 The later public-cloud room case passed on `.30` using the server's resolved IPv4
 address and supplied UDP port/password. The host controller joined by hostname; a second
 host join while the PS5 was connected reported two members. The PS5 launcher showed
@@ -191,14 +195,15 @@ CXX=clang++-18 python3 tools/check-multiplayer.py --source /path/to/pinned/eden 
   race, and verify leaving/rejoining and another game session. The live protocol probe
   does not replace this test or qualify the upstream proxy TCP limitations.
 - Repeat the two-game test across independent internet peers and record latency/topology.
-- Validate holdmysocks' outbound UDP forwarding on PS5, including cross-process loopback,
-  idle sessions and payload restart. The pinned atreus04-GG payload lacks this facility.
 - Repeat affected checks if those hardware findings require further changes.
 
 The native build/package checks, host packet/controller/socket regressions, and the
 hardware milestones above have passed. Keep this PR experimental until gameplay and
 transport qualification are complete. Only `.30` was used for these hardware cases.
 Public room browsing, PS5 room hosting and issue #89 remain separate follow-ups.
+Per the updated scope, Tailscale is an optional externally configured transport. Payload
+integration and qualification are not release gates for this direct-room client; the
+source findings and setup notes below are retained as optional reference only.
 
 ### Desktop reference preparation
 

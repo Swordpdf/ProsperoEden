@@ -11,7 +11,11 @@ future follow-up and is excluded from this work.
 
 Let a PS5 running ProsperoEden join an existing Eden room, launch a supported game, and play through the game's **local wireless** mode with another PS5 or desktop/Android Eden user. Each player runs an independent game instance and keeps their own save. The room carries discovery and game packets. It does not stream video or synchronize emulator save states.
 
-Support two ways to reach the same room client:
+Updated scope: deliver ordinary direct-room connectivity. Tailscale is configured outside
+ProsperoEden and its payload-specific tests are optional follow-up work, not release gates.
+The Tailscale sections and matrix rows below remain reference material for that follow-up.
+
+The same room client can use these endpoints:
 
 1. An ordinary room address on the LAN or internet.
 2. A local UDP forward supplied by an existing PS5 Tailscale payload, leading to a private room server in the player's tailnet.
@@ -285,7 +289,7 @@ If the local port is occupied, use another free local port such as 24873 and kee
 
 For this outbound-client topology, do not add the room port to the payload's inbound `udpPorts` merely to make it work; that setting serves the opposite direction. Do not use its HTTP proxy for ENet. While joined, guest interface queries must report the room-assigned virtual IPv4 address and subnet; the implementation now supplies this automatically. The native adapter remains the offline fallback. There is no kernel Tailscale interface to select.
 
-Mandatory Tailscale checks:
+Checks required only for a future claim of validated PS5 Tailscale compatibility:
 
 - Cross-process loopback UDP from the actual ProsperoEden app to the payload works in the deployed sandbox/elevation configuration.
 - The local relay preserves datagram boundaries, reply endpoint behavior, and stable flow mapping for an ENet session.
@@ -371,7 +375,7 @@ Suggested reviewable changes, adjusting boundaries if the existing code makes a 
 4. Add the demonstrated packet-validation fixes and their regression cases before internet testing.
 5. Qualify LDN plus proxy traffic on PS5; make any required interface/NIFM corrections separately.
 6. Add settings and launcher UI, including host-preview coverage and controller/text entry checks.
-7. Run internet and Tailscale qualification; add user documentation and exact tested combinations.
+7. Run internet qualification; add user documentation and exact tested combinations. Tailscale qualification is an optional follow-up.
 
 The direct-room feature is complete when a user can enter an endpoint, join, launch a qualified game, play with another device, leave/reconnect, and return to offline use without restarting or losing saves. Tailscale support is complete when the documented forward works with a pinned payload in actual gameplay and failure recovery, with measured limitations. If the atreus04-GG project lacks outbound UDP, explicitly record that result and the extension needed; do not label it supported.
 
