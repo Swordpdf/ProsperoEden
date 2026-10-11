@@ -229,8 +229,8 @@ static void UpdateGrips(Core::System& system, Eden::Pad& pad) {
                                      (grip == Grip::usual ? ": controller as usual" :
                                       grip == Grip::sideways_left ? ": a left Joy-Con held sideways, turned for a DualSense held as usual" :
                                       grip == Grip::sideways_right ? ": a right Joy-Con held sideways, turned for a DualSense held as usual" :
-                                      grip == Grip::upright_left ? ": a left Joy-Con held upright; the arrows and the shapes are its four buttons" :
-                                                                   ": a right Joy-Con held upright; the shapes and the arrows are its four buttons")).c_str());
+                                      grip == Grip::upright_left ? ": a left Joy-Con held upright; the shapes are its four buttons, the arrows and either stick its stick" :
+                                                                   ": a right Joy-Con held upright; the shapes are its four buttons, the arrows and either stick its stick")).c_str());
     }
 }
 

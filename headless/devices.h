@@ -81,8 +81,9 @@ public:
     void SetMapping(const ButtonMapping& value) { mapping = ValidMapping(value) ? value : kDefaultMapping; }
     // How a player's controller is used: as usual, or in place of a single left or right Joy-Con.
     // A single Joy-Con has one stick and one cluster of four buttons, and its game reads nothing
-    // else. Held upright, Consume makes the whole DualSense that Joy-Con: the buttons at each
-    // place, either stick, both pairs of shoulder buttons. Held sideways (the game says so), the
+    // else. Held upright, Consume makes the whole DualSense that Joy-Con: the shapes are its four
+    // buttons, the arrows and either stick its stick, both pairs of shoulder buttons its two.
+    // Held sideways (the game says so), the
     // DualSense is still held as usual, and Consume also turns what it sends by a quarter
     // (stick, button places, motion).
     enum class Grip : u8 { usual, sideways_left, sideways_right, upright_left, upright_right };

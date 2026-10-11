@@ -364,20 +364,19 @@ void Pad::Consume(std::size_t player, std::span<const ps5::pad::Data> samples) {
             // A single Joy-Con held upright. The game reads only what that Joy-Con has: one
             // stick, four buttons (a left Joy-Con's arrows, where Right is the game's A, Down
             // its B, Up its X and Left its Y; a right Joy-Con's A, B, X and Y), two shoulder
-            // buttons, Minus or Plus (set_menu), and the stick's click. Each of them is pressed
-            // by both of the DualSense's: the arrow and the button mapped to that place, L and
-            // R, ZL and ZR, Plus and Minus, either stick.
+            // buttons, Minus or Plus (set_menu), and the stick's click. On the DualSense the
+            // buttons mapped to A, B, X and Y are those four, and the arrows move the stick as
+            // either stick does: a Joy-Con has no arrows besides its four buttons. L and R,
+            // ZL and ZR, Plus and Minus, L3 and R3 each press the one the Joy-Con has.
             const auto held = [&](int game) { return down(game, sample.buttons, left, right); };
             const auto arrow = [&](ButtonMask mask) { return (sample.buttons & mask) != 0; };
             const bool upright_left = grip == Grip::upright_left;
-            engine->SetButtonState(player, upright_left ? Button::ButtonUp : Button::ButtonX,
-                                   arrow(kButtonUp) || held(game_x));
-            engine->SetButtonState(player, upright_left ? Button::ButtonRight : Button::ButtonA,
-                                   arrow(kButtonRight) || held(game_a));
-            engine->SetButtonState(player, upright_left ? Button::ButtonDown : Button::ButtonB,
-                                   arrow(kButtonDown) || held(game_b));
-            engine->SetButtonState(player, upright_left ? Button::ButtonLeft : Button::ButtonY,
-                                   arrow(kButtonLeft) || held(game_y));
+            if (upright_left) {
+                engine->SetButtonState(player, Button::ButtonUp, held(game_x));
+                engine->SetButtonState(player, Button::ButtonRight, held(game_a));
+                engine->SetButtonState(player, Button::ButtonDown, held(game_b));
+                engine->SetButtonState(player, Button::ButtonLeft, held(game_y));
+            }
             engine->SetButtonState(player, upright_left ? Button::TriggerL : Button::TriggerR,
                                    held(game_l) || held(game_r));
             engine->SetButtonState(player, upright_left ? Button::TriggerZL : Button::TriggerZR,
@@ -385,7 +384,14 @@ void Pad::Consume(std::size_t player, std::span<const ps5::pad::Data> samples) {
             set_menu(sample.buttons, left, right);
             engine->SetButtonState(player, upright_left ? Button::StickL : Button::StickR,
                                    held(game_left_stick) || held(game_right_stick));
-            if (right_x * right_x + right_y * right_y > left_x * left_x + left_y * left_y) {
+            const float arrows_x = static_cast<float>(arrow(kButtonRight)) - static_cast<float>(arrow(kButtonLeft));
+            const float arrows_y = static_cast<float>(arrow(kButtonUp)) - static_cast<float>(arrow(kButtonDown));
+            if (arrows_x != 0.0f || arrows_y != 0.0f) {
+                // Full tilt, also on a diagonal.
+                const float tilt = arrows_x != 0.0f && arrows_y != 0.0f ? std::numbers::sqrt2_v<float> / 2.0f : 1.0f;
+                left_x = right_x = arrows_x * tilt;
+                left_y = right_y = arrows_y * tilt;
+            } else if (right_x * right_x + right_y * right_y > left_x * left_x + left_y * left_y) {
                 left_x = right_x;
                 left_y = right_y;
             } else {
