@@ -183,6 +183,14 @@ msgstr "Parcourir les jeux"
 msgid "Browse settings"
 msgstr "Parcourir les paramètres"
 
+#: pe/ui/settings.cpp
+msgid "Browse the public directory"
+msgstr "Parcourir l'annuaire public"
+
+#: pe/ui/multiplayer.cpp
+msgid "Browse the public directory and choose a room."
+msgstr "Parcourez l'annuaire public et choisissez un salon."
+
 #. Which controller button presses each of the game's buttons.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
@@ -294,6 +302,26 @@ msgstr "COMPILER À L'AVANCE"
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "Compile au démarrage le code déjà utilisé par le jeu, pour moins de saccades dans les nouvelles zones."
 
+#: pe/ui/multiplayer.cpp
+msgid "Connect using a room address, port and password."
+msgstr "Connectez-vous avec l'adresse, le port et le mot de passe du salon."
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Connected"
+msgstr "Connecté"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connecting..."
+msgstr "Connexion..."
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection failed"
+msgstr "Échec de la connexion"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection problem"
+msgstr "Problème de connexion"
+
 #: pe/ui/library.cpp
 msgid "Console mode"
 msgstr "Mode console"
@@ -357,6 +385,10 @@ msgstr "Impossible d'enregistrer le dossier. Veuillez réessayer."
 #: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
 msgid "Could not save. Please try again."
 msgstr "Impossible d'enregistrer. Veuillez réessayer."
+
+#: pe/ui/multiplayer.cpp
+msgid "Could not start the connection or save its settings."
+msgstr "Impossible de lancer la connexion ou d'enregistrer ses paramètres."
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -554,6 +586,10 @@ msgstr "Anglais (Royaume-Uni)"
 #: host/fake_services.cpp, settings_store.h
 msgid "English (US)"
 msgstr "Anglais (États-Unis)"
+
+#: pe/ui/multiplayer.cpp
+msgid "Enter a UDP port between 1 and 65535."
+msgstr "Saisissez un port UDP entre 1 et 65535."
 
 #: eden_services.cpp
 msgid "Europe"
@@ -761,6 +797,10 @@ msgstr "Allemand"
 msgid "GETTING STARTED"
 msgstr "PREMIERS PAS"
 
+#: pe/ui/multiplayer.cpp
+msgid "Go offline"
+msgstr "Passer hors ligne"
+
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
 msgstr "Moteur de rendu et mise à l'échelle sur votre téléviseur."
@@ -809,6 +849,10 @@ msgstr "Sauvegarde importée. Une copie de l'ancienne a été conservée."
 msgid "IN USE"
 msgstr "UTILISÉ"
 
+#: pe/ui/multiplayer.cpp
+msgid "Incompatible"
+msgstr "Incompatible"
+
 #: pe/ui/save_sync.cpp
 msgid "It goes to the server."
 msgstr "Elles sont envoyées au serveur."
@@ -836,6 +880,22 @@ msgstr "Japon"
 #: settings_store.h
 msgid "Japanese"
 msgstr "Japonais"
+
+#: pe/ui/multiplayer.cpp
+msgid "Join a room before launching a game, then choose Local Wireless in the game."
+msgstr "Rejoignez un salon avant de lancer un jeu, puis choisissez le mode sans fil local dans le jeu."
+
+#: pe/ui/launcher.cpp
+msgid "Join a room successfully or leave it before starting a game."
+msgstr "Rejoignez un salon ou quittez-le avant de lancer un jeu."
+
+#: pe/ui/settings.cpp
+msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
+msgstr "Rejoignez un salon Eden, puis choisissez le mode sans fil local dans un jeu compatible. Tout le monde doit avoir une version compatible du jeu."
+
+#: pe/ui/multiplayer.cpp
+msgid "Join room"
+msgstr "Rejoindre le salon"
 
 #. keys, firmware and roms are folder names (unchanged). TRIANGLE is the controller's triangle button, in capitals.
 #: pe/ui/browse.cpp
@@ -901,6 +961,26 @@ msgstr "Dernier jeu lancé"
 msgid "Launch game"
 msgstr "Lancer le jeu"
 
+#: pe/ui/multiplayer.cpp
+msgid "Leave / cancel"
+msgstr "Quitter / annuler"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave room"
+msgstr "Quitter le salon"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave the room before changing connection details."
+msgstr "Quittez le salon avant de modifier les informations de connexion."
+
+#: pe/ui/profiles.cpp
+msgid "Leaving the room. Select the profile again when disconnected."
+msgstr "Vous quittez le salon. Sélectionnez à nouveau le profil une fois déconnecté."
+
+#: pe/ui/multiplayer.cpp
+msgid "Leaving..."
+msgstr "Déconnexion..."
+
 #: pe/ui/game_options.cpp
 msgid "Left Joy-Con"
 msgstr "Joy-Con gauche"
@@ -929,6 +1009,10 @@ msgstr "BIBLIOTHÈQUE"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Linked"
 msgstr "Associé"
+
+#: pe/ui/multiplayer.cpp
+msgid "Loading public rooms..."
+msgstr "Chargement des salons publics..."
 
 #: pe/ui/settings.cpp
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
@@ -968,6 +1052,14 @@ msgstr "MODS"
 #: pe/ui/library.cpp
 msgid "Mods"
 msgstr "Mods"
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Multiplayer"
+msgstr "Multijoueur"
+
+#: pe/ui/settings.cpp
+msgid "MULTIPLAYER"
+msgstr "MULTIJOUEUR"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Mute"
@@ -1009,6 +1101,14 @@ msgstr "Au redémarrage : {0}"
 msgid "NEXT START"
 msgstr "AU REDÉMARRAGE"
 
+#: pe/ui/multiplayer.cpp
+msgid "Nickname"
+msgstr "Pseudo"
+
+#: pe/ui/multiplayer.cpp
+msgid "Nickname: {0}"
+msgstr "Pseudo : {0}"
+
 #: pe/ui/library.cpp
 msgid "No cover art"
 msgstr "Aucune pochette"
@@ -1042,6 +1142,10 @@ msgstr "Aucun mod"
 #: pe/ui/library.cpp
 msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
 msgstr "Aucun mod pour ce jeu pour l'instant. Copiez le dossier de chaque mod dans {0}, à côté de roms/."
+
+#: pe/ui/multiplayer.cpp
+msgid "No public rooms are available."
+msgstr "Aucun salon public n'est disponible."
 
 #: pe/ui/library.cpp
 msgid "No ROM files found."
@@ -1193,6 +1297,10 @@ msgstr "Associé. Les sauvegardes du profil sont désormais synchronisées."
 msgid "Parent folder"
 msgstr "Dossier parent"
 
+#: pe/ui/multiplayer.cpp
+msgid "Password"
+msgstr "Mot de passe"
+
 #. What a mod is made of: a change to the game's program (not a game update).
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Patch"
@@ -1278,6 +1386,14 @@ msgstr "Appuyez à nouveau pour supprimer de la console le jeu, ses mises à jou
 msgid "Press again to replace this game's save. The current one is backed up."
 msgstr "Appuyez à nouveau pour remplacer la sauvegarde de ce jeu. Une copie de l'actuelle est conservée."
 
+#: pe/ui/multiplayer.cpp
+msgid "Private room"
+msgstr "Salon privé"
+
+#: pe/ui/settings.cpp
+msgid "PRIVATE ROOM"
+msgstr "SALON PRIVÉ"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1349,6 +1465,14 @@ msgstr "ÉDITION PS5"
 msgid "PS5 EDITION  /  {0}"
 msgstr "ÉDITION PS5  /  {0}"
 
+#: pe/ui/multiplayer.cpp
+msgid "Public rooms"
+msgstr "Salons publics"
+
+#: pe/ui/settings.cpp
+msgid "PUBLIC ROOMS"
+msgstr "SALONS PUBLICS"
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "En file d'attente"
@@ -1394,6 +1518,10 @@ msgstr "RÉDUCTION DES MOUVEMENTS"
 #: pe/ui/settings.cpp
 msgid "Reduce motion"
 msgstr "Réduction des mouvements"
+
+#: pe/ui/multiplayer.cpp
+msgid "Refresh"
+msgstr "Actualiser"
 
 #. Setting: how many times a second the TV picture is refreshed while a game runs (60 or 120 Hz).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -1448,6 +1576,18 @@ msgstr "Clic du bâton droit"
 #: eden_services.cpp, pe/ui/launcher.cpp
 msgid "ROM missing from the game files folder"
 msgstr "ROM absente du dossier des fichiers de jeu"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room address"
+msgstr "Adresse du salon"
+
+#: pe/ui/settings.cpp
+msgid "Room address and UDP port"
+msgstr "Adresse du salon et port UDP"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room {0} of {1}"
+msgstr "Salon {0} sur {1}"
 
 #: settings_store.h
 msgid "Russian"
@@ -1619,6 +1759,10 @@ msgstr "Plusieurs sources ont ce jeu. Depuis laquelle le télécharger?"
 msgid "Show or hide the FPS overlay"
 msgstr "Afficher ou masquer le compteur de FPS"
 
+#: pe/ui/multiplayer.cpp
+msgid "Showing the previous list."
+msgstr "Affichage de la liste précédente."
+
 #: pe/ui/pairing.cpp
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "Connectez-vous à {0} avec l'utilisateur auquel appartiennent les sauvegardes de ce profil."
@@ -1774,6 +1918,10 @@ msgstr "Le jeu démarre une fois ses sauvegardes à jour."
 msgid "The game starts when the download is done."
 msgstr "Le jeu démarre une fois le téléchargement terminé."
 
+#: pe/ui/multiplayer.cpp
+msgid "The keyboard could not be opened."
+msgstr "Impossible d'ouvrir le clavier."
+
 #: pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "La langue utilisée par les jeux qui la proposent."
@@ -1840,6 +1988,10 @@ msgstr "Ce jeu n'a pas encore de sauvegarde à exporter."
 msgid "This game's settings cannot be saved (no title ID)."
 msgstr "Impossible d'enregistrer les paramètres du jeu (aucun ID de titre)."
 
+#: pe/ui/multiplayer.cpp
+msgid "This room uses a different protocol version."
+msgstr "Ce salon utilise une autre version du protocole."
+
 #. ryujinx/, save-import/ and roms/ are folder names (unchanged); {0} is the game's ID.
 #: eden_services.cpp
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
@@ -1867,6 +2019,10 @@ msgstr "Nouvelle tentative."
 #: pe/ui/library.cpp
 msgid "Turn on or off"
 msgstr "Activer ou désactiver"
+
+#: pe/ui/multiplayer.cpp
+msgid "UDP port"
+msgstr "Port UDP"
 
 #: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Unavailable"
@@ -2143,6 +2299,10 @@ msgstr "{0} profils sur {1}"
 #: pe/ui/save_sync.cpp
 msgid "{0} on {1}"
 msgstr "{0} sur {1}"
+
+#: pe/ui/multiplayer.cpp
+msgid "{0} public rooms"
+msgstr "{0} salons publics"
 
 #: pe/ui/remote.cpp, pe/ui/settings.cpp
 msgid "{0} sources"

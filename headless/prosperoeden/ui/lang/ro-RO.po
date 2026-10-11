@@ -183,6 +183,14 @@ msgstr "Răsfoire jocuri"
 msgid "Browse settings"
 msgstr "Răsfoire setări"
 
+#: pe/ui/settings.cpp
+msgid "Browse the public directory"
+msgstr "Răsfoiește lista publică"
+
+#: pe/ui/multiplayer.cpp
+msgid "Browse the public directory and choose a room."
+msgstr "Răsfoiește lista publică și alege o cameră."
+
 #. Which controller button presses each of the game's buttons.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
@@ -294,6 +302,26 @@ msgstr "COMPILARE ÎN AVANS"
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "Compilează la pornire codul folosit deja de joc, astfel încât zonele noi să sacadeze mai puțin."
 
+#: pe/ui/multiplayer.cpp
+msgid "Connect using a room address, port and password."
+msgstr "Conectează-te cu adresa camerei, portul și parola."
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Connected"
+msgstr "Conectat"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connecting..."
+msgstr "Se conectează..."
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection failed"
+msgstr "Conexiune eșuată"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection problem"
+msgstr "Problemă de conexiune"
+
 #: pe/ui/library.cpp
 msgid "Console mode"
 msgstr "Mod consolă"
@@ -357,6 +385,10 @@ msgstr "Nu s-a putut salva folderul. Încearcă din nou."
 #: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
 msgid "Could not save. Please try again."
 msgstr "Nu s-a putut salva. Încearcă din nou."
+
+#: pe/ui/multiplayer.cpp
+msgid "Could not start the connection or save its settings."
+msgstr "Conexiunea nu a putut fi pornită sau setările ei nu au putut fi salvate."
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -554,6 +586,10 @@ msgstr "Engleză (Regatul Unit)"
 #: host/fake_services.cpp, settings_store.h
 msgid "English (US)"
 msgstr "Engleză (SUA)"
+
+#: pe/ui/multiplayer.cpp
+msgid "Enter a UDP port between 1 and 65535."
+msgstr "Introdu un port UDP între 1 și 65535."
 
 #: eden_services.cpp
 msgid "Europe"
@@ -761,6 +797,10 @@ msgstr "Germană"
 msgid "GETTING STARTED"
 msgstr "PRIMII PAȘI"
 
+#: pe/ui/multiplayer.cpp
+msgid "Go offline"
+msgstr "Treci offline"
+
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
 msgstr "Motorul de randare și scalarea jocurilor pe televizor."
@@ -809,6 +849,10 @@ msgstr "Importat. S-a făcut o copie de rezervă a salvării înlocuite."
 msgid "IN USE"
 msgstr "ÎN UZ"
 
+#: pe/ui/multiplayer.cpp
+msgid "Incompatible"
+msgstr "Incompatibilă"
+
 #: pe/ui/save_sync.cpp
 msgid "It goes to the server."
 msgstr "Ajung pe server."
@@ -836,6 +880,22 @@ msgstr "Japonia"
 #: settings_store.h
 msgid "Japanese"
 msgstr "Japoneză"
+
+#: pe/ui/multiplayer.cpp
+msgid "Join a room before launching a game, then choose Local Wireless in the game."
+msgstr "Intră într-o cameră înainte de a porni un joc, apoi alege jocul wireless local în joc."
+
+#: pe/ui/launcher.cpp
+msgid "Join a room successfully or leave it before starting a game."
+msgstr "Intră într-o cameră sau părăsește-o înainte de a porni un joc."
+
+#: pe/ui/settings.cpp
+msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
+msgstr "Intră într-o cameră Eden, apoi alege jocul wireless local într-un joc compatibil. Toți au nevoie de o versiune compatibilă a jocului."
+
+#: pe/ui/multiplayer.cpp
+msgid "Join room"
+msgstr "Intră în cameră"
 
 #. keys, firmware and roms are folder names (unchanged). TRIANGLE is the controller's triangle button, in capitals.
 #: pe/ui/browse.cpp
@@ -901,6 +961,26 @@ msgstr "Ultimul joc deschis"
 msgid "Launch game"
 msgstr "Pornire joc"
 
+#: pe/ui/multiplayer.cpp
+msgid "Leave / cancel"
+msgstr "Părăsește / anulează"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave room"
+msgstr "Părăsește camera"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave the room before changing connection details."
+msgstr "Părăsește camera înainte de a schimba datele conexiunii."
+
+#: pe/ui/profiles.cpp
+msgid "Leaving the room. Select the profile again when disconnected."
+msgstr "Se părăsește camera. Selectează din nou profilul după deconectare."
+
+#: pe/ui/multiplayer.cpp
+msgid "Leaving..."
+msgstr "Se părăsește camera..."
+
 #: pe/ui/game_options.cpp
 msgid "Left Joy-Con"
 msgstr "Joy-Con stâng"
@@ -929,6 +1009,10 @@ msgstr "BIBLIOTECĂ"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Linked"
 msgstr "Asociat"
+
+#: pe/ui/multiplayer.cpp
+msgid "Loading public rooms..."
+msgstr "Se încarcă camerele publice..."
 
 #: pe/ui/settings.cpp
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
@@ -968,6 +1052,14 @@ msgstr "MODURI"
 #: pe/ui/library.cpp
 msgid "Mods"
 msgstr "Moduri"
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Multiplayer"
+msgstr "Multiplayer"
+
+#: pe/ui/settings.cpp
+msgid "MULTIPLAYER"
+msgstr "MULTIPLAYER"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Mute"
@@ -1009,6 +1101,14 @@ msgstr "După repornire: {0}"
 msgid "NEXT START"
 msgstr "DUPĂ REPORNIRE"
 
+#: pe/ui/multiplayer.cpp
+msgid "Nickname"
+msgstr "Poreclă"
+
+#: pe/ui/multiplayer.cpp
+msgid "Nickname: {0}"
+msgstr "Poreclă: {0}"
+
 #: pe/ui/library.cpp
 msgid "No cover art"
 msgstr "Fără copertă"
@@ -1042,6 +1142,10 @@ msgstr "Niciun mod"
 #: pe/ui/library.cpp
 msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
 msgstr "Acest joc nu are încă moduri. Copiază folderul fiecărui mod în {0}, lângă roms/."
+
+#: pe/ui/multiplayer.cpp
+msgid "No public rooms are available."
+msgstr "Nu există camere publice disponibile."
 
 #: pe/ui/library.cpp
 msgid "No ROM files found."
@@ -1193,6 +1297,10 @@ msgstr "Asociat. Salvările profilului se sincronizează de acum înainte."
 msgid "Parent folder"
 msgstr "Folder părinte"
 
+#: pe/ui/multiplayer.cpp
+msgid "Password"
+msgstr "Parolă"
+
 #. What a mod is made of: a change to the game's program (not a game update).
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Patch"
@@ -1278,6 +1386,14 @@ msgstr "Apasă din nou pentru a șterge de pe consolă jocul, actualizările și
 msgid "Press again to replace this game's save. The current one is backed up."
 msgstr "Apasă din nou pentru a înlocui salvarea acestui joc. Se face o copie de rezervă a celei actuale."
 
+#: pe/ui/multiplayer.cpp
+msgid "Private room"
+msgstr "Cameră privată"
+
+#: pe/ui/settings.cpp
+msgid "PRIVATE ROOM"
+msgstr "CAMERĂ PRIVATĂ"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1349,6 +1465,14 @@ msgstr "EDIȚIA PS5"
 msgid "PS5 EDITION  /  {0}"
 msgstr "EDIȚIA PS5  /  {0}"
 
+#: pe/ui/multiplayer.cpp
+msgid "Public rooms"
+msgstr "Camere publice"
+
+#: pe/ui/settings.cpp
+msgid "PUBLIC ROOMS"
+msgstr "CAMERE PUBLICE"
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "În așteptare"
@@ -1394,6 +1518,10 @@ msgstr "REDUCERE MIȘCARE"
 #: pe/ui/settings.cpp
 msgid "Reduce motion"
 msgstr "Reducere mișcare"
+
+#: pe/ui/multiplayer.cpp
+msgid "Refresh"
+msgstr "Actualizează"
 
 #. Setting: how many times a second the TV picture is refreshed while a game runs (60 or 120 Hz).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -1448,6 +1576,18 @@ msgstr "Apăsare stick drept"
 #: eden_services.cpp, pe/ui/launcher.cpp
 msgid "ROM missing from the game files folder"
 msgstr "ROM-ul lipsește din folderul fișierelor de joc"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room address"
+msgstr "Adresa camerei"
+
+#: pe/ui/settings.cpp
+msgid "Room address and UDP port"
+msgstr "Adresa camerei și portul UDP"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room {0} of {1}"
+msgstr "Camera {0} din {1}"
 
 #: settings_store.h
 msgid "Russian"
@@ -1619,6 +1759,10 @@ msgstr "Mai multe surse au acest joc. De la care să vină?"
 msgid "Show or hide the FPS overlay"
 msgstr "Afișează sau ascunde contorul FPS"
 
+#: pe/ui/multiplayer.cpp
+msgid "Showing the previous list."
+msgstr "Se afișează lista anterioară."
+
 #: pe/ui/pairing.cpp
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "Autentifică-te pe {0} ca utilizatorul căruia îi aparțin salvările acestui profil."
@@ -1774,6 +1918,10 @@ msgstr "Jocul pornește când salvările sunt sincronizate."
 msgid "The game starts when the download is done."
 msgstr "Jocul pornește când descărcarea este gata."
 
+#: pe/ui/multiplayer.cpp
+msgid "The keyboard could not be opened."
+msgstr "Tastatura nu a putut fi deschisă."
+
 #: pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "Limba folosită de jocuri, atunci când o oferă."
@@ -1840,6 +1988,10 @@ msgstr "Acest joc nu are încă o salvare de exportat."
 msgid "This game's settings cannot be saved (no title ID)."
 msgstr "Setările acestui joc nu pot fi salvate (fără ID de titlu)."
 
+#: pe/ui/multiplayer.cpp
+msgid "This room uses a different protocol version."
+msgstr "Această cameră folosește o altă versiune de protocol."
+
 #. ryujinx/, save-import/ and roms/ are folder names (unchanged); {0} is the game's ID.
 #: eden_services.cpp
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
@@ -1867,6 +2019,10 @@ msgstr "Se încearcă din nou."
 #: pe/ui/library.cpp
 msgid "Turn on or off"
 msgstr "Activează sau dezactivează"
+
+#: pe/ui/multiplayer.cpp
+msgid "UDP port"
+msgstr "Port UDP"
 
 #: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Unavailable"
@@ -2143,6 +2299,10 @@ msgstr "{0} din {1} profiluri"
 #: pe/ui/save_sync.cpp
 msgid "{0} on {1}"
 msgstr "{0} pe {1}"
+
+#: pe/ui/multiplayer.cpp
+msgid "{0} public rooms"
+msgstr "{0} camere publice"
 
 #: pe/ui/remote.cpp, pe/ui/settings.cpp
 msgid "{0} sources"

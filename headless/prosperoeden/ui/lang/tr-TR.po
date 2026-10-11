@@ -183,6 +183,14 @@ msgstr "Oyunlara göz at"
 msgid "Browse settings"
 msgstr "Ayarlara göz at"
 
+#: pe/ui/settings.cpp
+msgid "Browse the public directory"
+msgstr "Herkese açık listeye göz at"
+
+#: pe/ui/multiplayer.cpp
+msgid "Browse the public directory and choose a room."
+msgstr "Herkese açık listeye göz atın ve bir oda seçin."
+
 #. Which controller button presses each of the game's buttons.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
@@ -294,6 +302,26 @@ msgstr "ÖNCEDEN DERLE"
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "Oyunun daha önce kullandığı kodu başlarken derler, böylece yeni alanlar daha az takılır."
 
+#: pe/ui/multiplayer.cpp
+msgid "Connect using a room address, port and password."
+msgstr "Oda adresi, bağlantı noktası ve parola ile bağlanın."
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Connected"
+msgstr "Bağlandı"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connecting..."
+msgstr "Bağlanılıyor..."
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection failed"
+msgstr "Bağlantı başarısız"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection problem"
+msgstr "Bağlantı sorunu"
+
 #: pe/ui/library.cpp
 msgid "Console mode"
 msgstr "Konsol modu"
@@ -357,6 +385,10 @@ msgstr "Klasör kaydedilemedi. Lütfen tekrar deneyin."
 #: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
 msgid "Could not save. Please try again."
 msgstr "Kaydedilemedi. Lütfen tekrar deneyin."
+
+#: pe/ui/multiplayer.cpp
+msgid "Could not start the connection or save its settings."
+msgstr "Bağlantı başlatılamadı veya ayarları kaydedilemedi."
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -554,6 +586,10 @@ msgstr "İngilizce (İngiltere)"
 #: host/fake_services.cpp, settings_store.h
 msgid "English (US)"
 msgstr "İngilizce (ABD)"
+
+#: pe/ui/multiplayer.cpp
+msgid "Enter a UDP port between 1 and 65535."
+msgstr "1 ile 65535 arasında bir UDP bağlantı noktası girin."
 
 #: eden_services.cpp
 msgid "Europe"
@@ -761,6 +797,10 @@ msgstr "Almanca"
 msgid "GETTING STARTED"
 msgstr "BAŞLARKEN"
 
+#: pe/ui/multiplayer.cpp
+msgid "Go offline"
+msgstr "Çevrimdışı ol"
+
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
 msgstr "Grafik işleyici ve oyunların TV'nize nasıl ölçeklendiği."
@@ -809,6 +849,10 @@ msgstr "İçe aktarıldı. Yerini aldığı kayıt yedeklendi."
 msgid "IN USE"
 msgstr "KULLANIMDA"
 
+#: pe/ui/multiplayer.cpp
+msgid "Incompatible"
+msgstr "Uyumsuz"
+
 #: pe/ui/save_sync.cpp
 msgid "It goes to the server."
 msgstr "Sunucuya gönderilir."
@@ -836,6 +880,22 @@ msgstr "Japonya"
 #: settings_store.h
 msgid "Japanese"
 msgstr "Japonca"
+
+#: pe/ui/multiplayer.cpp
+msgid "Join a room before launching a game, then choose Local Wireless in the game."
+msgstr "Oyun başlatmadan önce bir odaya katılın, ardından oyunda yerel kablosuz oyunu seçin."
+
+#: pe/ui/launcher.cpp
+msgid "Join a room successfully or leave it before starting a game."
+msgstr "Oyun başlatmadan önce bir odaya katılın veya odadan ayrılın."
+
+#: pe/ui/settings.cpp
+msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
+msgstr "Bir Eden odasına katılın, ardından desteklenen bir oyunda yerel kablosuz oyunu seçin. Herkesin uyumlu bir oyun sürümüne ihtiyacı var."
+
+#: pe/ui/multiplayer.cpp
+msgid "Join room"
+msgstr "Odaya katıl"
 
 #. keys, firmware and roms are folder names (unchanged). TRIANGLE is the controller's triangle button, in capitals.
 #: pe/ui/browse.cpp
@@ -901,6 +961,26 @@ msgstr "Son açılan oyun"
 msgid "Launch game"
 msgstr "Oyunu başlat"
 
+#: pe/ui/multiplayer.cpp
+msgid "Leave / cancel"
+msgstr "Ayrıl / iptal"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave room"
+msgstr "Odadan ayrıl"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave the room before changing connection details."
+msgstr "Bağlantı bilgilerini değiştirmeden önce odadan ayrılın."
+
+#: pe/ui/profiles.cpp
+msgid "Leaving the room. Select the profile again when disconnected."
+msgstr "Odadan ayrılınıyor. Bağlantı kesilince profili yeniden seçin."
+
+#: pe/ui/multiplayer.cpp
+msgid "Leaving..."
+msgstr "Ayrılınıyor..."
+
 #: pe/ui/game_options.cpp
 msgid "Left Joy-Con"
 msgstr "Sol Joy-Con"
@@ -929,6 +1009,10 @@ msgstr "KÜTÜPHANE"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Linked"
 msgstr "Bağlı"
+
+#: pe/ui/multiplayer.cpp
+msgid "Loading public rooms..."
+msgstr "Herkese açık odalar yükleniyor..."
 
 #: pe/ui/settings.cpp
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
@@ -968,6 +1052,14 @@ msgstr "MODLAR"
 #: pe/ui/library.cpp
 msgid "Mods"
 msgstr "Modlar"
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Multiplayer"
+msgstr "Çok oyunculu"
+
+#: pe/ui/settings.cpp
+msgid "MULTIPLAYER"
+msgstr "ÇOK OYUNCULU"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Mute"
@@ -1009,6 +1101,14 @@ msgstr "Sonraki açılış: {0}"
 msgid "NEXT START"
 msgstr "SONRAKİ AÇILIŞ"
 
+#: pe/ui/multiplayer.cpp
+msgid "Nickname"
+msgstr "Takma ad"
+
+#: pe/ui/multiplayer.cpp
+msgid "Nickname: {0}"
+msgstr "Takma ad: {0}"
+
 #: pe/ui/library.cpp
 msgid "No cover art"
 msgstr "Kapak görseli yok"
@@ -1042,6 +1142,10 @@ msgstr "Mod yok"
 #: pe/ui/library.cpp
 msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
 msgstr "Bu oyun için henüz mod yok. Her modun klasörünü roms/ klasörünün yanındaki {0} konumuna kopyalayın."
+
+#: pe/ui/multiplayer.cpp
+msgid "No public rooms are available."
+msgstr "Kullanılabilir herkese açık oda yok."
 
 #: pe/ui/library.cpp
 msgid "No ROM files found."
@@ -1193,6 +1297,10 @@ msgstr "Eşleştirildi. Profilin kaydedilen verileri bundan sonra eşitlenir."
 msgid "Parent folder"
 msgstr "Üst klasör"
 
+#: pe/ui/multiplayer.cpp
+msgid "Password"
+msgstr "Parola"
+
 #. What a mod is made of: a change to the game's program (not a game update).
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Patch"
@@ -1278,6 +1386,14 @@ msgstr "Oyunu, güncellemelerini ve DLC'lerini konsoldan silmek için tekrar bas
 msgid "Press again to replace this game's save. The current one is backed up."
 msgstr "Bu oyunun kaydının üzerine yazmak için tekrar basın. Mevcut kayıt yedeklenir."
 
+#: pe/ui/multiplayer.cpp
+msgid "Private room"
+msgstr "Özel oda"
+
+#: pe/ui/settings.cpp
+msgid "PRIVATE ROOM"
+msgstr "ÖZEL ODA"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1349,6 +1465,14 @@ msgstr "PS5 SÜRÜMÜ"
 msgid "PS5 EDITION  /  {0}"
 msgstr "PS5 SÜRÜMÜ  /  {0}"
 
+#: pe/ui/multiplayer.cpp
+msgid "Public rooms"
+msgstr "Herkese açık odalar"
+
+#: pe/ui/settings.cpp
+msgid "PUBLIC ROOMS"
+msgstr "HERKESE AÇIK ODALAR"
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "Sırada"
@@ -1394,6 +1518,10 @@ msgstr "HAREKETİ AZALTMA"
 #: pe/ui/settings.cpp
 msgid "Reduce motion"
 msgstr "Hareketi azaltma"
+
+#: pe/ui/multiplayer.cpp
+msgid "Refresh"
+msgstr "Yenile"
 
 #. Setting: how many times a second the TV picture is refreshed while a game runs (60 or 120 Hz).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -1448,6 +1576,18 @@ msgstr "Sağ çubuğa basma"
 #: eden_services.cpp, pe/ui/launcher.cpp
 msgid "ROM missing from the game files folder"
 msgstr "ROM, oyun dosyaları klasöründe yok"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room address"
+msgstr "Oda adresi"
+
+#: pe/ui/settings.cpp
+msgid "Room address and UDP port"
+msgstr "Oda adresi ve UDP bağlantı noktası"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room {0} of {1}"
+msgstr "Oda {0} / {1}"
 
 #: settings_store.h
 msgid "Russian"
@@ -1619,6 +1759,10 @@ msgstr "Bu oyun birden fazla kaynakta var. Hangisinden gelsin?"
 msgid "Show or hide the FPS overlay"
 msgstr "FPS sayacını gösterir veya gizler"
 
+#: pe/ui/multiplayer.cpp
+msgid "Showing the previous list."
+msgstr "Önceki liste gösteriliyor."
+
 #: pe/ui/pairing.cpp
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "{0} üzerinde, bu profilin kaydedilen verilerinin ait olduğu kullanıcı olarak oturum açın."
@@ -1774,6 +1918,10 @@ msgstr "Oyun, kaydedilen verileri eşitlenince başlar."
 msgid "The game starts when the download is done."
 msgstr "Oyun, indirme bitince başlar."
 
+#: pe/ui/multiplayer.cpp
+msgid "The keyboard could not be opened."
+msgstr "Klavye açılamadı."
+
 #: pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "Oyunlar destekliyorsa kullanılacak dil."
@@ -1840,6 +1988,10 @@ msgstr "Bu oyunun dışa aktarılacak bir kaydı henüz yok."
 msgid "This game's settings cannot be saved (no title ID)."
 msgstr "Bu oyunun ayarları kaydedilemiyor (oyun kimliği yok)."
 
+#: pe/ui/multiplayer.cpp
+msgid "This room uses a different protocol version."
+msgstr "Bu oda farklı bir protokol sürümü kullanıyor."
+
 #. ryujinx/, save-import/ and roms/ are folder names (unchanged); {0} is the game's ID.
 #: eden_services.cpp
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
@@ -1867,6 +2019,10 @@ msgstr "Yeniden deneniyor."
 #: pe/ui/library.cpp
 msgid "Turn on or off"
 msgstr "Aç veya kapat"
+
+#: pe/ui/multiplayer.cpp
+msgid "UDP port"
+msgstr "UDP bağlantı noktası"
 
 #: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Unavailable"
@@ -2143,6 +2299,10 @@ msgstr "{0}/{1} profil"
 #: pe/ui/save_sync.cpp
 msgid "{0} on {1}"
 msgstr "{1} üzerinde {0}"
+
+#: pe/ui/multiplayer.cpp
+msgid "{0} public rooms"
+msgstr "{0} herkese açık oda"
 
 #: pe/ui/remote.cpp, pe/ui/settings.cpp
 msgid "{0} sources"

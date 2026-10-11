@@ -183,6 +183,14 @@ msgstr "Перегляд ігор"
 msgid "Browse settings"
 msgstr "Перегляд налаштувань"
 
+#: pe/ui/settings.cpp
+msgid "Browse the public directory"
+msgstr "Переглянути публічний список"
+
+#: pe/ui/multiplayer.cpp
+msgid "Browse the public directory and choose a room."
+msgstr "Перегляньте публічний список і виберіть кімнату."
+
 #. Which controller button presses each of the game's buttons.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
@@ -294,6 +302,26 @@ msgstr "КОМПІЛЯЦІЯ НАПЕРЕД"
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "Під час запуску компілює код, який гра вже використовувала, щоб нові області менше пригальмовували."
 
+#: pe/ui/multiplayer.cpp
+msgid "Connect using a room address, port and password."
+msgstr "Підключіться за адресою кімнати, портом і паролем."
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Connected"
+msgstr "Підключено"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connecting..."
+msgstr "Підключення..."
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection failed"
+msgstr "Не вдалося підключитися"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection problem"
+msgstr "Проблема з підключенням"
+
 #: pe/ui/library.cpp
 msgid "Console mode"
 msgstr "Режим консолі"
@@ -357,6 +385,10 @@ msgstr "Не вдалося зберегти папку. Повторіть сп
 #: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
 msgid "Could not save. Please try again."
 msgstr "Не вдалося зберегти. Повторіть спробу."
+
+#: pe/ui/multiplayer.cpp
+msgid "Could not start the connection or save its settings."
+msgstr "Не вдалося почати підключення або зберегти його налаштування."
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -554,6 +586,10 @@ msgstr "Англійська (Британія)"
 #: host/fake_services.cpp, settings_store.h
 msgid "English (US)"
 msgstr "Англійська (США)"
+
+#: pe/ui/multiplayer.cpp
+msgid "Enter a UDP port between 1 and 65535."
+msgstr "Введіть порт UDP від 1 до 65535."
 
 #: eden_services.cpp
 msgid "Europe"
@@ -761,6 +797,10 @@ msgstr "Німецька"
 msgid "GETTING STARTED"
 msgstr "ПОЧАТОК РОБОТИ"
 
+#: pe/ui/multiplayer.cpp
+msgid "Go offline"
+msgstr "Від'єднатися"
+
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
 msgstr "Рендерер і масштабування ігор під ваш телевізор."
@@ -809,6 +849,10 @@ msgstr "Імпортовано. Для попереднього збережен
 msgid "IN USE"
 msgstr "ПОТОЧНА"
 
+#: pe/ui/multiplayer.cpp
+msgid "Incompatible"
+msgstr "Несумісна"
+
 #: pe/ui/save_sync.cpp
 msgid "It goes to the server."
 msgstr "Їх буде надіслано на сервер."
@@ -836,6 +880,22 @@ msgstr "Японія"
 #: settings_store.h
 msgid "Japanese"
 msgstr "Японська"
+
+#: pe/ui/multiplayer.cpp
+msgid "Join a room before launching a game, then choose Local Wireless in the game."
+msgstr "Увійдіть до кімнати перед запуском гри, потім виберіть у грі локальну бездротову гру."
+
+#: pe/ui/launcher.cpp
+msgid "Join a room successfully or leave it before starting a game."
+msgstr "Увійдіть до кімнати або вийдіть із неї перед запуском гри."
+
+#: pe/ui/settings.cpp
+msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
+msgstr "Увійдіть до кімнати Eden, потім виберіть локальну бездротову гру в підтримуваній грі. Усім потрібна сумісна версія гри."
+
+#: pe/ui/multiplayer.cpp
+msgid "Join room"
+msgstr "Увійти до кімнати"
 
 #. keys, firmware and roms are folder names (unchanged). TRIANGLE is the controller's triangle button, in capitals.
 #: pe/ui/browse.cpp
@@ -901,6 +961,26 @@ msgstr "Остання запущена гра"
 msgid "Launch game"
 msgstr "Запустити гру"
 
+#: pe/ui/multiplayer.cpp
+msgid "Leave / cancel"
+msgstr "Вийти / скасувати"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave room"
+msgstr "Вийти з кімнати"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave the room before changing connection details."
+msgstr "Вийдіть із кімнати, перш ніж змінювати дані підключення."
+
+#: pe/ui/profiles.cpp
+msgid "Leaving the room. Select the profile again when disconnected."
+msgstr "Вихід із кімнати. Після від'єднання виберіть профіль знову."
+
+#: pe/ui/multiplayer.cpp
+msgid "Leaving..."
+msgstr "Вихід..."
+
 #: pe/ui/game_options.cpp
 msgid "Left Joy-Con"
 msgstr "Лівий Joy-Con"
@@ -929,6 +1009,10 @@ msgstr "БІБЛІОТЕКА"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Linked"
 msgstr "Прив'язано"
+
+#: pe/ui/multiplayer.cpp
+msgid "Loading public rooms..."
+msgstr "Завантаження публічних кімнат..."
 
 #: pe/ui/settings.cpp
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
@@ -968,6 +1052,14 @@ msgstr "МОДИ"
 #: pe/ui/library.cpp
 msgid "Mods"
 msgstr "Моди"
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Multiplayer"
+msgstr "Мережева гра"
+
+#: pe/ui/settings.cpp
+msgid "MULTIPLAYER"
+msgstr "МЕРЕЖЕВА ГРА"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Mute"
@@ -1009,6 +1101,14 @@ msgstr "Після перезапуску: {0}"
 msgid "NEXT START"
 msgstr "ПІСЛЯ ПЕРЕЗАПУСКУ"
 
+#: pe/ui/multiplayer.cpp
+msgid "Nickname"
+msgstr "Псевдонім"
+
+#: pe/ui/multiplayer.cpp
+msgid "Nickname: {0}"
+msgstr "Псевдонім: {0}"
+
 #: pe/ui/library.cpp
 msgid "No cover art"
 msgstr "Немає обкладинки"
@@ -1042,6 +1142,10 @@ msgstr "Немає модів"
 #: pe/ui/library.cpp
 msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
 msgstr "Для цієї гри ще немає модів. Скопіюйте папку кожного мода до {0}, поруч із roms/."
+
+#: pe/ui/multiplayer.cpp
+msgid "No public rooms are available."
+msgstr "Немає доступних публічних кімнат."
 
 #: pe/ui/library.cpp
 msgid "No ROM files found."
@@ -1193,6 +1297,10 @@ msgstr "Сполучено. Збережені дані профілю відт�
 msgid "Parent folder"
 msgstr "Батьківська папка"
 
+#: pe/ui/multiplayer.cpp
+msgid "Password"
+msgstr "Пароль"
+
 #. What a mod is made of: a change to the game's program (not a game update).
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Patch"
@@ -1278,6 +1386,14 @@ msgstr "Натисніть ще раз, щоб видалити з консол�
 msgid "Press again to replace this game's save. The current one is backed up."
 msgstr "Натисніть ще раз, щоб замінити збереження цієї гри. Для поточного буде створено резервну копію."
 
+#: pe/ui/multiplayer.cpp
+msgid "Private room"
+msgstr "Приватна кімната"
+
+#: pe/ui/settings.cpp
+msgid "PRIVATE ROOM"
+msgstr "ПРИВАТНА КІМНАТА"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1349,6 +1465,14 @@ msgstr "ВЕРСІЯ ДЛЯ PS5"
 msgid "PS5 EDITION  /  {0}"
 msgstr "ВЕРСІЯ ДЛЯ PS5  /  {0}"
 
+#: pe/ui/multiplayer.cpp
+msgid "Public rooms"
+msgstr "Публічні кімнати"
+
+#: pe/ui/settings.cpp
+msgid "PUBLIC ROOMS"
+msgstr "ПУБЛІЧНІ КІМНАТИ"
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "У черзі"
@@ -1394,6 +1518,10 @@ msgstr "ЗМЕНШЕННЯ РУХУ"
 #: pe/ui/settings.cpp
 msgid "Reduce motion"
 msgstr "Зменшення руху"
+
+#: pe/ui/multiplayer.cpp
+msgid "Refresh"
+msgstr "Оновити"
 
 #. Setting: how many times a second the TV picture is refreshed while a game runs (60 or 120 Hz).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -1448,6 +1576,18 @@ msgstr "Натискання правого стика"
 #: eden_services.cpp, pe/ui/launcher.cpp
 msgid "ROM missing from the game files folder"
 msgstr "ROM не знайдено в папці з файлами ігор"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room address"
+msgstr "Адреса кімнати"
+
+#: pe/ui/settings.cpp
+msgid "Room address and UDP port"
+msgstr "Адреса кімнати та порт UDP"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room {0} of {1}"
+msgstr "Кімната {0} з {1}"
 
 #: settings_store.h
 msgid "Russian"
@@ -1619,6 +1759,10 @@ msgstr "Ця гра є в кількох джерелах. З якого її в
 msgid "Show or hide the FPS overlay"
 msgstr "Показати або приховати лічильник FPS"
 
+#: pe/ui/multiplayer.cpp
+msgid "Showing the previous list."
+msgstr "Показано попередній список."
+
 #: pe/ui/pairing.cpp
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "Увійдіть на {0} як користувач, якому належать збережені дані цього профілю."
@@ -1774,6 +1918,10 @@ msgstr "Гра запуститься, коли збережені дані бу
 msgid "The game starts when the download is done."
 msgstr "Гра запуститься, коли завантаження завершиться."
 
+#: pe/ui/multiplayer.cpp
+msgid "The keyboard could not be opened."
+msgstr "Не вдалося відкрити клавіатуру."
+
 #: pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "Мова ігор, якщо гра її підтримує."
@@ -1840,6 +1988,10 @@ msgstr "У цієї гри ще немає збереження для експ�
 msgid "This game's settings cannot be saved (no title ID)."
 msgstr "Налаштування цієї гри не можна зберегти (немає ID гри)."
 
+#: pe/ui/multiplayer.cpp
+msgid "This room uses a different protocol version."
+msgstr "Ця кімната використовує іншу версію протоколу."
+
 #. ryujinx/, save-import/ and roms/ are folder names (unchanged); {0} is the game's ID.
 #: eden_services.cpp
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
@@ -1867,6 +2019,10 @@ msgstr "Повторна спроба."
 #: pe/ui/library.cpp
 msgid "Turn on or off"
 msgstr "Увімкнути або вимкнути"
+
+#: pe/ui/multiplayer.cpp
+msgid "UDP port"
+msgstr "Порт UDP"
 
 #: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Unavailable"
@@ -2143,6 +2299,10 @@ msgstr "Профілів: {0} із {1}"
 #: pe/ui/save_sync.cpp
 msgid "{0} on {1}"
 msgstr "{0} на {1}"
+
+#: pe/ui/multiplayer.cpp
+msgid "{0} public rooms"
+msgstr "Публічних кімнат: {0}"
 
 #: pe/ui/remote.cpp, pe/ui/settings.cpp
 msgid "{0} sources"

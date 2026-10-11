@@ -183,6 +183,14 @@ msgstr "게임 둘러보기"
 msgid "Browse settings"
 msgstr "설정 둘러보기"
 
+#: pe/ui/settings.cpp
+msgid "Browse the public directory"
+msgstr "공개 목록 둘러보기"
+
+#: pe/ui/multiplayer.cpp
+msgid "Browse the public directory and choose a room."
+msgstr "공개 목록을 둘러보고 방을 선택하세요."
+
 #. Which controller button presses each of the game's buttons.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
@@ -294,6 +302,26 @@ msgstr "미리 컴파일"
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "게임이 이전에 사용한 코드를 시작할 때 컴파일하여 새 지역에서 끊김을 줄입니다."
 
+#: pe/ui/multiplayer.cpp
+msgid "Connect using a room address, port and password."
+msgstr "방 주소, 포트, 비밀번호로 연결합니다."
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Connected"
+msgstr "연결됨"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connecting..."
+msgstr "연결하는 중..."
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection failed"
+msgstr "연결 실패"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection problem"
+msgstr "연결 문제"
+
 #: pe/ui/library.cpp
 msgid "Console mode"
 msgstr "본체 모드"
@@ -357,6 +385,10 @@ msgstr "폴더를 저장하지 못했습니다. 다시 시도해 주세요."
 #: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
 msgid "Could not save. Please try again."
 msgstr "저장하지 못했습니다. 다시 시도해 주세요."
+
+#: pe/ui/multiplayer.cpp
+msgid "Could not start the connection or save its settings."
+msgstr "연결을 시작하거나 설정을 저장할 수 없습니다."
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -554,6 +586,10 @@ msgstr "영어(영국)"
 #: host/fake_services.cpp, settings_store.h
 msgid "English (US)"
 msgstr "영어(미국)"
+
+#: pe/ui/multiplayer.cpp
+msgid "Enter a UDP port between 1 and 65535."
+msgstr "1에서 65535 사이의 UDP 포트를 입력하세요."
 
 #: eden_services.cpp
 msgid "Europe"
@@ -761,6 +797,10 @@ msgstr "독일어"
 msgid "GETTING STARTED"
 msgstr "시작하기"
 
+#: pe/ui/multiplayer.cpp
+msgid "Go offline"
+msgstr "오프라인으로 전환"
+
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
 msgstr "그래픽 백엔드와 TV에 맞춘 화면 확대 방식."
@@ -809,6 +849,10 @@ msgstr "가져왔습니다. 대체된 세이브 데이터는 백업했습니다.
 msgid "IN USE"
 msgstr "사용 중"
 
+#: pe/ui/multiplayer.cpp
+msgid "Incompatible"
+msgstr "호환되지 않음"
+
 #: pe/ui/save_sync.cpp
 msgid "It goes to the server."
 msgstr "서버로 보냅니다."
@@ -836,6 +880,22 @@ msgstr "일본"
 #: settings_store.h
 msgid "Japanese"
 msgstr "일본어"
+
+#: pe/ui/multiplayer.cpp
+msgid "Join a room before launching a game, then choose Local Wireless in the game."
+msgstr "게임을 실행하기 전에 방에 참가한 다음 게임에서 로컬 통신을 선택하세요."
+
+#: pe/ui/launcher.cpp
+msgid "Join a room successfully or leave it before starting a game."
+msgstr "게임을 시작하기 전에 방에 참가하거나 방에서 나가세요."
+
+#: pe/ui/settings.cpp
+msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
+msgstr "Eden 방에 참가한 다음 지원되는 게임에서 로컬 통신을 선택하세요. 모두 호환되는 게임 버전이 필요합니다."
+
+#: pe/ui/multiplayer.cpp
+msgid "Join room"
+msgstr "방 참가"
 
 #. keys, firmware and roms are folder names (unchanged). TRIANGLE is the controller's triangle button, in capitals.
 #: pe/ui/browse.cpp
@@ -901,6 +961,26 @@ msgstr "마지막으로 연 게임"
 msgid "Launch game"
 msgstr "게임 실행"
 
+#: pe/ui/multiplayer.cpp
+msgid "Leave / cancel"
+msgstr "나가기 / 취소"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave room"
+msgstr "방 나가기"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave the room before changing connection details."
+msgstr "연결 정보를 변경하기 전에 방에서 나가세요."
+
+#: pe/ui/profiles.cpp
+msgid "Leaving the room. Select the profile again when disconnected."
+msgstr "방에서 나가는 중입니다. 연결이 끊어지면 프로필을 다시 선택하세요."
+
+#: pe/ui/multiplayer.cpp
+msgid "Leaving..."
+msgstr "나가는 중..."
+
 #: pe/ui/game_options.cpp
 msgid "Left Joy-Con"
 msgstr "Joy-Con (L)"
@@ -929,6 +1009,10 @@ msgstr "라이브러리"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Linked"
 msgstr "연결됨"
+
+#: pe/ui/multiplayer.cpp
+msgid "Loading public rooms..."
+msgstr "공개 방을 불러오는 중..."
 
 #: pe/ui/settings.cpp
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
@@ -968,6 +1052,14 @@ msgstr "모드"
 #: pe/ui/library.cpp
 msgid "Mods"
 msgstr "모드"
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Multiplayer"
+msgstr "멀티플레이"
+
+#: pe/ui/settings.cpp
+msgid "MULTIPLAYER"
+msgstr "멀티플레이"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Mute"
@@ -1009,6 +1101,14 @@ msgstr "다음 실행: {0}"
 msgid "NEXT START"
 msgstr "다음 실행"
 
+#: pe/ui/multiplayer.cpp
+msgid "Nickname"
+msgstr "닉네임"
+
+#: pe/ui/multiplayer.cpp
+msgid "Nickname: {0}"
+msgstr "닉네임: {0}"
+
 #: pe/ui/library.cpp
 msgid "No cover art"
 msgstr "커버 이미지 없음"
@@ -1042,6 +1142,10 @@ msgstr "모드 없음"
 #: pe/ui/library.cpp
 msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
 msgstr "이 게임에는 아직 모드가 없습니다. 각 모드의 폴더를 roms/ 옆의 {0}에 복사하세요."
+
+#: pe/ui/multiplayer.cpp
+msgid "No public rooms are available."
+msgstr "이용 가능한 공개 방이 없습니다."
 
 #: pe/ui/library.cpp
 msgid "No ROM files found."
@@ -1193,6 +1297,10 @@ msgstr "페어링했습니다. 이제부터 프로필의 세이브 데이터가 
 msgid "Parent folder"
 msgstr "상위 폴더"
 
+#: pe/ui/multiplayer.cpp
+msgid "Password"
+msgstr "비밀번호"
+
 #. What a mod is made of: a change to the game's program (not a game update).
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Patch"
@@ -1278,6 +1386,14 @@ msgstr "다시 누르면 게임과 업데이트, DLC를 본체에서 삭제합�
 msgid "Press again to replace this game's save. The current one is backed up."
 msgstr "다시 누르면 이 게임의 세이브 데이터를 교체합니다. 현재 데이터는 백업됩니다."
 
+#: pe/ui/multiplayer.cpp
+msgid "Private room"
+msgstr "비공개 방"
+
+#: pe/ui/settings.cpp
+msgid "PRIVATE ROOM"
+msgstr "비공개 방"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro 컨트롤러"
@@ -1349,6 +1465,14 @@ msgstr "PS5 에디션"
 msgid "PS5 EDITION  /  {0}"
 msgstr "PS5 에디션  /  {0}"
 
+#: pe/ui/multiplayer.cpp
+msgid "Public rooms"
+msgstr "공개 방"
+
+#: pe/ui/settings.cpp
+msgid "PUBLIC ROOMS"
+msgstr "공개 방"
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "대기 중"
@@ -1394,6 +1518,10 @@ msgstr "움직임 줄이기"
 #: pe/ui/settings.cpp
 msgid "Reduce motion"
 msgstr "움직임 줄이기"
+
+#: pe/ui/multiplayer.cpp
+msgid "Refresh"
+msgstr "새로 고침"
 
 #. Setting: how many times a second the TV picture is refreshed while a game runs (60 or 120 Hz).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -1448,6 +1576,18 @@ msgstr "오른쪽 스틱 누르기"
 #: eden_services.cpp, pe/ui/launcher.cpp
 msgid "ROM missing from the game files folder"
 msgstr "게임 파일 폴더에 ROM이 없습니다"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room address"
+msgstr "방 주소"
+
+#: pe/ui/settings.cpp
+msgid "Room address and UDP port"
+msgstr "방 주소 및 UDP 포트"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room {0} of {1}"
+msgstr "방 {0} / {1}"
 
 #: settings_store.h
 msgid "Russian"
@@ -1619,6 +1759,10 @@ msgstr "이 게임이 여러 소스에 있습니다. 어디에서 받을까요?"
 msgid "Show or hide the FPS overlay"
 msgstr "FPS 표시 켜기/끄기"
 
+#: pe/ui/multiplayer.cpp
+msgid "Showing the previous list."
+msgstr "이전 목록을 표시합니다."
+
 #: pe/ui/pairing.cpp
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "이 프로필의 세이브 데이터가 속한 사용자로 {0}에 로그인하세요."
@@ -1774,6 +1918,10 @@ msgstr "세이브 데이터 동기화가 끝나면 게임이 시작됩니다."
 msgid "The game starts when the download is done."
 msgstr "다운로드가 끝나면 게임이 시작됩니다."
 
+#: pe/ui/multiplayer.cpp
+msgid "The keyboard could not be opened."
+msgstr "키보드를 열 수 없습니다."
+
 #: pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "게임이 지원할 때 사용할 언어."
@@ -1840,6 +1988,10 @@ msgstr "이 게임에는 아직 내보낼 세이브 데이터가 없습니다."
 msgid "This game's settings cannot be saved (no title ID)."
 msgstr "이 게임의 설정을 저장할 수 없습니다(타이틀 ID 없음)."
 
+#: pe/ui/multiplayer.cpp
+msgid "This room uses a different protocol version."
+msgstr "이 방은 다른 프로토콜 버전을 사용합니다."
+
 #. ryujinx/, save-import/ and roms/ are folder names (unchanged); {0} is the game's ID.
 #: eden_services.cpp
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
@@ -1867,6 +2019,10 @@ msgstr "다시 시도합니다."
 #: pe/ui/library.cpp
 msgid "Turn on or off"
 msgstr "켜기/끄기"
+
+#: pe/ui/multiplayer.cpp
+msgid "UDP port"
+msgstr "UDP 포트"
 
 #: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Unavailable"
@@ -2143,6 +2299,10 @@ msgstr "프로필 {1}개 중 {0}개"
 #: pe/ui/save_sync.cpp
 msgid "{0} on {1}"
 msgstr "{1}의 {0}"
+
+#: pe/ui/multiplayer.cpp
+msgid "{0} public rooms"
+msgstr "공개 방 {0}개"
 
 #: pe/ui/remote.cpp, pe/ui/settings.cpp
 msgid "{0} sources"

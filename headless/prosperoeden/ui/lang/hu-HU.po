@@ -183,6 +183,14 @@ msgstr "Játékok böngészése"
 msgid "Browse settings"
 msgstr "Beállítások böngészése"
 
+#: pe/ui/settings.cpp
+msgid "Browse the public directory"
+msgstr "Nyilvános lista böngészése"
+
+#: pe/ui/multiplayer.cpp
+msgid "Browse the public directory and choose a room."
+msgstr "Böngészd a nyilvános listát, és válassz egy szobát."
+
 #. Which controller button presses each of the game's buttons.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
@@ -294,6 +302,26 @@ msgstr "ELŐRE FORDÍTÁS"
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "Indításkor lefordítja a játék által korábban használt kódot, így az új területek kevésbé akadoznak."
 
+#: pe/ui/multiplayer.cpp
+msgid "Connect using a room address, port and password."
+msgstr "Csatlakozz a szoba címével, portjával és jelszavával."
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Connected"
+msgstr "Csatlakozva"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connecting..."
+msgstr "Kapcsolódás..."
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection failed"
+msgstr "A kapcsolódás sikertelen"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection problem"
+msgstr "Kapcsolati probléma"
+
 #: pe/ui/library.cpp
 msgid "Console mode"
 msgstr "Konzolmód"
@@ -357,6 +385,10 @@ msgstr "Nem sikerült menteni a mappát. Próbáld újra."
 #: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
 msgid "Could not save. Please try again."
 msgstr "Nem sikerült menteni. Próbáld újra."
+
+#: pe/ui/multiplayer.cpp
+msgid "Could not start the connection or save its settings."
+msgstr "Nem sikerült elindítani a kapcsolatot vagy menteni a beállításait."
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -554,6 +586,10 @@ msgstr "Angol (UK)"
 #: host/fake_services.cpp, settings_store.h
 msgid "English (US)"
 msgstr "Angol (USA)"
+
+#: pe/ui/multiplayer.cpp
+msgid "Enter a UDP port between 1 and 65535."
+msgstr "Adj meg egy 1 és 65535 közötti UDP-portot."
 
 #: eden_services.cpp
 msgid "Europe"
@@ -761,6 +797,10 @@ msgstr "Német"
 msgid "GETTING STARTED"
 msgstr "ELSŐ LÉPÉSEK"
 
+#: pe/ui/multiplayer.cpp
+msgid "Go offline"
+msgstr "Váltás offline módra"
+
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
 msgstr "A renderelő és a játékok skálázása a TV-re."
@@ -809,6 +849,10 @@ msgstr "Importálva. A lecserélt mentésről biztonsági másolat készült."
 msgid "IN USE"
 msgstr "HASZNÁLATBAN"
 
+#: pe/ui/multiplayer.cpp
+msgid "Incompatible"
+msgstr "Nem kompatibilis"
+
 #: pe/ui/save_sync.cpp
 msgid "It goes to the server."
 msgstr "Felkerül a szerverre."
@@ -836,6 +880,22 @@ msgstr "Japán"
 #: settings_store.h
 msgid "Japanese"
 msgstr "Japán"
+
+#: pe/ui/multiplayer.cpp
+msgid "Join a room before launching a game, then choose Local Wireless in the game."
+msgstr "Játék indítása előtt csatlakozz egy szobához, majd a játékban válaszd a helyi vezeték nélküli játékot."
+
+#: pe/ui/launcher.cpp
+msgid "Join a room successfully or leave it before starting a game."
+msgstr "Játék indítása előtt csatlakozz egy szobához, vagy lépj ki belőle."
+
+#: pe/ui/settings.cpp
+msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
+msgstr "Csatlakozz egy Eden-szobához, majd válaszd a helyi vezeték nélküli játékot egy támogatott játékban. Mindenkinek kompatibilis játékverzió kell."
+
+#: pe/ui/multiplayer.cpp
+msgid "Join room"
+msgstr "Csatlakozás"
 
 #. keys, firmware and roms are folder names (unchanged). TRIANGLE is the controller's triangle button, in capitals.
 #: pe/ui/browse.cpp
@@ -901,6 +961,26 @@ msgstr "Legutóbb megnyitott játék"
 msgid "Launch game"
 msgstr "Játék indítása"
 
+#: pe/ui/multiplayer.cpp
+msgid "Leave / cancel"
+msgstr "Kilépés / mégse"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave room"
+msgstr "Kilépés a szobából"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave the room before changing connection details."
+msgstr "A kapcsolat adatainak módosítása előtt lépj ki a szobából."
+
+#: pe/ui/profiles.cpp
+msgid "Leaving the room. Select the profile again when disconnected."
+msgstr "Kilépés a szobából. A kapcsolat bontása után válaszd ki újra a profilt."
+
+#: pe/ui/multiplayer.cpp
+msgid "Leaving..."
+msgstr "Kilépés..."
+
 #: pe/ui/game_options.cpp
 msgid "Left Joy-Con"
 msgstr "Bal Joy-Con"
@@ -929,6 +1009,10 @@ msgstr "JÁTÉKTÁR"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Linked"
 msgstr "Párosítva"
+
+#: pe/ui/multiplayer.cpp
+msgid "Loading public rooms..."
+msgstr "Nyilvános szobák betöltése..."
 
 #: pe/ui/settings.cpp
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
@@ -968,6 +1052,14 @@ msgstr "MODOK"
 #: pe/ui/library.cpp
 msgid "Mods"
 msgstr "Modok"
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Multiplayer"
+msgstr "Többjátékos mód"
+
+#: pe/ui/settings.cpp
+msgid "MULTIPLAYER"
+msgstr "TÖBBJÁTÉKOS MÓD"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Mute"
@@ -1009,6 +1101,14 @@ msgstr "Következő indítás: {0}"
 msgid "NEXT START"
 msgstr "KÖVETKEZŐ INDÍTÁS"
 
+#: pe/ui/multiplayer.cpp
+msgid "Nickname"
+msgstr "Becenév"
+
+#: pe/ui/multiplayer.cpp
+msgid "Nickname: {0}"
+msgstr "Becenév: {0}"
+
 #: pe/ui/library.cpp
 msgid "No cover art"
 msgstr "Nincs borító"
@@ -1042,6 +1142,10 @@ msgstr "Nincs mod"
 #: pe/ui/library.cpp
 msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
 msgstr "Ehhez a játékhoz még nincs mod. Másold az egyes modok mappáját ide: {0}, a roms/ mellé."
+
+#: pe/ui/multiplayer.cpp
+msgid "No public rooms are available."
+msgstr "Nincs elérhető nyilvános szoba."
 
 #: pe/ui/library.cpp
 msgid "No ROM files found."
@@ -1193,6 +1297,10 @@ msgstr "Párosítva. A profil mentései mostantól szinkronizálódnak."
 msgid "Parent folder"
 msgstr "Szülőmappa"
 
+#: pe/ui/multiplayer.cpp
+msgid "Password"
+msgstr "Jelszó"
+
 #. What a mod is made of: a change to the game's program (not a game update).
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Patch"
@@ -1278,6 +1386,14 @@ msgstr "Nyomd meg újra a játék, a frissítései és a DLC-i törléséhez a k
 msgid "Press again to replace this game's save. The current one is backed up."
 msgstr "Nyomd meg újra a játék mentésének lecseréléséhez. A mostaniról biztonsági másolat készül."
 
+#: pe/ui/multiplayer.cpp
+msgid "Private room"
+msgstr "Privát szoba"
+
+#: pe/ui/settings.cpp
+msgid "PRIVATE ROOM"
+msgstr "PRIVÁT SZOBA"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1349,6 +1465,14 @@ msgstr "PS5-KIADÁS"
 msgid "PS5 EDITION  /  {0}"
 msgstr "PS5-KIADÁS  /  {0}"
 
+#: pe/ui/multiplayer.cpp
+msgid "Public rooms"
+msgstr "Nyilvános szobák"
+
+#: pe/ui/settings.cpp
+msgid "PUBLIC ROOMS"
+msgstr "NYILVÁNOS SZOBÁK"
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "Sorban áll"
@@ -1394,6 +1518,10 @@ msgstr "MOZGÁS CSÖKKENTÉSE"
 #: pe/ui/settings.cpp
 msgid "Reduce motion"
 msgstr "Mozgás csökkentése"
+
+#: pe/ui/multiplayer.cpp
+msgid "Refresh"
+msgstr "Frissítés"
 
 #. Setting: how many times a second the TV picture is refreshed while a game runs (60 or 120 Hz).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -1448,6 +1576,18 @@ msgstr "Jobb kar lenyomása"
 #: eden_services.cpp, pe/ui/launcher.cpp
 msgid "ROM missing from the game files folder"
 msgstr "A ROM hiányzik a játékfájlok mappájából"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room address"
+msgstr "Szoba címe"
+
+#: pe/ui/settings.cpp
+msgid "Room address and UDP port"
+msgstr "Szoba címe és UDP-portja"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room {0} of {1}"
+msgstr "{0}. szoba / {1}"
 
 #: settings_store.h
 msgid "Russian"
@@ -1619,6 +1759,10 @@ msgstr "Több forrásban is megvan ez a játék. Melyikből töltsük le?"
 msgid "Show or hide the FPS overlay"
 msgstr "FPS-kijelző be- vagy kikapcsolása"
 
+#: pe/ui/multiplayer.cpp
+msgid "Showing the previous list."
+msgstr "Az előző lista látható."
+
 #: pe/ui/pairing.cpp
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "Jelentkezz be ide: {0}, azzal a felhasználóval, akié a profil mentései."
@@ -1774,6 +1918,10 @@ msgstr "A játék elindul, amint a mentései naprakészek."
 msgid "The game starts when the download is done."
 msgstr "A játék a letöltés végén elindul."
 
+#: pe/ui/multiplayer.cpp
+msgid "The keyboard could not be opened."
+msgstr "Nem sikerült megnyitni a billentyűzetet."
+
 #: pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "A játékok nyelve, ha elérhető bennük."
@@ -1840,6 +1988,10 @@ msgstr "Ennek a játéknak még nincs exportálható mentése."
 msgid "This game's settings cannot be saved (no title ID)."
 msgstr "A játék beállításai nem menthetők (nincs játékazonosító)."
 
+#: pe/ui/multiplayer.cpp
+msgid "This room uses a different protocol version."
+msgstr "Ez a szoba más protokollverziót használ."
+
 #. ryujinx/, save-import/ and roms/ are folder names (unchanged); {0} is the game's ID.
 #: eden_services.cpp
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
@@ -1867,6 +2019,10 @@ msgstr "Újrapróbálkozás."
 #: pe/ui/library.cpp
 msgid "Turn on or off"
 msgstr "Be- vagy kikapcsolás"
+
+#: pe/ui/multiplayer.cpp
+msgid "UDP port"
+msgstr "UDP-port"
 
 #: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Unavailable"
@@ -2143,6 +2299,10 @@ msgstr "{1} profilból {0}"
 #: pe/ui/save_sync.cpp
 msgid "{0} on {1}"
 msgstr "{0} itt: {1}"
+
+#: pe/ui/multiplayer.cpp
+msgid "{0} public rooms"
+msgstr "{0} nyilvános szoba"
 
 #: pe/ui/remote.cpp, pe/ui/settings.cpp
 msgid "{0} sources"

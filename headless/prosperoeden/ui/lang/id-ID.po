@@ -183,6 +183,14 @@ msgstr "Telusuri game"
 msgid "Browse settings"
 msgstr "Telusuri pengaturan"
 
+#: pe/ui/settings.cpp
+msgid "Browse the public directory"
+msgstr "Jelajahi direktori publik"
+
+#: pe/ui/multiplayer.cpp
+msgid "Browse the public directory and choose a room."
+msgstr "Jelajahi direktori publik dan pilih ruang."
+
 #. Which controller button presses each of the game's buttons.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
@@ -294,6 +302,26 @@ msgstr "KOMPILASI LEBIH AWAL"
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "Mengompilasi kode yang pernah dipakai game saat dimulai, sehingga area baru tidak terlalu tersendat."
 
+#: pe/ui/multiplayer.cpp
+msgid "Connect using a room address, port and password."
+msgstr "Hubungkan dengan alamat ruang, port, dan kata sandi."
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Connected"
+msgstr "Terhubung"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connecting..."
+msgstr "Menghubungkan..."
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection failed"
+msgstr "Koneksi gagal"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection problem"
+msgstr "Masalah koneksi"
+
 #: pe/ui/library.cpp
 msgid "Console mode"
 msgstr "Mode konsol"
@@ -357,6 +385,10 @@ msgstr "Gagal menyimpan folder. Silakan coba lagi."
 #: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
 msgid "Could not save. Please try again."
 msgstr "Gagal menyimpan. Silakan coba lagi."
+
+#: pe/ui/multiplayer.cpp
+msgid "Could not start the connection or save its settings."
+msgstr "Tidak dapat memulai koneksi atau menyimpan pengaturannya."
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -554,6 +586,10 @@ msgstr "Inggris (Inggris Raya)"
 #: host/fake_services.cpp, settings_store.h
 msgid "English (US)"
 msgstr "Inggris (AS)"
+
+#: pe/ui/multiplayer.cpp
+msgid "Enter a UDP port between 1 and 65535."
+msgstr "Masukkan port UDP antara 1 dan 65535."
 
 #: eden_services.cpp
 msgid "Europe"
@@ -761,6 +797,10 @@ msgstr "Jerman"
 msgid "GETTING STARTED"
 msgstr "PERSIAPAN AWAL"
 
+#: pe/ui/multiplayer.cpp
+msgid "Go offline"
+msgstr "Beralih ke offline"
+
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
 msgstr "Renderer grafis dan cara game diskalakan ke TV Anda."
@@ -809,6 +849,10 @@ msgstr "Berhasil diimpor. Data tersimpan yang digantikan telah dicadangkan."
 msgid "IN USE"
 msgstr "DIGUNAKAN"
 
+#: pe/ui/multiplayer.cpp
+msgid "Incompatible"
+msgstr "Tidak kompatibel"
+
 #: pe/ui/save_sync.cpp
 msgid "It goes to the server."
 msgstr "Dikirim ke server."
@@ -836,6 +880,22 @@ msgstr "Jepang"
 #: settings_store.h
 msgid "Japanese"
 msgstr "Jepang"
+
+#: pe/ui/multiplayer.cpp
+msgid "Join a room before launching a game, then choose Local Wireless in the game."
+msgstr "Gabung ke ruang sebelum memulai game, lalu pilih permainan nirkabel lokal di dalam game."
+
+#: pe/ui/launcher.cpp
+msgid "Join a room successfully or leave it before starting a game."
+msgstr "Gabung ke ruang atau keluar darinya sebelum memulai game."
+
+#: pe/ui/settings.cpp
+msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
+msgstr "Gabung ke ruang Eden, lalu pilih permainan nirkabel lokal di game yang didukung. Semua orang memerlukan versi game yang kompatibel."
+
+#: pe/ui/multiplayer.cpp
+msgid "Join room"
+msgstr "Gabung ke ruang"
 
 #. keys, firmware and roms are folder names (unchanged). TRIANGLE is the controller's triangle button, in capitals.
 #: pe/ui/browse.cpp
@@ -901,6 +961,26 @@ msgstr "Game terakhir yang dibuka"
 msgid "Launch game"
 msgstr "Jalankan game"
 
+#: pe/ui/multiplayer.cpp
+msgid "Leave / cancel"
+msgstr "Keluar / batal"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave room"
+msgstr "Keluar dari ruang"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave the room before changing connection details."
+msgstr "Keluar dari ruang sebelum mengubah detail koneksi."
+
+#: pe/ui/profiles.cpp
+msgid "Leaving the room. Select the profile again when disconnected."
+msgstr "Keluar dari ruang. Pilih profil lagi setelah koneksi terputus."
+
+#: pe/ui/multiplayer.cpp
+msgid "Leaving..."
+msgstr "Keluar..."
+
 #: pe/ui/game_options.cpp
 msgid "Left Joy-Con"
 msgstr "Joy-Con kiri"
@@ -929,6 +1009,10 @@ msgstr "PERPUSTAKAAN"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Linked"
 msgstr "Tertaut"
+
+#: pe/ui/multiplayer.cpp
+msgid "Loading public rooms..."
+msgstr "Memuat ruang publik..."
 
 #: pe/ui/settings.cpp
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
@@ -968,6 +1052,14 @@ msgstr "MOD"
 #: pe/ui/library.cpp
 msgid "Mods"
 msgstr "Mod"
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Multiplayer"
+msgstr "Multipemain"
+
+#: pe/ui/settings.cpp
+msgid "MULTIPLAYER"
+msgstr "MULTIPEMAIN"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Mute"
@@ -1009,6 +1101,14 @@ msgstr "Sesi berikutnya: {0}"
 msgid "NEXT START"
 msgstr "SESI BERIKUTNYA"
 
+#: pe/ui/multiplayer.cpp
+msgid "Nickname"
+msgstr "Nama panggilan"
+
+#: pe/ui/multiplayer.cpp
+msgid "Nickname: {0}"
+msgstr "Nama panggilan: {0}"
+
 #: pe/ui/library.cpp
 msgid "No cover art"
 msgstr "Tidak ada sampul"
@@ -1042,6 +1142,10 @@ msgstr "Tidak ada mod"
 #: pe/ui/library.cpp
 msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
 msgstr "Belum ada mod untuk game ini. Salin folder tiap mod ke {0}, di samping roms/."
+
+#: pe/ui/multiplayer.cpp
+msgid "No public rooms are available."
+msgstr "Tidak ada ruang publik yang tersedia."
 
 #: pe/ui/library.cpp
 msgid "No ROM files found."
@@ -1193,6 +1297,10 @@ msgstr "Terpasang. Data simpanan profil ini disinkronkan mulai sekarang."
 msgid "Parent folder"
 msgstr "Folder induk"
 
+#: pe/ui/multiplayer.cpp
+msgid "Password"
+msgstr "Kata sandi"
+
 #. What a mod is made of: a change to the game's program (not a game update).
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Patch"
@@ -1278,6 +1386,14 @@ msgstr "Tekan lagi untuk menghapus game beserta pembaruan dan DLC-nya dari konso
 msgid "Press again to replace this game's save. The current one is backed up."
 msgstr "Tekan lagi untuk mengganti data tersimpan game ini. Data saat ini akan dicadangkan."
 
+#: pe/ui/multiplayer.cpp
+msgid "Private room"
+msgstr "Ruang pribadi"
+
+#: pe/ui/settings.cpp
+msgid "PRIVATE ROOM"
+msgstr "RUANG PRIBADI"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1349,6 +1465,14 @@ msgstr "EDISI PS5"
 msgid "PS5 EDITION  /  {0}"
 msgstr "EDISI PS5  /  {0}"
 
+#: pe/ui/multiplayer.cpp
+msgid "Public rooms"
+msgstr "Ruang publik"
+
+#: pe/ui/settings.cpp
+msgid "PUBLIC ROOMS"
+msgstr "RUANG PUBLIK"
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "Dalam antrean"
@@ -1394,6 +1518,10 @@ msgstr "KURANGI GERAKAN"
 #: pe/ui/settings.cpp
 msgid "Reduce motion"
 msgstr "Kurangi gerakan"
+
+#: pe/ui/multiplayer.cpp
+msgid "Refresh"
+msgstr "Segarkan"
 
 #. Setting: how many times a second the TV picture is refreshed while a game runs (60 or 120 Hz).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -1448,6 +1576,18 @@ msgstr "Tekan stik kanan"
 #: eden_services.cpp, pe/ui/launcher.cpp
 msgid "ROM missing from the game files folder"
 msgstr "ROM tidak ada di folder file game"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room address"
+msgstr "Alamat ruang"
+
+#: pe/ui/settings.cpp
+msgid "Room address and UDP port"
+msgstr "Alamat ruang dan port UDP"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room {0} of {1}"
+msgstr "Ruang {0} dari {1}"
 
 #: settings_store.h
 msgid "Russian"
@@ -1619,6 +1759,10 @@ msgstr "Beberapa sumber memiliki game ini. Unduh dari yang mana?"
 msgid "Show or hide the FPS overlay"
 msgstr "Tampilkan atau sembunyikan penghitung FPS"
 
+#: pe/ui/multiplayer.cpp
+msgid "Showing the previous list."
+msgstr "Menampilkan daftar sebelumnya."
+
 #: pe/ui/pairing.cpp
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "Masuk ke {0} sebagai pengguna pemilik data simpanan profil ini."
@@ -1774,6 +1918,10 @@ msgstr "Game dimulai setelah data simpanannya selaras."
 msgid "The game starts when the download is done."
 msgstr "Game dimulai setelah unduhan selesai."
 
+#: pe/ui/multiplayer.cpp
+msgid "The keyboard could not be opened."
+msgstr "Keyboard tidak dapat dibuka."
+
 #: pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "Bahasa yang digunakan game jika tersedia."
@@ -1840,6 +1988,10 @@ msgstr "Game ini belum memiliki data tersimpan untuk diekspor."
 msgid "This game's settings cannot be saved (no title ID)."
 msgstr "Pengaturan game ini tidak dapat disimpan (tidak ada ID judul)."
 
+#: pe/ui/multiplayer.cpp
+msgid "This room uses a different protocol version."
+msgstr "Ruang ini memakai versi protokol yang berbeda."
+
 #. ryujinx/, save-import/ and roms/ are folder names (unchanged); {0} is the game's ID.
 #: eden_services.cpp
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
@@ -1867,6 +2019,10 @@ msgstr "Mencoba lagi."
 #: pe/ui/library.cpp
 msgid "Turn on or off"
 msgstr "Aktifkan atau nonaktifkan"
+
+#: pe/ui/multiplayer.cpp
+msgid "UDP port"
+msgstr "Port UDP"
 
 #: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Unavailable"
@@ -2143,6 +2299,10 @@ msgstr "{0} dari {1} profil"
 #: pe/ui/save_sync.cpp
 msgid "{0} on {1}"
 msgstr "{0} di {1}"
+
+#: pe/ui/multiplayer.cpp
+msgid "{0} public rooms"
+msgstr "{0} ruang publik"
 
 #: pe/ui/remote.cpp, pe/ui/settings.cpp
 msgid "{0} sources"

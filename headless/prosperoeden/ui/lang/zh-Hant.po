@@ -183,6 +183,14 @@ msgstr "瀏覽遊戲"
 msgid "Browse settings"
 msgstr "瀏覽設定"
 
+#: pe/ui/settings.cpp
+msgid "Browse the public directory"
+msgstr "瀏覽公開清單"
+
+#: pe/ui/multiplayer.cpp
+msgid "Browse the public directory and choose a room."
+msgstr "瀏覽公開清單並選擇房間。"
+
 #. Which controller button presses each of the game's buttons.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
@@ -294,6 +302,26 @@ msgstr "預先編譯"
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "在遊戲啟動時編譯它先前用過的程式碼，讓新區域的卡頓更少。"
 
+#: pe/ui/multiplayer.cpp
+msgid "Connect using a room address, port and password."
+msgstr "使用房間位址、連接埠和密碼連線。"
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Connected"
+msgstr "已連線"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connecting..."
+msgstr "正在連線..."
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection failed"
+msgstr "連線失敗"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection problem"
+msgstr "連線問題"
+
 #: pe/ui/library.cpp
 msgid "Console mode"
 msgstr "主機模式"
@@ -357,6 +385,10 @@ msgstr "無法儲存資料夾。請再試一次。"
 #: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
 msgid "Could not save. Please try again."
 msgstr "無法儲存。請再試一次。"
+
+#: pe/ui/multiplayer.cpp
+msgid "Could not start the connection or save its settings."
+msgstr "無法開始連線或儲存其設定。"
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -554,6 +586,10 @@ msgstr "英文（英國）"
 #: host/fake_services.cpp, settings_store.h
 msgid "English (US)"
 msgstr "英文（美國）"
+
+#: pe/ui/multiplayer.cpp
+msgid "Enter a UDP port between 1 and 65535."
+msgstr "請輸入 1 到 65535 之間的 UDP 連接埠。"
 
 #: eden_services.cpp
 msgid "Europe"
@@ -761,6 +797,10 @@ msgstr "德文"
 msgid "GETTING STARTED"
 msgstr "開始使用"
 
+#: pe/ui/multiplayer.cpp
+msgid "Go offline"
+msgstr "切換為離線"
+
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
 msgstr "圖形後端，以及遊戲畫面如何縮放至電視。"
@@ -809,6 +849,10 @@ msgstr "已匯入。被取代的存檔已備份。"
 msgid "IN USE"
 msgstr "使用中"
 
+#: pe/ui/multiplayer.cpp
+msgid "Incompatible"
+msgstr "不相容"
+
 #: pe/ui/save_sync.cpp
 msgid "It goes to the server."
 msgstr "將上傳到伺服器。"
@@ -836,6 +880,22 @@ msgstr "日本"
 #: settings_store.h
 msgid "Japanese"
 msgstr "日文"
+
+#: pe/ui/multiplayer.cpp
+msgid "Join a room before launching a game, then choose Local Wireless in the game."
+msgstr "啟動遊戲前先加入房間，然後在遊戲中選擇本機無線通訊。"
+
+#: pe/ui/launcher.cpp
+msgid "Join a room successfully or leave it before starting a game."
+msgstr "開始遊戲前，請先加入房間或離開房間。"
+
+#: pe/ui/settings.cpp
+msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
+msgstr "加入 Eden 房間，然後在支援的遊戲中選擇本機無線通訊。所有人都需要相容的遊戲版本。"
+
+#: pe/ui/multiplayer.cpp
+msgid "Join room"
+msgstr "加入房間"
 
 #. keys, firmware and roms are folder names (unchanged). TRIANGLE is the controller's triangle button, in capitals.
 #: pe/ui/browse.cpp
@@ -901,6 +961,26 @@ msgstr "上次開啟的遊戲"
 msgid "Launch game"
 msgstr "啟動遊戲"
 
+#: pe/ui/multiplayer.cpp
+msgid "Leave / cancel"
+msgstr "離開 / 取消"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave room"
+msgstr "離開房間"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave the room before changing connection details."
+msgstr "請先離開房間，再變更連線資訊。"
+
+#: pe/ui/profiles.cpp
+msgid "Leaving the room. Select the profile again when disconnected."
+msgstr "正在離開房間。中斷連線後請重新選擇設定檔。"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leaving..."
+msgstr "正在離開..."
+
 #: pe/ui/game_options.cpp
 msgid "Left Joy-Con"
 msgstr "左 Joy-Con"
@@ -929,6 +1009,10 @@ msgstr "遊戲庫"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Linked"
 msgstr "已連結"
+
+#: pe/ui/multiplayer.cpp
+msgid "Loading public rooms..."
+msgstr "正在載入公開房間..."
 
 #: pe/ui/settings.cpp
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
@@ -968,6 +1052,14 @@ msgstr "模組"
 #: pe/ui/library.cpp
 msgid "Mods"
 msgstr "模組"
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Multiplayer"
+msgstr "多人遊戲"
+
+#: pe/ui/settings.cpp
+msgid "MULTIPLAYER"
+msgstr "多人遊戲"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Mute"
@@ -1009,6 +1101,14 @@ msgstr "下次啟動：{0}"
 msgid "NEXT START"
 msgstr "下次啟動"
 
+#: pe/ui/multiplayer.cpp
+msgid "Nickname"
+msgstr "暱稱"
+
+#: pe/ui/multiplayer.cpp
+msgid "Nickname: {0}"
+msgstr "暱稱：{0}"
+
 #: pe/ui/library.cpp
 msgid "No cover art"
 msgstr "沒有封面"
@@ -1042,6 +1142,10 @@ msgstr "沒有模組"
 #: pe/ui/library.cpp
 msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
 msgstr "此遊戲尚無模組。請將每個模組的資料夾複製到 roms/ 旁邊的 {0}。"
+
+#: pe/ui/multiplayer.cpp
+msgid "No public rooms are available."
+msgstr "沒有可用的公開房間。"
 
 #: pe/ui/library.cpp
 msgid "No ROM files found."
@@ -1193,6 +1297,10 @@ msgstr "已配對。此玩家檔案的存檔資料今後將同步。"
 msgid "Parent folder"
 msgstr "上層資料夾"
 
+#: pe/ui/multiplayer.cpp
+msgid "Password"
+msgstr "密碼"
+
 #. What a mod is made of: a change to the game's program (not a game update).
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Patch"
@@ -1278,6 +1386,14 @@ msgstr "再按一次將從主機刪除遊戲及其更新和 DLC。存檔資料�
 msgid "Press again to replace this game's save. The current one is backed up."
 msgstr "再按一次將取代此遊戲的存檔。目前的存檔會先備份。"
 
+#: pe/ui/multiplayer.cpp
+msgid "Private room"
+msgstr "私人房間"
+
+#: pe/ui/settings.cpp
+msgid "PRIVATE ROOM"
+msgstr "私人房間"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro 控制器"
@@ -1349,6 +1465,14 @@ msgstr "PS5 版"
 msgid "PS5 EDITION  /  {0}"
 msgstr "PS5 版  /  {0}"
 
+#: pe/ui/multiplayer.cpp
+msgid "Public rooms"
+msgstr "公開房間"
+
+#: pe/ui/settings.cpp
+msgid "PUBLIC ROOMS"
+msgstr "公開房間"
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "排隊中"
@@ -1394,6 +1518,10 @@ msgstr "減少動態效果"
 #: pe/ui/settings.cpp
 msgid "Reduce motion"
 msgstr "減少動態效果"
+
+#: pe/ui/multiplayer.cpp
+msgid "Refresh"
+msgstr "重新整理"
 
 #. Setting: how many times a second the TV picture is refreshed while a game runs (60 or 120 Hz).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -1448,6 +1576,18 @@ msgstr "按下右類比搖桿"
 #: eden_services.cpp, pe/ui/launcher.cpp
 msgid "ROM missing from the game files folder"
 msgstr "遊戲檔案的資料夾中缺少 ROM"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room address"
+msgstr "房間位址"
+
+#: pe/ui/settings.cpp
+msgid "Room address and UDP port"
+msgstr "房間位址和 UDP 連接埠"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room {0} of {1}"
+msgstr "房間 {0} / {1}"
 
 #: settings_store.h
 msgid "Russian"
@@ -1619,6 +1759,10 @@ msgstr "多個來源都有此遊戲。要從哪一個下載？"
 msgid "Show or hide the FPS overlay"
 msgstr "顯示或隱藏 FPS"
 
+#: pe/ui/multiplayer.cpp
+msgid "Showing the previous list."
+msgstr "正在顯示先前的清單。"
+
 #: pe/ui/pairing.cpp
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "以擁有此玩家檔案存檔資料的使用者身分登入 {0}。"
@@ -1774,6 +1918,10 @@ msgstr "存檔資料同步後遊戲即會啟動。"
 msgid "The game starts when the download is done."
 msgstr "下載完成後遊戲即會啟動。"
 
+#: pe/ui/multiplayer.cpp
+msgid "The keyboard could not be opened."
+msgstr "無法開啟鍵盤。"
+
 #: pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "遊戲支援時使用的語言。"
@@ -1840,6 +1988,10 @@ msgstr "此遊戲還沒有可匯出的存檔。"
 msgid "This game's settings cannot be saved (no title ID)."
 msgstr "無法儲存此遊戲的設定（沒有遊戲 ID）。"
 
+#: pe/ui/multiplayer.cpp
+msgid "This room uses a different protocol version."
+msgstr "此房間使用不同的通訊協定版本。"
+
 #. ryujinx/, save-import/ and roms/ are folder names (unchanged); {0} is the game's ID.
 #: eden_services.cpp
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
@@ -1867,6 +2019,10 @@ msgstr "正在重試。"
 #: pe/ui/library.cpp
 msgid "Turn on or off"
 msgstr "開啟或關閉"
+
+#: pe/ui/multiplayer.cpp
+msgid "UDP port"
+msgstr "UDP 連接埠"
 
 #: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Unavailable"
@@ -2143,6 +2299,10 @@ msgstr "{0}/{1} 個玩家檔案"
 #: pe/ui/save_sync.cpp
 msgid "{0} on {1}"
 msgstr "{1} 上的 {0}"
+
+#: pe/ui/multiplayer.cpp
+msgid "{0} public rooms"
+msgstr "{0} 個公開房間"
 
 #: pe/ui/remote.cpp, pe/ui/settings.cpp
 msgid "{0} sources"

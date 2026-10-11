@@ -183,6 +183,14 @@ msgstr "Selaa pelejä"
 msgid "Browse settings"
 msgstr "Selaa asetuksia"
 
+#: pe/ui/settings.cpp
+msgid "Browse the public directory"
+msgstr "Selaa julkista luetteloa"
+
+#: pe/ui/multiplayer.cpp
+msgid "Browse the public directory and choose a room."
+msgstr "Selaa julkista luetteloa ja valitse huone."
+
 #. Which controller button presses each of the game's buttons.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
@@ -294,6 +302,26 @@ msgstr "KÄÄNNÄ ETUKÄTEEN"
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "Kääntää pelin aiemmin käyttämän koodin käynnistyksen aikana, jolloin uudet alueet nykivät vähemmän."
 
+#: pe/ui/multiplayer.cpp
+msgid "Connect using a room address, port and password."
+msgstr "Yhdistä huoneen osoitteella, portilla ja salasanalla."
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Connected"
+msgstr "Yhdistetty"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connecting..."
+msgstr "Yhdistetään..."
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection failed"
+msgstr "Yhteys epäonnistui"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection problem"
+msgstr "Yhteysongelma"
+
 #: pe/ui/library.cpp
 msgid "Console mode"
 msgstr "Konsolitila"
@@ -357,6 +385,10 @@ msgstr "Kansiota ei voitu tallentaa. Yritä uudelleen."
 #: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
 msgid "Could not save. Please try again."
 msgstr "Tallennus epäonnistui. Yritä uudelleen."
+
+#: pe/ui/multiplayer.cpp
+msgid "Could not start the connection or save its settings."
+msgstr "Yhteyttä ei voitu aloittaa tai sen asetuksia tallentaa."
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -554,6 +586,10 @@ msgstr "Englanti (Iso-Britannia)"
 #: host/fake_services.cpp, settings_store.h
 msgid "English (US)"
 msgstr "Englanti (USA)"
+
+#: pe/ui/multiplayer.cpp
+msgid "Enter a UDP port between 1 and 65535."
+msgstr "Anna UDP-portti väliltä 1–65535."
 
 #: eden_services.cpp
 msgid "Europe"
@@ -761,6 +797,10 @@ msgstr "Saksa"
 msgid "GETTING STARTED"
 msgstr "NÄIN ALOITAT"
 
+#: pe/ui/multiplayer.cpp
+msgid "Go offline"
+msgstr "Siirry offline-tilaan"
+
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
 msgstr "Renderöijä ja pelien skaalaus televisioosi."
@@ -809,6 +849,10 @@ msgstr "Tuotu. Korvattu tallennus varmuuskopioitiin."
 msgid "IN USE"
 msgstr "KÄYTÖSSÄ"
 
+#: pe/ui/multiplayer.cpp
+msgid "Incompatible"
+msgstr "Ei yhteensopiva"
+
 #: pe/ui/save_sync.cpp
 msgid "It goes to the server."
 msgstr "Ne siirtyvät palvelimelle."
@@ -836,6 +880,22 @@ msgstr "Japani"
 #: settings_store.h
 msgid "Japanese"
 msgstr "Japani"
+
+#: pe/ui/multiplayer.cpp
+msgid "Join a room before launching a game, then choose Local Wireless in the game."
+msgstr "Liity huoneeseen ennen pelin käynnistämistä ja valitse sitten pelissä paikallinen langaton peli."
+
+#: pe/ui/launcher.cpp
+msgid "Join a room successfully or leave it before starting a game."
+msgstr "Liity huoneeseen tai poistu siitä ennen pelin käynnistämistä."
+
+#: pe/ui/settings.cpp
+msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
+msgstr "Liity Eden-huoneeseen ja valitse sitten paikallinen langaton peli tuetussa pelissä. Kaikilla on oltava yhteensopiva peliversio."
+
+#: pe/ui/multiplayer.cpp
+msgid "Join room"
+msgstr "Liity huoneeseen"
 
 #. keys, firmware and roms are folder names (unchanged). TRIANGLE is the controller's triangle button, in capitals.
 #: pe/ui/browse.cpp
@@ -901,6 +961,26 @@ msgstr "Viimeksi avattu peli"
 msgid "Launch game"
 msgstr "Käynnistä peli"
 
+#: pe/ui/multiplayer.cpp
+msgid "Leave / cancel"
+msgstr "Poistu / peruuta"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave room"
+msgstr "Poistu huoneesta"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave the room before changing connection details."
+msgstr "Poistu huoneesta ennen yhteystietojen muuttamista."
+
+#: pe/ui/profiles.cpp
+msgid "Leaving the room. Select the profile again when disconnected."
+msgstr "Poistutaan huoneesta. Valitse profiili uudelleen, kun yhteys on katkaistu."
+
+#: pe/ui/multiplayer.cpp
+msgid "Leaving..."
+msgstr "Poistutaan..."
+
 #: pe/ui/game_options.cpp
 msgid "Left Joy-Con"
 msgstr "Vasen Joy-Con"
@@ -929,6 +1009,10 @@ msgstr "KIRJASTO"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Linked"
 msgstr "Linkitetty"
+
+#: pe/ui/multiplayer.cpp
+msgid "Loading public rooms..."
+msgstr "Ladataan julkisia huoneita..."
 
 #: pe/ui/settings.cpp
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
@@ -968,6 +1052,14 @@ msgstr "MODIT"
 #: pe/ui/library.cpp
 msgid "Mods"
 msgstr "Modit"
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Multiplayer"
+msgstr "Moninpeli"
+
+#: pe/ui/settings.cpp
+msgid "MULTIPLAYER"
+msgstr "MONINPELI"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Mute"
@@ -1009,6 +1101,14 @@ msgstr "Seuraava käynnistys: {0}"
 msgid "NEXT START"
 msgstr "SEURAAVAKSI"
 
+#: pe/ui/multiplayer.cpp
+msgid "Nickname"
+msgstr "Nimimerkki"
+
+#: pe/ui/multiplayer.cpp
+msgid "Nickname: {0}"
+msgstr "Nimimerkki: {0}"
+
 #: pe/ui/library.cpp
 msgid "No cover art"
 msgstr "Ei kansikuvaa"
@@ -1042,6 +1142,10 @@ msgstr "Ei modeja"
 #: pe/ui/library.cpp
 msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
 msgstr "Tällä pelillä ei ole vielä modeja. Kopioi kunkin modin kansio kohteeseen {0}, roms/-kansion viereen."
+
+#: pe/ui/multiplayer.cpp
+msgid "No public rooms are available."
+msgstr "Julkisia huoneita ei ole saatavilla."
 
 #: pe/ui/library.cpp
 msgid "No ROM files found."
@@ -1193,6 +1297,10 @@ msgstr "Paritettu. Profiilin tallennukset synkronoidaan tästä lähtien."
 msgid "Parent folder"
 msgstr "Yläkansio"
 
+#: pe/ui/multiplayer.cpp
+msgid "Password"
+msgstr "Salasana"
+
 #. What a mod is made of: a change to the game's program (not a game update).
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Patch"
@@ -1278,6 +1386,14 @@ msgstr "Paina uudelleen, niin peli, sen päivitykset ja DLC poistetaan konsolist
 msgid "Press again to replace this game's save. The current one is backed up."
 msgstr "Paina uudelleen, niin pelin tallennus korvataan. Nykyinen varmuuskopioidaan."
 
+#: pe/ui/multiplayer.cpp
+msgid "Private room"
+msgstr "Yksityinen huone"
+
+#: pe/ui/settings.cpp
+msgid "PRIVATE ROOM"
+msgstr "YKSITYINEN HUONE"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1349,6 +1465,14 @@ msgstr "PS5-VERSIO"
 msgid "PS5 EDITION  /  {0}"
 msgstr "PS5-VERSIO  /  {0}"
 
+#: pe/ui/multiplayer.cpp
+msgid "Public rooms"
+msgstr "Julkiset huoneet"
+
+#: pe/ui/settings.cpp
+msgid "PUBLIC ROOMS"
+msgstr "JULKISET HUONEET"
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "Jonossa"
@@ -1394,6 +1518,10 @@ msgstr "VÄHENNÄ LIIKETTÄ"
 #: pe/ui/settings.cpp
 msgid "Reduce motion"
 msgstr "Vähennä liikettä"
+
+#: pe/ui/multiplayer.cpp
+msgid "Refresh"
+msgstr "Päivitä"
 
 #. Setting: how many times a second the TV picture is refreshed while a game runs (60 or 120 Hz).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -1448,6 +1576,18 @@ msgstr "Oikean sauvan painallus"
 #: eden_services.cpp, pe/ui/launcher.cpp
 msgid "ROM missing from the game files folder"
 msgstr "ROM puuttuu pelitiedostojen kansiosta"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room address"
+msgstr "Huoneen osoite"
+
+#: pe/ui/settings.cpp
+msgid "Room address and UDP port"
+msgstr "Huoneen osoite ja UDP-portti"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room {0} of {1}"
+msgstr "Huone {0}/{1}"
 
 #: settings_store.h
 msgid "Russian"
@@ -1619,6 +1759,10 @@ msgstr "Tämä peli on usealla lähteellä. Mistä se ladataan?"
 msgid "Show or hide the FPS overlay"
 msgstr "Näytä tai piilota FPS-laskuri"
 
+#: pe/ui/multiplayer.cpp
+msgid "Showing the previous list."
+msgstr "Näytetään edellinen luettelo."
+
 #: pe/ui/pairing.cpp
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "Kirjaudu palveluun {0} käyttäjänä, jolle tämän profiilin tallennukset kuuluvat."
@@ -1774,6 +1918,10 @@ msgstr "Peli käynnistyy, kun sen tallennukset on synkronoitu."
 msgid "The game starts when the download is done."
 msgstr "Peli käynnistyy, kun lataus on valmis."
 
+#: pe/ui/multiplayer.cpp
+msgid "The keyboard could not be opened."
+msgstr "Näppäimistöä ei voitu avata."
+
 #: pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "Kieli, jota pelit käyttävät, jos ne tukevat sitä."
@@ -1840,6 +1988,10 @@ msgstr "Tällä pelillä ei ole vielä vietävää tallennusta."
 msgid "This game's settings cannot be saved (no title ID)."
 msgstr "Tämän pelin asetuksia ei voi tallentaa (nimiketunnus puuttuu)."
 
+#: pe/ui/multiplayer.cpp
+msgid "This room uses a different protocol version."
+msgstr "Tämä huone käyttää eri protokollaversiota."
+
 #. ryujinx/, save-import/ and roms/ are folder names (unchanged); {0} is the game's ID.
 #: eden_services.cpp
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
@@ -1867,6 +2019,10 @@ msgstr "Yritetään uudelleen."
 #: pe/ui/library.cpp
 msgid "Turn on or off"
 msgstr "Ota käyttöön tai pois"
+
+#: pe/ui/multiplayer.cpp
+msgid "UDP port"
+msgstr "UDP-portti"
 
 #: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Unavailable"
@@ -2143,6 +2299,10 @@ msgstr "{0}/{1} profiilia"
 #: pe/ui/save_sync.cpp
 msgid "{0} on {1}"
 msgstr "{0} palvelimella {1}"
+
+#: pe/ui/multiplayer.cpp
+msgid "{0} public rooms"
+msgstr "{0} julkista huonetta"
 
 #: pe/ui/remote.cpp, pe/ui/settings.cpp
 msgid "{0} sources"

@@ -183,6 +183,14 @@ msgstr "เลื่อนดูเกม"
 msgid "Browse settings"
 msgstr "เลื่อนดูการตั้งค่า"
 
+#: pe/ui/settings.cpp
+msgid "Browse the public directory"
+msgstr "เรียกดู​รายการ​สาธารณะ"
+
+#: pe/ui/multiplayer.cpp
+msgid "Browse the public directory and choose a room."
+msgstr "เรียกดู​รายการ​สาธารณะ​แล้ว​เลือก​ห้อง"
+
 #. Which controller button presses each of the game's buttons.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
@@ -294,6 +302,26 @@ msgstr "คอมไพล์ล่วงหน้า"
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "คอมไพล์โค้ดที่เกมเคยใช้ขณะเริ่มเกม พื้นที่ใหม่จึงกระตุกน้อยลง"
 
+#: pe/ui/multiplayer.cpp
+msgid "Connect using a room address, port and password."
+msgstr "เชื่อมต่อ​ด้วย​ที่อยู่​ห้อง พอร์ต และ​รหัสผ่าน"
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Connected"
+msgstr "เชื่อมต่อ​แล้ว"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connecting..."
+msgstr "กำลัง​เชื่อมต่อ..."
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection failed"
+msgstr "การเชื่อมต่อ​ล้มเหลว"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection problem"
+msgstr "ปัญหา​การเชื่อมต่อ"
+
 #: pe/ui/library.cpp
 msgid "Console mode"
 msgstr "โหมดเครื่อง"
@@ -357,6 +385,10 @@ msgstr "บันทึก​โฟลเดอร์​ไม่ได้ โ�
 #: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
 msgid "Could not save. Please try again."
 msgstr "บันทึก​ไม่ได้ โปรด​ลอง​อีกครั้ง"
+
+#: pe/ui/multiplayer.cpp
+msgid "Could not start the connection or save its settings."
+msgstr "ไม่​สามารถ​เริ่ม​การเชื่อมต่อ​หรือ​บันทึก​การตั้งค่า​ได้"
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -554,6 +586,10 @@ msgstr "อังกฤษ (สหราชอาณาจักร)"
 #: host/fake_services.cpp, settings_store.h
 msgid "English (US)"
 msgstr "อังกฤษ (สหรัฐฯ)"
+
+#: pe/ui/multiplayer.cpp
+msgid "Enter a UDP port between 1 and 65535."
+msgstr "ป้อน​พอร์ต UDP ระหว่าง 1 ถึง 65535"
 
 #: eden_services.cpp
 msgid "Europe"
@@ -761,6 +797,10 @@ msgstr "เยอรมัน"
 msgid "GETTING STARTED"
 msgstr "เริ่มต้นใช้งาน"
 
+#: pe/ui/multiplayer.cpp
+msgid "Go offline"
+msgstr "ออฟไลน์"
+
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
 msgstr "ระบบ​กราฟิก​และ​วิธี​ปรับ​ขนาด​ภาพ​เกม​ให้​เข้ากับ​ทีวี"
@@ -809,6 +849,10 @@ msgstr "นำเข้า​แล้ว เซฟ​ที่​ถูก​�
 msgid "IN USE"
 msgstr "ใช้อยู่"
 
+#: pe/ui/multiplayer.cpp
+msgid "Incompatible"
+msgstr "เข้ากัน​ไม่ได้"
+
 #: pe/ui/save_sync.cpp
 msgid "It goes to the server."
 msgstr "จะ​ส่ง​ไป​ยัง​เซิร์ฟเวอร์"
@@ -836,6 +880,22 @@ msgstr "ญี่ปุ่น"
 #: settings_store.h
 msgid "Japanese"
 msgstr "ญี่ปุ่น"
+
+#: pe/ui/multiplayer.cpp
+msgid "Join a room before launching a game, then choose Local Wireless in the game."
+msgstr "เข้าร่วม​ห้อง​ก่อน​เปิด​เกม แล้ว​เลือก​การเล่น​ไร้สาย​ภายใน​ใน​เกม"
+
+#: pe/ui/launcher.cpp
+msgid "Join a room successfully or leave it before starting a game."
+msgstr "เข้าร่วม​ห้อง​หรือ​ออก​จาก​ห้อง​ก่อน​เริ่ม​เกม"
+
+#: pe/ui/settings.cpp
+msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
+msgstr "เข้าร่วม​ห้อง Eden แล้ว​เลือก​การเล่น​ไร้สาย​ภายใน​ใน​เกม​ที่​รองรับ ทุกคน​ต้อง​ใช้​เวอร์ชัน​เกม​ที่​เข้ากันได้"
+
+#: pe/ui/multiplayer.cpp
+msgid "Join room"
+msgstr "เข้าร่วม​ห้อง"
 
 #. keys, firmware and roms are folder names (unchanged). TRIANGLE is the controller's triangle button, in capitals.
 #: pe/ui/browse.cpp
@@ -901,6 +961,26 @@ msgstr "เกมที่เปิดล่าสุด"
 msgid "Launch game"
 msgstr "เริ่มเกม"
 
+#: pe/ui/multiplayer.cpp
+msgid "Leave / cancel"
+msgstr "ออก / ยกเลิก"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave room"
+msgstr "ออก​จาก​ห้อง"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave the room before changing connection details."
+msgstr "ออก​จาก​ห้อง​ก่อน​เปลี่ยน​ข้อมูล​การเชื่อมต่อ"
+
+#: pe/ui/profiles.cpp
+msgid "Leaving the room. Select the profile again when disconnected."
+msgstr "กำลัง​ออก​จาก​ห้อง เลือก​โปรไฟล์​อีกครั้ง​เมื่อ​ตัด​การเชื่อมต่อ​แล้ว"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leaving..."
+msgstr "กำลัง​ออก..."
+
 #: pe/ui/game_options.cpp
 msgid "Left Joy-Con"
 msgstr "Joy-Con ซ้าย"
@@ -929,6 +1009,10 @@ msgstr "คลังเกม"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Linked"
 msgstr "เชื่อมโยงแล้ว"
+
+#: pe/ui/multiplayer.cpp
+msgid "Loading public rooms..."
+msgstr "กำลัง​โหลด​ห้อง​สาธารณะ..."
 
 #: pe/ui/settings.cpp
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
@@ -968,6 +1052,14 @@ msgstr "ม็อด"
 #: pe/ui/library.cpp
 msgid "Mods"
 msgstr "ม็อด"
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Multiplayer"
+msgstr "ผู้เล่น​หลายคน"
+
+#: pe/ui/settings.cpp
+msgid "MULTIPLAYER"
+msgstr "ผู้เล่น​หลายคน"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Mute"
@@ -1009,6 +1101,14 @@ msgstr "เปิดครั้งถัดไป: {0}"
 msgid "NEXT START"
 msgstr "เปิดครั้งถัดไป"
 
+#: pe/ui/multiplayer.cpp
+msgid "Nickname"
+msgstr "ชื่อเล่น"
+
+#: pe/ui/multiplayer.cpp
+msgid "Nickname: {0}"
+msgstr "ชื่อเล่น: {0}"
+
 #: pe/ui/library.cpp
 msgid "No cover art"
 msgstr "ไม่มีภาพปก"
@@ -1042,6 +1142,10 @@ msgstr "ไม่มี​ม็อด"
 #: pe/ui/library.cpp
 msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
 msgstr "เกม​นี้​ยัง​ไม่มี​ม็อด คัดลอก​โฟลเดอร์​ของ​แต่ละ​ม็อด​ไป​ที่ {0} ข้าง roms/"
+
+#: pe/ui/multiplayer.cpp
+msgid "No public rooms are available."
+msgstr "ไม่มี​ห้อง​สาธารณะ​ที่​ใช้ได้"
 
 #: pe/ui/library.cpp
 msgid "No ROM files found."
@@ -1193,6 +1297,10 @@ msgstr "จับคู่​แล้ว ข้อมูล​เซฟ​ข�
 msgid "Parent folder"
 msgstr "โฟลเดอร์แม่"
 
+#: pe/ui/multiplayer.cpp
+msgid "Password"
+msgstr "รหัสผ่าน"
+
 #. What a mod is made of: a change to the game's program (not a game update).
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Patch"
@@ -1278,6 +1386,14 @@ msgstr "กด​อีกครั้ง​เพื่อ​ลบ​เกม
 msgid "Press again to replace this game's save. The current one is backed up."
 msgstr "กด​อีกครั้ง​เพื่อ​แทนที่​เซฟ​ของ​เกม​นี้ เซฟ​ปัจจุบัน​จะ​ถูก​สำรอง​ไว้"
 
+#: pe/ui/multiplayer.cpp
+msgid "Private room"
+msgstr "ห้อง​ส่วนตัว"
+
+#: pe/ui/settings.cpp
+msgid "PRIVATE ROOM"
+msgstr "ห้อง​ส่วนตัว"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1349,6 +1465,14 @@ msgstr "รุ่น PS5"
 msgid "PS5 EDITION  /  {0}"
 msgstr "รุ่น PS5  /  {0}"
 
+#: pe/ui/multiplayer.cpp
+msgid "Public rooms"
+msgstr "ห้อง​สาธารณะ"
+
+#: pe/ui/settings.cpp
+msgid "PUBLIC ROOMS"
+msgstr "ห้อง​สาธารณะ"
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "อยู่ในคิว"
@@ -1394,6 +1518,10 @@ msgstr "ลดการเคลื่อนไหว"
 #: pe/ui/settings.cpp
 msgid "Reduce motion"
 msgstr "ลดการเคลื่อนไหว"
+
+#: pe/ui/multiplayer.cpp
+msgid "Refresh"
+msgstr "รีเฟรช"
 
 #. Setting: how many times a second the TV picture is refreshed while a game runs (60 or 120 Hz).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -1448,6 +1576,18 @@ msgstr "กดแท่งอนาล็อกขวา"
 #: eden_services.cpp, pe/ui/launcher.cpp
 msgid "ROM missing from the game files folder"
 msgstr "ไม่มี ROM ในโฟลเดอร์ไฟล์เกม"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room address"
+msgstr "ที่อยู่​ห้อง"
+
+#: pe/ui/settings.cpp
+msgid "Room address and UDP port"
+msgstr "ที่อยู่​ห้อง​และ​พอร์ต UDP"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room {0} of {1}"
+msgstr "ห้อง {0} จาก {1}"
 
 #: settings_store.h
 msgid "Russian"
@@ -1619,6 +1759,10 @@ msgstr "มี​หลาย​แหล่ง​ที่​มี​เกม
 msgid "Show or hide the FPS overlay"
 msgstr "แสดง​หรือ​ซ่อน​ตัวแสดง FPS"
 
+#: pe/ui/multiplayer.cpp
+msgid "Showing the previous list."
+msgstr "กำลัง​แสดง​รายการ​ก่อนหน้า"
+
 #: pe/ui/pairing.cpp
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "ลงชื่อ​เข้าใช้ {0} ด้วย​ผู้ใช้​ที่​เป็น​เจ้าของ​ข้อมูล​เซฟ​ของ​โปรไฟล์​นี้"
@@ -1774,6 +1918,10 @@ msgstr "เกม​จะ​เริ่ม​เมื่อ​ข้อมู
 msgid "The game starts when the download is done."
 msgstr "เกม​จะ​เริ่ม​เมื่อ​ดาวน์โหลด​เสร็จ"
 
+#: pe/ui/multiplayer.cpp
+msgid "The keyboard could not be opened."
+msgstr "ไม่​สามารถ​เปิด​คีย์บอร์ด​ได้"
+
 #: pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "ภาษา​ที่​เกม​ใช้​เมื่อ​เกม​รองรับ"
@@ -1840,6 +1988,10 @@ msgstr "เกม​นี้​ยัง​ไม่มี​เซฟ​ให
 msgid "This game's settings cannot be saved (no title ID)."
 msgstr "บันทึก​การตั้งค่า​ของ​เกม​นี้​ไม่ได้ (ไม่มี ID ​ของ​เกม)"
 
+#: pe/ui/multiplayer.cpp
+msgid "This room uses a different protocol version."
+msgstr "ห้อง​นี้​ใช้​โปรโตคอล​คนละ​เวอร์ชัน"
+
 #. ryujinx/, save-import/ and roms/ are folder names (unchanged); {0} is the game's ID.
 #: eden_services.cpp
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
@@ -1867,6 +2019,10 @@ msgstr "กำลังลองอีกครั้ง"
 #: pe/ui/library.cpp
 msgid "Turn on or off"
 msgstr "เปิด​หรือ​ปิด"
+
+#: pe/ui/multiplayer.cpp
+msgid "UDP port"
+msgstr "พอร์ต UDP"
 
 #: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Unavailable"
@@ -2143,6 +2299,10 @@ msgstr "{0} จาก {1} โปรไฟล์"
 #: pe/ui/save_sync.cpp
 msgid "{0} on {1}"
 msgstr "{0} บน {1}"
+
+#: pe/ui/multiplayer.cpp
+msgid "{0} public rooms"
+msgstr "ห้อง​สาธารณะ {0} ห้อง"
 
 #: pe/ui/remote.cpp, pe/ui/settings.cpp
 msgid "{0} sources"

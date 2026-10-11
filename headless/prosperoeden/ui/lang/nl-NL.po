@@ -183,6 +183,14 @@ msgstr "Door games bladeren"
 msgid "Browse settings"
 msgstr "Door instellingen bladeren"
 
+#: pe/ui/settings.cpp
+msgid "Browse the public directory"
+msgstr "Door de openbare lijst bladeren"
+
+#: pe/ui/multiplayer.cpp
+msgid "Browse the public directory and choose a room."
+msgstr "Blader door de openbare lijst en kies een kamer."
+
 #. Which controller button presses each of the game's buttons.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
@@ -294,6 +302,26 @@ msgstr "VOORAF COMPILEREN"
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "Compileert bij het starten de code die een game eerder gebruikte, zodat nieuwe gebieden minder haperen."
 
+#: pe/ui/multiplayer.cpp
+msgid "Connect using a room address, port and password."
+msgstr "Verbind met een kameradres, poort en wachtwoord."
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Connected"
+msgstr "Verbonden"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connecting..."
+msgstr "Verbinden..."
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection failed"
+msgstr "Verbinding mislukt"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection problem"
+msgstr "Verbindingsprobleem"
+
 #: pe/ui/library.cpp
 msgid "Console mode"
 msgstr "Consolemodus"
@@ -357,6 +385,10 @@ msgstr "Kan de map niet opslaan. Probeer het opnieuw."
 #: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
 msgid "Could not save. Please try again."
 msgstr "Opslaan mislukt. Probeer het opnieuw."
+
+#: pe/ui/multiplayer.cpp
+msgid "Could not start the connection or save its settings."
+msgstr "De verbinding kon niet worden gestart of de instellingen konden niet worden opgeslagen."
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -554,6 +586,10 @@ msgstr "Engels (VK)"
 #: host/fake_services.cpp, settings_store.h
 msgid "English (US)"
 msgstr "Engels (VS)"
+
+#: pe/ui/multiplayer.cpp
+msgid "Enter a UDP port between 1 and 65535."
+msgstr "Voer een UDP-poort tussen 1 en 65535 in."
 
 #: eden_services.cpp
 msgid "Europe"
@@ -761,6 +797,10 @@ msgstr "Duits"
 msgid "GETTING STARTED"
 msgstr "AAN DE SLAG"
 
+#: pe/ui/multiplayer.cpp
+msgid "Go offline"
+msgstr "Offline gaan"
+
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
 msgstr "Renderer en hoe games naar je tv worden geschaald."
@@ -809,6 +849,10 @@ msgstr "Geïmporteerd. Van de vervangen data is een back-up gemaakt."
 msgid "IN USE"
 msgstr "IN GEBRUIK"
 
+#: pe/ui/multiplayer.cpp
+msgid "Incompatible"
+msgstr "Incompatibel"
+
 #: pe/ui/save_sync.cpp
 msgid "It goes to the server."
 msgstr "Gaat naar de server."
@@ -836,6 +880,22 @@ msgstr "Japan"
 #: settings_store.h
 msgid "Japanese"
 msgstr "Japans"
+
+#: pe/ui/multiplayer.cpp
+msgid "Join a room before launching a game, then choose Local Wireless in the game."
+msgstr "Betreed een kamer voordat je een spel start en kies daarna lokaal draadloos spelen in het spel."
+
+#: pe/ui/launcher.cpp
+msgid "Join a room successfully or leave it before starting a game."
+msgstr "Betreed een kamer of verlaat die voordat je een spel start."
+
+#: pe/ui/settings.cpp
+msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
+msgstr "Betreed een Eden-kamer en kies daarna lokaal draadloos spelen in een ondersteund spel. Iedereen heeft een compatibele spelversie nodig."
+
+#: pe/ui/multiplayer.cpp
+msgid "Join room"
+msgstr "Kamer betreden"
 
 #. keys, firmware and roms are folder names (unchanged). TRIANGLE is the controller's triangle button, in capitals.
 #: pe/ui/browse.cpp
@@ -901,6 +961,26 @@ msgstr "Laatst geopende game"
 msgid "Launch game"
 msgstr "Game starten"
 
+#: pe/ui/multiplayer.cpp
+msgid "Leave / cancel"
+msgstr "Verlaten / annuleren"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave room"
+msgstr "Kamer verlaten"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave the room before changing connection details."
+msgstr "Verlaat de kamer voordat je de verbindingsgegevens wijzigt."
+
+#: pe/ui/profiles.cpp
+msgid "Leaving the room. Select the profile again when disconnected."
+msgstr "Je verlaat de kamer. Selecteer het profiel opnieuw zodra de verbinding is verbroken."
+
+#: pe/ui/multiplayer.cpp
+msgid "Leaving..."
+msgstr "Bezig met verlaten..."
+
 #: pe/ui/game_options.cpp
 msgid "Left Joy-Con"
 msgstr "Linker Joy-Con"
@@ -929,6 +1009,10 @@ msgstr "BIBLIOTHEEK"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Linked"
 msgstr "Gekoppeld"
+
+#: pe/ui/multiplayer.cpp
+msgid "Loading public rooms..."
+msgstr "Openbare kamers laden..."
 
 #: pe/ui/settings.cpp
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
@@ -968,6 +1052,14 @@ msgstr "MODS"
 #: pe/ui/library.cpp
 msgid "Mods"
 msgstr "Mods"
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Multiplayer"
+msgstr "Multiplayer"
+
+#: pe/ui/settings.cpp
+msgid "MULTIPLAYER"
+msgstr "MULTIPLAYER"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Mute"
@@ -1009,6 +1101,14 @@ msgstr "Volgende start: {0}"
 msgid "NEXT START"
 msgstr "VOLGENDE START"
 
+#: pe/ui/multiplayer.cpp
+msgid "Nickname"
+msgstr "Bijnaam"
+
+#: pe/ui/multiplayer.cpp
+msgid "Nickname: {0}"
+msgstr "Bijnaam: {0}"
+
 #: pe/ui/library.cpp
 msgid "No cover art"
 msgstr "Geen cover"
@@ -1042,6 +1142,10 @@ msgstr "Geen mods"
 #: pe/ui/library.cpp
 msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
 msgstr "Nog geen mods voor deze game. Kopieer de map van elke mod naar {0}, naast roms/."
+
+#: pe/ui/multiplayer.cpp
+msgid "No public rooms are available."
+msgstr "Er zijn geen openbare kamers beschikbaar."
 
 #: pe/ui/library.cpp
 msgid "No ROM files found."
@@ -1193,6 +1297,10 @@ msgstr "Gekoppeld. De opgeslagen data van het profiel wordt vanaf nu gesynchroni
 msgid "Parent folder"
 msgstr "Bovenliggende map"
 
+#: pe/ui/multiplayer.cpp
+msgid "Password"
+msgstr "Wachtwoord"
+
 #. What a mod is made of: a change to the game's program (not a game update).
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Patch"
@@ -1278,6 +1386,14 @@ msgstr "Druk nogmaals om de game met updates en DLC van de console te verwijdere
 msgid "Press again to replace this game's save. The current one is backed up."
 msgstr "Druk nogmaals om de opgeslagen data van deze game te vervangen. Van de huidige wordt een back-up gemaakt."
 
+#: pe/ui/multiplayer.cpp
+msgid "Private room"
+msgstr "Privékamer"
+
+#: pe/ui/settings.cpp
+msgid "PRIVATE ROOM"
+msgstr "PRIVÉKAMER"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1349,6 +1465,14 @@ msgstr "PS5-EDITIE"
 msgid "PS5 EDITION  /  {0}"
 msgstr "PS5-EDITIE  /  {0}"
 
+#: pe/ui/multiplayer.cpp
+msgid "Public rooms"
+msgstr "Openbare kamers"
+
+#: pe/ui/settings.cpp
+msgid "PUBLIC ROOMS"
+msgstr "OPENBARE KAMERS"
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "In wachtrij"
@@ -1394,6 +1518,10 @@ msgstr "BEWEGING VERMINDEREN"
 #: pe/ui/settings.cpp
 msgid "Reduce motion"
 msgstr "Beweging verminderen"
+
+#: pe/ui/multiplayer.cpp
+msgid "Refresh"
+msgstr "Vernieuwen"
 
 #. Setting: how many times a second the TV picture is refreshed while a game runs (60 or 120 Hz).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -1448,6 +1576,18 @@ msgstr "Rechterstick indrukken"
 #: eden_services.cpp, pe/ui/launcher.cpp
 msgid "ROM missing from the game files folder"
 msgstr "ROM ontbreekt in de map met gamebestanden"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room address"
+msgstr "Kameradres"
+
+#: pe/ui/settings.cpp
+msgid "Room address and UDP port"
+msgstr "Kameradres en UDP-poort"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room {0} of {1}"
+msgstr "Kamer {0} van {1}"
 
 #: settings_store.h
 msgid "Russian"
@@ -1619,6 +1759,10 @@ msgstr "Meerdere bronnen hebben deze game. Van welke moet hij komen?"
 msgid "Show or hide the FPS overlay"
 msgstr "De FPS-teller tonen of verbergen"
 
+#: pe/ui/multiplayer.cpp
+msgid "Showing the previous list."
+msgstr "De vorige lijst wordt getoond."
+
 #: pe/ui/pairing.cpp
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "Meld je bij {0} aan als de gebruiker van wie de opgeslagen data van dit profiel is."
@@ -1774,6 +1918,10 @@ msgstr "De game start zodra de opgeslagen data gelijk is."
 msgid "The game starts when the download is done."
 msgstr "De game start zodra de download klaar is."
 
+#: pe/ui/multiplayer.cpp
+msgid "The keyboard could not be opened."
+msgstr "Het toetsenbord kon niet worden geopend."
+
 #: pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "De taal die games gebruiken als ze die aanbieden."
@@ -1840,6 +1988,10 @@ msgstr "Deze game heeft nog geen opgeslagen data om te exporteren."
 msgid "This game's settings cannot be saved (no title ID)."
 msgstr "Kan de instellingen van deze game niet opslaan (geen titel-ID)."
 
+#: pe/ui/multiplayer.cpp
+msgid "This room uses a different protocol version."
+msgstr "Deze kamer gebruikt een andere protocolversie."
+
 #. ryujinx/, save-import/ and roms/ are folder names (unchanged); {0} is the game's ID.
 #: eden_services.cpp
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
@@ -1867,6 +2019,10 @@ msgstr "Nieuwe poging."
 #: pe/ui/library.cpp
 msgid "Turn on or off"
 msgstr "In- of uitschakelen"
+
+#: pe/ui/multiplayer.cpp
+msgid "UDP port"
+msgstr "UDP-poort"
 
 #: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Unavailable"
@@ -2143,6 +2299,10 @@ msgstr "{0} van {1} profielen"
 #: pe/ui/save_sync.cpp
 msgid "{0} on {1}"
 msgstr "{0} op {1}"
+
+#: pe/ui/multiplayer.cpp
+msgid "{0} public rooms"
+msgstr "{0} openbare kamers"
 
 #: pe/ui/remote.cpp, pe/ui/settings.cpp
 msgid "{0} sources"

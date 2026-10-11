@@ -183,6 +183,14 @@ msgstr "浏览游戏"
 msgid "Browse settings"
 msgstr "浏览设置"
 
+#: pe/ui/settings.cpp
+msgid "Browse the public directory"
+msgstr "浏览公开列表"
+
+#: pe/ui/multiplayer.cpp
+msgid "Browse the public directory and choose a room."
+msgstr "浏览公开列表并选择房间。"
+
 #. Which controller button presses each of the game's buttons.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
@@ -294,6 +302,26 @@ msgstr "预先编译"
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "在游戏启动时编译它以前用过的代码，使新区域的卡顿更少。"
 
+#: pe/ui/multiplayer.cpp
+msgid "Connect using a room address, port and password."
+msgstr "使用房间地址、端口和密码连接。"
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Connected"
+msgstr "已连接"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connecting..."
+msgstr "正在连接..."
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection failed"
+msgstr "连接失败"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection problem"
+msgstr "连接问题"
+
 #: pe/ui/library.cpp
 msgid "Console mode"
 msgstr "主机模式"
@@ -357,6 +385,10 @@ msgstr "无法保存文件夹。请重试。"
 #: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
 msgid "Could not save. Please try again."
 msgstr "无法保存。请重试。"
+
+#: pe/ui/multiplayer.cpp
+msgid "Could not start the connection or save its settings."
+msgstr "无法开始连接或保存其设置。"
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -554,6 +586,10 @@ msgstr "英语（英国）"
 #: host/fake_services.cpp, settings_store.h
 msgid "English (US)"
 msgstr "英语（美国）"
+
+#: pe/ui/multiplayer.cpp
+msgid "Enter a UDP port between 1 and 65535."
+msgstr "请输入 1 到 65535 之间的 UDP 端口。"
 
 #: eden_services.cpp
 msgid "Europe"
@@ -761,6 +797,10 @@ msgstr "德语"
 msgid "GETTING STARTED"
 msgstr "入门"
 
+#: pe/ui/multiplayer.cpp
+msgid "Go offline"
+msgstr "切换为离线"
+
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
 msgstr "图形后端，以及游戏画面如何缩放到电视。"
@@ -809,6 +849,10 @@ msgstr "已导入。被替换的存档已备份。"
 msgid "IN USE"
 msgstr "使用中"
 
+#: pe/ui/multiplayer.cpp
+msgid "Incompatible"
+msgstr "不兼容"
+
 #: pe/ui/save_sync.cpp
 msgid "It goes to the server."
 msgstr "将上传到服务器。"
@@ -836,6 +880,22 @@ msgstr "日本"
 #: settings_store.h
 msgid "Japanese"
 msgstr "日语"
+
+#: pe/ui/multiplayer.cpp
+msgid "Join a room before launching a game, then choose Local Wireless in the game."
+msgstr "启动游戏前先加入房间，然后在游戏中选择本地无线通信。"
+
+#: pe/ui/launcher.cpp
+msgid "Join a room successfully or leave it before starting a game."
+msgstr "开始游戏前，请先加入房间或离开房间。"
+
+#: pe/ui/settings.cpp
+msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
+msgstr "加入 Eden 房间，然后在支持的游戏中选择本地无线通信。所有人都需要兼容的游戏版本。"
+
+#: pe/ui/multiplayer.cpp
+msgid "Join room"
+msgstr "加入房间"
 
 #. keys, firmware and roms are folder names (unchanged). TRIANGLE is the controller's triangle button, in capitals.
 #: pe/ui/browse.cpp
@@ -901,6 +961,26 @@ msgstr "上次打开的游戏"
 msgid "Launch game"
 msgstr "启动游戏"
 
+#: pe/ui/multiplayer.cpp
+msgid "Leave / cancel"
+msgstr "离开 / 取消"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave room"
+msgstr "离开房间"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave the room before changing connection details."
+msgstr "请先离开房间，再更改连接信息。"
+
+#: pe/ui/profiles.cpp
+msgid "Leaving the room. Select the profile again when disconnected."
+msgstr "正在离开房间。断开连接后请重新选择档案。"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leaving..."
+msgstr "正在离开..."
+
 #: pe/ui/game_options.cpp
 msgid "Left Joy-Con"
 msgstr "左 Joy-Con"
@@ -929,6 +1009,10 @@ msgstr "游戏库"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Linked"
 msgstr "已关联"
+
+#: pe/ui/multiplayer.cpp
+msgid "Loading public rooms..."
+msgstr "正在加载公开房间..."
 
 #: pe/ui/settings.cpp
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
@@ -968,6 +1052,14 @@ msgstr "模组"
 #: pe/ui/library.cpp
 msgid "Mods"
 msgstr "模组"
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Multiplayer"
+msgstr "多人游戏"
+
+#: pe/ui/settings.cpp
+msgid "MULTIPLAYER"
+msgstr "多人游戏"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Mute"
@@ -1009,6 +1101,14 @@ msgstr "下次启动：{0}"
 msgid "NEXT START"
 msgstr "下次启动"
 
+#: pe/ui/multiplayer.cpp
+msgid "Nickname"
+msgstr "昵称"
+
+#: pe/ui/multiplayer.cpp
+msgid "Nickname: {0}"
+msgstr "昵称：{0}"
+
 #: pe/ui/library.cpp
 msgid "No cover art"
 msgstr "无封面"
@@ -1042,6 +1142,10 @@ msgstr "没有模组"
 #: pe/ui/library.cpp
 msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
 msgstr "此游戏还没有模组。请将每个模组的文件夹复制到 roms/ 旁边的 {0}。"
+
+#: pe/ui/multiplayer.cpp
+msgid "No public rooms are available."
+msgstr "没有可用的公开房间。"
 
 #: pe/ui/library.cpp
 msgid "No ROM files found."
@@ -1193,6 +1297,10 @@ msgstr "已配对。此档案的存档数据今后将同步。"
 msgid "Parent folder"
 msgstr "上级文件夹"
 
+#: pe/ui/multiplayer.cpp
+msgid "Password"
+msgstr "密码"
+
 #. What a mod is made of: a change to the game's program (not a game update).
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Patch"
@@ -1278,6 +1386,14 @@ msgstr "再按一次将从主机删除游戏及其更新和 DLC。存档数据�
 msgid "Press again to replace this game's save. The current one is backed up."
 msgstr "再按一次将替换此游戏的存档。当前存档会被备份。"
 
+#: pe/ui/multiplayer.cpp
+msgid "Private room"
+msgstr "私人房间"
+
+#: pe/ui/settings.cpp
+msgid "PRIVATE ROOM"
+msgstr "私人房间"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro 控制器"
@@ -1349,6 +1465,14 @@ msgstr "PS5 版"
 msgid "PS5 EDITION  /  {0}"
 msgstr "PS5 版  /  {0}"
 
+#: pe/ui/multiplayer.cpp
+msgid "Public rooms"
+msgstr "公开房间"
+
+#: pe/ui/settings.cpp
+msgid "PUBLIC ROOMS"
+msgstr "公开房间"
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "排队中"
@@ -1394,6 +1518,10 @@ msgstr "减少动态效果"
 #: pe/ui/settings.cpp
 msgid "Reduce motion"
 msgstr "减少动态效果"
+
+#: pe/ui/multiplayer.cpp
+msgid "Refresh"
+msgstr "刷新"
 
 #. Setting: how many times a second the TV picture is refreshed while a game runs (60 or 120 Hz).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -1448,6 +1576,18 @@ msgstr "按下右摇杆"
 #: eden_services.cpp, pe/ui/launcher.cpp
 msgid "ROM missing from the game files folder"
 msgstr "游戏文件的文件夹中缺少 ROM"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room address"
+msgstr "房间地址"
+
+#: pe/ui/settings.cpp
+msgid "Room address and UDP port"
+msgstr "房间地址和 UDP 端口"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room {0} of {1}"
+msgstr "房间 {0} / {1}"
 
 #: settings_store.h
 msgid "Russian"
@@ -1619,6 +1759,10 @@ msgstr "多个来源都有此游戏。要从哪一个下载？"
 msgid "Show or hide the FPS overlay"
 msgstr "显示或隐藏帧率"
 
+#: pe/ui/multiplayer.cpp
+msgid "Showing the previous list."
+msgstr "正在显示之前的列表。"
+
 #: pe/ui/pairing.cpp
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "以拥有此档案存档数据的用户身份登录 {0}。"
@@ -1774,6 +1918,10 @@ msgstr "存档数据同步后游戏即会启动。"
 msgid "The game starts when the download is done."
 msgstr "下载完成后游戏即会启动。"
 
+#: pe/ui/multiplayer.cpp
+msgid "The keyboard could not be opened."
+msgstr "无法打开键盘。"
+
 #: pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "游戏支持时使用的语言。"
@@ -1840,6 +1988,10 @@ msgstr "此游戏还没有可导出的存档。"
 msgid "This game's settings cannot be saved (no title ID)."
 msgstr "无法保存此游戏的设置（没有游戏 ID）。"
 
+#: pe/ui/multiplayer.cpp
+msgid "This room uses a different protocol version."
+msgstr "此房间使用不同的协议版本。"
+
 #. ryujinx/, save-import/ and roms/ are folder names (unchanged); {0} is the game's ID.
 #: eden_services.cpp
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
@@ -1867,6 +2019,10 @@ msgstr "正在重试。"
 #: pe/ui/library.cpp
 msgid "Turn on or off"
 msgstr "开启或关闭"
+
+#: pe/ui/multiplayer.cpp
+msgid "UDP port"
+msgstr "UDP 端口"
 
 #: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Unavailable"
@@ -2143,6 +2299,10 @@ msgstr "{0}/{1} 个档案"
 #: pe/ui/save_sync.cpp
 msgid "{0} on {1}"
 msgstr "{1} 上的 {0}"
+
+#: pe/ui/multiplayer.cpp
+msgid "{0} public rooms"
+msgstr "{0} 个公开房间"
 
 #: pe/ui/remote.cpp, pe/ui/settings.cpp
 msgid "{0} sources"
