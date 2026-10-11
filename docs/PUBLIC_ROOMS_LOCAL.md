@@ -77,3 +77,19 @@ fallback remains in use. Preview images are in `build/public-room-preview/C3*.pn
 No console access or GitHub push was performed for this follow-up. The package hashes above
 describe the earlier candidate; they do not contain this UI follow-up. Console validation
 remains deferred, and the separate reported connectivity issue is not fixed by these messages.
+
+## Hardware case G2: combined browser and non-blocking socket fix on .40
+
+User authorized .40 only, conditional on idle state. Application source is `2699b69`, including
+upstream `f331835`, public/private selection and persistent connection-error explanations.
+Normal and diagnostic packages are frozen separately from the same application source.
+Target PPSA99008 at 192.168.4.40, using FTP 2121, klog 3232 and title controller 9021.
+Require idle state immediately before deployment and launch; never close a pre-existing title.
+
+Acceptance: render Multiplayer selection, fetch and refresh the public directory, return to
+the private form, join the owner's server, leave, and stop cleanly with runtime layers released.
+Use a temporary test nickname and preserve the original profile/configuration and development
+markers. No game launch or unrelated public room join. Stop on another active title, ambiguous
+screen, crash, service loss, or the 210-second observation limit. Restore the normal candidate
+after clean teardown and verify its remote hash. Firmware and artifact hashes are recorded
+with evidence in `results/public-room-browser-40/`. .30 remains out of scope.
