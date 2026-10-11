@@ -93,3 +93,31 @@ markers. No game launch or unrelated public room join. Stop on another active ti
 screen, crash, service loss, or the 210-second observation limit. Restore the normal candidate
 after clean teardown and verify its remote hash. Firmware and artifact hashes are recorded
 with evidence in `results/public-room-browser-40/`. .30 remains out of scope.
+
+G2 result: **partial-pass**. The console rendered both menu choices and the private form,
+loaded 130 public rooms (HTTP 200, 654 ms), and refreshed to 131 rooms (HTTP 200, 621 ms).
+The owner's private room accepted the test player and displayed the member list. Logs confirm
+the non-blocking socket, Joined state, bidirectional packets and RTT samples of 12, 18 and 21 ms.
+This used a numeric IPv4 address; it does not qualify console hostname lookup. No game was launched.
+The observation limit ended the run before a separate Leave-button or failure-message scenario.
+Error presentation remains host-preview tested; public-list scrolling was not exercised here.
+
+The launcher exited normally and ShadowMount reported PPSA99008 PID 566 stopped. This target
+does not provide the separate runtime-layer-release receipt used by the .30 runner. Cleanup
+initially rejected ftpsrv's successful `226 File deleted` reply; a bounded cleanup accepted
+that response, removed remaining temporary capture state and verified all 66 normal-package
+files. Original configuration was verified byte-for-byte restored, services remained healthy,
+and the environment lock was released. Existing development settings were restored by the runner.
+
+Application source: `2699b69`; diagnostic build after documentation-only `8cf64d8`.
+Console reported firmware SDK version `0x12700001`. Frozen eboot SHA-256:
+
+- Normal, installed after testing: `f28165e6a2de9a55160de1a105c480ff8e7f9fb2f6aea1df21e7701dda28b1bb`.
+- Diagnostic, tested: `e4e560886338de54cdc6f5e9c0ced50eb021e909807f5a5aea0f56d63df8964d`.
+
+Receipts: `results/public-room-browser-40/cleanup.json`, both deployment manifests, `klog.log`,
+`stderr.log`, `lifecycle.log`, `14-multiplayer.png`, `16-refresh.png`, and `24-join.png`.
+The pre-restoration `config-check.json` comparison differs as expected because the test used
+temporary connection and diagnostic settings; `cleanup.json` records the verified restoration.
+
+- 2026-10-10 | G2 | 2699b69 | .40 | partial-pass: directory, refresh, private join, packets and normal exit; normal package restored | results/public-room-browser-40/ | gameplay/error cases untested
