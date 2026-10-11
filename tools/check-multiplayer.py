@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Compile and exercise the actual derived Eden packet implementation, offline."""
 import argparse
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -48,7 +49,9 @@ def main():
             cache = args.host_cache.resolve()
             fmt = cache / "source/.cache/cpm/fmt/12.1.0/include"
             enet = cache / "source/.cache/cpm/enet/v1.3.18/include"
-            boost = sorted((cache / "source/.cache/cpm/boost/boost-1.90.0/libs").glob("*/include"))
+            boost_version = json.loads((source / "cpmfile.json").read_text())["boost"]["version"]
+            boost = sorted((cache / f"source/.cache/cpm/boost/{boost_version}/libs").glob("*/include"))
+            assert boost, "Build the host cache with this Eden revision before running the check"
             executable = output / "room-check"
             subprocess.run([
                 os.environ.get("CXX", "clang++"), "-std=c++20", "-g", "-O1", "-pthread",
