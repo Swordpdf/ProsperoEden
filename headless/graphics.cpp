@@ -678,6 +678,14 @@ void GraphicsWindow::OnFrameDisplayed() {
                     "shader_module"};
                 static std::array<unsigned long long, 24> last_ns{}, last_calls{};
                 static unsigned long long last_steps = 0, last_step_ns = 0;
+                // The texture collector's waits for the GPU: for a batch of images, and for one.
+                static std::array<unsigned long long, 5> last_gc{};
+                const auto& batched = Eden::Performance::gc_batched_drain;
+                const auto& single = Eden::Performance::gc_unbatched_drain;
+                const std::array<unsigned long long, 5> gc{
+                    batched.nanoseconds.load(std::memory_order_relaxed), batched.calls.load(std::memory_order_relaxed),
+                    batched.requested_bytes.load(std::memory_order_relaxed),
+                    single.nanoseconds.load(std::memory_order_relaxed), single.calls.load(std::memory_order_relaxed)};
                 std::array<unsigned long long, 24> ns{}, calls{};
                 for (std::size_t i = 0; i < ns.size(); ++i) {
                     ns[i] = Eden::Performance::vulkan_api[i].nanoseconds.load(std::memory_order_relaxed);
@@ -694,8 +702,15 @@ void GraphicsWindow::OnFrameDisplayed() {
                         if (ns[i] - last_ns[i] >= 2'000'000)
                             length += std::snprintf(line + length, sizeof(line) - static_cast<std::size_t>(length), " %s=%.0f/%llu",
                                                     names[i], static_cast<double>(ns[i] - last_ns[i]) / 1e6, calls[i] - last_calls[i]);
+                    if (length > 0 && length < 560 && (gc[1] != last_gc[1] || gc[4] != last_gc[4]))
+                        length += std::snprintf(line + length, sizeof(line) - static_cast<std::size_t>(length),
+                                                " gc_batches=%.0f/%llu gc_batch_images=%llu gc_single=%.0f/%llu",
+                                                static_cast<double>(gc[0] - last_gc[0]) / 1e6, gc[1] - last_gc[1],
+                                                gc[2] - last_gc[2], static_cast<double>(gc[3] - last_gc[3]) / 1e6,
+                                                gc[4] - last_gc[4]);
                     std::puts(line);
                 }
+                last_gc = gc;
                 last_ns = ns;
                 last_calls = calls;
                 last_steps = steps;
