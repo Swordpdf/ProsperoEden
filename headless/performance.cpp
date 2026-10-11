@@ -431,7 +431,7 @@ void ReportSessionMemory(const char* phase, unsigned session) {
                 "heap_pieces=%zu heap_large=%zu large_blocks=%u tables=%zu\n",
                 phase, session, total, free_bytes, largest, regions,
                 eden_heap_committed ? eden_heap_committed() : std::size_t{0}, large, large_blocks, table_held);
-#ifdef PS5_NATIVE
+#if defined(PS5_NATIVE) && defined(EDEN_DEV_PROFILE)
     for (unsigned i = 0; i < count; ++i)
         std::printf("EDEN_SESSION_MEMORY_MAP phase=%s session=%u start=%llx end=%llx mib=%lld type=%d parts=%u\n",
                     phase, session, static_cast<unsigned long long>(stretches[i].start),

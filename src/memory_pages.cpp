@@ -501,22 +501,9 @@ void* ReserveMemoryRange(std::size_t size) noexcept {
 }
 
 #ifdef PS5_NATIVE
-namespace {
-// Memory for a part of a reserved range, from as high in the pool as there is room. What is
-// committed this way (the heap's pieces) stays for good, while a game's memory and its graphics
-// come and go below. Taken from the bottom like the rest, the pieces a game made the heap grow
-// by were left in the middle of the pool when it ended, and the next game's graphics found
-// half the room.
-bool AllocateHigh(std::size_t size, std::int64_t* physical) noexcept {
-    const std::int64_t total = sceKernelGetDirectMemorySize();
-    const auto bytes = static_cast<std::int64_t>(size);
-    // Whole steps of the block's size down from the top, so that equal blocks stack without gaps.
-    for (std::int64_t start = (total - bytes) / bytes * bytes; bytes > 0 && start >= 0; start -= bytes) {
-        if (sceKernelAllocateDirectMemory(start, start + bytes, size, LargePage, 12, physical) == 0) return true;
-    }
-    return sceKernelAllocateDirectMemory(0, total, size, LargePage, 12, physical) == 0;
-}
-} // namespace
+// From as high in the pool as there is room (src/direct_memory.c): what is committed this way,
+// the heap's pieces, stays for good, while a game's memory and its graphics come and go below.
+extern "C" int eden_direct_high(std::size_t size, std::size_t alignment, int type, std::int64_t* start);
 #endif
 
 bool CommitMemoryRange(void* address, std::size_t size) noexcept {
@@ -525,7 +512,7 @@ bool CommitMemoryRange(void* address, std::size_t size) noexcept {
         return false;
 #ifdef PS5_NATIVE
     std::int64_t physical = -1;
-    if (!AllocateHigh(size, &physical)) return false;
+    if (eden_direct_high(size, LargePage, 12, &physical) != 0) return false;
     void* at = address;
     if (sceKernelMapDirectMemory(&at, size, PROT_READ | PROT_WRITE, MAP_FIXED, physical, LargePage) != 0 ||
         at != address) {
