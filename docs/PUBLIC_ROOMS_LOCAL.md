@@ -1,4 +1,7 @@
-# Public room browser — local development
+# Public room browser
+
+Prepared locally and validated on .40; publication to the existing multiplayer PR was
+authorized after the G2 result below. Earlier local-only and deferred-test notes are historical.
 
 The Multiplayer menu offers **Public rooms** and **Private room**. Private room retains the
 address/port/nickname/password form. Public rooms fetches the Eden directory anonymously over
@@ -11,7 +14,7 @@ for a new password only when needed. Browsing or cancelling does not save connec
 The selected connection is saved only when Join is requested, matching the existing private flow.
 Directory failure is distinct from joining failure; a failed refresh retains the previous list.
 
-No ENet changes. No GitHub publication. Search/ownership filters, account login, public hosting,
+No ENet changes. Search/ownership filters, account login, public hosting,
 and chat are deferred. Directory discovery does not fix the separately reported join timeout.
 
 ## Checks
