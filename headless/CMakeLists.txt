@@ -2408,6 +2408,7 @@ endif()
         target_include_directories(eden-headless PRIVATE "${launcher_dir}" "${PORT_ROOT}/third_party")
         if(EDEN_PS5_OPENGL)
             set(launcher_sources
+                "${EDEN_PORT_DIR}/multiplayer_directory.cpp"
                 "${launcher_dir}/frontend.cpp"
                 "${launcher_dir}/eden_services.cpp"
                 "${launcher_dir}/pe/audio/mixer.cpp"

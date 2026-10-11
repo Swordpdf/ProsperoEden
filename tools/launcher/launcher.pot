@@ -183,6 +183,14 @@ msgstr ""
 msgid "Browse settings"
 msgstr ""
 
+#: pe/ui/settings.cpp
+msgid "Browse the public directory"
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "Browse the public directory and choose a room."
+msgstr ""
+
 #. Which controller button presses each of the game's buttons.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
@@ -294,16 +302,16 @@ msgstr ""
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr ""
 
-#: pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/multiplayer.cpp
+msgid "Connect using a room address, port and password."
+msgstr ""
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Connected"
 msgstr ""
 
 #: pe/ui/multiplayer.cpp
 msgid "Connecting..."
-msgstr ""
-
-#: pe/ui/settings.cpp
-msgid "CONNECTION"
 msgstr ""
 
 #: pe/ui/multiplayer.cpp
@@ -837,6 +845,10 @@ msgstr ""
 msgid "IN USE"
 msgstr ""
 
+#: pe/ui/multiplayer.cpp
+msgid "Incompatible"
+msgstr ""
+
 #: pe/ui/save_sync.cpp
 msgid "It goes to the server."
 msgstr ""
@@ -994,6 +1006,10 @@ msgstr ""
 msgid "Linked"
 msgstr ""
 
+#: pe/ui/multiplayer.cpp
+msgid "Loading public rooms..."
+msgstr ""
+
 #: pe/ui/settings.cpp
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
 msgstr ""
@@ -1033,7 +1049,7 @@ msgstr ""
 msgid "Mods"
 msgstr ""
 
-#: pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Multiplayer"
 msgstr ""
 
@@ -1085,6 +1101,10 @@ msgstr ""
 msgid "Nickname"
 msgstr ""
 
+#: pe/ui/multiplayer.cpp
+msgid "Nickname: {0}"
+msgstr ""
+
 #: pe/ui/library.cpp
 msgid "No cover art"
 msgstr ""
@@ -1117,6 +1137,10 @@ msgstr ""
 #. {0} is a folder; roms/ is a folder name (unchanged).
 #: pe/ui/library.cpp
 msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "No public rooms are available."
 msgstr ""
 
 #: pe/ui/library.cpp
@@ -1358,6 +1382,14 @@ msgstr ""
 msgid "Press again to replace this game's save. The current one is backed up."
 msgstr ""
 
+#: pe/ui/multiplayer.cpp
+msgid "Private room"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "PRIVATE ROOM"
+msgstr ""
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr ""
@@ -1429,6 +1461,14 @@ msgstr ""
 msgid "PS5 EDITION  /  {0}"
 msgstr ""
 
+#: pe/ui/multiplayer.cpp
+msgid "Public rooms"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "PUBLIC ROOMS"
+msgstr ""
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr ""
@@ -1473,6 +1513,10 @@ msgstr ""
 #. A switch: no drifting, sliding or zooming on screen.
 #: pe/ui/settings.cpp
 msgid "Reduce motion"
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "Refresh"
 msgstr ""
 
 #. Setting: how many times a second the TV picture is refreshed while a game runs (60 or 120 Hz).
@@ -1535,6 +1579,10 @@ msgstr ""
 
 #: pe/ui/settings.cpp
 msgid "Room address and UDP port"
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "Room {0} of {1}"
 msgstr ""
 
 #: settings_store.h
@@ -1707,6 +1755,10 @@ msgstr ""
 msgid "Show or hide the FPS overlay"
 msgstr ""
 
+#: pe/ui/multiplayer.cpp
+msgid "Showing the previous list."
+msgstr ""
+
 #: pe/ui/pairing.cpp
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr ""
@@ -1798,10 +1850,6 @@ msgstr ""
 
 #: pe/ui/save_sync.cpp
 msgid "Syncing save data"
-msgstr ""
-
-#: pe/ui/settings.cpp
-msgid "TAILSCALE"
 msgstr ""
 
 #: eden_services.cpp
@@ -1936,6 +1984,10 @@ msgstr ""
 msgid "This game's settings cannot be saved (no title ID)."
 msgstr ""
 
+#: pe/ui/multiplayer.cpp
+msgid "This room uses a different protocol version."
+msgstr ""
+
 #. ryujinx/, save-import/ and roms/ are folder names (unchanged); {0} is the game's ID.
 #: eden_services.cpp
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
@@ -2031,10 +2083,6 @@ msgstr ""
 
 #: pe/ui/browse.cpp
 msgid "Use extracted firmware NCA files. Choose the folder in Settings, Game files; restart the app after changing it."
-msgstr ""
-
-#: pe/ui/settings.cpp
-msgid "Use the local UDP forward address"
 msgstr ""
 
 #: pe/ui/browse.cpp
@@ -2246,6 +2294,10 @@ msgstr ""
 
 #: pe/ui/save_sync.cpp
 msgid "{0} on {1}"
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "{0} public rooms"
 msgstr ""
 
 #: pe/ui/remote.cpp, pe/ui/settings.cpp

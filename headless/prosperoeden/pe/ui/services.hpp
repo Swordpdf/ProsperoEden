@@ -13,6 +13,7 @@
 #include <atomic>
 #include <optional>
 #include "../../../multiplayer.h"
+#include "../../../multiplayer_directory.h"
 
 namespace pe::ui
 {
@@ -639,6 +640,8 @@ class Services
     }
 
     virtual Eden::Multiplayer::Snapshot room_status() { return {}; }
+    virtual Eden::Multiplayer::RoomDirectory public_rooms(const std::atomic<bool>&)
+    { return {{}, "Public rooms are unavailable."}; }
     virtual Eden::Multiplayer::Connection room_connection() { return {}; }
     virtual bool connect_room(const Eden::Multiplayer::Connection&) { return false; }
     virtual void leave_room() {}

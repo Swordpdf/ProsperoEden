@@ -255,6 +255,16 @@ class Launcher
     void press_multiplayer(Key key);
     void update_multiplayer();
     void draw_multiplayer(Canvas& c, float open);
+    void refresh_public_rooms();
+    void draw_public_rooms(Canvas& c);
+    enum class RoomPage { choice, private_room, public_rooms };
+    RoomPage room_page_ = RoomPage::choice;
+    Eden::Multiplayer::RoomDirectory room_directory_;
+    std::atomic<bool> room_directory_stop_{false};
+    std::future<Eden::Multiplayer::RoomDirectory> room_directory_request_;
+    bool room_directory_loaded_ = false;
+    bool room_directory_refresh_ = false;
+    bool room_password_join_ = false;
     Eden::Multiplayer::Connection room_connection_;
     Eden::Multiplayer::Snapshot room_status_;
     int room_row_ = 0;

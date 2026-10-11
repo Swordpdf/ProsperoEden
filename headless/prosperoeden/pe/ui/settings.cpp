@@ -358,8 +358,8 @@ void Launcher::draw_settings(Canvas &c)
     }
     case kMultiplayer:
         about = tr("Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version.");
-        lines = {{tr("CONNECTION"), tr("Room address and UDP port")},
-                 {tr("TAILSCALE"), tr("Use the local UDP forward address")}};
+        lines = {{tr("PUBLIC ROOMS"), tr("Browse the public directory")},
+                 {tr("PRIVATE ROOM"), tr("Room address and UDP port")}};
         break;
     default:
         about = tr("The language games use when they offer it.");

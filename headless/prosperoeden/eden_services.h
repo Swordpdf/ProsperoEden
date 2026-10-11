@@ -104,6 +104,7 @@ public:
     bool load_image(const std::string& path, pe::gfx::Image* image) override;
 
     Eden::Multiplayer::Snapshot room_status() override;
+    Eden::Multiplayer::RoomDirectory public_rooms(const std::atomic<bool>& stop) override;
     Eden::Multiplayer::Connection room_connection() override;
     bool connect_room(const Eden::Multiplayer::Connection&) override;
     void leave_room() override;

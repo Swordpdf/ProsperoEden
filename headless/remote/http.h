@@ -49,6 +49,8 @@ extern "C"
         remote_http_sink sink;
         remote_http_stop stop;       /* NULL: never stopped */
         void *user;
+        const char *api_version;   /* NULL: no API-version header */
+        int https_only;            /* disallow HTTP, including redirects, for public services */
     } remote_http_request;
 
     typedef struct remote_http_result

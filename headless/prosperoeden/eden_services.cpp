@@ -5,6 +5,7 @@
 #include "crash_report.h"
 #include "diagnostics.h"
 #include "multiplayer_logging.h"
+#include "network/room.h"
 #include "metadata_bridge.h"
 #include "mods.h"
 #include "profiles.h"
@@ -473,6 +474,9 @@ std::string ProfileName(const std::string& key) {
 } // namespace
 
 Eden::Multiplayer::Snapshot EdenServices::room_status() { return rooms_.GetSnapshot(); }
+Eden::Multiplayer::RoomDirectory EdenServices::public_rooms(const std::atomic<bool>& stop) {
+    return Eden::Multiplayer::FetchRoomDirectory(Network::network_version, stop);
+}
 Eden::Multiplayer::Connection EdenServices::room_connection() {
     auto result = Eden::LoadRoomConnection();
     if (result.nickname.empty()) result.nickname = "PlayerPS5";

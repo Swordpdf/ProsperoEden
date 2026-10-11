@@ -506,6 +506,27 @@ void pictures(Stage &s)
     s.wait(0.5f);
     s.press({Key::down, Key::down, Key::down, Key::cross}); // Multiplayer
     s.wait(0.8f);
+    s.shoot("B0-multiplayer-choice");
+    s.press({Key::cross});
+    s.wait(0.8f);
+    s.shoot("B1-public-rooms");
+    const auto check_room = [&](bool condition, const char* label) {
+        if (!condition) { std::fprintf(stderr, "Room preview failed: %s\n", label); s.ok = false; }
+    };
+    s.press({Key::down, Key::down, Key::down, Key::cross});
+    check_room(s.services.room.phase == Eden::Multiplayer::Phase::Idle, "incompatible join blocked");
+    s.shoot("B2-public-incompatible");
+    s.press({Key::up, Key::cross}); // Password dialog cancelled by preview service.
+    s.shoot("B3-public-password-cancelled");
+    s.wait(0.8f);
+    check_room(s.services.last_room_connection.host.empty(), "cancelled password does not join");
+    s.press({Key::up, Key::cross});
+    s.wait(0.8f);
+    check_room(s.services.last_room_connection.host == "192.0.2.1", "selected endpoint");
+    check_room(s.services.last_room_connection.password.empty(), "private password isolated");
+    s.press({Key::square, Key::circle});
+    s.press({Key::down, Key::cross});
+    s.wait(0.8f);
     s.shoot("C0-multiplayer-offline");
     s.press({Key::down, Key::down, Key::down, Key::down, Key::cross});
     s.wait(0.8f);
@@ -530,7 +551,7 @@ void pictures(Stage &s)
     s.press({Key::square});
     s.wait(0.5f);
     if (s.services.room.phase != Eden::Multiplayer::Phase::Idle) s.ok = false;
-    s.press({Key::circle, Key::down, Key::cross});
+    s.press({Key::circle, Key::circle, Key::down, Key::cross});
     s.wait(1.0f);
     s.shoot("21-language");
     s.press({Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down,

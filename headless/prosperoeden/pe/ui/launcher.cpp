@@ -52,6 +52,8 @@ Launcher::Launcher(Services &services, Textures &textures, const Fonts &fonts, b
 
 Launcher::~Launcher()
 {
+    room_directory_stop_ = true;
+    if (room_directory_request_.valid()) room_directory_request_.wait();
     room_edit_stop_ = true;
     if (room_edit_.valid()) room_edit_.wait();
     // The game list may still be reading; it uses the services this launcher was given.
