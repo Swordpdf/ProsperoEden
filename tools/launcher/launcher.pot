@@ -318,6 +318,10 @@ msgstr ""
 msgid "Connection failed"
 msgstr ""
 
+#: pe/ui/multiplayer.cpp
+msgid "Connection problem"
+msgstr ""
+
 #: pe/ui/library.cpp
 msgid "Console mode"
 msgstr ""

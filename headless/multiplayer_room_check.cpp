@@ -325,7 +325,7 @@ void CheckController(u16 port) {
     assert(client.Connect(connection));
     assert(!client.BeginGame());
     Wait([&] { return client.GetSnapshot().phase == Phase::Failed; });
-    assert(client.GetSnapshot().error == "The room password is incorrect.");
+    assert(client.GetSnapshot().error == "Incorrect password. Enter the room password again; it is case-sensitive.");
     connection.password = "secret";
     assert(client.Connect(connection));
     Wait([&] { return client.GetSnapshot().phase == Phase::Connected; });
@@ -416,7 +416,7 @@ void CheckController(u16 port) {
     assert(client.BeginGame());
     room.Destroy();
     Wait([&] { return client.GetSnapshot().phase == Phase::Failed; });
-    assert(client.GetSnapshot().error == "The connection to the room was lost.");
+    assert(client.GetSnapshot().error == "Connection lost. Check your internet connection, then rejoin the room before restarting Local Wireless in the game.");
     assert(client.GameConnectionLost() && guest_socket_mode == 1);
     assert(member->GetPingMilliseconds() == -1);
     assert(!client.Connect(connection));
@@ -510,7 +510,7 @@ void CheckRejectedRoom(u16 port) {
     Wait([&] { return occupied.GetState() == Network::RoomMember::State::Joined; });
     assert(client.Connect({"127.0.0.1", port, "Occupied", ""}));
     Wait([&] { return client.GetSnapshot().phase == Phase::Failed; });
-    assert(client.GetSnapshot().error == "That nickname is already in use.");
+    assert(client.GetSnapshot().error == "Nickname already in use. Enter a different nickname and try again.");
     assert(client.Connect({"127.0.0.1", port, "Available", ""}));
     Wait([&] { return client.GetSnapshot().phase == Phase::Connected; });
     client.Leave();
@@ -519,7 +519,7 @@ void CheckRejectedRoom(u16 port) {
     Wait([&] { return members == 2; });
     assert(client.Connect({"127.0.0.1", port, "Available", ""}));
     Wait([&] { return client.GetSnapshot().phase == Phase::Failed; });
-    assert(client.GetSnapshot().error == "The room is full.");
+    assert(client.GetSnapshot().error == "Room full. Wait for a free place or choose another room.");
     second.Leave();
     Wait([&] { return members == 1; });
     assert(client.Connect({"127.0.0.1", port, "Available", ""}));
@@ -531,7 +531,7 @@ void CheckRejectedRoom(u16 port) {
     room.Destroy();
 }
 
-enum class TestRoom { OutOfOrder, Stalled, VersionMismatch };
+enum class TestRoom { OutOfOrder, Stalled, VersionMismatch, JoinTimeout };
 
 void CheckTestRoom(u16 port, TestRoom mode) {
     using namespace Eden::Multiplayer;
@@ -555,6 +555,8 @@ void CheckTestRoom(u16 port, TestRoom mode) {
                 const bool join = event.packet->dataLength && event.packet->data[0] == Network::IdJoinRequest;
                 enet_packet_destroy(event.packet);
                 if (!join) continue;
+                // Keep ENet responsive, but never accept the player's room join.
+                if (mode == TestRoom::JoinTimeout) continue;
                 if (mode == TestRoom::VersionMismatch) {
                     Network::Packet reply;
                     reply.Write(u8{Network::IdVersionMismatch}).Write(u32{Network::network_version + 1});
@@ -597,8 +599,9 @@ void CheckTestRoom(u16 port, TestRoom mode) {
         }
     }
     Wait([&] { return client.GetSnapshot().phase == Phase::Failed; });
-    assert(client.GetSnapshot().error == (stall ? "The connection to the room was lost." :
-        mode == TestRoom::VersionMismatch ? "The room uses a different protocol version." : "The room connection failed."));
+    assert(client.GetSnapshot().error == (stall ? "Connection lost. Check your internet connection, then rejoin the room before restarting Local Wireless in the game." :
+        mode == TestRoom::JoinTimeout ? "Room join timed out. The server connection opened, but room acceptance did not finish. Retry; if it repeats, ask the host to check the server log." :
+        mode == TestRoom::VersionMismatch ? "Incompatible room version. Update ProsperoEden or choose a compatible room; the host may also need to update the server." : "Connection failed. Try again. If it repeats, enable detailed logging in Settings and share the log with support."));
     paused = false;
     client.Leave();
     Wait([&] { return client.GetSnapshot().phase == Phase::Idle; });
@@ -682,6 +685,7 @@ int main(int argc, char** argv) {
     CheckTestRoom(port, TestRoom::OutOfOrder);
     CheckTestRoom(port, TestRoom::Stalled);
     CheckTestRoom(port, TestRoom::VersionMismatch);
+    CheckTestRoom(port, TestRoom::JoinTimeout);
     const auto start = std::chrono::steady_clock::now();
     {
         Eden::Multiplayer::RoomClient client;

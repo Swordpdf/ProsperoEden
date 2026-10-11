@@ -547,9 +547,22 @@ void pictures(Stage &s)
     s.shoot("C2c-multiplayer-members-shrink");
     s.press({Key::cross});
     if (s.services.room.phase != Eden::Multiplayer::Phase::Idle) s.ok = false;
-    s.services.room = {Eden::Multiplayer::Phase::Failed, "The connection to the room was lost.", {}, {}};
+    s.services.room = {Eden::Multiplayer::Phase::Failed, "Connection lost. Check your internet connection, then rejoin the room before restarting Local Wireless in the game.", {}, {}};
     s.wait(0.8f);
     s.shoot("C3-multiplayer-lost");
+    s.services.room.error = "Room join timed out. The server connection opened, but room acceptance did not finish. Retry; if it repeats, ask the host to check the server log.";
+    s.wait(7.0f); // Failure remains visible after transient notices expire.
+    s.shoot("C3a-private-timeout");
+    check_room(s.services.room.phase == Eden::Multiplayer::Phase::Failed, "failure persists");
+    s.press({Key::circle});
+    s.shoot("C3b-choice-timeout");
+    s.press({Key::cross});
+    s.wait(0.8f);
+    s.shoot("C3c-public-timeout");
+    s.services.room.error = "Incorrect password. Enter the room password again; it is case-sensitive.";
+    s.wait(0.8f);
+    s.shoot("C3d-public-password");
+    s.press({Key::circle, Key::down, Key::cross});
     s.press({Key::square});
     s.wait(0.5f);
     if (s.services.room.phase != Eden::Multiplayer::Phase::Idle) s.ok = false;

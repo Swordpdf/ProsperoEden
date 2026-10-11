@@ -106,7 +106,7 @@ int main() {
                 assert ("multiplayer debug:" in run.stderr) == detailed
                 assert ("Transport: rtt_ms=" in run.stderr) == detailed
                 assert ("Hostname lookup result=0 usable_ipv4=1" in run.stderr) == detailed
-                assert "The room password is incorrect." in run.stderr
+                assert "Incorrect password. Enter the room password again; it is case-sensitive." in run.stderr
                 assert not any(value in run.stderr for value in ("secret", "PlayerOne", "localhost", "127.0.0.1"))
             print("Multiplayer logs: default off, live toggle, normal errors, transport details and privacy: PASS")
             print("Real room: password rejection, retry, two members, LDN broadcast, proxy routing, loss: PASS")

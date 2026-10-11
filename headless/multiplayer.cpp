@@ -21,18 +21,18 @@ using Member = Network::RoomMember;
 namespace {
 const char* ErrorText(Member::Error error) {
     switch (error) {
-    case Member::Error::LostConnection: return "The connection to the room was lost.";
-    case Member::Error::HostKicked: return "The room host removed you.";
-    case Member::Error::NameCollision: return "That nickname is already in use.";
-    case Member::Error::IpCollision: return "The room could not assign a player address.";
-    case Member::Error::WrongVersion: return "The room uses a different protocol version.";
-    case Member::Error::WrongPassword: return "The room password is incorrect.";
-    case Member::Error::CouldNotConnect: return "The room did not respond. Check the address and UDP port.";
-    case Member::Error::RoomIsFull: return "The room is full.";
-    case Member::Error::HostBanned: return "You are banned from this room.";
-    case Member::Error::PermissionDenied: return "The room denied this operation.";
-    case Member::Error::NoSuchUser: return "That player is no longer in the room.";
-    default: return "The room connection failed.";
+    case Member::Error::LostConnection: return "Connection lost. Check your internet connection, then rejoin the room before restarting Local Wireless in the game.";
+    case Member::Error::HostKicked: return "Removed by the host. Ask the host before trying to rejoin, or choose another room.";
+    case Member::Error::NameCollision: return "Nickname already in use. Enter a different nickname and try again.";
+    case Member::Error::IpCollision: return "Player address unavailable. Try joining again. If it repeats, ask the host to check the room server.";
+    case Member::Error::WrongVersion: return "Incompatible room version. Update ProsperoEden or choose a compatible room; the host may also need to update the server.";
+    case Member::Error::WrongPassword: return "Incorrect password. Enter the room password again; it is case-sensitive.";
+    case Member::Error::CouldNotConnect: return "Could not reach the room. Check the address and UDP port, then retry. Ask the host to check that the server is online and its UDP port is reachable.";
+    case Member::Error::RoomIsFull: return "Room full. Wait for a free place or choose another room.";
+    case Member::Error::HostBanned: return "Banned from this room. Contact the host or choose another room.";
+    case Member::Error::PermissionDenied: return "Permission denied. Ask the host whether you are allowed to perform this action.";
+    case Member::Error::NoSuchUser: return "Player unavailable. Try again after the room information updates.";
+    default: return "Connection failed. Try again. If it repeats, enable detailed logging in Settings and share the log with support.";
     }
 }
 bool ValidConnection(const Connection& connection) {
@@ -128,7 +128,8 @@ struct RoomClient::Impl {
             Debug("Hostname lookup timed out");
         }
         if (!resolved || resolution->address.empty()) {
-            Fail("The room address could not be resolved. Check the hostname or use an IPv4 address.");
+            Fail(!resolved ? "Address lookup timed out. Check the hostname and internet connection, or enter the server IPv4 address."
+                           : "Address lookup failed. Check the hostname, or ask the host for the server IPv4 address.");
             return {};
         }
         Debug("Hostname lookup succeeded");
@@ -150,7 +151,7 @@ struct RoomClient::Impl {
         const bool timed_out = snapshot.phase == Phase::Connecting && snapshot.error.empty() &&
                                !stop.stop_requested();
         lock.unlock();
-        if (timed_out) Fail("The room did not finish accepting the connection.");
+        if (timed_out) Fail("Room join timed out. The server connection opened, but room acceptance did not finish. Retry; if it repeats, ask the host to check the server log.");
         if (timed_out || stop.stop_requested()) member->Leave();
     }
 
@@ -178,7 +179,7 @@ struct RoomClient::Impl {
             try {
                 Join(std::move(connection), stop);
             } catch (const std::exception&) {
-                Fail("The room connection could not be started.");
+                Fail("Could not start the connection. Restart ProsperoEden and try again. If it repeats, enable detailed logging in Settings.");
                 member->Leave();
             }
             {
@@ -196,7 +197,7 @@ RoomClient::RoomClient() : impl(std::make_unique<Impl>()) {
     auto& p = *impl;
     p.initialized = Network::Init();
     if (!p.initialized) {
-        p.snapshot.error = "Multiplayer networking could not be initialized.";
+        p.snapshot.error = "Networking unavailable. Restart ProsperoEden and check the console network connection before trying again.";
         return;
     }
     p.member = Network::GetRoomMember().lock();

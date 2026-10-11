@@ -56,3 +56,24 @@ stopped deployment before package replacement. No diagnostic launch or public ro
 The environment lock was released. Do not resume console work without new user authorization.
 
 - 2026-10-10 | G1 | 28e668d | .30 | no-run: title reopened during deployment preflight; testing deferred by user | results/public-room-browser/ | retain local packages
+
+## Connection error presentation (local follow-up)
+
+Multiplayer now keeps a highlighted explanation visible on the choice, private and public
+screens after a failed attempt. Each reported cause includes a next step: check the address
+and UDP port, correct a password or nickname, choose another room, or contact the host.
+Hostname lookup timeout and lookup failure have distinct messages. A room-acceptance timeout
+explains that the server connection opened but the room did not finish accepting the player.
+These messages describe the observed stage, not a diagnosis of a firewall or server fault.
+ENet, connection deadlines and retry behavior are unchanged.
+
+Validation: host preview passed and timeout/password layouts were visually inspected;
+native build and repository audits passed. The ASan/UBSan multiplayer suite passed with
+logging enabled and disabled, including a new localhost server case that keeps ENet alive
+but never replies to the room join request. Existing rejection, retry and log-privacy checks
+also passed. Translation catalog checking reports untranslated multiplayer text; English
+fallback remains in use. Preview images are in `build/public-room-preview/C3*.png`.
+
+No console access or GitHub push was performed for this follow-up. The package hashes above
+describe the earlier candidate; they do not contain this UI follow-up. Console validation
+remains deferred, and the separate reported connectivity issue is not fixed by these messages.
