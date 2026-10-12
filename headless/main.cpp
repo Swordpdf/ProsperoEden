@@ -1131,6 +1131,9 @@ int main(int argc, char** argv) {
             if (!pad->Open()) throw std::runtime_error("PS5 controller initialization failed");
             Eden::BootTrace::Line("controllers open");
             Settings::values.audio_output_device_id = "ps5";
+            // AudioIn sessions take their stream from the input sink, a separate one: left at the
+            // default it was upstream's NullSink, which releases no samples (audio.cpp).
+            Settings::values.audio_input_device_id = "ps5";
             // Settings > Controls, or the game's own (Library > Game settings > Controls).
             const auto controls = Eden::PreferencesFor(game_title);
             Settings::values.vibration_enabled.SetValue(controls.vibration);

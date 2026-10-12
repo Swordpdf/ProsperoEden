@@ -639,7 +639,10 @@ void CheckAudio() {
     Reject([&] { stream->AppendBuffer(buffer, pcm); });
     sink.CloseStreams(); state.fail_output = false;
     const int opened = state.audio_opens;
-    sink.AcquireSinkStream(system, 2, "input null", StreamType::In);
+    auto* input = sink.AcquireSinkStream(system, 2, "input null", StreamType::In);
+    const auto released = input->ReleaseBuffer(0xf00 / sizeof(s16));
+    CHECK(released.size() == 0xf00 / sizeof(s16));
+    CHECK(std::ranges::all_of(released, [](s16 sample) { return sample == 0; }));
     sink.CloseStreams(); CHECK(state.audio_opens == opened);
     CHECK(state.audio_opens == state.audio_closes); CHECK(state.audio_drains == 6);
     std::puts("Audio PCM mono/stereo/6-channel, volume, queue, underrun, pause/resume and failure cleanup PASS");
