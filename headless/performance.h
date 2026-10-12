@@ -316,6 +316,11 @@ void RecordHle(const char* service, unsigned command, long long ns);
 // direct memory (what the next allocation needs) is under kShortMemory.
 // dev-settings gc_dirty=upstream restores Eden's rule.
 inline std::atomic<bool> gc_keep_dirty{true};
+// The collector's per-run budget counts evictions, not visits (tools/
+// prepare-vulkan-port.py): skipped images used to burn it and stop the scan,
+// so kept images shielded everything behind them. dev-settings gc_scan=upstream
+// restores Eden's visit counting.
+inline std::atomic<bool> gc_count_visits{false};
 inline std::atomic<bool> graphics_memory_short{false};
 // 1 GiB: the pool is the CPU's too, and the largest thing a game asked of it at once was a
 // block of 486 MiB (a texture array of 121 layers, decoded before it is uploaded). With 384 MiB
