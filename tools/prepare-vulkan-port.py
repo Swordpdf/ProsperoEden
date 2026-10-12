@@ -663,6 +663,41 @@ for stage in ('vert', 'frag'):
 path = output / 'vulkan_hud_shaders.h'
 if not path.exists() or path.read_text() != shader_header:
     path.write_text(shader_header)
+# The allocator's budget is the driver's, and on the console it does not say what is available: the
+# driver counts each allocation of graphics memory twice (as VRAM and as visible VRAM), so the budget
+# of the 8 GiB heap is used up at 4 GiB, and it knows nothing of the pool the CPU shares. Eden asks
+# for images and buffers within the budget and takes a refusal as final (its Commit paths do not:
+# they ask again outside the budget). Tears of the Kingdom at 2x ended with "ran out of graphics
+# memory" while the pool had 0.75 GiB in one block and 1.5 GiB free. An image or a buffer the budget
+# refuses is asked for again outside it, as Commit does; the driver refuses when the pool has no
+# room, and that is still the session's end.
+allocator = (source / 'src/video_core/vulkan_common/vulkan_memory_allocator.cpp').read_text()
+for call in ('vmaCreateImage(allocator, &ci, &alloc_ci, &handle, &allocation, &alloc_info)',
+             'vmaCreateBuffer(allocator, &ci, &alloc_ci, &handle, &allocation, &alloc_info)',
+             'vmaCreateBufferWithAlignment(allocator, &ci, &alloc_ci, min_alignment, &handle,\n'
+             '                                           &allocation, &alloc_info)'):
+    old = '    vk::Check(' + call + ');\n'
+    if allocator.count(old) != 1:
+        raise RuntimeError(f'Pinned Vulkan allocator changed: {call[:28]} is there {allocator.count(old)} times')
+    allocator = allocator.replace(old, (
+        '    VkResult created = CALL;\n'
+        '    if (created != VK_SUCCESS) {\n'
+        '        VmaAllocationCreateInfo outside_budget = alloc_ci;\n'
+        '        outside_budget.flags &= ~static_cast<VmaAllocationCreateFlags>(VMA_ALLOCATION_CREATE_WITHIN_BUDGET_BIT);\n'
+        '        created = AGAIN;\n'
+        '        const auto times = ::Eden::Performance::outside_budget.fetch_add(1, std::memory_order_relaxed) + 1;\n'
+        '        if ((times & (times - 1)) == 0)  // the 1st, 2nd, 4th, 8th ... time\n'
+        '            std::fprintf(stderr, "[ProsperoEden] graphics memory: the allocator\'s budget refused %llu requests; "\n'
+        '                         "asked again outside it (result %d)\\n", static_cast<unsigned long long>(times), int(created));\n'
+        '    }\n'
+        '    vk::Check(created);\n').replace('CALL', call).replace('AGAIN', call.replace('&alloc_ci', '&outside_budget')))
+include = '#include "video_core/vulkan_common/vulkan_memory_allocator.h"\n'
+if allocator.count(include) != 1:
+    raise RuntimeError('Pinned Vulkan allocator changed: its own include')
+allocator = allocator.replace(include, include + '#include <atomic>\n#include <cstdio>\n#include "performance.h"\n')
+path = output / 'vulkan_memory_allocator.cpp'
+if not path.exists() or path.read_text() != allocator:
+    path.write_text(allocator)
 adapt('src/video_core/vulkan_common/vulkan.h', 'include/video_core/vulkan_common/vulkan.h',
       [('#else\n#define VK_USE_PLATFORM_XLIB_KHR', '#elif defined(PS5_NATIVE)\n// Native display-plane presentation, no desktop window-system headers.\n#else\n#define VK_USE_PLATFORM_XLIB_KHR')])
 adapt('src/video_core/vulkan_common/vulkan_instance.cpp', 'vulkan_instance.cpp', [

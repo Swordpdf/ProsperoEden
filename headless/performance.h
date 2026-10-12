@@ -111,6 +111,9 @@ inline Totals gpu_fence_drain, gpu_present_wait, gpu_queue_full;
 // lookahead stopped). calls = drains, requested_bytes = images covered: one drain per image in the
 // unbatched case is the stall to drive out.
 inline Totals gc_batched_drain, gc_unbatched_drain;
+// Images and buffers the allocator's budget refused and that were asked for again outside it
+// (tools/prepare-vulkan-port.py, the Vulkan allocator).
+inline std::atomic<unsigned long long> outside_budget{0};
 inline std::array<Totals, 4> core_run;
 inline std::array<std::atomic<long long>, 4> core_cpu{};
 // What the collector's lookahead did with the images it met, and why an image still waited
