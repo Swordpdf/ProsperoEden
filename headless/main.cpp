@@ -570,6 +570,16 @@ int main(int argc, char** argv) {
             Eden::Performance::BeginPcSampling();
             pc_sampler_installed = true;
         }
+        // Where the guest cores' host threads are while a frame is overdue (performance.h).
+        static bool stall_sampler_installed = false;
+        if (!stall_sampler_installed && std::filesystem::exists(Eden::AppFile("stall-sample.txt"))) {
+            if (!pc_sampler_installed) {
+                Eden::Performance::BeginPcSampling();  // the signal's handler
+                pc_sampler_installed = true;
+            }
+            Eden::Performance::BeginStallSampling();
+            stall_sampler_installed = true;
+        }
 #endif
         setenv("PS5VK_QUIET_LOG", performance_run ? "1" : "0", 1);
         // Bounded development cost breakdowns; never enable per-draw tracing.
@@ -1703,6 +1713,9 @@ int main(int argc, char** argv) {
 #ifdef PS5_NATIVE
                     if (completion->room_lost)
                         launch_error = "The room connection was lost. Rejoin from Multiplayer before launching again.";
+#endif
+#ifdef EDEN_DEV_PROFILE
+                    Eden::Performance::EndStallWindow();  // before the game's threads go
 #endif
                     session_seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - session_start).count();
                     if (!guest_exited && !game) {

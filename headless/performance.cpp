@@ -65,6 +65,26 @@ pthread_t core_sample_thread{};
 std::atomic<bool> core_sample_ready{};
 unsigned pc_reported{};
 bool pc_sampling{};
+#ifdef PS5_NATIVE
+// Stall samples (performance.h, BeginStallSampling).
+struct StallSample {
+    long long ns;
+    uintptr_t pc;
+    unsigned core, found;
+    std::array<uintptr_t, 14> calls;
+    std::atomic<bool> done;
+};
+std::array<StallSample, 4096> stall_samples{};
+std::atomic<unsigned> stall_count{};
+unsigned stall_reported{};
+std::atomic<bool> stall_sampling{};
+std::array<pthread_t, 3> stall_threads{};
+std::array<std::atomic<bool>, 3> stall_ready{};
+// A thread reads its own stack through its pipe: an address that is not mapped fails the write
+// instead of faulting (the stack of a guest thread is a fiber's, of unknown extent).
+std::array<std::array<int, 2>, 3> stall_pipes{};
+std::array<std::array<uintptr_t, 512>, 3> stall_words{};
+#endif
 #if defined(EDEN_DEV_WAIT_CALLERS) && defined(PS5_NATIVE)
 // Same firmware6.02 register offsets qualified by the C46 caller sampler.
 constexpr size_t runtime_rsp_offset = 248, runtime_rbp_offset = 136;
@@ -106,7 +126,57 @@ constexpr std::size_t jit_block_capacity = std::size_t{1} << 20;
 JitBlock* core0_blocks = nullptr;
 std::atomic<std::size_t> core0_block_count{0};
 
+#ifdef PS5_NATIVE
+extern "C" {
+// The app's code, from the link (tools/unwind.ld).
+extern const char __eden_text_start[];
+extern const char __eden_text_end[];
+}
+// In the signal handler: only system calls, atomics and the clock.
+void TakeStallSample(unsigned core, void* context) {
+    const unsigned index = stall_count.fetch_add(1, std::memory_order_relaxed);
+    if (index >= stall_samples.size()) return;
+    StallSample& sample = stall_samples[index];
+    sample.ns = NowNs();
+    sample.core = core;
+    // Where system software 6.02 keeps the interrupted address; on another version this word may
+    // be something else, and the calls below do not depend on it.
+    sample.pc = static_cast<const uintptr_t*>(context)[224 / sizeof(uintptr_t)];
+    const uintptr_t first = reinterpret_cast<uintptr_t>(__eden_text_start) + 8;
+    const uintptr_t last = reinterpret_cast<uintptr_t>(__eden_text_end);
+    unsigned found = 0;
+    char here;  // this frame: what the thread was doing is above it
+    uintptr_t at = reinterpret_cast<uintptr_t>(&here) & ~uintptr_t{7};
+    for (unsigned pages = 0; pages < 24 && found < sample.calls.size(); ++pages) {
+        const std::size_t bytes = 4096 - (at & 4095);
+        const ssize_t wrote = write(stall_pipes[core][1], reinterpret_cast<const void*>(at), bytes);
+        if (wrote <= 0) break;
+        if (read(stall_pipes[core][0], stall_words[core].data(), static_cast<std::size_t>(wrote)) != wrote) break;
+        for (std::size_t i = 0; i < static_cast<std::size_t>(wrote) / 8 && found < sample.calls.size(); ++i) {
+            const uintptr_t value = stall_words[core][i];
+            if (value >= first && value < last && (found == 0 || sample.calls[found - 1] != value))
+                sample.calls[found++] = value;
+        }
+        if (static_cast<std::size_t>(wrote) != bytes) break;
+        at += bytes;
+    }
+    sample.found = found;
+    sample.done.store(true, std::memory_order_release);
+}
+#endif
+
 void PcSignal(int, siginfo_t*, void* context) {
+#ifdef PS5_NATIVE
+    if (stall_sampling.load(std::memory_order_acquire)) {
+        const pthread_t self = pthread_self();
+        for (unsigned core = 0; core < stall_threads.size(); ++core) {
+            if (!stall_ready[core].load(std::memory_order_acquire) || !pthread_equal(self, stall_threads[core]))
+                continue;
+            TakeStallSample(core, context);
+            return;
+        }
+    }
+#endif
     if (core_sample_ready.load(std::memory_order_acquire) &&
         pthread_equal(pthread_self(), core_sample_thread)) {
         const unsigned core_index = core_pc_count.load(std::memory_order_relaxed);
@@ -721,6 +791,17 @@ void RegisterWorker(const char* name) {
             }
         }
 #endif
+#if defined(EDEN_DEV_PROFILE) && defined(PS5_NATIVE)
+        if (stall_sampling.load(std::memory_order_acquire) && i < stall_threads.size()) {
+            sigset_t mask;
+            sigemptyset(&mask);
+            sigaddset(&mask, SIGUSR2);
+            if (pthread_sigmask(SIG_UNBLOCK, &mask, nullptr))
+                throw std::runtime_error("Cannot enable the development stall sampler");
+            stall_threads[i] = pthread_self();
+            stall_ready[i].store(true, std::memory_order_release);
+        }
+#endif
         worker.clock_error = CurrentCpuClock(&worker.clock);
         worker.wall_ns = Common::g_wall_clock.GetTimeNS().count();
         worker.mono_ns = ClockNs(CLOCK_MONOTONIC);
@@ -965,6 +1046,54 @@ extern "C" void eden_jit_block(unsigned core, unsigned long long location, const
     core0_blocks[count] = JitBlock{address, size, location};
     core0_block_count.store(count + 1, std::memory_order_release);
 }
+
+#ifdef PS5_NATIVE
+void BeginStallSampling() {
+    for (auto& ends : stall_pipes)
+        if (pipe(ends.data())) throw std::runtime_error("Cannot open the development stall sampler's pipes");
+    stall_sampling.store(true, std::memory_order_release);
+    std::printf("EDEN_STALL_SAMPLING text=%llx-%llx capacity=%zu\n",
+                static_cast<unsigned long long>(reinterpret_cast<uintptr_t>(__eden_text_start)),
+                static_cast<unsigned long long>(reinterpret_cast<uintptr_t>(__eden_text_end)), stall_samples.size());
+    std::thread([] {
+        for (;;) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(8));
+            const long long last = last_frame_ns.load(std::memory_order_relaxed);
+            if (last == 0 || frames_shown.load(std::memory_order_relaxed) < 900) continue;
+            const long long gap = NowNs() - last;
+            if (gap < 120'000'000 || gap > 1'500'000'000) continue;
+            if (stall_count.load(std::memory_order_relaxed) >= stall_samples.size()) continue;
+            for (unsigned core = 0; core < stall_threads.size(); ++core)
+                if (stall_ready[core].load(std::memory_order_acquire)) pthread_kill(stall_threads[core], SIGUSR2);
+        }
+    }).detach();
+}
+
+void EndStallWindow() {
+    for (auto& ready : stall_ready) ready.store(false, std::memory_order_release);
+    frames_shown.store(0, std::memory_order_relaxed);
+    last_frame_ns.store(0, std::memory_order_relaxed);
+}
+
+void ReportStallSamples() {
+    const unsigned end = std::min<unsigned>(stall_count.load(std::memory_order_acquire),
+                                            static_cast<unsigned>(stall_samples.size()));
+    while (stall_reported < end && stall_samples[stall_reported].done.load(std::memory_order_acquire)) {
+        const StallSample& sample = stall_samples[stall_reported++];
+        char line[420];
+        int length = std::snprintf(line, sizeof(line), "EDEN_STALL_SAMPLE ns=%lld core=%u pc=%llx calls=", sample.ns,
+                                   sample.core, static_cast<unsigned long long>(sample.pc));
+        for (unsigned i = 0; i < sample.found && length > 0 && length < 380; ++i)
+            length += std::snprintf(line + length, sizeof(line) - static_cast<std::size_t>(length), "%s%llx",
+                                    i ? "," : "", static_cast<unsigned long long>(sample.calls[i]));
+        std::puts(line);
+    }
+}
+#else
+void BeginStallSampling() {}
+void EndStallWindow() {}
+void ReportStallSamples() {}
+#endif
 
 void BeginPcSampling() {
     struct sigaction previous{}, action{};

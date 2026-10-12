@@ -655,6 +655,9 @@ void GraphicsWindow::OnFrameDisplayed() {
         // What a recorded controller session counts frames by (gameplay_test.h): the input
         // worker runs on another thread, so it reads a copy rather than the member.
         Display::gameplay_frame.store(frame_total, std::memory_order_relaxed);
+        // For the development stall sampler (performance.h): when the last frame came.
+        Eden::Performance::frames_shown.store(frame_total, std::memory_order_relaxed);
+        Eden::Performance::last_frame_ns.store(Eden::Performance::NowNs(), std::memory_order_relaxed);
         if (frame_sample_start < 0) {
             frame_sample_start = frame_sample_last = now;
         } else {
@@ -748,6 +751,9 @@ void GraphicsWindow::OnFrameDisplayed() {
                                                 why[1] - last_why[1], why[2] - last_why[2], why[3] - last_why[3],
                                                 why[4] - last_why[4], why[5] - last_why[5], why[6] - last_why[6]);
                     std::puts(line);
+#ifdef EDEN_DEV_PROFILE
+                    Eden::Performance::ReportStallSamples();
+#endif
                 }
                 last_game = game;
                 last_why = why;

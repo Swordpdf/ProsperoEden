@@ -51,6 +51,17 @@ void SampleCpu(unsigned core, unsigned long long thread, unsigned long long pc, 
 // what they grew by (graphics.cpp): a core that was inside the JIT all the frame long and used
 // the CPU for it was computing, one that used none was held up below the game.
 void CoreRan(unsigned core, long long start_ns);
+// Development (stall-sample.txt in the app folder): where the host threads of the guest cores
+// are while a frame is overdue. From 120 ms after the last frame, and for a second and a half
+// at most (a loading screen is not a stall), the three threads are signalled every 8 ms; each
+// notes the addresses of the app's code on its stack, which are the calls it is inside (the
+// build has no frame pointers; tools read them back as crash reports are read). Not in the
+// first 900 frames of a game: signals during a boot have hung it.
+void BeginStallSampling();
+void EndStallWindow();      // the game is stopping: no more signals to its threads
+void ReportStallSamples();  // prints what was sampled since the last call
+inline std::atomic<long long> last_frame_ns{0};
+inline std::atomic<unsigned> frames_shown{0};
 struct alignas(64) Totals {
     std::atomic<unsigned long long> calls{}, nanoseconds{}, requested_bytes{};
 };
