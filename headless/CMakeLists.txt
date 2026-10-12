@@ -617,6 +617,22 @@ foreach(bits 32 64)
         if(inline_exclusive_at LESS 0)
             message(FATAL_ERROR "Pinned exclusive-access configuration changed")
         endif()
+        # Eden's Unsafe CPU mode (Settings > Performance > Faster CPU emulation) clears this again, twice:
+        # cpuopt_unsafe_host_mmu is false on every platform but Apple, Linux, Android and Windows, so the
+        # Unsafe case and the closing IsFastmemEnabled() check both drop fastmem_exclusive_access, and every
+        # LDXR/STXR then left JIT code for the global-monitor helpers (14% of the core time in Pokemon Violet,
+        # measured). The pointer reset stays; the inline page-table path needs no fastmem pointer.
+        set(unsafe_old "        if (!Settings::values.cpuopt_unsafe_host_mmu) {\n            config.fastmem_pointer = std::nullopt;\n            config.fastmem_exclusive_access = false;\n        }")
+        set(unsafe_new "        if (!Settings::values.cpuopt_unsafe_host_mmu) {\n            config.fastmem_pointer = std::nullopt;\n        }")
+        set(final_old "    if (!Settings::IsFastmemEnabled()) {\n        config.fastmem_pointer = std::nullopt;\n        config.fastmem_exclusive_access = false;\n    }")
+        set(final_new "    if (!Settings::IsFastmemEnabled()) {\n        config.fastmem_pointer = std::nullopt;\n    }")
+        foreach(pair IN ITEMS unsafe final)
+            string(FIND "${wrapper}" "${${pair}_old}" unsafe_at)
+            if(unsafe_at LESS 0)
+                message(FATAL_ERROR "Pinned Unsafe CPU mode fastmem handling changed (${pair}, arm_dynarmic_${bits})")
+            endif()
+            string(REPLACE "${${pair}_old}" "${${pair}_new}" wrapper "${wrapper}")
+        endforeach()
     endif()
       string(REPLACE "std::uint32_t(512_MiB)" "std::uint32_t(16_MiB)" wrapper "${wrapper}")
       # Guest cores 0-2 share a 640 MiB code budget. A64: 256/192/192, since a large
