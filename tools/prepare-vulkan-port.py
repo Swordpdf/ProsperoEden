@@ -695,6 +695,34 @@ include = '#include "video_core/vulkan_common/vulkan_memory_allocator.h"\n'
 if allocator.count(include) != 1:
     raise RuntimeError('Pinned Vulkan allocator changed: its own include')
 allocator = allocator.replace(include, include + '#include <atomic>\n#include <cstdio>\n#include "performance.h"\n')
+# Development: what the allocator holds, heap by heap (performance.h, eden_report_vma).
+constructor = '                    device_.GetPhysical().GetProperties().limits.bufferImageGranularity} {\n'
+if allocator.count(constructor) != 1:
+    raise RuntimeError('Pinned Vulkan allocator changed: its constructor')
+allocator = allocator.replace(constructor, constructor + '    eden_vma = allocator;\n')
+allocator = allocator.replace('#include "performance.h"\n', '#include "performance.h"\nstatic VmaAllocator eden_vma{};\n', 1)
+allocator += '''
+extern "C" void eden_report_vma() {
+    if (!eden_vma) return;
+    VmaTotalStatistics total{};
+    vmaCalculateStatistics(eden_vma, &total);
+    VmaBudget budgets[VK_MAX_MEMORY_HEAPS]{};
+    vmaGetHeapBudgets(eden_vma, budgets);
+    for (unsigned heap = 0; heap < VK_MAX_MEMORY_HEAPS; ++heap) {
+        const VmaDetailedStatistics& detail = total.memoryHeap[heap];
+        if (detail.statistics.blockCount == 0 && detail.statistics.allocationCount == 0) continue;
+        std::printf("EDEN_VULKAN_VMA heap=%u blocks=%u allocations=%u block_bytes=%llu used_bytes=%llu "
+                    "free_ranges=%u largest_free_range=%llu largest_allocation=%llu driver_usage=%llu driver_budget=%llu\\n",
+                    heap, detail.statistics.blockCount, detail.statistics.allocationCount,
+                    static_cast<unsigned long long>(detail.statistics.blockBytes),
+                    static_cast<unsigned long long>(detail.statistics.allocationBytes), detail.unusedRangeCount,
+                    static_cast<unsigned long long>(detail.unusedRangeCount ? detail.unusedRangeSizeMax : 0),
+                    static_cast<unsigned long long>(detail.statistics.allocationCount ? detail.allocationSizeMax : 0),
+                    static_cast<unsigned long long>(budgets[heap].usage),
+                    static_cast<unsigned long long>(budgets[heap].budget));
+    }
+}
+'''
 path = output / 'vulkan_memory_allocator.cpp'
 if not path.exists() or path.read_text() != allocator:
     path.write_text(allocator)
@@ -794,7 +822,25 @@ for signature, index in (
     if index == 13:
         scope += '''    if constexpr (std::is_same_v<Runtime, Vulkan::TextureCacheRuntime>) {
         if ((cost_timer || Eden::Performance::texture_budget_log.load(std::memory_order_relaxed)) &&
-            frame_tick % 300 == 0)
+            frame_tick % 300 == 0) {
+            // What holds the graphics memory: the cache's images (the scaled copies apart) and
+            // the allocator's heaps (performance.h, eden_report_vma).
+            unsigned long long images = 0, bytes = 0, scaled_images = 0, scaled_bytes = 0, written = 0;
+            lru_cache.ForEachItemBelow(~u64{0}, [&](ImageId id) {
+                const auto& image = slot_images[id];
+                ++images;
+                bytes += (std::max)(image.guest_size_bytes, image.unswizzled_size_bytes);
+                if (image.HasScaled()) {
+                    ++scaled_images;
+                    scaled_bytes += GetScaledImageSizeBytes(image);
+                }
+                if (True(image.flags & ImageFlagBits::GpuModified)) ++written;
+                return false;
+            });
+            std::printf("EDEN_VULKAN_TEXTURES frame=%llu images=%llu bytes=%llu scaled_images=%llu scaled_bytes=%llu "
+                        "gpu_written=%llu\\n", static_cast<unsigned long long>(frame_tick), images, bytes,
+                        scaled_images, scaled_bytes, written);
+            eden_report_vma();
             std::printf("EDEN_VULKAN_TEXTURE_BUDGET frame=%llu usage=%llu expected=%llu critical=%llu "
                         "keep_dirty=%d memory_short=%d\\n",
                         static_cast<unsigned long long>(frame_tick),
@@ -803,6 +849,7 @@ for signature, index in (
                         static_cast<unsigned long long>(critical_memory),
                         int(Eden::Performance::gc_keep_dirty.load(std::memory_order_relaxed)),
                         int(Eden::Performance::graphics_memory_short.load(std::memory_order_relaxed)));
+        }
     }
 '''
     texture_costs.append((anchor, anchor + scope))

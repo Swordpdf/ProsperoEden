@@ -9,6 +9,8 @@
 #include <optional>
 #include "common/cpu_features.h"
 
+// Development: prints what the Vulkan allocator holds, heap by heap (tools/prepare-vulkan-port.py).
+extern "C" void eden_report_vma();
 namespace Eden::Performance {
 void RegisterWorker(const char* name);
 // Development: keep other named threads off guest cores 0-2 and their SMT siblings.
