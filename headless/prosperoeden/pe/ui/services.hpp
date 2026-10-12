@@ -653,9 +653,10 @@ class Services
     virtual void leave_room() {}
     virtual std::optional<std::string> room_text(int, const std::string&, const std::atomic<bool>&)
     { return std::nullopt; }
-    // The system keyboard, digits only, for a game's RNG seed: what was typed, or nothing when it
-    // was cancelled. Throws when the keyboard cannot be opened.
-    virtual std::optional<std::string> seed_text(const std::string& /*initial*/, const std::atomic<bool>& /*stop*/)
+    // Asks for a game's RNG seed on the system keyboard (digits only), starting from the seed it
+    // has (-1: none). The seed typed; -1 when what was typed is not a seed (0 to 4294967295);
+    // nothing when the keyboard was cancelled. Throws when the keyboard cannot be opened.
+    virtual std::optional<std::int64_t> ask_seed(std::int64_t /*current*/, const std::atomic<bool>& /*stop*/)
     { return std::nullopt; }
     virtual bool can_launch_game() { return true; }
 

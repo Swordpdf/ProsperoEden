@@ -7,7 +7,6 @@
 #include "pe/ui/launcher.hpp"
 
 #include <algorithm>
-#include <charconv>
 #include <chrono>
 #include <cstdint>
 #include <string>
@@ -268,11 +267,9 @@ void Launcher::edit_seed()
     seed_edit_stop_ = false;
     try
     {
-        seed_edit_ = std::async(std::launch::async,
-                                [this, initial = game_settings_.rng_seed >= 0 ?
-                                                     std::to_string(game_settings_.rng_seed) : std::string{}] {
-                                    return services_.seed_text(initial, seed_edit_stop_);
-                                });
+        seed_edit_ = std::async(std::launch::async, [this, current = game_settings_.rng_seed] {
+            return services_.ask_seed(current, seed_edit_stop_);
+        });
     }
     catch (const std::exception &)
     {
@@ -285,7 +282,7 @@ void Launcher::update_game_options()
 {
     if (!seed_edit_.valid() || seed_edit_.wait_for(std::chrono::seconds{0}) != std::future_status::ready)
         return;
-    std::optional<std::string> answer;
+    std::optional<std::int64_t> answer;
     try
     {
         answer = seed_edit_.get();
@@ -300,16 +297,14 @@ void Launcher::update_game_options()
     if (!answer || seed_edit_stop_ || modal_ != Modal::game_options || game_options_ != category_system ||
         games_.empty())
         return;
-    std::uint32_t seed = 0;
-    const auto parsed = std::from_chars(answer->data(), answer->data() + answer->size(), seed);
-    if (answer->empty() || parsed.ec != std::errc{} || parsed.ptr != answer->data() + answer->size())
+    if (*answer < 0)
     {
         say(tr("Enter a number between 0 and 4294967295."), true);
         cue(Cue::error);
         return;
     }
     GameSettings next = game_settings_;
-    next.rng_seed = seed;
+    next.rng_seed = *answer;
     const bool saved =
         services_.set_game_settings(games_[static_cast<std::size_t>(library_.selected)].title_id, next);
     if (saved)

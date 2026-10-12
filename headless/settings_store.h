@@ -442,8 +442,18 @@ struct GameSettings {
     bool own_mapping = false;   // the game has a button mapping of its own: mapping
     ButtonMapping mapping = kDefaultMapping;
     std::array<int, kPerformanceSwitches> performance{-1, -1, -1, -1, -1, -1, -1};  // kPerformanceKeys
-    int64_t rng_seed = -1;
+    int64_t rng_seed = -1;      // 0 to 4294967295, or -1: no seed (load_address.h)
 };
+// The seed a typed text names: digits and nothing else, 0 to 4294967295. -1 for any other text.
+inline int64_t RngSeedFromText(std::string_view text) {
+    if (text.empty() || text.size() > 10) return -1;
+    uint64_t seed = 0;
+    for (const char digit : text) {
+        if (digit < '0' || digit > '9') return -1;
+        seed = seed * 10 + static_cast<uint64_t>(digit - '0');
+    }
+    return seed <= 0xffffffffULL ? static_cast<int64_t>(seed) : -1;
+}
 inline constexpr const char* kRendererKeys[] = {"opengl", "vulkan"};
 // Library > Game settings > Controls > Controller type: the controller every player of the game
 // gets (the handheld: player 1 only). Without one a game gets what it takes, a Pro Controller

@@ -366,6 +366,19 @@ int main() {
         assert(Eden::SaveGameSettings(quest, game, file));
         assert(Eden::LoadGameSettings(quest, file).rng_seed == 0);
         game.rng_seed = -1;
+        // A typed seed: digits only, within 32 bits.
+        assert(Eden::RngSeedFromText("0") == 0 && Eden::RngSeedFromText("1234") == 1234 &&
+               Eden::RngSeedFromText("007") == 7 && Eden::RngSeedFromText("4294967295") == 0xffffffffLL);
+        assert(Eden::RngSeedFromText("") == -1 && Eden::RngSeedFromText("4294967296") == -1 &&
+               Eden::RngSeedFromText("99999999999") == -1 && Eden::RngSeedFromText("-1") == -1 &&
+               Eden::RngSeedFromText("+5") == -1 && Eden::RngSeedFromText("12a") == -1 &&
+               Eden::RngSeedFromText(" 12") == -1 && Eden::RngSeedFromText("1.5") == -1);
+        // Every seed a text can name is one the settings take.
+        game.rng_seed = Eden::RngSeedFromText("4294967295");
+        assert(Eden::SaveGameSettings(quest, game, file) &&
+               Eden::LoadGameSettings(quest, file).rng_seed == 0xffffffffLL);
+        game.rng_seed = -1;
+        assert(Eden::SaveGameSettings(quest, game, file) && Eden::LoadGameSettings(quest, file).rng_seed == -1);
         wrong = game;
         wrong.mute = 2;
         assert(!Eden::SaveGameSettings(quest, wrong, file));

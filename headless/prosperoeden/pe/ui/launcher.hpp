@@ -416,7 +416,7 @@ class Launcher
     int game_options_ = 0;          // the category a game's own settings dialog shows
     ListView option_rows_;          // its rows
     std::atomic<bool> seed_edit_stop_{false};
-    std::future<std::optional<std::string>> seed_edit_;  // the keyboard, while it is open
+    std::future<std::optional<std::int64_t>> seed_edit_;  // the keyboard, while it is open
     bool mapping_for_game_ = false; // the mapping dialog edits the game's own mapping
     ListView mapping_rows_;
     std::vector<Profile> profiles_; // the people who play on this console
