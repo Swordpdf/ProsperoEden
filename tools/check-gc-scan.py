@@ -41,6 +41,7 @@ assert "max_scanned = 8192" in port, "scan bound"
 # under the upstream flag, evictions only without it.
 assert "num_iterations == 0 || num_scanned >= max_scanned" in port, "stop rule"
 assert "++num_scanned;" in port, "visit count"
+assert "num_scanned = 0;" in port, "fresh allowance for the aggressive pass"
 assert port.count("gc_count_visits.load(std::memory_order_relaxed)") == 2, \
     "flag read at both burn sites"
 

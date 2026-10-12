@@ -844,6 +844,12 @@ for old, new in [
      '        if (num_iterations == 0 || num_scanned >= max_scanned) {\n            return true;\n        }\n        ++num_scanned;\n        if (::Eden::Performance::gc_count_visits.load(std::memory_order_relaxed)) {\n            --num_iterations;\n        }'),
     ('        if ((!aggressive_mode && True(image.flags & ImageFlagBits::CostlyLoad)) || (!DirtyEvictions() && must_download)) {\n            return false;\n        }',
      '        if ((!aggressive_mode && True(image.flags & ImageFlagBits::CostlyLoad)) || (!DirtyEvictions() && must_download)) {\n            return false;\n        }\n        if (!::Eden::Performance::gc_count_visits.load(std::memory_order_relaxed)) {\n            --num_iterations;\n        }'),
+    # The aggressive pass gets its own scan allowance: Configure resets the
+    # eviction budget per pass, and the scan counter must reset with it, or a
+    # first pass spent on skips would stillborn the second one. Runs after the
+    # Configure(true) pair above, whose first line this matches.
+    ('        Configure(true);',
+     '        Configure(true);\n        num_scanned = 0;'),
 ]:
     if gc.count(old) != 1:
         raise RuntimeError(f'Pinned GC anchor changed: {old}')
