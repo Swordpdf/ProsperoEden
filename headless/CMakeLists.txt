@@ -877,6 +877,26 @@ if(EDEN_A32_FASTMEM)
     list(REMOVE_ITEM core_sources "loader/deconstructed_rom_directory.cpp")
     list(APPEND core_sources "${PORT_BUILD_DIR}/deconstructed_rom_directory.cpp")
 endif()
+if(EDEN_DEV_PROFILE)
+    # Unmapped low-address read tracer (TotK inventory-freeze diagnosis). Eden's Read
+    # path logs the fault; the first few also capture the reading guest thread's
+    # backtrace so one repro identifies the null-reader. Throttled: silent counts
+    # with periodic totals afterwards (a storm must not stall the log pipe).
+    # Reads the A32 block's derived file above.
+    if(NOT EDEN_A32_FASTMEM)
+        message(FATAL_ERROR "Dev unmapped tracer needs EDEN_A32_FASTMEM (derived memory.cpp).")
+    endif()
+    file(READ "${PORT_BUILD_DIR}/memory.cpp" unmapped_source)
+    set(unmapped_old "        if (auto const ptr = GetPointerImpl(addr, [addr]() {\n            LOG_ERROR(HW_Memory, \"Unmapped Read{} @ {:#016x}\", sizeof(T) * 8, addr);")
+    string(FIND "${unmapped_source}" "${unmapped_old}" unmapped_at)
+    if(unmapped_at LESS 0)
+        message(FATAL_ERROR "Pinned unmapped-read log changed; review the storm tracer first.")
+    endif()
+    string(REPLACE "${unmapped_old}" "        if (auto const ptr = GetPointerImpl(addr, [addr, this]() {\n            LOG_ERROR(HW_Memory, \"Unmapped Read{} @ {:#016x}\", sizeof(T) * 8, addr);\n#ifdef EDEN_DEV_PROFILE\n            if (addr < 0x10000) {\n                static std::atomic<unsigned> eden_unmapped_low_total{0};\n                static std::atomic<unsigned> eden_unmapped_low_traced{0};\n                const unsigned eden_unmapped_n = eden_unmapped_low_total.fetch_add(1, std::memory_order_relaxed) + 1;\n                if (eden_unmapped_low_traced.load(std::memory_order_relaxed) < 8 && eden_unmapped_low_traced.fetch_add(1, std::memory_order_relaxed) < 8) {\n                    try {\n                        const Kernel::KThread* eden_trace_thread = system.Kernel().GetCurrentEmuThread();\n                        std::string eden_trace_frames;\n                        if (eden_trace_thread) {\n                            for (const auto& entry : Core::GetBacktrace(eden_trace_thread))\n                                eden_trace_frames += fmt::format(\" {}+{:X}\", entry.module, entry.offset);\n                        }\n                        LOG_ERROR(HW_Memory, \"EDEN_UNMAPPED_TRACE addr={:#x} size={} thread={} frames={}\", addr, sizeof(T), eden_trace_thread ? Core::GetThreadName(eden_trace_thread).value_or(\"-\") : \"-\", eden_trace_frames.empty() ? \"-\" : eden_trace_frames);\n                    } catch (...) {\n                        // Never fail the read path from a diagnostic probe.\n                    }\n                } else if (eden_unmapped_n % 8192 == 0) {\n                    LOG_ERROR(HW_Memory, \"EDEN_UNMAPPED_TOTAL low_reads={}\", eden_unmapped_n);\n                }\n            }\n#endif" unmapped_source "${unmapped_source}")
+    write_derived("${PORT_BUILD_DIR}/memory.cpp" "#include <atomic>\n#include <string>\n#include \"core/arm/debug.h\"\n${unmapped_source}")
+    list(REMOVE_ITEM core_sources "memory.cpp" "${PORT_BUILD_DIR}/memory.cpp")
+    list(APPEND core_sources "${PORT_BUILD_DIR}/memory.cpp")
+endif()
 # GetPseudoDeviceId read the seed through the control data without checking that there is
 # any (a game without control data, such as a homebrew NRO): seed 0 then, as for other
 # NACP fields Eden defaults when the metadata is missing.
