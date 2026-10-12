@@ -23,14 +23,17 @@
 #include "stb_image_write.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <initializer_list>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -213,6 +216,39 @@ void pictures(Stage &s)
     s.press({Key::circle, Key::circle});
     s.wait(0.6f);
     s.shoot("53-game-settings-changed");
+    // Its own System: the RNG seed switched on, then typed on the keyboard. A text that is no
+    // seed and a cancelled keyboard leave it as it was; Left takes the seed away again.
+    {
+        // The keyboard answers on a thread of its own: it is given a moment before the frames
+        // that take its answer.
+        const auto type = [&s](std::optional<std::int64_t> answer) {
+            s.services.typed_seed = answer;
+            s.press({Key::cross});
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            s.wait(0.4f);
+        };
+        const auto seed = [&s] { return s.services.game_settings(0).rng_seed; };
+        s.press({Key::down, Key::cross});
+        s.wait(0.6f);
+        s.shoot("D0-game-system");
+        s.press({Key::right});
+        const bool switched_on = seed() == 0;
+        type(1234);
+        s.shoot("D1-game-system-seed");
+        const bool typed = seed() == 1234;
+        type(-1);
+        s.shoot("D2-game-system-not-a-seed");
+        type(std::nullopt);
+        const bool kept = seed() == 1234;
+        s.press({Key::left});
+        if (!switched_on || !typed || !kept || seed() != -1)
+        {
+            std::fprintf(stderr, "error: the game's RNG seed did not follow what was chosen and typed\n");
+            s.ok = false;
+        }
+        s.press({Key::circle});
+        s.wait(0.6f);
+    }
     // The game's mods: the row, the list, one switched on, and a game that has none.
     s.press({Key::down, Key::down});
     s.wait(0.6f);
@@ -696,7 +732,8 @@ void pictures(Stage &s)
     s.shoot("94-library-downloaded");
     s.press({Key::triangle});
     s.wait(0.6f);
-    s.press({Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down});
+    s.press({Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down,
+             Key::down});
     s.wait(0.6f);
     s.shoot("95-game-delete-row");
     s.press({Key::cross});

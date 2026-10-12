@@ -240,6 +240,13 @@ class FakeServices final : public ui::Services
         game_settings_ = settings;
         return true;
     }
+    // What the keyboard gives the next time a game's RNG seed is asked for: a seed, -1 for a
+    // text that is no seed, nothing for a cancelled keyboard.
+    std::optional<std::int64_t> typed_seed;
+    std::optional<std::int64_t> ask_seed(std::int64_t, const std::atomic<bool> &) override
+    {
+        return typed_seed;
+    }
     ui::Preferences preferences() override
     {
         return preferences_;
