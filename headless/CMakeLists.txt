@@ -130,6 +130,36 @@ string(REPLACE "    to.impl->previous_fiber = weak_from.lock();"
 string(REPLACE "    // \"from\" might no longer be valid if the thread was killed\n    if (auto from = weak_from.lock()) {"
     "    if (auto* from = static_cast<Fiber*>(transfer.data)) {" fiber_source "${fiber_source}")
 write_derived("${PORT_BUILD_DIR}/fiber.cpp" "${fiber_source}")
+# Eden writes a log line on the thread that logs it, and flushes the file to storage after every
+# error line. On the console a flush is a storage write of about 0.7 ms, and a game that reads
+# unmapped memory logs an error for each read: Tears of the Kingdom does it six hundred to twelve
+# hundred times at a stretch, which held a guest core inside the logger for 0.4 to 0.9 s while no
+# frame was shown (33 such frames in a session of five and a half minutes). An error is flushed at
+# once when the last flush is 100 ms old, as a lone error always is; in a burst the lines in between
+# wait for the next flush (the next error after 100 ms, a full buffer, or the logger's own Flush).
+file(READ "${PROJECT_SOURCE_DIR}/src/common/logging.cpp" logging_source)
+set(old_error_flush "            if (write_limit_exceeded)\n                enabled = false;\n            file->Flush();")
+set(old_log_file "    std::optional<FS::IOFile> file;")
+foreach(pinned IN ITEMS old_error_flush old_log_file)
+    string(FIND "${logging_source}" "${${pinned}}" pinned_at)
+    if(pinned_at LESS 0)
+        message(FATAL_ERROR "Pinned log file backend changed (${pinned}); review the flush of error lines.")
+    endif()
+endforeach()
+string(REPLACE "${old_error_flush}" [=[            if (write_limit_exceeded)
+                enabled = false;
+            const long long flush_now = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now().time_since_epoch()).count();
+            if (write_limit_exceeded || flush_now - error_flushed_ms.load(std::memory_order_relaxed) >= 100) {
+                error_flushed_ms.store(flush_now, std::memory_order_relaxed);
+                file->Flush();
+            }]=] logging_source "${logging_source}")
+string(REPLACE "${old_log_file}" "    std::optional<FS::IOFile> file;\n    std::atomic<long long> error_flushed_ms{-1000};  // when an error line was last flushed" logging_source "${logging_source}")
+write_derived("${PORT_BUILD_DIR}/logging.cpp" "#include <atomic>\n#include <chrono>\n${logging_source}")
+get_target_property(common_sources common SOURCES)
+list(REMOVE_ITEM common_sources logging.cpp)
+list(APPEND common_sources "${PORT_BUILD_DIR}/logging.cpp")
+set_property(TARGET common PROPERTY SOURCES "${common_sources}")
 get_target_property(common_sources common SOURCES)
 list(REMOVE_ITEM common_sources fiber.cpp)
 list(APPEND common_sources "${PORT_BUILD_DIR}/fiber.cpp")
