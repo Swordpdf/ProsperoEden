@@ -699,7 +699,16 @@ for call in ('vmaCreateImage(allocator, &ci, &alloc_ci, &handle, &allocation, &a
         '            std::fprintf(stderr, "[ProsperoEden] graphics memory: the allocator\'s budget refused %llu requests; "\n'
         '                         "asked again outside it (result %d)\\n", static_cast<unsigned long long>(times), int(created));\n'
         '    }\n'
-        '    vk::Check(created);\n').replace('CALL', call).replace('AGAIN', call.replace('&alloc_ci', '&outside_budget')))
+        '    vk::Check(created);\n'
+        '    if (alloc_info.size >= (VkDeviceSize{128} << 20))  // development: what the large ones are\n'
+        '        std::fprintf(stderr, "[ProsperoEden] graphics memory: one allocation of %llu MiB: DETAIL\\n",\n'
+        '                     static_cast<unsigned long long>(alloc_info.size >> 20), VALUES);\n'
+        ).replace('CALL', call).replace('AGAIN', call.replace('&alloc_ci', '&outside_budget'))
+        .replace('DETAIL', 'image %ux%ux%u, %u layers, %u levels, %u samples, format %d' if 'Image' in call
+                 else 'buffer of %llu bytes, usage 0x%x')
+        .replace('VALUES', 'ci.extent.width, ci.extent.height, ci.extent.depth, ci.arrayLayers, ci.mipLevels, '
+                 'unsigned(ci.samples), int(ci.format)' if 'Image' in call
+                 else 'static_cast<unsigned long long>(ci.size), unsigned(ci.usage)'))
 include = '#include "video_core/vulkan_common/vulkan_memory_allocator.h"\n'
 if allocator.count(include) != 1:
     raise RuntimeError('Pinned Vulkan allocator changed: its own include')
@@ -835,7 +844,7 @@ for signature, index in (
             // What holds the graphics memory: the cache's images (the scaled copies apart) and
             // the allocator's heaps (performance.h, eden_report_vma).
             unsigned long long images = 0, bytes = 0, scaled_images = 0, scaled_bytes = 0, written = 0;
-            lru_cache.ForEachItemBelow(~u64{0}, [&](ImageId id) {
+            lru_cache.ForEachItemBelow(u64{0x7fffffffffffffff}, [&](ImageId id) {  // every image
                 const auto& image = slot_images[id];
                 ++images;
                 bytes += (std::max)(image.guest_size_bytes, image.unswizzled_size_bytes);
