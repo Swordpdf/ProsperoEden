@@ -59,6 +59,10 @@ eden_fastmem_probe_fallback:
 namespace Common {
 void* AllocateMemoryPages(size_t size) noexcept;
 void* AllocateGuestMemory(size_t size) noexcept;  // above the guest's address space (memory_pages.cpp)
+// The same block backed where the guest's kernel uses it, and what goes with it (memory_pages.cpp).
+void* AllocateGuestMemoryWhereUsed(size_t size) noexcept;
+void CommitGuestMemory(std::uint64_t offset, size_t bytes) noexcept;
+void FreeGuestMemory(void* base, size_t size) noexcept;
 void FreeMemoryPages(void* base, size_t size) noexcept;
 #ifdef PS5_NATIVE
 std::int64_t DirectMemoryStart(const void* pointer) noexcept;
@@ -479,7 +483,9 @@ public:
             base = static_cast<u8*>(mapped);
         }
 #endif
-        if (!base) base = static_cast<u8*>(AllocateGuestMemory(requested));
+        // The fastmem window aliases the block by its place in direct memory: it is then one block.
+        if (!base)
+            base = static_cast<u8*>(fastmem ? AllocateGuestMemory(requested) : AllocateGuestMemoryWhereUsed(requested));
         if (!base) throw std::system_error(errno, std::generic_category(), "Backing allocation");
         if (!fastmem) return;
         window = std::make_unique<Window>();
@@ -498,7 +504,7 @@ public:
             return;
         }
 #endif
-        FreeMemoryPages(base, size);
+        FreeGuestMemory(base, size);
     }
 };
 
@@ -526,7 +532,10 @@ HostMemory& HostMemory::operator=(HostMemory&& other) noexcept {
 void HostMemory::ClearBackingRegion(size_t offset, size_t length, u32 fill) {
     if (offset > backing_size || length > backing_size - offset)
         throw std::out_of_range("Backing clear range");
-    if (length) std::memset(backing_base + offset, fill, length);
+    if (length) {
+        CommitGuestMemory(offset, length);
+        std::memset(backing_base + offset, fill, length);
+    }
 }
 // Eden calls these only while a page table uses VirtualBasePointer() as its fastmem
 // arena. Without a window they are rejected rather than presented as no-ops.

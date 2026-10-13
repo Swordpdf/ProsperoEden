@@ -259,11 +259,15 @@ struct SparseRange {
     std::atomic<std::uintptr_t> begin{0}; // 0: free
     std::uintptr_t end = 0;
     std::atomic<bool>* owned = nullptr; // per slot: it has a block of its own
+    bool guest = false;                 // the guest's memory, not a table (counted apart)
     std::int64_t* physical = nullptr;   // that block (PS5)
 };
 std::array<SparseRange, 64> sparse_ranges;
 std::mutex sparse_mutex;
 std::atomic<std::size_t> sparse_reserved{0}, sparse_committed{0};
+// The guest's memory when it is such a range (below: "The guest's memory, backed where it is used").
+std::atomic<std::size_t> guest_reserved{0}, guest_committed{0};
+std::atomic<SparseRange*> guest_range{nullptr};
 std::atomic<int> sparse_state{0}; // 0 unknown, 1 in use, 2 not available (tables are dense)
 
 SparseRange* SparseRangeOf(std::uintptr_t address) {
@@ -305,12 +309,13 @@ bool MapSlot(std::uintptr_t at, int protection, std::int64_t physical) {
 }
 #endif
 
-// Reserves `span` bytes whose every slot reads as zeroes. Null when the platform refuses.
-void* ReserveSparse(std::size_t span) {
+// Reserves `span` bytes whose every slot reads as zeroes. Null when the platform refuses. The
+// guest's memory goes above the guest's address space, as it does when it is taken whole.
+void* ReserveSparse(std::size_t span, [[maybe_unused]] bool guest = false) {
 #ifdef PS5_NATIVE
-    void* address = reinterpret_cast<void*>(cpu_mapping_hint);
+    void* address = reinterpret_cast<void*>(guest ? guest_memory_hint : cpu_mapping_hint);
     if (sceKernelReserveVirtualRange(&address, span, 0, SparseSlot) != 0) return nullptr;
-    if (!cpu_mapping_range(address, span)) {
+    if (guest ? reinterpret_cast<std::uintptr_t>(address) < guest_memory_hint : !cpu_mapping_range(address, span)) {
         (void)munmap(address, span);
         return nullptr;
     }
@@ -355,8 +360,9 @@ void ReleaseSparse(SparseRange& range) {
         if (sceKernelReleaseDirectMemory(range.physical[slot], SparseSlot) != 0) std::abort();
 #endif
     }
-    sparse_reserved.fetch_sub(span, std::memory_order_relaxed);
-    sparse_committed.fetch_sub(owned * SparseSlot, std::memory_order_relaxed);
+    (range.guest ? guest_reserved : sparse_reserved).fetch_sub(span, std::memory_order_relaxed);
+    (range.guest ? guest_committed : sparse_committed).fetch_sub(owned * SparseSlot, std::memory_order_relaxed);
+    range.guest = false;
     range.begin.store(0, std::memory_order_release);
     delete[] range.owned;
     delete[] range.physical;
@@ -433,9 +439,12 @@ bool SparseTablesAvailable() noexcept {
     return SparseAvailable();
 }
 
-void* AllocateSparsePages(std::size_t size) noexcept {
+namespace {
+// A sparse range of `size` bytes: every slot reads as zeroes until CommitSparsePage gives it a
+// block of its own. Null when the size is too small for one or the platform refuses.
+void* NewSparseRange(std::size_t size, bool guest) {
     const std::size_t span = (size + SparseSlot - 1) / SparseSlot * SparseSlot;
-    if (size < 2 * SparseSlot || span < size || !SparseAvailable()) return AllocateMemoryPages(size);
+    if (size < 2 * SparseSlot || span < size || !SparseAvailable()) return nullptr;
     const std::lock_guard lock{sparse_mutex};
     SparseRange* free_range = nullptr;
     for (auto& range : sparse_ranges)
@@ -446,15 +455,11 @@ void* AllocateSparsePages(std::size_t size) noexcept {
     const std::size_t slots = span / SparseSlot;
     auto* owned = free_range ? new (std::nothrow) std::atomic<bool>[slots] : nullptr;
     auto* physical = owned ? new (std::nothrow) std::int64_t[slots] : nullptr;
-    void* address = physical ? ReserveSparse(span) : nullptr;
+    void* address = physical ? ReserveSparse(span, guest) : nullptr;
     if (address == nullptr) {
         delete[] owned;
         delete[] physical;
-        // The platform took the check's two slots but not this table: it is dense, as before.
-        char line[96];
-        const int length = std::snprintf(line, sizeof(line), "EDEN_SPARSE_TABLES dense bytes=%zu\n", size);
-        if (length > 0) Report(line);
-        return AllocateMemoryPages(size);
+        return nullptr;
     }
     for (std::size_t slot = 0; slot < slots; ++slot) {
         owned[slot].store(false, std::memory_order_relaxed);
@@ -462,10 +467,24 @@ void* AllocateSparsePages(std::size_t size) noexcept {
     }
     free_range->owned = owned;
     free_range->physical = physical;
+    free_range->guest = guest;
     free_range->end = reinterpret_cast<std::uintptr_t>(address) + span;
     free_range->begin.store(reinterpret_cast<std::uintptr_t>(address), std::memory_order_release);
-    sparse_reserved.fetch_add(span, std::memory_order_relaxed);
+    (guest ? guest_reserved : sparse_reserved).fetch_add(span, std::memory_order_relaxed);
+    if (guest) guest_range.store(free_range, std::memory_order_release);
     return address;
+}
+} // namespace
+
+void* AllocateSparsePages(std::size_t size) noexcept {
+    if (void* const address = NewSparseRange(size, false)) return address;
+    if (size >= 2 * SparseSlot && SparseAvailable()) {
+        // The platform took the check's two slots but not this table: it is dense, as before.
+        char line[96];
+        const int length = std::snprintf(line, sizeof(line), "EDEN_SPARSE_TABLES dense bytes=%zu\n", size);
+        if (length > 0) Report(line);
+    }
+    return AllocateMemoryPages(size);
 }
 
 void FreeSparsePages(void* base, std::size_t size) noexcept {
@@ -482,6 +501,65 @@ void FreeSparsePages(void* base, std::size_t size) noexcept {
     FreeMemoryPages(base, size); // a table that was allocated dense
 }
 
+// ---- The guest's memory, backed where it is used ----
+//
+// A game's console has 4 GiB, and the guest's kernel divides them into pools: the game's, the
+// applets', the system's. Taken whole, the block is 4 GiB of the pool the CPU shares with the
+// GPU from the moment a game starts. But the kernel hands a pool's pages out as they are asked
+// for, and a page it has not handed out was never written: the applets' pool is not used by a
+// game at all, most of the system's is not, and a small game leaves most of its own. So the
+// block is a sparse range like the tables above, each 2 MiB slot one shared block of zeroes
+// until it is committed, and it is committed where the guest's kernel uses it: everything
+// outside the pools when the kernel starts, and a pool's pages when they are handed out (the
+// two places are in headless/CMakeLists.txt, "The guest's memory is backed where it is used").
+// Reading a slot that was never committed gives zeroes, as the block taken whole would;
+// writing one that was not announced stops the app, on the console as in the host checks.
+void CommitSparsePage(std::uintptr_t page) noexcept;
+
+void* AllocateGuestMemoryWhereUsed(std::size_t size) noexcept {
+    // Development A/B: dev-settings guest_memory=whole takes the block whole, as before.
+    void* base = DevSetting("guest_memory=whole") ? nullptr : NewSparseRange(size, true);
+    if (base == nullptr) return AllocateGuestMemory(size);
+    char line[112];
+    const int length = std::snprintf(line, sizeof(line), "EDEN_GUEST_MEMORY va=%p bytes=%zu above_guest=1 backed=where-used\n",
+                                     base, size);
+    if (length > 0) Report(line);
+    return base;
+}
+
+// Memory behind `bytes` of the guest's memory from `offset` on (whole slots). Nothing to do for
+// a block that was taken whole.
+void CommitGuestMemory(std::uint64_t offset, std::size_t bytes) noexcept {
+    SparseRange* const range = guest_range.load(std::memory_order_acquire);
+    if (range == nullptr || bytes == 0) return;
+    const auto begin = range->begin.load(std::memory_order_relaxed);
+    const std::size_t span = range->end - begin;
+    if (offset >= span) return;
+    if (bytes > span - offset) bytes = span - static_cast<std::size_t>(offset);
+    const std::size_t last = (static_cast<std::size_t>(offset) + bytes - 1) / SparseSlot;
+    for (std::size_t slot = static_cast<std::size_t>(offset) / SparseSlot; slot <= last; ++slot)
+        if (!range->owned[slot].load(std::memory_order_acquire)) CommitSparsePage(begin + slot * SparseSlot);
+}
+
+// The guest's memory, however it was taken.
+void FreeGuestMemory(void* base, std::size_t size) noexcept {
+    if (SparseRange* const range = guest_range.load(std::memory_order_acquire);
+        range != nullptr && range->begin.load(std::memory_order_relaxed) == reinterpret_cast<std::uintptr_t>(base)) {
+        char line[112];
+        const int length = std::snprintf(line, sizeof(line), "EDEN_GUEST_MEMORY given back: held=%zu of=%zu\n",
+                                         guest_committed.load(std::memory_order_relaxed), size);
+        if (length > 0) Report(line);
+        guest_range.store(nullptr, std::memory_order_release);
+    }
+    FreeSparsePages(base, size);
+}
+
+// The span of the guest's memory and the memory behind it; both 0 for a block taken whole.
+void GuestMemoryUsage(std::size_t* span, std::size_t* held) noexcept {
+    *span = guest_reserved.load(std::memory_order_relaxed);
+    *held = guest_committed.load(std::memory_order_relaxed);
+}
+
 void CommitSparsePage(std::uintptr_t page) noexcept {
     SparseRange* range = SparseRangeOf(page);
     if (range == nullptr) return; // dense: already writable
@@ -495,7 +573,7 @@ void CommitSparsePage(std::uintptr_t page) noexcept {
         Report("EDEN_SPARSE_TABLES commit failed: out of memory\n");
         std::abort();
     }
-    sparse_committed.fetch_add(SparseSlot, std::memory_order_relaxed);
+    (range->guest ? guest_committed : sparse_committed).fetch_add(SparseSlot, std::memory_order_relaxed);
     range->owned[slot].store(true, std::memory_order_release);
 }
 

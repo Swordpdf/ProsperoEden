@@ -1535,6 +1535,39 @@ set_property(TARGET core PROPERTY SOURCES "${page_table_core_sources}")
 # A server's stopped flag only covers its inner request loop; stopping the CPU
 # immediately after it fires can abandon the applet destructor mid-cleanup.
 file(READ "${PROJECT_SOURCE_DIR}/src/core/hle/kernel/kernel.cpp" kernel_source)
+# The guest's memory is backed where it is used (src/memory_pages.cpp). Here: everything outside
+# the pools, as soon as the kernel knows where the pools are and before its first write (the
+# slab heaps). A pool's pages follow when they are handed out (k_memory_manager.cpp below).
+set(guest_backing_site "        DeriveInitialMemoryLayout();\n        Init::InitializeSlabHeaps(system, *memory_layout);")
+string(FIND "${kernel_source}" "${guest_backing_site}" guest_backing_at)
+if(guest_backing_at LESS 0)
+    message(FATAL_ERROR "Pinned kernel start changed; review where the guest's memory is backed.")
+endif()
+string(REPLACE "${guest_backing_site}"
+    "        DeriveInitialMemoryLayout();\n        for (const auto& region : memory_layout->GetPhysicalMemoryRegionTree()) {\n            const u64 dram = Core::DramMemoryMap::Base;\n            if (region.IsDerivedFrom(KMemoryRegionType_DramUserPool) || region.GetLastAddress() < dram) continue;\n            const u64 start = std::max<u64>(region.GetAddress(), dram);\n            ::Common::CommitGuestMemory(start - dram, region.GetLastAddress() - start + 1);\n        }\n        Init::InitializeSlabHeaps(system, *memory_layout);"
+    kernel_source "${kernel_source}")
+string(PREPEND kernel_source "#include <algorithm>\n#include <cstddef>\n#include <cstdint>\n#include \"core/device_memory.h\"\nnamespace Common { void CommitGuestMemory(std::uint64_t offset, std::size_t bytes) noexcept; }\n")
+file(READ "${PROJECT_SOURCE_DIR}/src/core/hle/kernel/k_memory_manager.cpp" pool_source)
+string(PREPEND pool_source "#include <cstddef>\n#include <cstdint>\nnamespace Common { void CommitGuestMemory(std::uint64_t offset, std::size_t bytes) noexcept; }\n")
+# Its two places: a run of pages in one piece, and the blocks of a page group.
+set(continuous_site "    // If we failed to allocate, quit now.\n    if (allocated_block == 0) {\n        return 0;\n    }\n")
+set(group_site "                KPhysicalAddress allocated_block = cur_manager->AllocateBlock(index, random);\n                if (allocated_block == 0) {\n                    break;\n                }\n")
+string(FIND "${pool_source}" "${continuous_site}" continuous_at)
+string(FIND "${pool_source}" "${group_site}" group_at)
+if(continuous_at LESS 0 OR group_at LESS 0)
+    message(FATAL_ERROR "Pinned guest page allocation changed; review where the guest's memory is backed.")
+endif()
+string(REPLACE "${continuous_site}"
+    "${continuous_site}    ::Common::CommitGuestMemory(GetInteger(allocated_block) - Core::DramMemoryMap::Base, num_pages * PageSize);\n"
+    pool_source "${pool_source}")
+string(REPLACE "${group_site}"
+    "${group_site}                ::Common::CommitGuestMemory(GetInteger(allocated_block) - Core::DramMemoryMap::Base, pages_per_alloc * PageSize);\n"
+    pool_source "${pool_source}")
+write_derived("${PORT_BUILD_DIR}/k_memory_manager.cpp" "${pool_source}")
+get_target_property(pool_core_sources core SOURCES)
+list(REMOVE_ITEM pool_core_sources hle/kernel/k_memory_manager.cpp)
+list(APPEND pool_core_sources "${PORT_BUILD_DIR}/k_memory_manager.cpp")
+set_property(TARGET core PROPERTY SOURCES "${pool_core_sources}")
 string(REPLACE "    void Shutdown(KernelCore& kernel) {" "    void Shutdown(KernelCore& kernel) {\n        worker_task_manager.WaitForRequests();" kernel_source "${kernel_source}")
 string(REPLACE "    ASSERT(R_SUCCEEDED(thread->Run(*this)));\n}"
     "    impl->service_threads.push_back(thread);\n    ASSERT(R_SUCCEEDED(thread->Run(*this)));\n}" kernel_source "${kernel_source}")
