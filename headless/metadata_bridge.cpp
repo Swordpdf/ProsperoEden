@@ -360,11 +360,23 @@ int eden_game_language(const char* rom_path, const char* keys_dir, uint64_t titl
     const auto application = NS::ConvertToApplicationLanguage(codes[static_cast<std::size_t>(chosen)]);
     const auto* priorities = application ? NS::GetApplicationLanguagePriorityList(*application) : nullptr;
     if (!supported || !priorities) return chosen;
-    for (const auto language : *priorities) {
-        if ((supported & NS::GetSupportedLanguageFlag(language)) == 0) continue;
-        const auto match = NS::ConvertToLanguageCode(language);
-        for (std::size_t i = 0; match && i < codes.size(); ++i)
-            if (codes[i] == *match) return static_cast<int>(i);
+    // The console's order for a language goes on to its neighbours before English: Brazilian
+    // Portuguese to Portuguese, then to Latin American Spanish. A player who chose Portuguese
+    // does not expect Spanish. So: the chosen language and its own variants in the console's
+    // order, then English, and only then the rest of that order. A language code starts with
+    // its two letters ("pt-BR", "pt"), which tells the variants of one language.
+    const auto letters = [](Service::Set::LanguageCode code) { return static_cast<u64>(code) & 0xffff; };
+    const u64 own = letters(codes[static_cast<std::size_t>(chosen)]);
+    const u64 english = u64{'e'} | u64{'n'} << 8;
+    for (int pass = 0; pass < 3; ++pass) {
+        for (const auto language : *priorities) {
+            if ((supported & NS::GetSupportedLanguageFlag(language)) == 0) continue;
+            const auto match = NS::ConvertToLanguageCode(language);
+            if (!match) continue;
+            if ((pass == 0 && letters(*match) != own) || (pass == 1 && letters(*match) != english)) continue;
+            for (std::size_t i = 0; i < codes.size(); ++i)
+                if (codes[i] == *match) return static_cast<int>(i);
+        }
     }
     return chosen;
 }
