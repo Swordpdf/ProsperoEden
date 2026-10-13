@@ -214,6 +214,15 @@ if(PS5_NATIVE)
     string(REPLACE "    GenRunCode(rcp);"
         "    std::printf(\"EDEN_JIT_FEATURES mask=%x cache_bytes=%zu\\n\", unsigned(GetHostFeatures()), total_code_size);\n    GenRunCode(rcp);" code_source "${code_source}")
 endif()
+  # A cache takes its memory as it fills (src/memory_pages.cpp): the JIT asks before every
+  # block, and before it takes room for constants, how far it is about to write.
+  set(commit_site "void BlockOfCode::EnsureMemoryCommitted([[maybe_unused]] size_t codesize) {\n")
+  string(FIND "${code_source}" "${commit_site}" commit_at)
+  if(commit_at LESS 0)
+      message(FATAL_ERROR "Pinned JIT memory commit changed")
+  endif()
+  string(REPLACE "${commit_site}"
+      "${commit_site}    commitMemory(std::min<size_t>(maxSize_, size_ + codesize));\n" code_source "${code_source}")
   # ConstantPool has completed construction before this body. Isolate its last
   # page from executable prelude, without accessing fields during construction.
   string(REPLACE "    EnableWriting();\n    EnsureMemoryCommitted(PRELUDE_COMMIT_SIZE);"

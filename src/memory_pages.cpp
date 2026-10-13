@@ -566,4 +566,160 @@ bool CommitMemoryRange(void* address, std::size_t size) noexcept {
     return mprotect(address, size, PROT_READ | PROT_WRITE) == 0;
 #endif
 }
+
+// ---- A range that fills: a JIT code cache ----
+//
+// The JIT writes a code cache from its start, one block after another, and starts again at the
+// beginning when the cache is full. Taken whole, the four caches of a 64-bit game are 656 MiB of
+// the pool the CPU shares with the GPU, and a large game fills little more than half of that.
+// So a cache is address space only, in two ranges (the one the JIT writes through and the one
+// the code runs from), and memory is put behind both a step at a time as the JIT reaches it:
+// CommitCodeRange is asked before every block. Memory is not taken back while the cache lives.
+namespace {
+constexpr std::size_t CodeStep = std::size_t{16} << 20;
+constexpr std::size_t CodeSteps = 64; // the largest cache: 1 GiB
+struct CodeRange {
+    std::atomic<std::uintptr_t> executable{0}; // 0: free
+    std::uintptr_t writable = 0;
+    std::size_t span = 0;
+    std::atomic<std::size_t> committed{0};
+    std::int64_t physical[CodeSteps] = {};
+};
+std::array<CodeRange, 16> code_ranges;
+std::mutex code_mutex;
+std::atomic<std::size_t> code_reserved{0}, code_committed{0};
+
+// Memory behind the next step of both ranges. code_mutex is held.
+bool CommitCodeStep(CodeRange& range, std::size_t offset) {
+    void* const writable = reinterpret_cast<void*>(range.writable + offset);
+    void* const executable = reinterpret_cast<void*>(range.executable.load(std::memory_order_relaxed) + offset);
+#ifdef PS5_NATIVE
+    std::int64_t physical = -1;
+    if (eden_direct_low(CodeStep, LargePage, 12, &physical) != 0) return false;
+    // A step that fails half way stays as it is: the caller has no cache to go on with.
+    void* at = writable;
+    if (sceKernelMapDirectMemory(&at, CodeStep, PROT_READ | PROT_WRITE, MAP_FIXED, physical, LargePage) != 0 ||
+        at != writable)
+        return false;
+    std::memset(writable, 0, CodeStep);
+    at = executable;
+    if (sceKernelMapDirectMemory(&at, CodeStep, PROT_READ, MAP_FIXED, physical, LargePage) != 0 || at != executable)
+        return false;
+    // As MapExecutableAlias: the mapping call refuses EXEC on some versions.
+    if (mprotect(executable, CodeStep, PROT_READ | PROT_EXEC) != 0) return false;
+    range.physical[offset / CodeStep] = physical;
+#else
+    if (mprotect(writable, CodeStep, PROT_READ | PROT_WRITE) != 0 ||
+        mprotect(executable, CodeStep, PROT_READ | PROT_EXEC) != 0)
+        return false;
+#endif
+    code_committed.fetch_add(CodeStep, std::memory_order_relaxed);
+    return true;
+}
+} // namespace
+
+// Address space for a code cache of `size` bytes: returns the range to write through and sets
+// the one to run from. Null when a cache this small is better taken whole, or when the
+// platform refuses: the caller then takes the cache whole, as before.
+void* ReserveCodeRange(std::size_t size, void** executable) noexcept {
+    if (size < 2 * CodeStep || size % CodeStep != 0 || size / CodeStep > CodeSteps) return nullptr;
+    const std::lock_guard lock{code_mutex};
+    CodeRange* free_range = nullptr;
+    for (auto& range : code_ranges)
+        if (range.executable.load(std::memory_order_relaxed) == 0) {
+            free_range = &range;
+            break;
+        }
+    if (free_range == nullptr) return nullptr;
+    void* views[2] = {nullptr, nullptr};
+#ifdef PS5_NATIVE
+    // Development A/B: dev-settings jit_memory=whole takes every cache whole, as before.
+    if (DevSetting("jit_memory=whole")) return nullptr;
+    (void)sceKernelEnableDmemAliasing(); // reports zero regardless; the first step is the check
+    for (void*& view : views) {
+        view = reinterpret_cast<void*>(cpu_mapping_hint);
+        if (sceKernelReserveVirtualRange(&view, size, 0, LargePage) != 0) {
+            view = nullptr;
+        } else if (!cpu_mapping_range(view, size)) {
+            (void)munmap(view, size);
+            view = nullptr;
+        }
+    }
+#else
+    const int fd = memfd_create("eden-jit", MFD_CLOEXEC);
+    if (fd >= 0 && ftruncate(fd, static_cast<off_t>(size)) == 0) {
+        for (void*& view : views) {
+            view = mmap(nullptr, size, PROT_NONE, MAP_SHARED, fd, 0);
+            if (view == MAP_FAILED) view = nullptr;
+        }
+    }
+    if (fd >= 0 && close(fd) != 0) std::abort();
+#endif
+    if (views[0] == nullptr || views[1] == nullptr) {
+        for (void* view : views)
+            if (view != nullptr) (void)munmap(view, size);
+        return nullptr;
+    }
+    free_range->writable = reinterpret_cast<std::uintptr_t>(views[0]);
+    free_range->span = size;
+    free_range->committed.store(0, std::memory_order_relaxed);
+    free_range->executable.store(reinterpret_cast<std::uintptr_t>(views[1]), std::memory_order_release);
+    code_reserved.fetch_add(size, std::memory_order_relaxed);
+    *executable = views[1];
+    return views[0];
+}
+
+// Memory behind the first `bytes` of the cache that runs from `executable` (more than the
+// cache: all of it). True when it is there, and for a cache that was taken whole. False when
+// the console has none left.
+bool CommitCodeRange(const void* executable, std::size_t bytes) noexcept {
+    const auto address = reinterpret_cast<std::uintptr_t>(executable);
+    for (auto& range : code_ranges) {
+        if (address == 0 || range.executable.load(std::memory_order_acquire) != address) continue;
+        if (bytes > range.span) bytes = range.span;
+        if (bytes <= range.committed.load(std::memory_order_acquire)) return true;
+        const std::lock_guard lock{code_mutex};
+        std::size_t committed = range.committed.load(std::memory_order_relaxed);
+        while (committed < bytes) {
+            if (!CommitCodeStep(range, committed)) return false;
+            committed += CodeStep;
+            range.committed.store(committed, std::memory_order_release);
+        }
+        char line[112];
+        const int length = std::snprintf(line, sizeof(line), "EDEN_JIT_MEMORY code=%p held=%zu of=%zu\n", executable,
+                                         committed, range.span);
+        if (length > 0) Report(line);
+        return true;
+    }
+    return true;
+}
+
+// Gives back a cache ReserveCodeRange made: its memory and both ranges. False for any other.
+bool FreeCodeRange(void* executable) noexcept {
+    const auto address = reinterpret_cast<std::uintptr_t>(executable);
+    if (address == 0) return false;
+    const std::lock_guard lock{code_mutex};
+    for (auto& range : code_ranges) {
+        if (range.executable.load(std::memory_order_relaxed) != address) continue;
+        const std::size_t committed = range.committed.load(std::memory_order_relaxed);
+        if (munmap(reinterpret_cast<void*>(range.writable), range.span) != 0 || munmap(executable, range.span) != 0)
+            std::abort();
+#ifdef PS5_NATIVE
+        for (std::size_t step = 0; step < committed / CodeStep; ++step)
+            if (sceKernelReleaseDirectMemory(range.physical[step], CodeStep) != 0) std::abort();
+#endif
+        code_reserved.fetch_sub(range.span, std::memory_order_relaxed);
+        code_committed.fetch_sub(committed, std::memory_order_relaxed);
+        range.committed.store(0, std::memory_order_relaxed);
+        range.executable.store(0, std::memory_order_release);
+        return true;
+    }
+    return false;
+}
+
+// Address space the growing code caches span, and the memory behind them (for the log).
+void CodeRangeUsage(std::size_t* reserved, std::size_t* committed) noexcept {
+    *reserved = code_reserved.load(std::memory_order_relaxed);
+    *committed = code_committed.load(std::memory_order_relaxed);
+}
 } // namespace Common

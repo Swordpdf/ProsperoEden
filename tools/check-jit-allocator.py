@@ -25,12 +25,21 @@ static unsigned fail_stage, stage;
 static std::vector<void*> views;
 static std::vector<int> handles;
 static bool enabled;
+// A cache that takes its memory as it fills needs address ranges: given only when asked for,
+// so the caches before that are taken whole, as on a console that refuses a range.
+static bool reserve_ok;
+static std::uintptr_t reserve_at = 0x1000000000ull;
 extern "C" std::int64_t sceKernelGetDirectMemorySize() { return std::int64_t{1}<<40; }
 extern "C" int sceKernelEnableDmemAliasing() { enabled=true; return 0; }
 // The same source file also holds the heap's growing range and the sparse tables; this check
 // does not use them (tools/check-heap-growth.py and eden-memory-check do).
 extern "C" int sceKernelDebugOutText(int, const char*) { return 0; }
-extern "C" int sceKernelReserveVirtualRange(void**, size_t, int, size_t) { return std::int32_t(0x80020001u); }
+extern "C" int sceKernelReserveVirtualRange(void** out, size_t size, int, size_t) {
+    if (!reserve_ok) return std::int32_t(0x80020001u);
+    void* at=mmap(reinterpret_cast<void*>(reserve_at),size,PROT_NONE,
+                  MAP_PRIVATE|MAP_ANONYMOUS|MAP_NORESERVE|MAP_FIXED_NOREPLACE,-1,0);
+    assert(at!=MAP_FAILED); reserve_at+=size+(std::size_t{1}<<30); *out=at; return 0;
+}
 extern "C" int sceKernelAllocateDirectMemory(std::int64_t, std::int64_t, size_t size,
                                                size_t, int type, std::int64_t* out) {
     if (++stage==fail_stage) return std::int32_t(0x80020001u);
@@ -50,8 +59,13 @@ extern "C" int eden_direct_low(size_t size, size_t alignment, int type, std::int
 extern "C" int sceKernelReleaseDirectMemory(std::int64_t physical, size_t) {
     return close(physical>>32);
 }
-extern "C" int sceKernelMapDirectMemory(void** out, size_t size, int prot, int,
+extern "C" int sceKernelMapDirectMemory(void** out, size_t size, int prot, int flags,
                                            std::int64_t physical, size_t) {
+    if (flags & MAP_FIXED) { // a step of a range that was reserved
+        assert(!(prot&PROT_EXEC) && enabled && reserve_ok);
+        void* at=mmap(*out,size,prot,MAP_SHARED|MAP_FIXED,physical>>32,physical & 0xffffffff);
+        assert(at==*out); return 0;
+    }
     if (++stage==fail_stage) return std::int32_t(0x80020001u);
     const auto offset=physical & 0xffffffff;
     assert(!(prot&PROT_EXEC) && (!offset || enabled));
@@ -104,6 +118,42 @@ int main() {
         errno=0;
         assert(mincore(const_cast<unsigned char*>(p), page, &state)==-1 && errno==ENOMEM);
     }
+    {
+        // A cache that takes its memory as it fills: its first step at once, the rest when asked.
+#ifdef EDEN_JIT_ALIAS_NATIVE
+        fail_stage=0; stage=0; reserve_ok=true; handles.clear();
+#endif
+        const std::size_t size=std::size_t(64)<<20, step=std::size_t(16)<<20, far=std::size_t(40)<<20;
+        const unsigned char* p; const unsigned char* writable;
+        {
+            Xbyak::CodeGenerator code(size, Xbyak::DontSetProtectRWE, allocator);
+            p=code.getCode(); writable=code.writableAddress(p);
+            assert(code.hasWritableAlias() && p!=writable);
+            code.mov(code.eax, 42); code.ret();
+            assert(code.getCode<int(*)()>()()==42);
+            fault(writable+far,true); fault(p+far,false);   // no memory that far yet
+            auto* start=const_cast<unsigned char*>(p);
+            allocator->commit(start, far+1);
+            const_cast<unsigned char*>(writable)[far]=0xc3;  // ret
+            assert(p[far]==0xc3);
+            reinterpret_cast<void(*)()>(const_cast<unsigned char*>(p+far))();
+            fault(p+far,true); fault(writable+far,false);   // each range keeps its one use
+            fault(writable+far+step,true);                  // the step after has none yet
+            allocator->commit(start, far+1);                // asked again: nothing to do
+            allocator->commit(start, std::numeric_limits<std::size_t>::max());
+            const_cast<unsigned char*>(writable)[size-1]=7;
+            assert(p[size-1]==7 && p[far]==0xc3);
+        }
+        for (auto* gone : {p, writable}) {
+            unsigned char state; errno=0;
+            assert(mincore(const_cast<unsigned char*>(gone), page, &state)==-1 && errno==ENOMEM);
+        }
+#ifdef EDEN_JIT_ALIAS_NATIVE
+        assert(handles.size()==4);
+        for (int fd : handles) { errno=0; assert(fcntl(fd,F_GETFD)==-1 && errno==EBADF); }
+        reserve_ok=false;
+#endif
+    }
 #ifdef EDEN_JIT_ALIAS_NATIVE
     for (fail_stage=1; fail_stage<=5; ++fail_stage) {
         stage=0; views.clear(); handles.clear();
@@ -131,4 +181,4 @@ with tempfile.TemporaryDirectory() as temp:
             *(['-DEDEN_JIT_ALIAS_NATIVE=1','-DPS5_NATIVE=1','-Wl,--wrap=mprotect'] if native_mock else []),
             str(root/'src/memory_pages.cpp'),'-o',str(exe)],check=True)
         subprocess.run([str(exe)],check=True, cwd=temp)
-print('Production JIT aliases: 512/64/64/16 MiB, overflow, RX write/RW execute faults, live rewrite, both-view release and native API partial-failure cleanup PASS (host backend/mocked native APIs)')
+print('Production JIT aliases: 512/64/64/16 MiB, overflow, RX write/RW execute faults, live rewrite, a cache that takes its memory as it fills, both-view release and native API partial-failure cleanup PASS (host backend/mocked native APIs)')
