@@ -6,12 +6,12 @@ name: Release build
 # beside Ubuntu's LLVM 18 (the versions the releases are built with on a developer machine, so
 # the linker is the same and no link flag differs), Meson, and the SPIR-V LLVM translator.
 #
-# A pull request, a v* tag and every push to main build by themselves; main is also built twice a
-# week, and any branch can be built by hand (Actions > Release build > Run workflow). Every run
-# builds the ZIP, checks it (intact, eboot.bin, every entry 0777) and keeps it as a 7-day
-# artifact; only a v* tag also publishes it, as a pre-release.
-# The builds of main are there for their caches: a tag's build can use no other branch's, so with
-# main built after every merge a release compiles only what the release itself changed.
+# A pull request and a v* tag build by themselves; main is built every night, and any branch can
+# be built by hand (Actions > Release build > Run workflow). Every run builds the ZIP, checks it
+# (intact, eboot.bin, every entry 0777) and keeps it as a 7-day artifact; only a v* tag also
+# publishes it, as a pre-release.
+# The nightly build of main is there for its caches: a tag's build can use no other branch's, so
+# a release compiles only what was merged since the night before.
 # A tag's or a manual run's ZIP also gets a signed attestation of where it was built.
 # The release's files come from this workflow: a release that already exists for the tag gets
 # them when it has no ZIP yet, and keeps its own (with a warning) when it has one.
@@ -20,20 +20,20 @@ name: Release build
 # about ten minutes; one without them compiles everything on four cores and takes about an hour.
 # Should a build ever reach the build step's limit (315 minutes), ccache is still saved: running
 # the workflow again continues from there.
-# GitHub drops a cache nobody used for a week (the twice-weekly build of main keeps its caches in
+# GitHub drops a cache nobody used for a week (the nightly build of main keeps its caches in
 # use), and a pull request or a tag only sees the caches of main.
 # For a run that finds no ccache there is a second source: a snapshot kept as a file of the
 # `build-cache` release, which it downloads. A manual run on main with "snapshot" ticked keeps
 # its ccache as an artifact, which build-cache.yml publishes as the new snapshot.
 # The actions are the Node 24 versions, pinned by commit.
 on:
-  # main after every merge and twice a week, for its caches; a v* tag, to release.
+  # A v* tag, to release: pushes to main build nothing.
   push:
-    branches: [main]
     tags: ['v*']
   pull_request:
+  # main every night, for its caches.
   schedule:
-    - cron: '23 5 * * 1,4'
+    - cron: '23 5 * * *'
   workflow_dispatch:
     inputs:
       snapshot:
@@ -44,7 +44,7 @@ on:
 permissions:
   contents: read
 
-# A newer push to a pull request or to main, or a newer manual run on the same branch, replaces
+# A newer push to a pull request, or a newer manual or nightly run on the same branch, replaces
 # the run in progress; a tag's run is never cancelled.
 concurrency:
   group: release-build-${{ github.ref }}
@@ -242,8 +242,8 @@ jobs:
 
       # Signed provenance: this ZIP was built by this workflow from this commit. Anyone can check a
       # downloaded copy with `gh attestation verify <file> -R <owner>/<repo>`. For a tag and a manual
-      # run only: a pull request's run cannot sign (a fork), the builds of main are there for
-      # their caches and not to be handed out, and a private repository's plan does not include it.
+      # run only: a pull request's run cannot sign (a fork), the nightly builds of main are there
+      # for their caches and not to be handed out, and a private repository's plan does not include it.
       - name: Attest the release ZIP
         if: (github.ref_type == 'tag' || github.event_name == 'workflow_dispatch') && !github.event.repository.private
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2

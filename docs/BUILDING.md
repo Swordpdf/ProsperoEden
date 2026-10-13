@@ -192,8 +192,8 @@ continues from there. A pull request starts from `main`'s caches and, when it bu
 ccache of its own.
 
 GitHub drops a cache that nobody used for a week, and the build of a tag or of a pull request can
-use only the caches of `main`. So `main` is built by itself after every merge and twice a week:
-a release's build then compiles only what the release changed. For a run that finds no ccache at
+use only the caches of `main`. So `main` is built by itself every night: a release's build then
+compiles only what was merged since the night before. For a run that finds no ccache at
 all there is a second source: `ccache-u24.tar`, a file of the `build-cache` release, which it
 downloads. To replace it, start the workflow on `main` by hand with "snapshot" ticked;
 `.github/workflows/build-cache.yml` then publishes that run's ccache.
@@ -205,11 +205,11 @@ dependencies are reused instead of fetched) for a build on your own machine.
   Run workflow): builds the release files, checks the ZIP (intact, `eboot.bin` present, every
   entry stored as 0777) and keeps `dist/` (the ZIP, `SHA256SUMS` and `release-notes.md`) as a
   7-day artifact. Nothing is published. A push to
-  `main`, and a schedule twice a week, build `main` the same way: those builds keep the caches a
+  `main` builds nothing; `main` is built the same way every night, to keep the caches a
   release's build starts from. The artifact is `ProsperoEden`; for
   a pull request it is `ProsperoEden-PR<number>-<commit>`, with the first seven characters of
-  the pull request's own head commit. A newer push to a pull request or to `main`, or a newer
-  manual run on the same branch, cancels the run in progress.
+  the pull request's own head commit. A newer push to a pull request, or a newer manual or
+  nightly run on the same branch, cancels the run in progress.
 - **Tag `vX.Y.Z`** (by itself, when the tag is pushed): builds and checks them the same way, checks that the tag matches the package
   version, and publishes a pre-release with the ZIP and `SHA256SUMS` (a second job). The release notes come from the README's "Changes in vX.Y.Z" section.
 - Every run also keeps `build/symbols/` as an artifact with `-symbols` after the name: 90 days
