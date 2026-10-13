@@ -57,12 +57,12 @@
     },
     {
       "name": "opengl-sdk",
-      "about": "PS5 OpenGL 4.6 SDK 1.0.0 (launcher UI and the OpenGL renderer)",
+      "about": "PS5 OpenGL 4.6 SDK 1.0.2 (launcher UI and the OpenGL renderer)",
       "kind": "archive",
-      "url": "https://github.com/blackbearreloaded/ps5-opengl/releases/download/v1.0.0/ps5-opengl-sdk-1.0.0.tar.gz",
-      "sha256": "f93643c04c843d56143b00951df1f8042ea7706ae9f19e4e9abf158e1ead77c5",
+      "url": "https://github.com/blackbearreloaded/ps5-opengl/releases/download/v1.0.2/ps5-opengl-sdk-1.0.2.tar.gz",
+      "sha256": "30d8e51dd062739b629346102be5932728ba714bc50b1bdcdf08306c8843d9a4",
       "extract": ".deps",
-      "creates": ".deps/ps5-opengl-sdk-1.0.0/sdk/lib/libps5_opengl_core33.a"
+      "creates": ".deps/ps5-opengl-sdk-1.0.2/sdk/lib/libps5_opengl_core33.a"
     },
     {
       "name": "harfbuzz",

@@ -83,7 +83,7 @@ Inside this repository, in `.deps/`:
   modify Eden's files: the PS5 frontend in `headless/` replaces and derives sources at
   configure time (`headless/inject.cmake`).
 - **FFmpeg** at the commit Eden pins, built with only the decoders games use.
-- **PS5 OpenGL 4.6 SDK 1.0.0** (release archive), for the launcher and the OpenGL renderer.
+- **PS5 OpenGL 4.6 SDK 1.0.2** (release archive), for the launcher and the OpenGL renderer.
 - **OpenSSL, zlib, libcurl and libpsl** from pacbrew v0.40.2.
 - **LLVM 18.1.8 compiler-rt** emulated-TLS sources and **fmt 12.1.0** headers.
 - **PS5-Lapy-JB-Daemon** at its pinned compatibility-fork commit, its pinned **ps5log** build input,

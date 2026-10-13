@@ -457,7 +457,7 @@ A bug fix for v1.000.090. If you are on v1.000.090, update.
 - **3x and 4x resolution.** The internal resolution now goes up to 4x. These need far more graphics memory than 2x; a game that runs out says so, and can be given its own lower resolution.
 - **Patches for more frames than the display shows.** A game patched to run faster than the output refreshes keeps its pace: the frames the display has no refresh for are left out.
 - **Crash reports.** If ProsperoEden stops because of an error, it writes `crash-<date>-<time>.txt` to `/data/prosperoeden/logs`, starts again and says on the home screen where the report is. That session's logs are kept beside it, and the five newest reports stay. A report holds what failed, where in the app's code, and what was running; it never holds the contents of memory.
-- The launcher and the OpenGL renderer use the PS5 OpenGL 4.6 SDK 1.0.0.
+- The launcher and the OpenGL renderer use the PS5 OpenGL 4.6 SDK 1.0.2.
 - The graphics driver's shader cache moved to `/data/prosperoeden/cache`, so a read-only package install keeps it.
 - **Experimental: block list.** With an empty file named `block-list.txt` in `/data/homebrew/PPSA99008`, ProsperoEden saves which code a 64-bit game compiled and compiles it again on a spare CPU when the game next starts. In a repeat session of a large open-world game, the emulated cores then compiled 426 blocks during play instead of 138,262, and gameplay started at 30 FPS instead of 22. It is off by default until more games have run with it.
 

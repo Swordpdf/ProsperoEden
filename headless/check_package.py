@@ -27,7 +27,7 @@ if (APP / 'dev-settings.txt').is_file():
     REQUIRED.add('dev-settings.txt')
 RECEIPT = ROOT / 'HEADLESS_CANDIDATE.json'
 # The pinned OpenGL SDK release (tools/deps.json): digest of its manifest.sha256.
-GL_SDK_MANIFEST_SHA256 = 'f4b91f672be037fbac3f82494f1225deaf4c227a03f37ac3ffa56abb213b943f'
+GL_SDK_MANIFEST_SHA256 = '0d432edc9d648d6e0cccb4d5eb3db8484f10ba4b075b5ccf23edda3251b66360'
 LAPY_PROTOCOL_SHA256 = 'bb02c4aa814eaba7a7a423a31b29ff41f786212c2953678cf29434e85fa0f869'
 
 
@@ -103,7 +103,7 @@ if __name__ == '__main__':
             if not p.startswith('../') or (ROOT / p).exists()]  # console tooling of a development layout
         frontend = json.loads((OUT / 'frontend.json').read_text())
         if frontend['renderer'] == 'opengl-4.6-compatibility':
-            sdk = ROOT / '.deps/ps5-opengl-sdk-1.0.0/sdk'
+            sdk = ROOT / '.deps/ps5-opengl-sdk-1.0.2/sdk'
             manifest = sdk / 'manifest.sha256'
             assert digest(manifest) == GL_SDK_MANIFEST_SHA256
             paths.append(manifest)
