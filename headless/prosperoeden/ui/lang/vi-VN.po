@@ -1902,6 +1902,10 @@ msgid "Vibration on"
 msgstr "Rung: Bật"
 
 #: pe/ui/settings.cpp
+msgid "Vibration strength"
+msgstr "Cường độ rung"
+
+#: pe/ui/settings.cpp
 msgid "Vibration, button mapping and the shortcuts during a game."
 msgstr "Rung, gán nút và phím tắt khi đang chơi."
 

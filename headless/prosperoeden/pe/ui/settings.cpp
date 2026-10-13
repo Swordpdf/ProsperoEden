@@ -376,7 +376,8 @@ int Launcher::dialog_rows(Modal modal) const
                (library_.selected < static_cast<int>(games_.size()) &&
                         !games_[static_cast<std::size_t>(library_.selected)].sources.empty() &&
                         !games_[static_cast<std::size_t>(library_.selected)].remote ? 1 : 0);
-    case Modal::controls:     // vibration, the button mapping
+    case Modal::controls:     // vibration, its strength, the button mapping
+        return 3;
     case Modal::diagnostics:  // detailed logging, logs written at once
         return 2;
     default:
@@ -399,7 +400,7 @@ float Launcher::dialog_row_top(Modal modal, int row) const
     case Modal::game:
         return 334.0f + 96.0f * static_cast<float>(row);
     case Modal::controls: // under the shortcuts
-        return 560.0f + 96.0f * static_cast<float>(row);
+        return 528.0f + 96.0f * static_cast<float>(row);
     case Modal::diagnostics: // under the setup's state
         return 500.0f + 102.0f * static_cast<float>(row);
     default:
@@ -527,12 +528,21 @@ void Launcher::press_dialog(Key key)
         break;
     }
     case Modal::controls:
-        if (option_ == 1)
+        if (option_ == 2)
         {
             // The button mapping has its own list (game_options.cpp).
             if (activate)
                 open_mapping(false);
             return;
+        }
+        if (option_ == 1)
+        {
+            // The strength: a quarter at a time, never off (the switch above is for that).
+            if (!adjust)
+                return;
+            prefs_.vibration_strength = std::clamp(prefs_.vibration_strength + 25 * step, 25, 100);
+            sound = Cue::slider;
+            break;
         }
         prefs_.vibration = !prefs_.vibration;
         break;
@@ -761,9 +771,20 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         // The button mapping: as usual or changed, opened with Cross.
         const float shown = text_shrink(
             c, prefs_.mapping == kDefaultMapping ? tr("As usual") : tr("Changed"), 1292.0f,
-            baseline(dialog_row_top(modal, 1), 94.0f, th().size_small), th().size_small,
+            baseline(dialog_row_top(modal, 2), 94.0f, th().size_small), th().size_small,
             prefs_.mapping == kDefaultMapping ? th().meta : th().accent_pale, 320.0f, Align::right);
-        label(1, tr("Button mapping"), shown);
+        label(2, tr("Button mapping"), shown);
+        // The vibration's strength: a level row, as the volumes are.
+        {
+            const float value =
+                text(c, percent(prefs_.vibration_strength), 1292.0f,
+                     baseline(dialog_row_top(modal, 1), 94.0f, th().size_text), th().size_text, th().accent_pale,
+                     Align::right);
+            const float gap = std::max(96.0f, value + 20.0f);
+            level_bar(c, 1292.0f - gap, row_centre(1), 260.0f,
+                      static_cast<float>(prefs_.vibration_strength) / 100.0f, option_ == 1 ? 1.0f : 0.0f);
+            label(1, tr("Vibration strength"), 260.0f + gap);
+        }
         break;
     }
     case Modal::performance:
@@ -862,9 +883,9 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
                    th().meta, 736.0f, 2, kShrink);
     }
 
-    // Under the rows: Video's five, and Performance's four with their line of text, end lower
-    // than the other dialogs' three.
-    const float foot = scrolls ? 848.0f : 811.0f;
+    // Under the rows: Video's five, Performance's four with their line of text, and Controls'
+    // three under its shortcuts end lower than the other dialogs' three.
+    const float foot = scrolls || modal == Modal::controls ? 848.0f : 811.0f;
     if (!message_.empty() && scrolls)
     {
         // Two lines, placed as a game's own settings place theirs: what a Video choice costs
@@ -877,7 +898,7 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         notice(c, message_, 592.0f, foot + 7.0f, th().size_small,
                message_warning_ ? th().warning : th().accent_pale, 736.0f, message_warning_);
     }
-    else if (modal == Modal::controls && option_ == 1)
+    else if (modal == Modal::controls && option_ == 2)
     {
         static constexpr Hint kOpen[] = {
             {Pad::updown, TR("Select")}, {Pad::cross, TR("Open")}, {Pad::circle, TR("Back")}};

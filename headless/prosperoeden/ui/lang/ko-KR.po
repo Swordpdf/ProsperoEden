@@ -1902,6 +1902,10 @@ msgid "Vibration on"
 msgstr "진동 켬"
 
 #: pe/ui/settings.cpp
+msgid "Vibration strength"
+msgstr "진동 세기"
+
+#: pe/ui/settings.cpp
 msgid "Vibration, button mapping and the shortcuts during a game."
 msgstr "진동, 버튼 배치, 게임 중 바로 가기."
 

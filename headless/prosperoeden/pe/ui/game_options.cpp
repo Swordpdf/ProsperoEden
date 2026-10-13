@@ -497,7 +497,7 @@ void Launcher::press_mapping(Key key)
         else
         {
             modal_ = modal_shown_ = Modal::controls;
-            option_ = 1;
+            option_ = 2;
             option_cursor_.snap(dialog_row_top(Modal::controls, option_));
         }
         message_.clear();

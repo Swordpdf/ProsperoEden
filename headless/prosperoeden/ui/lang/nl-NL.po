@@ -1902,6 +1902,10 @@ msgid "Vibration on"
 msgstr "Trilfunctie aan"
 
 #: pe/ui/settings.cpp
+msgid "Vibration strength"
+msgstr "Trilsterkte"
+
+#: pe/ui/settings.cpp
 msgid "Vibration, button mapping and the shortcuts during a game."
 msgstr "Trilfunctie, knoppentoewijzing en de sneltoetsen tijdens een game."
 

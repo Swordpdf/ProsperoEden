@@ -1902,6 +1902,10 @@ msgid "Vibration on"
 msgstr "Δόνηση ενεργή"
 
 #: pe/ui/settings.cpp
+msgid "Vibration strength"
+msgstr "Ένταση δόνησης"
+
+#: pe/ui/settings.cpp
 msgid "Vibration, button mapping and the shortcuts during a game."
 msgstr "Δόνηση, αντιστοίχιση κουμπιών και οι συντομεύσεις στο παιχνίδι."
 

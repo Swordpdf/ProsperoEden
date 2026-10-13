@@ -80,6 +80,8 @@ The output resolution, the menu's sounds and the accessibility settings are the 
 
 ## Button mapping
 
+**Settings > Controls > Vibration strength** sets how strong the DualSense vibrates, from 25% to 100% of what a game asks for; **Vibration** turns it off altogether.
+
 **Settings > Controls > Button mapping** lists the game's buttons (A, B, X, Y, L, R, ZL, ZR, Plus, Minus and the two stick presses) with the DualSense button that presses each one. Left and right choose another DualSense button; when another game button had it, the two swap, so one DualSense button never presses two game buttons. Square puts every button back. The mapping applies to every controller.
 
 A game can have its own: in its settings, **Controls**, set **Button mapping** to **This game**, then press Cross to change it. It starts as a copy of the one in Settings.

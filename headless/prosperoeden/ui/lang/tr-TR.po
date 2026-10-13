@@ -1902,6 +1902,10 @@ msgid "Vibration on"
 msgstr "Titreşim açık"
 
 #: pe/ui/settings.cpp
+msgid "Vibration strength"
+msgstr "Titreşim gücü"
+
+#: pe/ui/settings.cpp
 msgid "Vibration, button mapping and the shortcuts during a game."
 msgstr "Titreşim, tuş atama ve oyun sırasındaki kısayollar."
 

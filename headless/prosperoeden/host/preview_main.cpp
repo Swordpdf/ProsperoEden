@@ -575,6 +575,16 @@ void pictures(Stage &s)
     s.press({Key::cross});
     s.wait(0.8f);
     s.shoot("17-controls");
+    // The vibration's strength: a quarter less, and back.
+    s.press({Key::down, Key::left});
+    s.wait(0.4f);
+    s.shoot("17-controls-strength");
+    if (s.services.preferences().vibration_strength != 75)
+    {
+        std::fprintf(stderr, "error: the vibration strength did not reach the settings\n");
+        s.ok = false;
+    }
+    s.press({Key::right});
     // The button mapping: B moved to Circle takes A's place (A gets Cross), then all back.
     s.press({Key::down});
     s.wait(0.4f);

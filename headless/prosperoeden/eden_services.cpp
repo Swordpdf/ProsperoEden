@@ -957,6 +957,7 @@ pe::ui::Preferences EdenServices::preferences() {
     result.frame_gen_target = saved.frame_gen_target;
     result.frame_gen_multiplier = saved.frame_gen_multiplier;
     result.vibration = saved.vibration;
+    result.vibration_strength = saved.vibration_strength;
     result.language = saved.language;
     result.menu_volume = saved.menu_volume;
     result.large_text = saved.large_text;
@@ -993,6 +994,7 @@ bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     value.frame_gen_target = preferences.frame_gen_target;
     value.frame_gen_multiplier = preferences.frame_gen_multiplier;
     value.vibration = preferences.vibration;
+    value.vibration_strength = preferences.vibration_strength;
     value.language = preferences.language;
     value.menu_volume = preferences.menu_volume;
     value.large_text = preferences.large_text;

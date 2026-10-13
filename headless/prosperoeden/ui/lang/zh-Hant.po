@@ -1902,6 +1902,10 @@ msgid "Vibration on"
 msgstr "震動已開啟"
 
 #: pe/ui/settings.cpp
+msgid "Vibration strength"
+msgstr "震動強度"
+
+#: pe/ui/settings.cpp
 msgid "Vibration, button mapping and the shortcuts during a game."
 msgstr "震動、按鍵配置與遊戲中的快捷操作。"
 

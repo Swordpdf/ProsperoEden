@@ -1902,6 +1902,10 @@ msgid "Vibration on"
 msgstr "Getaran aktif"
 
 #: pe/ui/settings.cpp
+msgid "Vibration strength"
+msgstr "Kekuatan getaran"
+
+#: pe/ui/settings.cpp
 msgid "Vibration, button mapping and the shortcuts during a game."
 msgstr "Getaran, pemetaan tombol, dan pintasan selama bermain."
 

@@ -1902,6 +1902,10 @@ msgid "Vibration on"
 msgstr "เปิดการสั่น"
 
 #: pe/ui/settings.cpp
+msgid "Vibration strength"
+msgstr "ความแรงของการสั่น"
+
+#: pe/ui/settings.cpp
 msgid "Vibration, button mapping and the shortcuts during a game."
 msgstr "การสั่น การกำหนดปุ่ม และปุ่มลัดระหว่างเล่นเกม"
 

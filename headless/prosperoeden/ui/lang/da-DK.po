@@ -1902,6 +1902,10 @@ msgid "Vibration on"
 msgstr "Vibration til"
 
 #: pe/ui/settings.cpp
+msgid "Vibration strength"
+msgstr "Vibrationsstyrke"
+
+#: pe/ui/settings.cpp
 msgid "Vibration, button mapping and the shortcuts during a game."
 msgstr "Vibration, knaptildeling og genvejene under et spil."
 
