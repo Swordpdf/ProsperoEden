@@ -12,7 +12,7 @@
 //
 // Only the buttons, the sticks, the triggers and the connection are recorded. Motion is left out
 // deliberately - an accelerometer never stops changing, so it would defeat the dedupe that keeps
-// a session down to the states that actually changed, and Xenoblade does not read it. A replayed
+// a session down to the states that actually changed, and the game this was written for does not read it. A replayed
 // pad therefore reports itself at rest rather than the room it was recorded in. The touchpad is
 // worth leaving alone while recording too: its tap and its hold are counted in calls into
 // Pad::Consume rather than in time (pad.cpp, kSelectTapPolls), and a replay reaches Consume once

@@ -103,7 +103,7 @@ void RasterizerVulkan::DispatchCompute() {"""),
     # The upstream code has an __ANDROID__ ifdef for DRAWS_TO_DISPATCH (512 vs 4096) and
     # CHECK_MASK (3 vs 7). Neither branch applies: replace the whole block. 512 draws per
     # command buffer submission: 4,096 exceeds the PS5 GPU watchdog timeout in shader-heavy
-    # scenes (VK_ERROR_DEVICE_LOST in Xenoblade 2's cities). CHECK_MASK is the configurable
+    # scenes (VK_ERROR_DEVICE_LOST in one game's cities). CHECK_MASK is the configurable
     # dispatch interval (dev-settings dispatch_draws=N); default 64 draws between hand-offs.
     ('#ifdef __ANDROID__\n    static constexpr u32 DRAWS_TO_DISPATCH = 512;\n    static constexpr u32 CHECK_MASK = 3;\n#else\n    static constexpr u32 DRAWS_TO_DISPATCH = 4096;\n    static constexpr u32 CHECK_MASK = 7;\n#endif // __ANDROID__\n\n    static_assert(DRAWS_TO_DISPATCH % (CHECK_MASK + 1) == 0);\n',
      '    static constexpr u32 DRAWS_TO_DISPATCH = 512;\n    const u32 CHECK_MASK = ::Eden::Performance::dispatch_mask.load(std::memory_order_relaxed);\n    recorded_tick = scheduler.CurrentTick();\n\n'),

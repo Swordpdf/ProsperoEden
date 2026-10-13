@@ -649,7 +649,7 @@ void pictures(Stage &s)
     s.shoot("C1-multiplayer-connecting");
     if (s.services.room.phase != Eden::Multiplayer::Phase::Connecting) s.ok = false;
     s.services.room = {Eden::Multiplayer::Phase::Connected, "", "Friends' room",
-        {"PlayerPS5 - Mario Kart 8 Deluxe (3.0.3)", "Desktop player - Mario Kart 8 Deluxe (3.0.3)"}};
+        {"PlayerPS5 - Kart Carnival Deluxe (3.0.3)", "Desktop player - Kart Carnival Deluxe (3.0.3)"}};
     s.wait(0.8f);
     s.shoot("C2-multiplayer-connected");
     s.press({Key::circle, Key::down, Key::cross});

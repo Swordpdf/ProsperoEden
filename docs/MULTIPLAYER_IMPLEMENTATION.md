@@ -45,14 +45,14 @@ live log-gate toggling, normal errors, detailed DNS/transport output and credent
 
 ## Latest hardware result
 
-The operator subsequently confirmed creating a Mario Kart lobby while connected to the
+The operator subsequently confirmed creating a lobby in the test game while connected to the
 public server. This establishes operator-observed lobby creation; no second game joined
 and no race was completed.
 
 The later public-cloud room case passed on `.30` using the server's resolved IPv4
 address and supplied UDP port/password. The host controller joined by hostname; a second
 host join while the PS5 was connected reported two members. The PS5 launcher showed
-Connected and the expected room name. Mario Kart 8 Deluxe 3.0.5 reached its title screen,
+Connected and the expected room name. The test game reached its title screen,
 with the native log confirming game startup with room networking. Remote Play keyboard
 input did not advance the title screen, so this case does not qualify cloud lobby creation
 or racing. Both test launches closed and released their runtime layers.
@@ -64,7 +64,7 @@ the original configuration is backed up. Private endpoint/configuration evidence
 `results/multiplayer-public-room` and `results/multiplayer-public-ipv4` and is not committed.
 
 On 2026-10-10, `.30` (FW 6.02) joined the private room with its saved password,
-launched Mario Kart 8 Deluxe 3.0.5, selected Wireless Play, created a room, and
+launched the test game, selected Wireless Play, created a room, and
 reached the Mii waiting lobby without the reported communication error. The candidate
 uses the room-assigned virtual IPv4 address and /16 subnet for guest interface queries,
 while preserving the native adapter fallback when offline. The host regression covers
@@ -75,7 +75,7 @@ enabled for reliable timed button presses. The normal candidate uses the same ne
 code. Exact package hashes and lifecycle evidence are in `results/multiplayer-development`.
 Title-specific shutdown and runtime release passed; temporary test-control files were
 restored. A subsequent corrected host probe discovered the PS5 lobby, connected a second
-LDN node and received the two-node synchronization. It received 98 Mario Kart UDP proxy
+LDN node and received the two-node synchronization. It received 98 UDP proxy
 packets (port 12345, 205 bytes) before sending Disconnect and leaving. This verifies the
 PS5's guest discovery and outbound game traffic through a real room; the probe is not a
 second running game and does not establish racing or inbound guest game-packet handling.
@@ -88,7 +88,7 @@ The initial live probe was inconclusive because it used upstream `IsConnected()`
 includes Joining, before sending Scan. The corrected probe waits for Joined, matching the
 application's existing startup requirement. No production change was needed for that finding.
 
-- 2026-10-10 | LDN hardware | 540f9a9 | FW 6.02 | partial-pass: Mario Kart wireless lobby created; clean teardown | results/multiplayer-development | validate second peer
+- 2026-10-10 | LDN hardware | 540f9a9 | FW 6.02 | partial-pass: wireless lobby created; clean teardown | results/multiplayer-development | validate second peer
 - 2026-10-10 | LDN hardware | 27d6cb3 | FW 6.02 | partial-pass: peer scan/connect/sync, game packets, room-loss recovery | results/multiplayer-live-ldn-joined | qualify two-game racing
 
 ## Completed offline
@@ -174,7 +174,7 @@ thread and is cancelled before launcher destruction.
 Game startup accepts only idle or fully joined connections. While a game exists, the controller
 refuses join/leave operations and preserves its socket mode through room loss: new BSD sockets
 remain proxies until game teardown. The input worker requests the existing normal return-to-menu
-shutdown path on room loss and displays a notice on return. The Mario Kart lobby case above
+shutdown path on room loss and displays a notice on return. The lobby case above
 qualifies this recovery path; active races and subsequent sessions still need qualification.
 
 Offline evidence: the real controller test covers game-start gating, blocked connect/leave during
@@ -246,7 +246,7 @@ source findings and setup notes below are retained as optional reference only.
 
 ### Desktop reference preparation
 
-The Windows host has a GTX 1070 Ti and an existing Mario Kart base game. An isolated
+The Windows host has a GTX 1070 Ti and an existing copy of the test game. An isolated
 portable copy of [official Eden 0.2.1](https://git.eden-emu.dev/eden-emu/eden/releases/tag/v0.2.1)
 is downloaded for the next compatibility case. The archive SHA-256 is
 `6c1b53ce325170a026cc0f87098380027dc6170d94ba95f913aab7596fd097cb`;

@@ -16,7 +16,7 @@ using namespace ps5::native_audio;
 namespace {
 // Microphone input is not captured on the PS5. Upstream's NullSinkStreamImpl returns an empty
 // vector from ReleaseBuffer, and DeviceSession::ReleaseBuffer then copies buffer.size bytes from
-// its data(), a null pointer, into guest memory: any game that opens AudioIn (Portal's voice
+// its data(), a null pointer, into guest memory: any game that opens AudioIn (for voice
 // chat, for one) crashed on the AudioManager thread. Release silence of the requested length.
 class SilentInputStream final : public SinkStream {
 public:

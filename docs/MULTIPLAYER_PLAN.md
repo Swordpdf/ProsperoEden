@@ -344,7 +344,7 @@ Record every row as not run, pass, fail, or unsupported with a reason. Do not ma
 | Offline game launch and return | Existing behavior preserved | Representative Vulkan and OpenGL checks |
 | Native LAN mode without room | Independent optional result | Title/mode-specific socket and discovery trace |
 
-Use Mario Kart 8 Deluxe local wireless as the first candidate because the workspace has extensive game familiarity, but establish the desktop control first. For the second title, select another locally owned LDN-capable game with multiplayer unlocked. Match game updates/DLC where relevant; initially disable gameplay-altering mods, cheats, speed changes, and frame-generation comparisons. Restore each user's preferences afterward.
+Use a racing game's local wireless mode as the first candidate because the workspace has extensive familiarity with it, but establish the desktop control first. For the second title, select another locally owned LDN-capable game with multiplayer unlocked. Match game updates/DLC where relevant; initially disable gameplay-altering mods, cheats, speed changes, and frame-generation comparisons. Restore each user's preferences afterward.
 
 Collect compact metrics: join duration, final room state/error, assigned virtual IP, LDN packet counts by type, proxy packet/byte counts, ENet RTT/loss where available, selected host interface, session end reason, socket/thread counts across repeated sessions, and matched frame-time/FPS windows. Full logs stay on disk. Avoid per-packet logging in performance runs.
 

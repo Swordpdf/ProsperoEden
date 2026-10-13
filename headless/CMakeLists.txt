@@ -666,7 +666,7 @@ foreach(bits 32 64)
         # Eden's Unsafe CPU mode (Settings > Performance > Faster CPU emulation) clears this again, twice:
         # cpuopt_unsafe_host_mmu is false on every platform but Apple, Linux, Android and Windows, so the
         # Unsafe case and the closing IsFastmemEnabled() check both drop fastmem_exclusive_access, and every
-        # LDXR/STXR then left JIT code for the global-monitor helpers (14% of the core time in Pokemon Violet,
+        # LDXR/STXR then left JIT code for the global-monitor helpers (14% of the core time in one game,
         # measured). The pointer reset stays; the inline page-table path needs no fastmem pointer.
         set(unsafe_old "        if (!Settings::values.cpuopt_unsafe_host_mmu) {\n            config.fastmem_pointer = std::nullopt;\n            config.fastmem_exclusive_access = false;\n        }")
         set(unsafe_new "        if (!Settings::values.cpuopt_unsafe_host_mmu) {\n            config.fastmem_pointer = std::nullopt;\n        }")

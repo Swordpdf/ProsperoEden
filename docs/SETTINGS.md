@@ -73,7 +73,7 @@ The menu opens with the profile that the PS5 user in front chose last. If you us
 | Performance | Each of the seven switches |
 | Audio | Game volume, mute |
 | Controls | Vibration, and a button mapping of its own |
-| System | RNG seed: with a seed the game is loaded at the same place in memory at every start, which some mods need (HewDraw Remix asks for seed 0). Left and right switch between **Random** and the seed; Cross opens the keyboard to type another one. The game's own random numbers still change from start to start |
+| System | RNG seed: with a seed the game is loaded at the same place in memory at every start, which some mods need. Left and right switch between **Random** and the seed; Cross opens the keyboard to type another one. The game's own random numbers still change from start to start |
 | Language | The language the game is given |
 
 The output resolution, the menu's sounds and the accessibility settings are the same for every game.
