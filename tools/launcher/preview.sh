@@ -18,11 +18,14 @@ source_dir="$root/headless/prosperoeden"
 build=${PROSPEROEDEN_LAUNCHER_BUILD:-"$HOME/.cache/prosperoeden-launcher"}
 cxx=${HOST_CXX:-c++}
 mkdir -p "$build/obj"
-python3 -B "$root/tools/deps.py" fetch harfbuzz
+python3 -B "$root/tools/deps.py" fetch harfbuzz ui-kit
 harfbuzz=$(python3 -B "$root/tools/deps.py" path harfbuzz)
 harfbuzz=${harfbuzz%/harfbuzz.cc}
+# The UI kit's theme table: the launcher's themes start from its recipes (pe/ui/theme_kit.cpp).
+kit=$(python3 -B "$root/tools/deps.py" path ui-kit)/src
 
-sources=("$source_dir"/host/*.cpp "$source_dir"/pe/core/*.cpp "$source_dir"/pe/gfx/*.cpp "$source_dir"/pe/ui/*.cpp)
+sources=("$source_dir"/host/*.cpp "$source_dir"/pe/core/*.cpp "$source_dir"/pe/gfx/*.cpp "$source_dir"/pe/ui/*.cpp
+    "$kit/ui/theme.cpp")
 objects=()
 pids=()
 for source in "${sources[@]}"; do
@@ -36,7 +39,8 @@ for source in "${sources[@]}"; do
         warnings=(-Wall -Wextra)
         [[ $relative == pe/gfx/harfbuzz.cpp ]] && warnings=(-w)
         "$cxx" -std=c++20 -O2 "${warnings[@]}" -DGL_GLEXT_PROTOTYPES=1 -I"$source_dir" \
-            -I"$source_dir/host" -I"$root/tools/launcher/stb" -I"$root/third_party" -I"$harfbuzz" -c "$source" -o "$object" &
+            -I"$source_dir/host" -I"$root/tools/launcher/stb" -I"$root/third_party" -I"$harfbuzz" -I"$kit" \
+            -c "$source" -o "$object" &
         pids+=($!)
     fi
 done

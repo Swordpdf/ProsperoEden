@@ -1,4 +1,4 @@
-// ProsperoEden - Launcher colours, type sizes and motion constants.
+// ProsperoEden - Launcher themes: colour roles, type, shape, motion, artwork, ambient light, sound.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -7,6 +7,8 @@
 #include "pe/gfx/draw_list.hpp"
 
 #include <algorithm>
+#include <span>
+#include <string_view>
 
 namespace pe::ui
 {
@@ -15,57 +17,112 @@ using gfx::Align;
 using gfx::Color;
 using gfx::Rect;
 
-namespace theme
+// A theme is data: what the launcher's screens are painted with. The screens name roles (accent,
+// panel, title), never a hue, and a theme fills every role. It does not move anything: where the
+// rail, the hero and the lists are is the launcher's. docs/THEMES.md is the contract.
+//
+// A theme starts from a recipe of the UI kit (ps5-homebrew-ui, `kit`): its surface style, shadows,
+// focus ring and motion, and colours for every role derived from the kit's. It then sets what it
+// wants of its own over that.
+struct Theme
 {
+    // ---- identity ----
+    const char *id = "";      // in the settings file, and the folder of its files
+    const char *name = "";    // as Settings > Theme shows it (a name: not translated)
+    const char *summary = ""; // one line about it (English; marked with TR() where it is set)
+    const char *kit = "";     // the kit theme its recipe starts from
+    int contract = 1;         // the version of this structure it was made for
 
-// Backgrounds
-inline const Color kBase = Color::rgb(0x06090a);
-inline const Color kScrim = Color::rgb(0x010806);
-inline const Color kGlass = Color::rgb(0x16221d);  // home panels
-inline const Color kPanel = Color::rgb(0x0b1713);  // screens and dialogs
-inline const Color kPanelEdge = Color::rgb(0x768e75);
-inline const Color kRow = Color::rgb(0x17241e);
-inline const Color kRowEdge = Color::rgb(0x6a8267);
-inline const Color kRowFocus = Color::rgb(0x294433);
+    // ---- colour: surfaces ----
+    Color base;       // behind everything, where the artwork does not reach
+    Color scrim;      // what dims the artwork behind screens and dialogs
+    Color glass;      // panels over the artwork
+    Color panel;      // screens' panels and dialogs
+    Color panel_edge; // their hairline
+    Color row;        // a control at rest
+    Color row_edge;
+    Color row_focus;  // under the highlight
+    // ---- colour: the accent (one meaning a screen: where you are) ----
+    Color accent;
+    Color accent_deep; // the far end of its gradients
+    Color accent_pale; // values, kickers, the focus ring
+    Color on_accent;   // text on an accent fill
+    Color highlight;   // light in the artwork: the sun, the motes
+    // ---- colour: text, from the brightest to the faintest ----
+    Color text;
+    Color title;
+    Color value;
+    Color body;
+    Color copy;
+    Color meta;
+    Color label;
+    Color muted;
+    Color faint;
+    Color warning; // what needs the player (always with a mark, never the colour alone)
+    Color rule;    // dividing lines
 
-// The accent: lime to deep green, left to right.
-inline const Color kLime = Color::rgb(0xa9db63);
-inline const Color kLimeDeep = Color::rgb(0x245d4a);
-inline const Color kLimePale = Color::rgb(0xdfe8a6);
-inline const Color kSun = Color::rgb(0xffd76a);
+    // ---- type: one family, sizes in virtual pixels (the screen is 1920 by 1080) ----
+    float size_hero = 88.0f;    // the home screen's game
+    float size_display = 48.0f; // a screen's title
+    float size_lead = 40.0f;
+    float size_brand = 36.0f;
+    float size_heading = 32.0f;
+    float size_clock = 28.0f;
+    float size_text = 24.0f;  // rows, actions
+    float size_small = 20.0f; // values, hints, captions
+    float weight_title = 0.9f; // how much heavier titles are drawn (pixels of outline at 48)
+    float tracking_kicker = 4.0f; // between the letters of the small capital headings
 
-// Text
-inline const Color kText = Color::rgb(0xf0f5f2);
-inline const Color kTitle = Color::rgb(0xfffcef);
-inline const Color kValue = Color::rgb(0xf2f4e9);
-inline const Color kBody = Color::rgb(0xe2e8d7);
-inline const Color kCopy = Color::rgb(0xc5d0bd);
-inline const Color kMeta = Color::rgb(0xb7c6b5);
-inline const Color kLabel = Color::rgb(0xaebdaa);
-inline const Color kMuted = Color::rgb(0xaab8ac);
-inline const Color kFaint = Color::rgb(0x8c9e90);
-inline const Color kWarning = Color::rgb(0xe8b39a);
-inline const Color kRule = Color::rgb(0x536b55);
+    // ---- shape ----
+    float radius_row = 18.0f;   // rows, buttons
+    float radius_card = 22.0f;  // cards, tiles, covers
+    float radius_panel = 30.0f; // panels, dialogs
+    bool pill_chips = true;     // chips and state tags are pills
+    float border = 1.0f;        // hairlines
+    float focus_width = 2.0f;   // the focus ring's stroke
+    float focus_glow = 30.0f;   // how far its light reaches
+    bool glass_panels = true;   // panels show the blurred artwork behind them
+    float shadow_blur = 48.0f;
+    float shadow_offset = 20.0f;
 
-// Type sizes (Montserrat Medium)
-constexpr float kDisplay = 48.0f;
-constexpr float kLead = 40.0f;
-constexpr float kBrand = 36.0f;
-constexpr float kHeading = 32.0f;
-constexpr float kClock = 28.0f;
-constexpr float kText24 = 24.0f;
-constexpr float kSmall = 20.0f;
+    // ---- motion (springs in rad/s, times in seconds) ----
+    float focus_spring = 20.0f;
+    float cursor_spring = 26.0f;
+    float scroll_spring = 16.0f;
+    float screen_seconds = 0.30f;
+    float launch_seconds = 0.95f;
+    float stagger = 0.07f; // between the parts of a screen as it arrives
+    float breathe = 2.6f;  // the focus glow's slow pulse (rad/s)
 
-// Motion (spring responsiveness in rad/s, durations in seconds)
-constexpr float kFocusSpring = 20.0f;
-constexpr float kCursorSpring = 26.0f;
-constexpr float kScrollSpring = 16.0f;
-constexpr float kScreenSeconds = 0.30f;
-constexpr float kLaunchSeconds = 0.95f;
+    // ---- artwork (files in the theme's art folder) ----
+    const char *backdrop = "backdrop.tga";
+    const char *backdrop_blur = "backdrop-blur.tga";
+    const char *brand = "brand.tga";
+    float light_x = 0.710f; // where the artwork's light is, as a share of its width and height
+    float light_y = 0.391f;
 
-} // namespace theme
+    // ---- ambient light over the artwork ----
+    int motes = 26;     // 0: none
+    float drift = 1.0f; // how far the artwork wanders (0: it stands still)
 
-// How the launcher is shown: Settings > Accessibility.
+    // ---- sound: a folder of ui/sounds with its own cues ("": the launcher's) ----
+    const char *sounds = "";
+};
+
+// The theme in use. Read where things are drawn, so a change of theme shows in the next frame.
+const Theme &th();
+// Every theme this build has, the first being the one a new install uses.
+std::span<const Theme> themes();
+// The place of the one in use in themes().
+int theme_index();
+// Puts a theme in use by its id; false when this build has none of that name (the one in use stays).
+bool use_theme(std::string_view id);
+
+// A kit theme (ps5-homebrew-ui) as a launcher theme: every role filled from the kit's colours, its
+// corners, focus ring and motion. False when the kit has no theme of that id (theme_kit.cpp).
+bool theme_from_kit(std::string_view kit_id, Theme *theme);
+
+// How the launcher is shown: Settings > Accessibility. It lies over whatever theme is in use.
 struct Look
 {
     bool large_text = false;    // small text is drawn larger
@@ -99,5 +156,20 @@ inline bool inside(const Rect &r, float x, float y)
 {
     return x >= r.x && y >= r.y && x < r.x + r.w && y < r.y + r.h;
 }
+
+// ---- where the launcher's parts are (the same in every theme) ----
+namespace layout
+{
+constexpr float kRail = 120.0f;    // the section rail's width
+constexpr float kLeft = 184.0f;    // content from here ...
+constexpr float kRight = 1824.0f;  // ... to here
+constexpr float kWidth = kRight - kLeft;
+constexpr float kTop = 44.0f;      // the top bar's line box: 64 high
+constexpr float kFooter = 1026.0f; // the hints' centre line
+// A list of settings beside others (a game's page): its rows, and how many show.
+constexpr float kPaneRow = 84.0f;
+constexpr float kPanePitch = 94.0f;
+constexpr int kPaneRows = 7;
+} // namespace layout
 
 } // namespace pe::ui

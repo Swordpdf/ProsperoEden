@@ -4,6 +4,8 @@
 
 #include "pe/ui/textures.hpp"
 
+#include "pe/ui/theme.hpp"
+
 #include "pe/core/log.hpp"
 
 #include <algorithm>
@@ -30,27 +32,51 @@ std::uint32_t Textures::create(const gfx::Image &image)
 
 bool Textures::load_art(const std::string &directory)
 {
-    const auto load = [&](const char *name, std::uint32_t *texture)
+    const auto load = [&](const std::string &name, std::uint32_t *texture)
     {
         gfx::Image image;
         if (!gfx::load_tga(directory + "/" + name, &image))
         {
-            sys::log("art %s could not be read", name);
+            sys::log("art %s could not be read", name.c_str());
             return false;
         }
         *texture = create(image);
         return *texture != 0;
     };
-    const bool backdrop = load("art/backdrop.tga", &backdrop_);
-    const bool blur = load("art/backdrop-blur.tga", &backdrop_blur_);
-    const bool brand = load("art/brand.tga", &brand_);
+    // The theme names its artwork (theme.hpp).
+    const std::string art = "art/";
+    const bool backdrop = load(art + th().backdrop, &backdrop_);
+    const bool blur = load(art + th().backdrop_blur, &backdrop_blur_);
+    const bool brand = load(art + th().brand, &brand_);
     // Only the home screen's controller display needs this one.
     (void)load("art/controller.tga", &controller_);
     return backdrop && blur && brand;
 }
 
+bool Textures::load_splash(const std::string &path)
+{
+    drop_splash();
+    gfx::Blocks blocks;
+    if (!gfx::load_dds_bc7(path, &blocks))
+    {
+        sys::log("the launch picture %s could not be read", path.c_str());
+        return false;
+    }
+    splash_ = batch_.create_bc7_texture(blocks.width, blocks.height, blocks.bc7.data(), blocks.bc7.size());
+    if (splash_ == 0)
+        sys::log("the launch picture was not taken as a texture");
+    return splash_ != 0;
+}
+
+void Textures::drop_splash()
+{
+    batch_.delete_texture(splash_);
+    splash_ = 0;
+}
+
 void Textures::release()
 {
+    drop_splash();
     for (std::uint32_t *texture : {&backdrop_, &backdrop_blur_, &brand_, &controller_})
     {
         batch_.delete_texture(*texture);

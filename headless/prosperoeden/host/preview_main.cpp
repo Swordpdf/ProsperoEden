@@ -106,6 +106,32 @@ struct Stage
                 wait(pause);
         }
     }
+    // The sections from the home screen: R1 goes to the next one, L1 to the one before.
+    void library()
+    {
+        press({Key::r1});
+    }
+    void multiplayer()
+    {
+        press({Key::r1, Key::r1});
+    }
+    void settings()
+    {
+        press({Key::l1, Key::l1}); // past About, the last section
+    }
+    // Where things lie four to a row (the Library's covers, the Settings tiles): from the one at
+    // `from` to the one at `to`, down or up first, then along the row.
+    void walk(int from, int to, int columns = 4)
+    {
+        for (int row = from / columns; row < to / columns; ++row)
+            press({Key::down});
+        for (int row = from / columns; row > to / columns; --row)
+            press({Key::up});
+        for (int column = from % columns; column < to % columns; ++column)
+            press({Key::right});
+        for (int column = from % columns; column > to % columns; --column)
+            press({Key::left});
+    }
     void render()
     {
         list.clear();
@@ -141,9 +167,18 @@ struct Stage
 
 void pictures(Stage &s)
 {
-    // Home, as it settles after the app opens.
+    // The opening: the console's launch picture, the mark over it, the picture leaving; then
+    // home, as it settles.
     s.restart(true);
+    s.frame();
+    s.shoot("00a-opening-picture");
+    s.wait(0.36f);
+    s.shoot("00b-opening-mark-coming");
+    s.wait(0.50f);
+    s.shoot("00c-opening-mark");
     s.wait(0.42f);
+    s.shoot("00d-opening-leaving");
+    s.wait(0.28f);
     s.shoot("00-arriving");
     s.wait(3.0f);
     s.shoot("01-home");
@@ -153,25 +188,40 @@ void pictures(Stage &s)
     s.press({Key::down, Key::right});
     s.wait(0.6f);
     s.shoot("03-home-recent-focus");
-    s.press({Key::up, Key::up, Key::right});
+    // The game's settings from the home screen (Triangle), and back to it.
+    s.press({Key::up, Key::triangle});
+    s.wait(0.9f);
+    s.shoot("04c-home-game-settings");
+    s.press({Key::circle});
+    s.wait(0.9f);
+    s.shoot("04d-home-after-game-settings");
+    s.press({Key::down, Key::right});
+    // Triangle on a recent game: that game's settings, and back to it.
+    s.press({Key::triangle});
+    s.wait(0.9f);
+    s.shoot("04e-home-recent-game-settings");
+    s.press({Key::circle});
+    s.wait(0.9f);
+    s.shoot("04f-home-after-recent-game-settings");
+    // Left from the screen's edge: the rail opens with its sections' names.
+    s.press({Key::up, Key::left});
     s.wait(0.6f);
-    s.shoot("04-home-settings-focus");
+    s.shoot("04-home-rail");
+    s.press({Key::down, Key::down, Key::down});
+    s.wait(0.6f);
+    s.shoot("04b-rail-settings");
 
     // Library.
     s.restart();
     s.wait(1.0f);
-    s.press({Key::up, Key::cross});
+    s.library();
     s.wait(0.14f);
     s.shoot("05-opening-library");
     s.wait(1.2f);
     s.shoot("06-library");
-    s.press({Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down,
-             Key::down, Key::down});
+    s.walk(0, 9);
     s.wait(0.8f);
     s.shoot("07-library-scrolled");
-    s.press({Key::right});
-    s.wait(0.6f);
-    s.shoot("08-library-handheld");
     // The Library's Mods switch: all of this game's mods off, and on again.
     s.press({Key::square});
     s.wait(0.6f);
@@ -182,6 +232,10 @@ void pictures(Stage &s)
     s.press({Key::triangle});
     s.wait(0.8f);
     s.shoot("09-game-settings");
+    // The console mode, the first of its kinds: handheld for this game.
+    s.press({Key::right});
+    s.wait(0.6f);
+    s.shoot("08-game-handheld");
     // The game's own Video: a renderer of its own, then the output's refresh rate.
     s.press({Key::down, Key::cross});
     s.wait(0.6f);
@@ -189,7 +243,11 @@ void pictures(Stage &s)
     s.press({Key::right});
     s.wait(0.6f);
     s.shoot("10-game-settings-changed");
+    // ASTC textures at full quality says what it costs; then back to what Settings has.
     s.press({Key::down, Key::down, Key::down, Key::right, Key::right});
+    s.wait(0.6f);
+    s.shoot("100-game-astc");
+    s.press({Key::right, Key::down, Key::right, Key::right});
     s.wait(0.6f);
     s.shoot("40-game-refresh");
     // Its own Performance: Compile ahead switched on for this game only.
@@ -284,8 +342,10 @@ void pictures(Stage &s)
     s.press({Key::circle});
     s.wait(0.3f);
     s.press({Key::cross});
-    s.wait(0.30f);
+    s.wait(0.16f);
     s.shoot("11-launching");
+    s.wait(0.12f);
+    s.shoot("11b-launching-arrived");
     s.wait(0.32f);
     s.shoot("12-launching-late");
 
@@ -401,7 +461,7 @@ void pictures(Stage &s)
             s.services.removed.push_back(game.file);
     s.wait(2.5f);
     s.shoot("56-home-game-removed");
-    s.press({Key::up, Key::cross});
+    s.library();
     s.wait(1.2f);
     s.shoot("57-library-game-removed");
     s.services.removed.clear();
@@ -409,7 +469,7 @@ void pictures(Stage &s)
     // Settings and its dialogs.
     s.restart();
     s.wait(1.0f);
-    s.press({Key::up, Key::right, Key::cross});
+    s.settings();
     s.wait(1.0f);
     s.shoot("13-settings");
     // Profiles, the first category: a new one, playing as it, and taking it off the list again.
@@ -446,22 +506,30 @@ void pictures(Stage &s)
             s.ok = false;
         }
     }
-    s.press({Key::circle, Key::down, Key::cross});
+    s.press({Key::circle});
+    s.walk(0, 1);
+    s.press({Key::cross});
     s.wait(0.8f);
     s.shoot("14-video");
     s.press({Key::down, Key::right});
     s.wait(0.6f);
     s.shoot("15-video-saved");
+    // ASTC textures at full quality says what it costs; then back to compressed.
     s.press({Key::down, Key::down, Key::down, Key::right});
     s.wait(0.6f);
+    s.shoot("99-video-astc");
+    s.press({Key::right, Key::down, Key::right});
+    s.wait(0.6f);
     s.shoot("41-video-refresh");
-    // The sixth row: the list scrolls to it.
+    // The seventh row: the list scrolls to it.
     s.press({Key::down});
     s.wait(0.6f);
     s.shoot("43-video-overlay");
     // Performance: seven switches, four of them showing. Reactive flushing starts on, the
     // others off, and a press on each one reaches the settings.
-    s.press({Key::circle, Key::down, Key::cross});
+    s.press({Key::circle});
+    s.walk(1, 2);
+    s.press({Key::cross});
     s.wait(0.8f);
     s.shoot("46-performance");
     {
@@ -497,10 +565,14 @@ void pictures(Stage &s)
             s.ok = false;
         }
     }
-    s.press({Key::circle, Key::down, Key::cross});
+    s.press({Key::circle});
+    s.walk(2, 3);
+    s.press({Key::cross});
     s.wait(0.8f);
     s.shoot("16-audio");
-    s.press({Key::circle, Key::down, Key::cross});
+    s.press({Key::circle});
+    s.walk(3, 4);
+    s.press({Key::cross});
     s.wait(0.8f);
     s.shoot("17-controls");
     // The button mapping: B moved to Circle takes A's place (A gets Cross), then all back.
@@ -520,19 +592,25 @@ void pictures(Stage &s)
     }
     s.press({Key::circle});
     s.wait(0.4f);
-    s.press({Key::circle, Key::down, Key::cross});
+    s.press({Key::circle});
+    s.walk(4, 5);
+    s.press({Key::cross});
     s.wait(0.8f);
     s.shoot("30-accessibility");
     s.press({Key::down, Key::down});
     s.wait(0.6f);
     s.shoot("31-accessibility-motion");
-    s.press({Key::circle, Key::down, Key::cross});
+    s.press({Key::circle});
+    s.walk(5, 6);
+    s.press({Key::cross});
     s.wait(0.8f);
     s.shoot("18-diagnostics");
     s.press({Key::down});
     s.wait(0.6f);
     s.shoot("18b-diagnostics-logs-at-once");
-    s.press({Key::circle, Key::down, Key::cross});
+    s.press({Key::circle});
+    s.walk(6, 7);
+    s.press({Key::cross});
     s.wait(1.0f);
     s.shoot("19-game-files");
     s.press({Key::down, Key::down, Key::triangle});
@@ -540,8 +618,8 @@ void pictures(Stage &s)
     s.shoot("20-game-files-saved");
     s.press({Key::circle});
     s.wait(0.5f);
-    s.press({Key::down, Key::down, Key::down, Key::cross}); // Multiplayer
-    s.wait(0.8f);
+    s.press({Key::l1}); // Multiplayer: the section before Settings
+    s.wait(1.0f);
     s.shoot("B0-multiplayer-choice");
     s.press({Key::cross});
     s.wait(0.8f);
@@ -604,13 +682,31 @@ void pictures(Stage &s)
     s.press({Key::square});
     s.wait(0.5f);
     if (s.services.room.phase != Eden::Multiplayer::Phase::Idle) s.ok = false;
-    s.press({Key::circle, Key::circle, Key::down, Key::cross});
+    s.press({Key::circle, Key::r1}); // back to Settings, where Game files still has the highlight
+    s.wait(1.0f);
+    s.walk(7, 10);
+    s.press({Key::cross});
     s.wait(1.0f);
     s.shoot("21-language");
     s.press({Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down,
              Key::down, Key::down, Key::cross});
     s.wait(0.8f);
     s.shoot("22-language-chosen");
+    // Settings > Theme: the themes this build has, the one in use marked.
+    s.press({Key::circle});
+    s.wait(0.6f);
+    s.walk(10, 11);
+    s.wait(0.6f);
+    s.shoot("T0-settings-theme");
+    s.press({Key::cross});
+    s.wait(0.8f);
+    s.shoot("T1-theme");
+    s.press({Key::cross, Key::circle});
+    if (s.services.preferences().theme != pe::ui::th().id)
+    {
+        std::fprintf(stderr, "error: the theme chosen did not reach the settings\n");
+        s.ok = false;
+    }
 
     s.services.room = {Eden::Multiplayer::Phase::Connected, "", "Friends' room", {"PlayerPS5"}};
     s.restart();
@@ -619,9 +715,9 @@ void pictures(Stage &s)
     s.services.room = {};
     s.wait(0.5f);
     s.shoot("C5-home-room-disconnected");
-    s.press({Key::up, Key::right, Key::cross});
-    s.wait(0.8f);
-    s.shoot("C6-settings-multiplayer-off");
+    s.multiplayer();
+    s.wait(1.0f);
+    s.shoot("C6-multiplayer-off");
 
     // Two profiles: the home screen names who is playing.
     s.services.add_profile();
@@ -633,7 +729,7 @@ void pictures(Stage &s)
     // About.
     s.restart();
     s.wait(1.0f);
-    s.press({Key::up, Key::right, Key::right, Key::cross});
+    s.press({Key::l1}); // the last section
     s.wait(1.0f);
     s.shoot("23-about");
 
@@ -676,9 +772,9 @@ void pictures(Stage &s)
     s.services.has_server = true;
     s.restart();
     s.wait(1.0f);
-    s.press({Key::up, Key::cross});
+    s.library();
     s.wait(1.2f);
-    s.press({Key::down, Key::down, Key::down, Key::down, Key::down}); // Lighthouse Keeper
+    s.walk(0, 5); // Lighthouse Keeper
     s.wait(0.6f);
     s.shoot("80-library-server-game");
     // Square: into the download queue; it starts at once.
@@ -688,7 +784,7 @@ void pictures(Stage &s)
     s.wait(2.0f);
     s.shoot("82-library-downloading");
     // Cross on another: played once it is downloaded, after the one downloading.
-    s.press({Key::down, Key::down, Key::down}); // Orbit Postman
+    s.walk(5, 8); // Orbit Postman
     s.wait(0.4f);
     s.press({Key::cross});
     s.wait(0.6f);
@@ -725,9 +821,9 @@ void pictures(Stage &s)
     // A downloaded game from the server is deleted from the console in its settings, asked first.
     s.restart();
     s.wait(1.0f);
-    s.press({Key::up, Key::cross});
+    s.library();
     s.wait(1.2f);
-    s.press({Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down}); // Orbit Postman
+    s.walk(0, 8); // Orbit Postman
     s.wait(0.6f);
     s.shoot("94-library-downloaded");
     s.press({Key::triangle});
@@ -756,10 +852,9 @@ void pictures(Stage &s)
     s.services.download_fails = true;
     s.restart();
     s.wait(1.0f);
-    s.press({Key::up, Key::cross});
+    s.library();
     s.wait(1.2f);
-    s.press({Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down,
-             Key::down, Key::down, Key::down}); // Rune Gardens
+    s.walk(0, 11); // Rune Gardens
     s.wait(0.4f);
     // Two sources have it: which one, first.
     s.press({Key::cross});
@@ -774,9 +869,9 @@ void pictures(Stage &s)
     // Settings > Downloads: the sources and the queue.
     s.press({Key::circle});
     s.wait(0.8f);
-    s.press({Key::up, Key::right, Key::cross});
+    s.settings();
     s.wait(1.0f);
-    s.press({Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down});
+    s.walk(0, 8);
     s.wait(0.6f);
     s.shoot("88-settings-downloads");
     s.press({Key::cross});
@@ -800,10 +895,10 @@ void pictures(Stage &s)
     s.services.has_server = false;
     s.restart();
     s.wait(1.0f);
-    s.press({Key::up, Key::right, Key::cross});
+    s.settings();
     s.wait(1.0f);
-    s.press({Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down,
-             Key::cross});
+    s.walk(0, 8);
+    s.press({Key::cross});
     s.wait(0.8f);
     s.shoot("93-downloads-not-set-up");
 
@@ -811,7 +906,7 @@ void pictures(Stage &s)
     s.services.save_sync_on = true;
     s.restart();
     s.wait(1.0f);
-    s.press({Key::up, Key::cross});
+    s.library();
     s.wait(1.2f);
     s.press({Key::cross});
     s.wait(0.6f);
@@ -835,7 +930,7 @@ void pictures(Stage &s)
     s.services.save_sync_fails = true;
     s.restart();
     s.wait(1.0f);
-    s.press({Key::up, Key::cross});
+    s.library();
     s.wait(1.2f);
     s.press({Key::cross});
     s.wait(3.0f);
@@ -852,7 +947,7 @@ void pictures(Stage &s)
     s.services.save_sync_too_old = true;
     s.restart();
     s.wait(1.0f);
-    s.press({Key::up, Key::cross});
+    s.library();
     s.wait(1.2f);
     s.press({Key::cross});
     s.wait(3.0f);
@@ -872,9 +967,9 @@ void pictures(Stage &s)
     // Settings > Save sync: the profiles and their servers; pairing one by a QR code.
     s.restart();
     s.wait(1.0f);
-    s.press({Key::up, Key::right, Key::cross});
+    s.settings();
     s.wait(1.0f);
-    s.press({Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down});
+    s.walk(0, 9);
     s.wait(0.6f);
     s.shoot("B0-settings-save-sync");
     s.press({Key::cross});
@@ -896,6 +991,14 @@ void pictures(Stage &s)
     s.shoot("B6-save-sync-unlink-asked");
 }
 
+// The first seconds after the app is started, one frame per call of frame().
+void opening_tour(Stage &s)
+{
+    s.services.connected_controllers = 0b0001;
+    s.restart(true);
+    s.wait(4.5f);
+}
+
 // A walk through the launcher, one frame per call of frame().
 void tour(Stage &s)
 {
@@ -907,28 +1010,31 @@ void tour(Stage &s)
     s.wait(1.2f);
     s.services.connected_controllers = 0b0111;
     s.wait(1.4f);
+    // Home: the two actions, the recent games.
     s.press({Key::right, Key::left, Key::down, Key::right, Key::right, Key::left, Key::up}, 0.32f);
     s.wait(0.5f);
-    s.press({Key::up}, 0.4f);
-    s.press({Key::cross});
-    s.wait(1.0f);
-    s.press({Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down,
-             Key::down, Key::up, Key::up},
-            0.22f);
-    s.press({Key::right}, 0.6f);
-    s.press({Key::triangle}, 0.8f);
-    s.press({Key::down, Key::right, Key::down, Key::right}, 0.4f);
-    s.press({Key::circle}, 0.6f);
+    // The Library: along the covers, then one game's settings.
+    s.press({Key::r1}, 1.0f);
+    s.press({Key::right, Key::right, Key::down, Key::right, Key::down, Key::up, Key::left}, 0.26f);
+    s.press({Key::triangle}, 0.9f);
+    s.press({Key::down}, 0.4f);
+    s.press({Key::cross}, 0.5f);
+    s.press({Key::right, Key::down, Key::right}, 0.4f);
+    s.press({Key::circle}, 0.5f);
+    s.press({Key::down, Key::down}, 0.35f);
     s.press({Key::circle}, 0.8f);
-    s.press({Key::right}, 0.3f);
-    s.press({Key::cross});
-    s.wait(0.9f);
-    s.press({Key::down, Key::down, Key::up}, 0.3f);
+    // Multiplayer, then Settings and one of its dialogs.
+    s.press({Key::r1}, 1.0f);
+    s.press({Key::down, Key::up}, 0.4f);
+    s.press({Key::r1}, 1.0f);
+    s.press({Key::right, Key::right, Key::down, Key::left}, 0.3f);
     s.press({Key::cross}, 0.8f);
-    s.press({Key::right, Key::down, Key::left}, 0.4f);
+    s.press({Key::down, Key::right}, 0.4f);
     s.press({Key::circle}, 0.6f);
-    s.press({Key::circle}, 0.9f);
-    s.press({Key::down}, 0.5f);
+    // Back home by the rail, and into the game.
+    s.press({Key::left, Key::left}, 0.5f);
+    s.press({Key::up, Key::up, Key::up}, 0.3f);
+    s.press({Key::cross}, 1.0f);
     s.press({Key::cross});
     s.wait(1.2f);
 }
@@ -1108,8 +1214,13 @@ int main(int argc, char **argv)
         services.set_preferences(preferences);
     }
     pe::ui::Textures textures(batch, services);
+    pe::ui::use_theme(services.preferences().theme);
     if (!textures.load_art(assets))
         std::fprintf(stderr, "warning: launcher art is incomplete\n");
+    // The console's launch picture, three folders up from the launcher's assets in the source
+    // tree, for the opening.
+    if (!textures.load_splash(assets + "/../../../sce_sys/pic0.dds"))
+        std::fprintf(stderr, "warning: no launch picture; the launcher opens without its opening\n");
     textures.set_output_scale(static_cast<float>(width) / 1920.0f);
 
     // PE_SPECIMEN=<file>: instead of the screens, one picture of the file's lines of text (a line
@@ -1124,7 +1235,7 @@ int main(int argc, char **argv)
         }
         const std::uint32_t texture = batch.create_font_texture(font);
         pe::gfx::DrawList list;
-        list.rounded_rect({0.0f, 0.0f, 1920.0f, 1080.0f}, 0.0f, pe::ui::theme::kPanel);
+        list.rounded_rect({0.0f, 0.0f, 1920.0f, 1080.0f}, 0.0f, pe::ui::th().panel);
         float x = 40.0f;
         float y = 60.0f;
         const float size = 30.0f;
@@ -1152,8 +1263,8 @@ int main(int argc, char **argv)
             {
                 for (const std::string &part : font.wrap(line.substr(2), size, column))
                 {
-                    list.rounded_rect({x, y - size, column, pitch - 6.0f}, 4.0f, pe::ui::theme::kRow);
-                    list.text(font, texture, part, x, y, size, pe::ui::theme::kText);
+                    list.rounded_rect({x, y - size, column, pitch - 6.0f}, 4.0f, pe::ui::th().row);
+                    list.text(font, texture, part, x, y, size, pe::ui::th().text);
                     advance();
                 }
                 continue;
@@ -1161,13 +1272,13 @@ int main(int argc, char **argv)
             if (line.substr(0, 2) == "F ")
             {
                 // Cut to a narrow place, as a long title is.
-                list.rounded_rect({x, y - size, 420.0f, pitch - 6.0f}, 4.0f, pe::ui::theme::kRow);
-                list.text(font, texture, font.fit(line.substr(2), size, 420.0f), x, y, size, pe::ui::theme::kText);
+                list.rounded_rect({x, y - size, 420.0f, pitch - 6.0f}, 4.0f, pe::ui::th().row);
+                list.text(font, texture, font.fit(line.substr(2), size, 420.0f), x, y, size, pe::ui::th().text);
                 advance();
                 continue;
             }
-            list.text(font, texture, line, x, y, size, pe::ui::theme::kText);
-            list.text(font, texture, line, x + column, y, 20.0f, pe::ui::theme::kLime, pe::gfx::Align::right);
+            list.text(font, texture, line, x, y, size, pe::ui::th().text);
+            list.text(font, texture, line, x + column, y, 20.0f, pe::ui::th().accent, pe::gfx::Align::right);
             advance();
         }
         batch.sync_font_texture(texture, font);
@@ -1191,6 +1302,8 @@ int main(int argc, char **argv)
     const char *which_tour = std::getenv("PE_TOUR");
     if (make_tour && which_tour && std::strcmp(which_tour, "update") == 0)
         update_tour(stage);
+    else if (make_tour && which_tour && std::strcmp(which_tour, "opening") == 0)
+        opening_tour(stage);
     else if (make_tour)
         tour(stage);
     else

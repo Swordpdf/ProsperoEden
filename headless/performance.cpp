@@ -148,6 +148,53 @@ void PcSignal(int, siginfo_t*, void* context) {
 }
 #endif
 #ifdef PS5_NATIVE
+// Whether logical CPUs 0 and 1 are one physical core, by timing. Four multiply chains on each of
+// two CPUs at once: siblings take the core's one multiplier in turns and need about twice as long
+// as two CPUs of different cores. The shortest of three runs of each pair, for whatever else runs
+// meanwhile. (CheckWorkerTopology asks this where CPUID does not tell the cores apart.)
+long long PairLoopNs(unsigned cpu_a, unsigned cpu_b) {
+    std::atomic<int> ready{0};
+    std::atomic<bool> go{false};
+    std::array<long long, 2> elapsed{-1, -1};
+    const auto body = [&](unsigned cpu, unsigned slot) {
+        cpuset_t one{};
+        CPU_SET(cpu, &one);
+        const bool placed = cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_TID, -1, 8, &one) == 0;
+        sched_yield();
+        ready.fetch_add(1, std::memory_order_release);
+        if (!placed) return;
+        // Bounded: threads of one priority are not time-sliced here.
+        for (unsigned spins = 0; !go.load(std::memory_order_acquire) && spins < 200'000'000; ++spins) {}
+        const long long begin = NowNs();
+        unsigned long long a = cpu + 1, b = 3, c = 5, d = 7;
+        for (unsigned i = 0; i < 1'500'000; ++i) {
+            a = a * 6364136223846793005ULL + 1;
+            b = b * 2862933555777941757ULL + 3;
+            c = c * 3202034522624059733ULL + 5;
+            d = d * 1442695040888963407ULL + 7;
+        }
+        volatile unsigned long long sink = a ^ b ^ c ^ d;
+        (void)sink;
+        elapsed[slot] = NowNs() - begin;
+    };
+    std::thread first(body, cpu_a, 0u), second(body, cpu_b, 1u);
+    while (ready.load(std::memory_order_acquire) < 2) std::this_thread::yield();
+    go.store(true, std::memory_order_release);
+    first.join();
+    second.join();
+    return elapsed[0] < 0 || elapsed[1] < 0 ? -1 : std::max(elapsed[0], elapsed[1]);
+}
+bool AdjacentCpusShareCore() {
+    long long together = -1, apart = -1;
+    for (int run = 0; run < 3; ++run) {
+        const long long pair = PairLoopNs(0, 1), others = PairLoopNs(0, 2);
+        if (pair > 0 && (together < 0 || pair < together)) together = pair;
+        if (others > 0 && (apart < 0 || others < apart)) apart = others;
+    }
+    const bool share = together > 0 && apart > 0 && together * 4 >= apart * 5;
+    std::printf("EDEN_WORKER_SMT cpus_0_1_ns=%lld cpus_0_2_ns=%lld share=%d\n", together, apart, share);
+    return share;
+}
 std::array<unsigned, 5> worker_cpus{};
 bool worker_topology_ready = false;
 // Physical core (x2APIC above the SMT shift) of each allowed CPU, -1 if unknown.
@@ -165,12 +212,15 @@ void CheckWorkerTopology() {
         cpuset_getaffinity(CPU_LEVEL_WHICH, CPU_WHICH_TID, -1, 8, &original)) return;
     std::array<unsigned, 5> cores{};
     unsigned count = 0;
-    bool changed = false;
+    bool changed = false, refused = false, measured = false;
     for (unsigned cpu = 0; cpu < 64; ++cpu) {
         if (!CPU_ISSET(cpu, &original)) continue;
         cpuset_t one{};
         CPU_SET(cpu, &one);
-        if (cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_TID, -1, 8, &one)) break;
+        if (cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_TID, -1, 8, &one)) {
+            refused = true;
+            break;
+        }
         changed = true;
         unsigned a, b, c, d;
         __cpuid_count(0xb, 0, a, b, c, d);
@@ -191,6 +241,28 @@ void CheckWorkerTopology() {
             std::memcmp(&original, &restored, 8))
             throw std::runtime_error("Cannot restore topology-probe thread affinity");
     }
+    // CPUID did not tell five physical cores apart: newer system software gives one answer for
+    // every CPU (a console with it ran every thread unpinned: a large open-world game at 20
+    // frames a second where a console with pinned threads made 26 to 29). Where CPUID does
+    // answer, logical CPUs 2n and 2n+1 are one core; a timing of two pairs says whether that
+    // holds here (AdjacentCpusShareCore), and then the same five CPUs are used.
+    if (!refused && count != cores.size()) {
+        unsigned even = 0;
+        for (unsigned cpu = 0; cpu < 64; cpu += 2) even += CPU_ISSET(cpu, &original) ? 1 : 0;
+        if (even >= cores.size() && CPU_ISSET(1, &original) && AdjacentCpusShareCore()) {
+            count = 0;
+            cpu_core.fill(-1);
+            for (unsigned cpu = 0; cpu < 64; ++cpu) {
+                if (!CPU_ISSET(cpu, &original)) continue;
+                cpu_core[cpu] = static_cast<int>(cpu / 2);
+                if ((cpu & 1) == 0 && count < cores.size()) {
+                    cores[count] = cpu / 2;
+                    worker_cpus[count++] = cpu;
+                }
+            }
+            measured = true;
+        }
+    }
     worker_topology_ready = count == cores.size();
     topology_allowed = original;
     topology_allowed_valid = true;
@@ -203,8 +275,9 @@ void CheckWorkerTopology() {
         }
         std::printf("EDEN_WORKER_SECONDARY mask=%llx\n", secondary_cpus);
     }
-    std::printf("EDEN_WORKER_TOPOLOGY ready=%d distinct_cores=%u cpus=%u,%u,%u,%u,%u\n",
-        worker_topology_ready, count, worker_cpus[0], worker_cpus[1], worker_cpus[2], worker_cpus[3], worker_cpus[4]);
+    std::printf("EDEN_WORKER_TOPOLOGY ready=%d distinct_cores=%u cpus=%u,%u,%u,%u,%u measured=%d\n",
+        worker_topology_ready, count, worker_cpus[0], worker_cpus[1], worker_cpus[2], worker_cpus[3], worker_cpus[4],
+        static_cast<int>(measured));
 }
 void PlaceSecondary(const char* name) {
     if (!placement_secondary.load(std::memory_order_relaxed) || !secondary_cpus) return;
@@ -391,6 +464,36 @@ void RecordHle(const char* service, unsigned command, long long ns) {
     auto& entry = hle_calls[{service, command}];
     ++entry.first;
     entry.second += static_cast<unsigned long long>(ns > 0 ? ns : 0);
+}
+
+void ReportSessionMemory(const char* phase, unsigned session) {
+    unsigned large_blocks = 0;
+    const std::size_t large = eden_heap_large_held ? eden_heap_large_held(&large_blocks) : 0;
+    std::size_t table_span = 0, table_held = 0;
+    ::Common::SparseUsage(&table_span, &table_held);
+    long long total = 0, free_bytes = -1;
+    std::size_t largest = 0;
+    unsigned regions = 0;
+#ifdef PS5_NATIVE
+    total = sceKernelGetDirectMemorySize();
+    if (total > 0) {
+        std::int64_t start = 0, taken = 0, offset = 0;
+        (void)sceKernelAvailableDirectMemorySize(0, total, 0x4000, &start, &largest);
+        DirectMemoryRegion region{};
+        while (offset < total && regions < 8192 &&
+               sceKernelDirectMemoryQuery(offset, 1, &region, sizeof(region)) == 0 && region.end > offset) {
+            taken += region.end - region.start;
+            offset = region.end;
+            ++regions;
+        }
+        if (regions != 0) free_bytes = total - taken;
+    }
+#endif
+    std::printf("EDEN_SESSION_MEMORY phase=%s session=%u total=%lld free=%lld largest_free=%zu regions=%u "
+                "heap_pieces=%zu heap_large=%zu large_blocks=%u tables=%zu\n",
+                phase, session, total, free_bytes, largest, regions,
+                eden_heap_committed ? eden_heap_committed() : std::size_t{0}, large, large_blocks, table_held);
+    std::fflush(stdout);
 }
 
 void ReportGpuThread(unsigned frame) {

@@ -161,12 +161,6 @@ int CountFiles(const std::string& directory, std::initializer_list<const char*> 
     return ok ? count : -1;
 }
 
-unsigned int HashPath(const std::string& path) {
-    unsigned int hash = 2166136261u;
-    for (const unsigned char byte : path) hash = (hash ^ byte) * 16777619u;
-    return hash;
-}
-
 // A title from the file's name: without its extension and the tags dumps carry
 // ("Name [0100...][v0]", "Name (USA)").
 std::string CleanTitle(const std::string& filename) {
@@ -178,18 +172,14 @@ std::string CleanTitle(const std::string& filename) {
 }
 
 // Covers are keyed by the ROM's file name, not its full path, so they survive a new game
-// files folder.
-std::string CoverPath(const std::string& filename) {
-    char name[16]{};
-    std::snprintf(name, sizeof(name), "/%08x.tga", HashPath(filename));
-    return Eden::CoversDir() + name;
-}
+// files folder (storage_paths.h).
+std::string CoverPath(const std::string& filename) { return Eden::CoverFile(filename); }
 
 // The game's own name is kept beside its cover once the ROM has been read, so the home screen
 // can name its games without opening them.
 std::string NamePath(const std::string& filename) {
     char name[16]{};
-    std::snprintf(name, sizeof(name), "/%08x.name", HashPath(filename));
+    std::snprintf(name, sizeof(name), "/%08x.name", Eden::HashPath(filename));
     return Eden::CoversDir() + name;
 }
 
@@ -906,6 +896,7 @@ pe::ui::GameSettings EdenServices::game_settings(std::uint64_t title_id) {
     result.renderer = saved.renderer;
     result.resolution = saved.resolution;
     result.filter = saved.upscaling_filter;
+    result.astc = saved.astc_textures;
     result.refresh = saved.refresh;
     result.hud = saved.hud;
     result.frame_gen = saved.frame_gen;
@@ -928,6 +919,7 @@ bool EdenServices::set_game_settings(std::uint64_t title_id, const pe::ui::GameS
     value.renderer = settings.renderer;
     value.resolution = settings.resolution;
     value.upscaling_filter = settings.filter;
+    value.astc_textures = settings.astc;
     value.refresh = settings.refresh;
     value.hud = settings.hud;
     value.frame_gen = settings.frame_gen;
@@ -958,6 +950,7 @@ pe::ui::Preferences EdenServices::preferences() {
     result.renderer = saved.backend == Eden::GraphicsBackend::OpenGL ? 0 : 1;
     result.resolution = saved.resolution;
     result.filter = saved.upscaling_filter;
+    result.astc = saved.astc_textures;
     result.refresh = saved.refresh;
     result.output = saved.output;
     result.frame_gen = saved.frame_gen;
@@ -969,6 +962,7 @@ pe::ui::Preferences EdenServices::preferences() {
     result.large_text = saved.large_text;
     result.high_contrast = saved.high_contrast;
     result.reduce_motion = saved.reduce_motion;
+    result.theme = saved.theme;
     // Settings > Performance: the general values (settings_store.h).
     const Eden::PerformanceSettings speed = Eden::LoadPerformance(0);
     result.block_list = speed.block_list;
@@ -992,6 +986,7 @@ bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     value.backend = preferences.renderer == 0 ? Eden::GraphicsBackend::OpenGL : Eden::GraphicsBackend::Vulkan;
     value.resolution = preferences.resolution;
     value.upscaling_filter = preferences.filter;
+    value.astc_textures = preferences.astc;
     value.refresh = preferences.refresh;
     value.output = preferences.output;
     value.frame_gen = preferences.frame_gen;
@@ -1003,6 +998,7 @@ bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     value.large_text = preferences.large_text;
     value.high_contrast = preferences.high_contrast;
     value.reduce_motion = preferences.reduce_motion;
+    value.theme = preferences.theme;
     value.mapping = preferences.mapping;
     Eden::PerformanceSettings speed = Eden::LoadPerformance(0);
     speed.block_list = preferences.block_list;
@@ -1039,6 +1035,11 @@ int EdenServices::frame_gen_state() {
 
 const std::vector<std::string>& EdenServices::filter_labels() {
     static const std::vector<std::string> labels = Labels(Eden::kUpscalingFilterLabels);
+    return labels;
+}
+
+const std::vector<std::string>& EdenServices::astc_labels() {
+    static const std::vector<std::string> labels = Labels(Eden::kAstcTextureLabels);
     return labels;
 }
 

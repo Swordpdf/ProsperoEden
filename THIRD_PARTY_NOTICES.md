@@ -64,6 +64,10 @@ builds on the following projects, each under its own license.
 - **[ProsperoPuzzles](https://github.com/blackbearreloaded/ProsperoPuzzles)**,
   GPL-3.0-or-later. The launcher's drawing, text, animation and sound code
   (`headless/prosperoeden/pe`) started there.
+- **[ps5-homebrew-ui](https://github.com/blackbearreloaded/ps5-homebrew-ui)**,
+  GPL-3.0-or-later. The launcher's themes start from its theme recipes: its
+  theme table (`src/ui/theme.cpp`) is compiled into the launcher. Fetched at
+  the commit pinned in `tools/deps.json`.
 - **Montserrat** by Julieta Ulanovsky and contributors, SIL Open Font License
   1.1 (`third_party/fonts`). The launcher's font is baked from Montserrat Medium.
 - **[HarfBuzz](https://github.com/harfbuzz/harfbuzz)**, "Old MIT" license (its

@@ -79,7 +79,17 @@ void RasterizerVulkan::DispatchCompute() {"""),
     ('bool RasterizerVulkan::OnCPUWrite(DAddr addr, u64 size) {',
      'bool RasterizerVulkan::OnCPUWrite(DAddr addr, u64 size) {\n    ::Eden::Performance::Timer guest_write_timer(::Eden::Performance::guest_cpu_write);'),
     ('VideoCore::RasterizerDownloadArea RasterizerVulkan::GetFlushArea(DAddr addr, u64 size) {',
-     'VideoCore::RasterizerDownloadArea RasterizerVulkan::GetFlushArea(DAddr addr, u64 size) {\n    ::Eden::Performance::Timer guest_read_timer(::Eden::Performance::guest_cpu_read);'),
+     'VideoCore::RasterizerDownloadArea RasterizerVulkan::GetFlushArea(DAddr addr, u64 size) {\n    ::Eden::Performance::Timer guest_read_timer(::Eden::Performance::guest_cpu_read);\n'
+     # A read of memory no image was ever registered in: the texture cache would find none and
+     # change nothing, so its lock (held by the GPU thread through every draw) is not taken
+     # (headless/image_pages.h).
+     '    if (::Eden::ImagePages::NeverHeld(addr, size)) {\n'
+     '        return VideoCore::RasterizerDownloadArea{\n'
+     '            .start_address = Common::AlignDown(addr, Core::DEVICE_PAGESIZE),\n'
+     '            .end_address = Common::AlignUp(addr + size, Core::DEVICE_PAGESIZE),\n'
+     '            .preemtive = true,\n'
+     '        };\n'
+     '    }'),
     # ... and wait for those locks spinning briefly before sleeping (performance.h GuestCacheLock).
     ('        std::scoped_lock lock{texture_cache.mutex};\n        auto area = texture_cache.GetFlushArea(addr, size);',
      '        ::Eden::Performance::GuestCacheLock(texture_cache.mutex);\n'
@@ -96,7 +106,17 @@ void RasterizerVulkan::DispatchCompute() {"""),
     # scenes (VK_ERROR_DEVICE_LOST in Xenoblade 2's cities). CHECK_MASK is the configurable
     # dispatch interval (dev-settings dispatch_draws=N); default 64 draws between hand-offs.
     ('#ifdef __ANDROID__\n    static constexpr u32 DRAWS_TO_DISPATCH = 512;\n    static constexpr u32 CHECK_MASK = 3;\n#else\n    static constexpr u32 DRAWS_TO_DISPATCH = 4096;\n    static constexpr u32 CHECK_MASK = 7;\n#endif // __ANDROID__\n\n    static_assert(DRAWS_TO_DISPATCH % (CHECK_MASK + 1) == 0);\n',
-     '    static constexpr u32 DRAWS_TO_DISPATCH = 512;\n    const u32 CHECK_MASK = ::Eden::Performance::dispatch_mask.load(std::memory_order_relaxed);\n\n'),
+     '    static constexpr u32 DRAWS_TO_DISPATCH = 512;\n    const u32 CHECK_MASK = ::Eden::Performance::dispatch_mask.load(std::memory_order_relaxed);\n    recorded_tick = scheduler.CurrentTick();\n\n'),
+    # A guest fence with something to wait for submits twice in a row: its own Flush
+    # (InnerFence::Queue, vk_fence_manager.cpp), then the fence manager's FlushCommands, which
+    # asks only whether a draw was counted since the counter was last cleared - and a fence's
+    # Flush does not clear it. The second submission holds nothing: a quarter of a millisecond
+    # of the worker thread in the driver, and a large open-world game makes seven of them a
+    # frame (24 submissions a frame, 7 of them empty). FlushCommands now submits only when
+    # nothing has been submitted since the last draw was recorded (FlushWork notes the
+    # scheduler's tick at every draw, clear and dispatch).
+    ('void RasterizerVulkan::FlushCommands() {\n    if (draw_counter == 0) {\n        return;\n    }\n    draw_counter = 0;\n    scheduler.Flush();\n}',
+     'namespace {\n// The scheduler\'s tick when the last draw, clear or dispatch was recorded (GPU thread).\nu64 recorded_tick = 0;\n} // namespace\n\nvoid RasterizerVulkan::FlushCommands() {\n    if (draw_counter == 0) {\n        return;\n    }\n    draw_counter = 0;\n    if (scheduler.CurrentTick() != recorded_tick) {\n        return; // a submission has taken every draw already\n    }\n    scheduler.Flush();\n}'),
     # Where the ~4 us a draw spends goes: six phases under one running clock, each Mark taking the
     # gap since the previous one so they do not overlap. The Timer still wraps the whole function,
     # so a draw that returns early is charged for its unmarked tail and the sum of the six falls
@@ -171,7 +191,9 @@ GraphicsPipeline* prepared_pipeline = nullptr;
 template <typename Func>
 void RasterizerVulkan::PrepareDraw(bool is_indexed, Func&& draw_func) {'''),
     ('    std::scoped_lock lock{buffer_cache.mutex, texture_cache.mutex};\n    // update engine as channel may be different.',
-     '''    std::scoped_lock lock{buffer_cache.mutex, texture_cache.mutex};
+     '''    ::Eden::Performance::YieldToGuests();  // a guest thread asleep on a cache lock goes first
+    ::Eden::AstcPolicy::Draw();
+    std::scoped_lock lock{buffer_cache.mutex, texture_cache.mutex};
     prepared_pipeline = pipeline;
     SCOPE_EXIT {
         prepared_pipeline = nullptr;
@@ -182,7 +204,7 @@ void RasterizerVulkan::PrepareDraw(bool is_indexed, Func&& draw_func) {'''),
     # Development GPU fault probe (dev_vulkan.h, pipeline_trace=on): once the runner
     # creates /app0/sync-draws.txt, report every draw/dispatch to klog and wait for the
     # GPU, so the last report before a fatal GPU fault names the operation.
-    ('#include "performance.h"', '#include "performance.h"\n#include "dev_vulkan.h"\n#include "diagnostics.h"\n#include <filesystem>'),
+    ('#include "performance.h"', '#include "performance.h"\n#include "dev_vulkan.h"\n#include "diagnostics.h"\n#include "image_pages.h"\n#include "astc_policy.h"\n#include <filesystem>'),
     ('GraphicsPipeline* prepared_pipeline = nullptr;',
      'GraphicsPipeline* prepared_pipeline = nullptr;\n'
      '// The pipeline of the last prepared draw, for the development fault probe.\n'
@@ -410,6 +432,15 @@ adapt('src/video_core/renderer_vulkan/vk_present_manager.cpp', 'vulkan_present_m
 # Development A/B switches for device features (headless/dev_vulkan.h, dev-settings).
 adapt('src/video_core/vulkan_common/vulkan_device.cpp', 'vulkan_device.cpp', [
     ('#include <algorithm>', '#include <algorithm>\n#include <cstdio>\n#include "dev_vulkan.h"\n#include "performance.h"'),
+    # The allocator counts what it holds itself instead of asking the driver. The driver's figures
+    # are wrong on the console: it counts each allocation of graphics memory twice (as VRAM and as
+    # visible VRAM), so the allocator saw the budget of the 8 GiB heap used up at 4 GiB. From there
+    # it could make no more of its 256 MiB blocks and gave every image memory of its own: 926
+    # allocations where 40 blocks had done, a third of what it held unused (1.3 of 3.9 GiB in a large
+    # open-world game at 2x), and the shared pool cut into hundreds of pieces. Without the driver's
+    # budget its own count stands against four fifths of the heap.
+    ('    if (extensions.memory_budget) {\n        flags |= VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT;\n    }\n',
+     '    // The driver\'s budget is not asked for: its count is double (tools/prepare-vulkan-port.py).\n'),
     # "Memory in use" for the texture and buffer caches: on the console, the budget less what is
     # left of the pool the CPU shares with the GPU (performance.h, graphics_memory_free).
     ('u64 Device::GetDeviceMemoryUsage() const {\n',
@@ -629,16 +660,24 @@ void PresentVulkanLoading(VideoCore::RendererBase& renderer) {
 ])
 adapt('src/video_core/renderer_vulkan/present/window_adapt_pass.h',
       'include/video_core/renderer_vulkan/present/window_adapt_pass.h', [
+    # The overlay and the loading screen are drawn in this pass when it is given the allocator
+    # their picture's memory comes from (vulkan_hud_prepare.inc).
+    ('class RasterizerVulkan;\n\nclass WindowAdaptPass final {',
+     'class RasterizerVulkan;\nclass MemoryAllocator;\n\nclass WindowAdaptPass final {'),
     ('const Layout::FramebufferLayout& layout, Frame* dst);',
-     'const Layout::FramebufferLayout& layout, Frame* dst, bool draw_hud = false);'),
+     'const Layout::FramebufferLayout& layout, Frame* dst, MemoryAllocator* hud_memory = nullptr);'),
     ('    vk::Pipeline coverage_pipeline;',
-     '    vk::Pipeline coverage_pipeline;\n    vk::PipelineLayout hud_layout;\n    vk::Pipeline hud_pipeline;'),
+     '    vk::Pipeline coverage_pipeline;\n    vk::PipelineLayout hud_layout;\n    vk::Pipeline hud_pipeline;\n'
+     '    vk::Image hud_art;\n    vk::ImageView hud_art_view;\n    vk::Sampler hud_sampler;\n'
+     '    vk::DescriptorSetLayout hud_set_layout;\n    vk::DescriptorPool hud_pool;\n'
+     '    vk::DescriptorSets hud_sets;'),
 ])
 adapt('src/video_core/renderer_vulkan/present/window_adapt_pass.cpp', 'vulkan_window_adapt_pass.cpp', [
     ('#include "core/frontend/framebuffer_layout.h"',
-     '#include "core/frontend/framebuffer_layout.h"\n#include "hud.h"\n#include "vulkan_hud_shaders.h"'),
+     '#include "core/frontend/framebuffer_layout.h"\n#include "hud.h"\n#include "loading_art.h"\n'
+     '#include "vulkan_hud_shaders.h"'),
     ('const Layout::FramebufferLayout& layout, Frame* dst) {',
-     'const Layout::FramebufferLayout& layout, Frame* dst, bool draw_hud) {'),
+     'const Layout::FramebufferLayout& layout, Frame* dst, MemoryAllocator* hud_memory) {'),
     ('    scheduler.Record([=](vk::CommandBuffer cmdbuf) {',
      (port / 'vulkan_hud_prepare.inc').read_text() + '\n    scheduler.Record([=](vk::CommandBuffer cmdbuf) {'),
     ('        cmdbuf.EndRenderPass();',
@@ -648,7 +687,7 @@ adapt('src/video_core/renderer_vulkan/vk_blit_screen.cpp', 'vulkan_blit_screen.c
     ('VkFormat current_swapchain_view_format) {',
      'VkFormat current_swapchain_view_format, bool draw_hud) {'),
     ('image_index, layers, framebuffers, layout, frame);',
-     'image_index, layers, framebuffers, layout, frame, draw_hud);'),
+     'image_index, layers, framebuffers, layout, frame, draw_hud ? &memory_allocator : nullptr);'),
 ])
 shader_header = '#pragma once\n#include <cstdint>\n'
 for stage in ('vert', 'frag'):
@@ -663,6 +702,62 @@ for stage in ('vert', 'frag'):
 path = output / 'vulkan_hud_shaders.h'
 if not path.exists() or path.read_text() != shader_header:
     path.write_text(shader_header)
+# The allocator's budget is the driver's, and on the console it does not say what is available: the
+# driver counts each allocation of graphics memory twice (as VRAM and as visible VRAM), so the budget
+# of the 8 GiB heap is used up at 4 GiB, and it knows nothing of the pool the CPU shares. Eden asks
+# for images and buffers within the budget and takes a refusal as final (its Commit paths do not:
+# they ask again outside the budget). A large open-world game at 2x ended with "ran out of graphics
+# memory" while the pool had 0.75 GiB in one block and 1.5 GiB free. An image or a buffer the budget
+# refuses is asked for again outside it, as Commit does; the driver refuses when the pool has no
+# room, and that is still the session's end.
+allocator = (source / 'src/video_core/vulkan_common/vulkan_memory_allocator.cpp').read_text()
+for call in ('vmaCreateImage(allocator, &ci, &alloc_ci, &handle, &allocation, &alloc_info)',
+             'vmaCreateBuffer(allocator, &ci, &alloc_ci, &handle, &allocation, &alloc_info)',
+             'vmaCreateBufferWithAlignment(allocator, &ci, &alloc_ci, min_alignment, &handle,\n'
+             '                                           &allocation, &alloc_info)'):
+    old = '    vk::Check(' + call + ');\n'
+    if allocator.count(old) != 1:
+        raise RuntimeError(f'Pinned Vulkan allocator changed: {call[:28]} is there {allocator.count(old)} times')
+    allocator = allocator.replace(old, (
+        '    VkResult created = CALL;\n'
+        '    if (created != VK_SUCCESS) {\n'
+        '        VmaAllocationCreateInfo outside_budget = alloc_ci;\n'
+        '        outside_budget.flags &= ~static_cast<VmaAllocationCreateFlags>(VMA_ALLOCATION_CREATE_WITHIN_BUDGET_BIT);\n'
+        '        created = AGAIN;\n'
+        '        const auto times = ::Eden::Performance::outside_budget.fetch_add(1, std::memory_order_relaxed) + 1;\n'
+        '        if ((times & (times - 1)) == 0)  // the 1st, 2nd, 4th, 8th ... time\n'
+        '            std::fprintf(stderr, "[ProsperoEden] graphics memory: the allocator\'s budget refused %llu requests; "\n'
+        '                         "asked again outside it (result %d): DETAIL\\n", static_cast<unsigned long long>(times), int(created),\n'
+        '                         VALUES);\n'
+        # Refused outside the budget too: the session ends here, and its log says what there was.
+        '        if (created != VK_SUCCESS) {\n'
+        '            VmaBudget held[VK_MAX_MEMORY_HEAPS]{};\n'
+        '            vmaGetHeapBudgets(allocator, held);\n'
+        '            unsigned long long blocks = 0, used = 0;\n'
+        '            for (const VmaBudget& heap : held) {\n'
+        '                blocks += heap.statistics.blockBytes;\n'
+        '                used += heap.statistics.allocationBytes;\n'
+        '            }\n'
+        '            const auto free_block = ::Eden::Performance::graphics_memory_free.load(std::memory_order_relaxed);\n'
+        '            std::fprintf(stderr, "[ProsperoEden] graphics memory: refused outside the budget too (result %d): the pool\'s "\n'
+        '                         "largest free block is %llu MiB; the allocator holds %llu MiB in blocks, %llu MiB of it in use\\n",\n'
+        '                         int(created), free_block ? free_block() >> 20 : 0ull, blocks >> 20, used >> 20);\n'
+        '        }\n'
+        '    }\n'
+        '    vk::Check(created);\n'
+        ).replace('CALL', call).replace('AGAIN', call.replace('&alloc_ci', '&outside_budget'))
+        .replace('DETAIL', 'image %ux%ux%u, %u layers, %u levels, %u samples, format %d' if 'Image' in call
+                 else 'buffer of %llu bytes, usage 0x%x')
+        .replace('VALUES', 'ci.extent.width, ci.extent.height, ci.extent.depth, ci.arrayLayers, ci.mipLevels, '
+                 'unsigned(ci.samples), int(ci.format)' if 'Image' in call
+                 else 'static_cast<unsigned long long>(ci.size), unsigned(ci.usage)'))
+include = '#include "video_core/vulkan_common/vulkan_memory_allocator.h"\n'
+if allocator.count(include) != 1:
+    raise RuntimeError('Pinned Vulkan allocator changed: its own include')
+allocator = allocator.replace(include, include + '#include <atomic>\n#include <cstdio>\n#include "performance.h"\n')
+path = output / 'vulkan_memory_allocator.cpp'
+if not path.exists() or path.read_text() != allocator:
+    path.write_text(allocator)
 adapt('src/video_core/vulkan_common/vulkan.h', 'include/video_core/vulkan_common/vulkan.h',
       [('#else\n#define VK_USE_PLATFORM_XLIB_KHR', '#elif defined(PS5_NATIVE)\n// Native display-plane presentation, no desktop window-system headers.\n#else\n#define VK_USE_PLATFORM_XLIB_KHR')])
 adapt('src/video_core/vulkan_common/vulkan_instance.cpp', 'vulkan_instance.cpp', [
@@ -773,7 +868,21 @@ for signature, index in (
     texture_costs.append((anchor, anchor + scope))
 adapt('src/video_core/texture_cache/texture_cache.h',
       'vulkan-cache/video_core/texture_cache/texture_cache.h', [
-    ('namespace VideoCommon {', '#include "performance.h"\n#include "common/scope_exit.h"\nnamespace Vulkan { class TextureCacheRuntime; }\n\nnamespace VideoCommon {'),
+    ('namespace VideoCommon {', '#include "performance.h"\n#include "image_pages.h"\n#include "astc_policy.h"\n#include "common/scope_exit.h"\nnamespace Vulkan { class TextureCacheRuntime; }\n\nnamespace VideoCommon {'),
+    # An ASTC texture kept as BC3 is converted in the background in a busy frame only, and in
+    # place on a light screen (headless/astc_policy.h). The frame is counted where the texture
+    # cache ends its own.
+    ('    if (True(image.flags & ImageFlagBits::AsynchronousDecode)) {\n        QueueAsyncDecode(image, image_id);\n        return;\n    }',
+     '    if (True(image.flags & ImageFlagBits::AsynchronousDecode) && ::Eden::AstcPolicy::InBackground()) {\n        QueueAsyncDecode(image, image_id);\n        return;\n    }'),
+    ('    TickAsyncDecode();\n    TickAsyncUnswizzle();', '    ::Eden::AstcPolicy::Frame();\n    TickAsyncDecode();\n    TickAsyncUnswizzle();'),
+    # Every place an image is registered at is marked before the texture cache can find the
+    # image there (headless/image_pages.h): the two inserts below are the only ones.
+    ('        auto map_id =\n            slot_map_views.insert(image.gpu_addr, image.cpu_addr, image.guest_size_bytes, image_id);',
+     '        ::Eden::ImagePages::Mark(image.cpu_addr, image.guest_size_bytes);\n'
+     '        auto map_id =\n            slot_map_views.insert(image.gpu_addr, image.cpu_addr, image.guest_size_bytes, image_id);'),
+    ('            auto map_id = slot_map_views.insert(gpu_addr, cpu_addr, size, image_id);',
+     '            ::Eden::ImagePages::Mark(cpu_addr, size);\n'
+     '            auto map_id = slot_map_views.insert(gpu_addr, cpu_addr, size, image_id);'),
     (download_prefix, download_prefix + (port / 'vulkan_download_batch.inc').read_text() + '\n'),
     (gc_original, gc),
     # RADV reports all Vulkan allocations, not just cached textures. A game's

@@ -4,13 +4,15 @@
 //   {
 //     "version": 1,
 //     "video": { "renderer": "vulkan", "fps_overlay": true, "resolution": "1x",
-//                "upscaling_filter": "bilinear", "refresh_rate": "60",
+//                "upscaling_filter": "bilinear", "astc_textures": "compressed",
+//                "refresh_rate": "60",
 //                "output_resolution": "1080p", "frame_gen": false,
 //                "frame_gen_target": "auto", "frame_gen_multiplier": "2" },
 //     "audio": { "volume": 100, "mute": false, "menu_volume": 70 },
 //     "controls": { "vibration": true, "mapping": { "a": "cross", "b": "circle" } },
 //     "system": { "language": "en-US" },
 //     "accessibility": { "large_text": false, "high_contrast": false, "reduce_motion": false },
+//     "launcher": { "theme": "canopy" },
 //     "diagnostics": { "detailed_logging": false, "immediate_logs": false },
 //     "performance": { "block_list": false, "async_shaders": false, "fast_gpu": false,
 //                      "unsafe_cpu": false, "unsafe_dma": false, "reactive_flushing": true,
@@ -19,6 +21,7 @@
 //     "library": { "last_game": "Game [id].nsp", "recent": ["Game [id].nsp"] },
 //     "games": { "0100000000010000": { "console_mode": "handheld", "renderer": "opengl",
 //                                      "resolution": "0.75x", "upscaling_filter": "fsr",
+//                                      "astc_textures": "full",
 //                                      "refresh_rate": "120", "fps_overlay": false,
 //                                      "frame_gen": true,
 //                                      "frame_gen_target": "120", "frame_gen_multiplier": "3",
@@ -69,6 +72,12 @@ static_assert(std::size(kResolutionLabels) == std::size(kResolutionKeys));
 inline constexpr int kNativeResolution = 2;
 inline constexpr const char* kUpscalingFilterKeys[] = {"bilinear", "fsr", "bicubic", "nearest"};
 inline constexpr const char* kUpscalingFilterLabels[] = {"Bilinear", "AMD FSR", "Bicubic", "Nearest"};
+// Settings > Video: how a texture in ASTC, a format the console's GPU cannot read, is held.
+// Compressed keeps it as BC3; full quality keeps it decoded, at four times the graphics memory
+// (headless/main.cpp has the numbers).
+inline constexpr const char* kAstcTextureKeys[] = {"compressed", "full"};
+inline constexpr const char* kAstcTextureLabels[] = {"Compressed", "Full quality"};
+static_assert(std::size(kAstcTextureLabels) == std::size(kAstcTextureKeys));
 // Settings > Video: the refresh rate of the output while a game runs. 120 Hz is asked of the
 // display (display_refresh.h); one that cannot show it stays at 60 Hz.
 inline constexpr const char* kRefreshKeys[] = {"60", "120"};
@@ -111,6 +120,7 @@ struct Preferences {
     GraphicsBackend backend = GraphicsBackend::Vulkan;
     int resolution = kNativeResolution;  // index into kResolutionKeys
     int upscaling_filter = 0;            // index into kUpscalingFilterKeys
+    int astc_textures = 0;               // index into kAstcTextureKeys (0 is compressed)
     int refresh = 0;                     // index into kRefreshKeys
     int output = 0;                      // index into kOutputKeys
     bool frame_gen = false;              // Lossless Scaling frame generation (Vulkan only)
@@ -122,6 +132,7 @@ struct Preferences {
     bool large_text = false;             // Settings > Accessibility: the launcher's look
     bool high_contrast = false;
     bool reduce_motion = false;
+    std::string theme = "canopy";        // Settings > Theme: the launcher's look, by its id
     ButtonMapping mapping = kDefaultMapping;  // Settings > Controls > Button mapping
     int controller = -1;                 // a game's own Controller type (kControllerKeys); -1: automatic
     bool immediate_logs = false;         // Settings > Diagnostics: log lines written as they come
@@ -331,6 +342,11 @@ inline Preferences LoadPreferences(const std::string& file = SettingsFile()) {
     result.mute = Settings::Bool(document, Json::json_pointer("/audio/mute"), result.mute);
     const int menu_volume = Settings::Int(document, Json::json_pointer("/audio/menu_volume"), result.menu_volume);
     if (menu_volume >= 0 && menu_volume <= 100) result.menu_volume = menu_volume;
+    // A theme's id is a short plain word; anything else reads as the default.
+    const std::string theme = Settings::String(document, Json::json_pointer("/launcher/theme"));
+    if (!theme.empty() && theme.size() <= 32 &&
+        std::all_of(theme.begin(), theme.end(), [](char c) { return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-'; }))
+        result.theme = theme;
     result.detailed_logging = Settings::Bool(document, Json::json_pointer("/diagnostics/detailed_logging"),
                                              result.detailed_logging);
     result.immediate_logs = Settings::Bool(document, Json::json_pointer("/diagnostics/immediate_logs"),
@@ -340,6 +356,8 @@ inline Preferences LoadPreferences(const std::string& file = SettingsFile()) {
     result.upscaling_filter = KeyIndex(Settings::String(document, Json::json_pointer("/video/upscaling_filter")),
                                        kUpscalingFilterKeys, int(std::size(kUpscalingFilterKeys)),
                                        result.upscaling_filter);
+    result.astc_textures = KeyIndex(Settings::String(document, Json::json_pointer("/video/astc_textures")),
+                                    kAstcTextureKeys, int(std::size(kAstcTextureKeys)), result.astc_textures);
     result.refresh = KeyIndex(Settings::String(document, Json::json_pointer("/video/refresh_rate")),
                               kRefreshKeys, int(std::size(kRefreshKeys)), result.refresh);
     result.output = KeyIndex(Settings::String(document, Json::json_pointer("/video/output_resolution")),
@@ -366,6 +384,7 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
         (value.backend != GraphicsBackend::OpenGL && value.backend != GraphicsBackend::Vulkan) ||
         value.resolution < 0 || value.resolution >= int(std::size(kResolutionKeys)) ||
         value.upscaling_filter < 0 || value.upscaling_filter >= int(std::size(kUpscalingFilterKeys)) ||
+        value.astc_textures < 0 || value.astc_textures >= int(std::size(kAstcTextureKeys)) ||
         value.refresh < 0 || value.refresh >= int(std::size(kRefreshKeys)) ||
         value.output < 0 || value.output >= int(std::size(kOutputKeys)) ||
         value.language < 0 || value.language >= int(std::size(kLanguageKeys)) ||
@@ -376,6 +395,7 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
     document["video"]["fps_overlay"] = value.hud;
     document["video"]["resolution"] = kResolutionKeys[value.resolution];
     document["video"]["upscaling_filter"] = kUpscalingFilterKeys[value.upscaling_filter];
+    document["video"]["astc_textures"] = kAstcTextureKeys[value.astc_textures];
     document["video"]["refresh_rate"] = kRefreshKeys[value.refresh];
     document["video"]["output_resolution"] = kOutputKeys[value.output];
     document["video"]["frame_gen"] = value.frame_gen;
@@ -393,6 +413,7 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
     document["accessibility"]["large_text"] = value.large_text;
     document["accessibility"]["high_contrast"] = value.high_contrast;
     document["accessibility"]["reduce_motion"] = value.reduce_motion;
+    document["launcher"]["theme"] = value.theme;
     return Settings::Write(document, file);
 }
 
@@ -434,6 +455,7 @@ struct GameSettings {
     int frame_gen = -1;         // Lossless Scaling frame generation (Vulkan only)
     int frame_gen_target = -1;  // index into kFrameGenTargetKeys
     int frame_gen_multiplier = -1;  // index into kFrameGenMultiplierKeys
+    int astc_textures = -1;     // index into kAstcTextureKeys
     int volume = -1;            // game volume, 0 to 100
     int mute = -1;
     int vibration = -1;
@@ -471,6 +493,7 @@ inline GameSettings LoadGameSettings(uint64_t title_id, const std::string& file 
     result.resolution = KeyIndex(key("resolution"), kResolutionKeys, int(std::size(kResolutionKeys)), -1);
     result.upscaling_filter = KeyIndex(key("upscaling_filter"), kUpscalingFilterKeys,
                                        int(std::size(kUpscalingFilterKeys)), -1);
+    result.astc_textures = KeyIndex(key("astc_textures"), kAstcTextureKeys, int(std::size(kAstcTextureKeys)), -1);
     result.refresh = KeyIndex(key("refresh_rate"), kRefreshKeys, int(std::size(kRefreshKeys)), -1);
     result.frame_gen_target = KeyIndex(key("frame_gen_target"), kFrameGenTargetKeys,
                                        int(std::size(kFrameGenTargetKeys)), -1);
@@ -509,6 +532,7 @@ inline bool SaveGameSettings(uint64_t title_id, const GameSettings& value, const
     if (!title_id || value.renderer >= int(std::size(kRendererKeys)) ||
         value.resolution >= int(std::size(kResolutionKeys)) ||
         value.upscaling_filter >= int(std::size(kUpscalingFilterKeys)) ||
+        value.astc_textures >= int(std::size(kAstcTextureKeys)) ||
         value.refresh >= int(std::size(kRefreshKeys)) || value.language >= int(std::size(kLanguageKeys)) ||
         value.controller >= int(std::size(kControllerKeys)) ||
         value.frame_gen_target >= int(std::size(kFrameGenTargetKeys)) ||
@@ -529,6 +553,7 @@ inline bool SaveGameSettings(uint64_t title_id, const GameSettings& value, const
     store("renderer", value.renderer, kRendererKeys);
     store("resolution", value.resolution, kResolutionKeys);
     store("upscaling_filter", value.upscaling_filter, kUpscalingFilterKeys);
+    store("astc_textures", value.astc_textures, kAstcTextureKeys);
     store("refresh_rate", value.refresh, kRefreshKeys);
     store("frame_gen_target", value.frame_gen_target, kFrameGenTargetKeys);
     store("frame_gen_multiplier", value.frame_gen_multiplier, kFrameGenMultiplierKeys);
@@ -563,6 +588,7 @@ inline Preferences PreferencesFor(uint64_t title_id, const std::string& file = S
     if (game.renderer >= 0) result.backend = game.renderer == 0 ? GraphicsBackend::OpenGL : GraphicsBackend::Vulkan;
     if (game.resolution >= 0) result.resolution = game.resolution;
     if (game.upscaling_filter >= 0) result.upscaling_filter = game.upscaling_filter;
+    if (game.astc_textures >= 0) result.astc_textures = game.astc_textures;
     if (game.refresh >= 0) result.refresh = game.refresh;
     if (game.hud >= 0) result.hud = game.hud == 1;
     if (game.frame_gen >= 0) result.frame_gen = game.frame_gen == 1;

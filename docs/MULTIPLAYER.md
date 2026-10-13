@@ -21,7 +21,7 @@ Use a private room server on a PC/Linux host for initial tests. The PS5 build is
 client; it does not host a room or browse public rooms. Obtain the host address, UDP port
 and optional room password from the room operator. The usual UDP port is **24872**.
 
-1. In ProsperoEden, open **Settings > Multiplayer** before launching a game.
+1. In ProsperoEden, open **Multiplayer** (a section of the menu: R1 twice from the home screen) before launching a game.
 2. Select **Room address** and enter a numeric IPv4 address or hostname. Enter the port
    separately. IPv6 literals are not supported by this connection form.
    The current PS5 candidate failed hostname resolution in the public-cloud test; use

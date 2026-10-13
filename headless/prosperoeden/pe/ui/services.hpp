@@ -292,6 +292,7 @@ struct Preferences
     int renderer = 1; // 0 OpenGL, 1 Vulkan
     int resolution = 2;
     int filter = 0;
+    int astc = 0; // ASTC textures: 0 kept compressed, 1 full quality (four times the memory)
     int refresh = 0; // the output while a game runs: 0 60 Hz, 1 120 Hz
     int output = 0;  // the size of the picture, menu and games: 0 1080p, 1 1440p, 2 2160p
     // Lossless Scaling frame generation (Vulkan only): between a game's own frames, show
@@ -302,6 +303,7 @@ struct Preferences
     bool vibration = true;
     int language = 0;
     int menu_volume = 70; // launcher sounds, 0-100
+    std::string theme = "canopy"; // the launcher's look (theme.hpp); one this build lacks reads as the first
     // Accessibility: how the launcher itself is shown (theme.hpp, Look).
     bool large_text = false;
     bool high_contrast = false;
@@ -324,6 +326,7 @@ struct GameSettings
     int renderer = -1;   // 0 OpenGL, 1 Vulkan
     int resolution = -1; // index into Services::resolution_labels
     int filter = -1;     // index into Services::filter_labels
+    int astc = -1;       // index into Services::astc_labels
     int refresh = -1;    // 0 60 Hz, 1 120 Hz
     int hud = -1;        // FPS overlay
     int frame_gen = -1;  // Lossless Scaling frame generation (Vulkan only)
@@ -437,6 +440,7 @@ class Services
     virtual const std::vector<std::string> &resolution_labels() = 0; // "1x (native)"
     virtual const std::vector<std::string> &resolution_keys() = 0;   // "1x"
     virtual const std::vector<std::string> &filter_labels() = 0;
+    virtual const std::vector<std::string> &astc_labels() = 0; // "Compressed", "Full quality"
     // Frame generation: 0 this build has none (its settings are not shown), 1 the user's
     // Lossless.dll is missing (they are shown greyed out), 2 ready.
     virtual int frame_gen_state()

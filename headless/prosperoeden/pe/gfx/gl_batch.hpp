@@ -36,6 +36,9 @@ class GlBatch
     void sync_font_texture(std::uint32_t texture, const Font &font);
     // Uploads RGBA8 pixels as a single-level texture; returns its name.
     std::uint32_t create_texture(int width, int height, const std::uint8_t *rgba);
+    // Uploads BC7 blocks as a single-level texture; returns its name, or 0 when the graphics
+    // driver does not take them.
+    std::uint32_t create_bc7_texture(int width, int height, const std::uint8_t *blocks, std::size_t size);
     void delete_texture(std::uint32_t texture);
 
     // Draws into the currently bound framebuffer of the given size.

@@ -10,6 +10,8 @@
             cmdbuf.SetViewport(0, viewport);
             cmdbuf.SetScissor(0, scissor);
             cmdbuf.BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hud_graphics_pipeline);
+            cmdbuf.BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hud_pipeline_layout, 0,
+                                      hud_descriptor_set, {});
             auto constants = hud;
             if (hud.loading) {
                 // The loading scene fills the picture: tell it how large that is.

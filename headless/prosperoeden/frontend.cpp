@@ -5,6 +5,7 @@
 #include "frontend.h"
 
 #include "assets_dir.h"
+#include "hud.h"
 #include "audio_out_init.h"
 #include "boot_trace.h"
 #include "diagnostics.h"
@@ -179,11 +180,16 @@ std::string RunApp(const std::string& launch_error, bool first_start, Eden::Mult
         Eden::Report("menu video failure", pe::ps5::egl_error_name(display.last_error()));
         return {};
     }
-    // Something on screen at once: the launcher's own dark, then the first real frame.
-    glClearColor(0.024f, 0.035f, 0.039f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    display.swap();
-    sceSystemServiceHideSplashScreen();
+    // Something on screen at once. When the app has just been started that is the console's own
+    // launch picture: it stays until the launcher's first frame, which shows the same picture (the
+    // opening, pe/ui/launcher.cpp), so the app appears without a cut. Later the launcher's own dark.
+    bool splash_hidden = !first_start;
+    if (!first_start) {
+        glClearColor(0.024f, 0.035f, 0.039f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        display.swap();
+        sceSystemServiceHideSplashScreen();
+    }
 
     std::string selected_game;
     {
@@ -202,6 +208,7 @@ std::string RunApp(const std::string& launch_error, bool first_start, Eden::Mult
             glClearColor(0.7f, 0.08f, 0.16f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
             display.swap();
+            sceSystemServiceHideSplashScreen();
             batch.release();
             display.close();
             return {};
@@ -213,8 +220,13 @@ std::string RunApp(const std::string& launch_error, bool first_start, Eden::Mult
         Eden::Report("setup", "Checking supplied keys and firmware");
         EdenServices services(launch_error, rooms);
         pe::ui::Textures textures(batch, services);
+        // The look the player chose names the artwork (pe/ui/theme.hpp).
+        pe::ui::use_theme(services.preferences().theme);
         if (!textures.load_art(Eden::AppFile("ui")))
             Eden::Report("menu", "Launcher art is incomplete; check the app's ui/art folder");
+        // The picture the console is showing now, for the opening.
+        if (first_start && !textures.load_splash(Eden::AppFile("sce_sys/pic0.dds")))
+            Eden::Report("menu", "The launch picture could not be loaded; the launcher opens without it");
         textures.set_output_scale(static_cast<float>(display.width()) / 1920.0f);
 
         // Sound: its own thread feeds the console's audio port from the mixer.
@@ -372,6 +384,11 @@ std::string RunApp(const std::string& launch_error, bool first_start, Eden::Mult
                 Eden::Report("menu video failure", pe::ps5::egl_error_name(display.last_error()));
                 running = false;
             }
+            if (!splash_hidden) {
+                // The launcher's first frame is up: the console's launch picture can go.
+                sceSystemServiceHideSplashScreen();
+                splash_hidden = true;
+            }
             {
                 // A slow launcher frame names its stage in the log, at most once a second.
                 const auto done = Clock::now();
@@ -387,8 +404,21 @@ std::string RunApp(const std::string& launch_error, bool first_start, Eden::Mult
             }
         }
 
+        if (!splash_hidden) sceSystemServiceHideSplashScreen();
         selected_game = launcher.selected_game();
         if (!launcher.done()) selected_game.clear();
+        // The loading screen that follows wears the theme's colours (hud.h).
+        {
+            const pe::ui::Theme& theme = pe::ui::th();
+            const auto word = [](const pe::gfx::Color& colour) {
+                const auto byte = [](float value) {
+                    return static_cast<uint32_t>(std::clamp(value, 0.0f, 1.0f) * 255.0f + 0.5f);
+                };
+                return byte(colour.r) << 16 | byte(colour.g) << 8 | byte(colour.b);
+            };
+            Eden::Loading::Palette(word(theme.accent), word(theme.accent_pale), word(theme.accent_deep),
+                                   word(theme.base));
+        }
         // Let the last sound end (the screen is already dark), then give everything back.
         for (int wait = 0; audio_ready && wait < 60 && mixer->active_voices() > 0; ++wait) sceKernelUsleep(10000);
         audio.stop();

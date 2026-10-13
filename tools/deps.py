@@ -199,7 +199,10 @@ def fetch(item):
             if target.exists():
                 continue
             algorithm, expected = pinned_hash(entry)
-            shutil.copyfile(download(entry['url'], algorithm, expected, f'{item["name"]}-{entry["name"]}'), target)
+            # A file may sit in a folder of its input (src/ui/theme.cpp).
+            target.parent.mkdir(parents=True, exist_ok=True)
+            cached = f'{item["name"]}-{entry["name"].replace("/", "-")}'
+            shutil.copyfile(download(entry['url'], algorithm, expected, cached), target)
     else:
         fail(f'{item["name"]}: unknown kind {kind}')
     if not present(item):

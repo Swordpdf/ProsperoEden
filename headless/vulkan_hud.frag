@@ -2,6 +2,8 @@
 #version 450
 #extension GL_GOOGLE_include_directive : enable
 layout(push_constant) uniform Text { uint glyphs[28]; uint width; uint x; uint y; uint loading; } text;
+// The loading screen's picture (loading_art.h); the overlay does not read it.
+layout(set = 0, binding = 0) uniform sampler2D loading_art;
 layout(location = 0) out vec4 color;
 #include "loading_text.glsl"
 #include "loading_scene.glsl"

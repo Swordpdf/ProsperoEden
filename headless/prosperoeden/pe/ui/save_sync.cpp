@@ -258,41 +258,41 @@ void Launcher::draw_save_sync(Canvas &c, float open)
     if (!asks(save_sync_, sync_launch_))
     {
         // It works: the game's cover in a turning ring.
-        glass(c, kPanel, 28.0f, theme::kPanel.with_alpha(0.97f), theme::kLime.with_alpha(0.38f), 1.8f);
-        list.circle(kCenterX, kRingY, kRingRadius - kRingWidth, theme::kBase.with_alpha(0.55f));
-        list.ring(kCenterX, kRingY, kRingRadius, kRingWidth, theme::kPanelEdge.with_alpha(0.22f));
+        glass(c, kPanel, 28.0f, th().panel.with_alpha(0.97f), th().accent.with_alpha(0.38f), 1.8f);
+        list.circle(kCenterX, kRingY, kRingRadius - kRingWidth, th().base.with_alpha(0.55f));
+        list.ring(kCenterX, kRingY, kRingRadius, kRingWidth, th().panel_edge.with_alpha(0.22f));
         arc(list, kCenterX, kRingY, kRingRadius, kRingWidth, sync_time_ * 4.2f,
-            kPi * (0.55f + 0.45f * std::sin(sync_time_ * 2.1f)), theme::kLime);
+            kPi * (0.55f + 0.45f * std::sin(sync_time_ * 2.1f)), th().accent);
         const float art = (kRingRadius - kRingWidth) * 2.0f * 0.70710678f;
         if (sync_launch_)
             cover(c, sync_cover_, {kCenterX - art * 0.5f, kRingY - art * 0.5f, art, art}, 12.0f);
-        centred(game, 506.0f, 46.0f, theme::kHeading, theme::kTitle);
+        centred(game, 506.0f, 46.0f, th().size_heading, th().title);
         centred(save_sync_.before || sync_launch_ ? tr("Syncing save data") : tr("Backing up save data"), 560.0f,
-                32.0f, theme::kText24, theme::kValue);
+                32.0f, th().size_text, th().value);
         if (!save_sync_.profile.empty())
-            centred(fill(tr("Profile {0}"), {save_sync_.profile}), 606.0f, 28.0f, theme::kSmall, theme::kMeta);
+            centred(fill(tr("Profile {0}"), {save_sync_.profile}), 606.0f, 28.0f, th().size_small, th().meta);
         centred(sync_launch_ ? tr("The game starts when its save data is in step.") :
                                tr("Your save data is checked against the server's."),
-                706.0f, 30.0f, theme::kSmall, theme::kCopy);
+                706.0f, 30.0f, th().size_small, th().copy);
         if (sync_launch_)
         {
             static constexpr Hint kWaiting[] = {{Pad::circle, TR("Back")}};
-            draw_hints(c, kWaiting, 1, kPanel.x + 52.0f, kPanel.y + kPanel.h - 54.0f, theme::kCopy, kPanel.w - 104.0f);
+            draw_hints(c, kWaiting, 1, kPanel.x + 52.0f, kPanel.y + kPanel.h - 54.0f, th().copy, kPanel.w - 104.0f);
         }
         list.pop_transform();
         list.pop_opacity();
         return;
     }
 
-    glass(c, kDialog, 26.0f, theme::kPanel.with_alpha(0.97f), theme::kPanelEdge.with_alpha(0.66f), 1.6f);
+    glass(c, kDialog, th().radius_panel, th().panel.with_alpha(0.97f), th().panel_edge.with_alpha(0.66f), 1.6f);
     const bool conflict = save_sync_.stage == SaveSyncStage::conflict;
     const bool too_old = !conflict && save_sync_.too_old;
     text_shrink(c, conflict ? tr("Save data changed on both sides") :
                    too_old  ? tr("Server too old for save sync") :
                               tr("Save data not synced"),
-                592.0f, baseline(218.0f, 62.0f, theme::kDisplay), theme::kDisplay, theme::kTitle, 736.0f);
+                592.0f, baseline(218.0f, 62.0f, th().size_display), th().size_display, th().title, 736.0f);
     text_fit(c, save_sync_.profile.empty() ? game : fill(tr("{0} · Profile {1}"), {game, save_sync_.profile}), 592.0f,
-             baseline(291.0f, 32.0f, theme::kSmall), theme::kSmall, Color::rgb(0xbecbb9), 736.0f);
+             baseline(291.0f, 32.0f, th().size_small), th().size_small, th().copy, 736.0f);
     notice_block(c,
                  conflict ? std::string{tr("This console and the server both have save data the other does not know. "
                                            "Which one should stay? The other is kept as a backup.")} :
@@ -300,8 +300,8 @@ void Launcher::draw_save_sync(Canvas &c, float open)
                                     "server: until then no save data is synced with it."),
                                  {save_sync_.server_version, save_sync_.needed_version}) :
                             save_sync_.error,
-                 592.0f, baseline(332.0f, 32.0f, theme::kSmall), theme::kSmall, 32.0f,
-                 conflict ? theme::kCopy : theme::kWarning, 736.0f, 3, false);
+                 592.0f, baseline(332.0f, 32.0f, th().size_small), th().size_small, 32.0f,
+                 conflict ? th().copy : th().warning, 736.0f, 3, false);
 
     // The answers.
     const std::vector<Answer> offered = answers(save_sync_, sync_launch_);
@@ -311,8 +311,8 @@ void Launcher::draw_save_sync(Canvas &c, float open)
         server = server.empty() ? save_sync_.server_device : fill(tr("{0} on {1}"), {server, save_sync_.server_device});
     const auto row_top = [&](int row) { return kRowsTop + static_cast<float>(row) * kRowPitch; };
     for (std::size_t row = 0; row < offered.size(); ++row)
-        plate_rest(c, kRowPlate, {592.0f, row_top(static_cast<int>(row)), 736.0f, kRowHeight});
-    plate_focus(c, kRowPlate, {592.0f, kRowsTop + sync_rows_.cursor(), 736.0f, kRowHeight}, 1.0f);
+        plate_rest(c, row_plate(), {592.0f, row_top(static_cast<int>(row)), 736.0f, kRowHeight});
+    plate_focus(c, row_plate(), {592.0f, kRowsTop + sync_rows_.cursor(), 736.0f, kRowHeight}, 1.0f);
     for (std::size_t row = 0; row < offered.size(); ++row)
     {
         std::string title;
@@ -352,8 +352,8 @@ void Launcher::draw_save_sync(Canvas &c, float open)
             break;
         }
         const float top = row_top(static_cast<int>(row));
-        text_fit(c, title, 628.0f, baseline(top + 16.0f, 38.0f, theme::kText24), theme::kText24, theme::kValue, 664.0f);
-        text_fit(c, note, 628.0f, baseline(top + 56.0f, 30.0f, theme::kSmall), theme::kSmall, theme::kMeta, 664.0f);
+        text_fit(c, title, 628.0f, baseline(top + 16.0f, 38.0f, th().size_text), th().size_text, th().value, 664.0f);
+        text_fit(c, note, 628.0f, baseline(top + 56.0f, 30.0f, th().size_small), th().size_small, th().meta, 664.0f);
     }
 
     static constexpr Hint kAnswers[] = {
@@ -362,9 +362,9 @@ void Launcher::draw_save_sync(Canvas &c, float open)
         {Pad::updown, TR("Select")}, {Pad::cross, TR("Choose")}, {Pad::circle, TR("Change nothing")}};
     static constexpr Hint kConfirm[] = {{Pad::cross, TR("Understood")}};
     if (offered.size() == 1)
-        draw_hints(c, kConfirm, 1, 592.0f, kHints, theme::kCopy, 736.0f);
+        draw_hints(c, kConfirm, 1, 592.0f, kHints, th().copy, 736.0f);
     else
-        draw_hints(c, conflict ? kConflict : kAnswers, 3, 592.0f, kHints, theme::kCopy, 736.0f);
+        draw_hints(c, conflict ? kConflict : kAnswers, 3, 592.0f, kHints, th().copy, 736.0f);
     list.pop_transform();
     list.pop_opacity();
 }
@@ -381,10 +381,10 @@ void Launcher::draw_save_sync_notice(Canvas &c)
     const bool failed = sync_notice_.stage == SaveSyncStage::failed;
     const bool fine = !failed && (sync_notice_.outcome == SaveSyncOutcome::uploaded ||
                                   sync_notice_.outcome == SaveSyncOutcome::downloaded);
-    const Color accent = fine ? theme::kLime : theme::kWarning;
+    const Color accent = fine ? th().accent : th().warning;
     list.push_opacity(shown);
     list.push_transform(1.0f, 0.0f, 0.0f, (1.0f - shown) * 72.0f * motion(), 0.0f);
-    glass(c, panel, 20.0f, theme::kPanel.with_alpha(0.97f), accent.with_alpha(0.55f), 1.4f);
+    glass(c, panel, 20.0f, th().panel.with_alpha(0.97f), accent.with_alpha(0.55f), 1.4f);
     // A mark at the left: a disc with an arrow up (to the server) or down (from it).
     const float cx = panel.x + 48.0f;
     const float cy = panel.y + 50.0f;
@@ -411,9 +411,9 @@ void Launcher::draw_save_sync_notice(Canvas &c)
     }
     else
         title = tr("Save data left as it was");
-    text_shrink(c, title, panel.x + 88.0f, baseline(panel.y + 18.0f, 34.0f, theme::kText24), theme::kText24,
-                theme::kTitle, panel.w - 112.0f);
-    text_shrink(c, line, panel.x + 88.0f, baseline(panel.y + 54.0f, 30.0f, theme::kSmall), theme::kSmall, theme::kCopy,
+    text_shrink(c, title, panel.x + 88.0f, baseline(panel.y + 18.0f, 34.0f, th().size_text), th().size_text,
+                th().title, panel.w - 112.0f);
+    text_shrink(c, line, panel.x + 88.0f, baseline(panel.y + 54.0f, 30.0f, th().size_small), th().size_small, th().copy,
                 panel.w - 112.0f);
     const float left = tween::clamp01(sync_notice_left_ / kNoticeSeconds);
     list.rounded_rect({panel.x + 20.0f, panel.y + panel.h - 12.0f, (panel.w - 40.0f) * left, 3.0f}, 1.5f,

@@ -7,6 +7,7 @@
 #include "pe/core/log.hpp"
 
 #include <cctype>
+#include <cmath>
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
@@ -21,17 +22,25 @@ using audio::Cue;
 namespace
 {
 
-constexpr Rect kListPanel{108.0f, 188.0f, 820.0f, 720.0f};
-constexpr Rect kDetailPanel{980.0f, 188.0f, 820.0f, 720.0f};
-constexpr Rect kWindow{138.0f, 250.0f, 760.0f, 606.0f};
-constexpr float kRowHeight = 78.0f;
-// Under the game's details: its console mode, then the switch for its mods.
-constexpr Rect kModeRow{1022.0f, 700.0f, 736.0f, 74.0f};
-constexpr Rect kModsRow{1022.0f, 782.0f, 736.0f, 74.0f};
-constexpr Rect kDialog{550.0f, 180.0f, 820.0f, 720.0f};
+// The Library: covers four to a row at the left, the selected game's details at the right.
+constexpr int kColumns = 4;
+constexpr float kCover = 240.0f;
+constexpr float kCellPitchX = kCover + 32.0f;
+constexpr float kCellPitchY = 346.0f; // a cover, its name on up to two lines, a line under it, and the gap
+constexpr float kGridTop = 152.0f;
+constexpr float kGridBottom = 972.0f;
+constexpr float kGridWidth = kCellPitchX * (kColumns - 1) + kCover;
+constexpr Rect kDetail{1304.0f, 136.0f, 520.0f, 836.0f};
 
-// The game settings dialog's rows, and the window that shows five of them (also the Mods list's).
-// Video to Language open what the game does differently from Settings (game_options.cpp).
+// A game's settings: a page of three parts beside the rail.
+constexpr Rect kKinds{layout::kLeft, 160.0f, 400.0f, 792.0f};
+constexpr float kKindPitch = 80.0f;
+constexpr float kKindHeight = 72.0f;
+constexpr Rect kMiddle{624.0f, 160.0f, 760.0f, 792.0f};
+constexpr Rect kExplain{1424.0f, 160.0f, 400.0f, 792.0f};
+
+// The game page's rows on the left. Video to Language open what the game does differently from
+// Settings (game_options.cpp).
 enum GameRow : int
 {
     row_mode,
@@ -45,26 +54,27 @@ enum GameRow : int
     row_save,   // in builds that move saves
     row_delete, // a game a download source has: deleted from the console
 };
-constexpr float kDialogRowsTop = 334.0f;
-constexpr float kDialogRowPitch = 96.0f;
-constexpr float kDialogRowHeight = 94.0f;
-constexpr int kDialogRowsShown = 5;
-constexpr Rect kDialogWindow{592.0f, kDialogRowsTop, 736.0f,
-                             kDialogRowPitch * (kDialogRowsShown - 1) + kDialogRowHeight};
-constexpr float kDialogHints = 848.0f;
+constexpr const char *kKindNames[] = {TR("Console mode"), TR("Video"),    TR("Performance"),
+                                      TR("Audio"),        TR("Controls"), TR("System"),
+                                      TR("Language"),     TR("Mods"),     TR("Save data"),
+                                      TR("Delete from console")};
 
-// Console mode marks, drawn from lines: a screen on its stand, and a handheld.
-void draw_docked(Canvas &c, float x, float cy, Color ink)
+// How many settings a game has of its own.
+int changes_of(const GameSettings &game)
 {
-    c.list.bordered_rect({x, cy - 13.0f, 36.0f, 22.0f}, 3.0f, ink.with_alpha(0.0f), 2.0f, ink);
-    c.list.line(x + 11.0f, cy + 14.0f, x + 25.0f, cy + 14.0f, 2.0f, ink);
+    return (game.renderer >= 0) + (game.resolution >= 0) + (game.filter >= 0) + (game.astc >= 0) +
+           (game.refresh >= 0) + (game.hud >= 0) + (game.frame_gen >= 0) + (game.frame_gen_target >= 0) +
+           (game.frame_gen_multiplier >= 0) +
+           static_cast<int>(std::count_if(game.performance.begin(), game.performance.end(),
+                                          [](int value) { return value >= 0; })) +
+           (game.volume >= 0) + (game.mute >= 0) + (game.vibration >= 0) + (game.own_mapping ? 1 : 0) +
+           (game.controller >= 0) + (game.rng_seed >= 0) + (game.language >= 0);
 }
 
-void draw_handheld(Canvas &c, float x, float cy, Color ink)
+// "3 changed", or that the game follows Settings.
+std::string changes_text(int changes)
 {
-    c.list.bordered_rect({x, cy - 10.0f, 40.0f, 20.0f}, 6.0f, ink.with_alpha(0.0f), 2.0f, ink);
-    c.list.circle(x + 7.0f, cy, 2.2f, ink);
-    c.list.circle(x + 33.0f, cy, 2.2f, ink);
+    return changes == 0 ? std::string{tr("Follows Settings")} : fill(tr("{0} changed"), {std::to_string(changes)});
 }
 
 } // namespace
@@ -186,9 +196,10 @@ void Launcher::check_games_present()
         {
             read_home();
             const int recents = static_cast<int>(home_.recents.size());
-            if (home_focus_ >= 5 && home_focus_ < 9 && home_focus_ - 5 >= recents)
-                home_focus_ = recents > 0 ? 4 + recents : 9;
-            if (home_focus_ == 4 && !home_.last_exists)
+            // (2 to 5 are the recent games, 6 is "view all", 1 the game's settings: home.cpp.)
+            if (home_focus_ >= 2 && home_focus_ < 6 && home_focus_ - 2 >= recents)
+                home_focus_ = recents > 0 ? 1 + recents : 6;
+            if (home_focus_ == 1 && !home_.last_exists)
                 home_focus_ = 0;
         }
     }
@@ -287,10 +298,10 @@ void Launcher::enter_library()
         start_scan();
         finish_scan(true);
     }
-    library_.visible = 7;
-    library_.pitch = 88.0f;
+    library_.wrap = false;
     library_.reset(static_cast<int>(games_.size()), 0);
     refresh_selected_game();
+    sync_grid(true);
     detail_.snap(1.0f);
     mode_.snap(selected_docked_ ? 0.0f : 1.0f);
 }
@@ -305,55 +316,90 @@ void Launcher::refresh_selected_game()
                           1.0f : 0.0f);
     detail_.value = 0.0f;
     detail_.velocity = 0.0f;
+    // What it has of its own is read once the selection rests (read_selected_details).
+    selected_read_ = false;
+    selected_changes_ = 0;
+    selected_session_.clear();
+    sync_grid(false);
+}
+
+void Launcher::sync_grid(bool snap)
+{
+    const int count = static_cast<int>(games_.size());
+    const int rows = (count + kColumns - 1) / kColumns;
+    const int row = count > 0 ? library_.selected / kColumns : 0;
+    grid_rows_.visible = 2;
+    grid_rows_.pitch = kCellPitchY;
+    grid_rows_.wrap = false;
+    if (snap || grid_rows_.count != rows)
+        grid_rows_.reset(rows, row);
+    else
+        grid_rows_.select(row);
+    grid_x_.target = static_cast<float>(count > 0 ? library_.selected % kColumns : 0) * kCellPitchX;
+    grid_y_.target = static_cast<float>(row) * kCellPitchY;
+    // The highlight glides only where it can be seen doing it.
+    if (snap || screen_ != Screen::library || transition_.running)
+    {
+        grid_x_.snap(grid_x_.target);
+        grid_y_.snap(grid_y_.target);
+    }
+}
+
+void Launcher::read_selected_details()
+{
+    selected_read_ = true;
+    selected_changes_ = 0;
+    selected_session_.clear();
+    if (games_.empty())
+        return;
+    const Game &game = games_[static_cast<std::size_t>(library_.selected)];
+    if (game.title_id == 0 || game.remote)
+        return;
+    const GameSettings own = services_.game_settings(game.title_id);
+    selected_changes_ = changes_of(own);
+    selected_session_ = session_line(own, selected_docked_);
 }
 
 void Launcher::press_library(Key key)
 {
     const int count = static_cast<int>(games_.size());
     const Game *game = count > 0 ? &games_[static_cast<std::size_t>(library_.selected)] : nullptr;
+    const auto go = [&](int next)
+    {
+        if (!library_.select(next))
+            return;
+        message_.clear();
+        refresh_selected_game();
+        mode_.snap(selected_docked_ ? 0.0f : 1.0f);
+        cue(Cue::focus);
+    };
     switch (key)
     {
     case Key::circle:
-        open(Screen::home, false);
+        go_section(0);
         return;
     case Key::up:
     case Key::down:
-        if (library_.move(key == Key::down ? 1 : -1))
-        {
-            message_.clear();
-            refresh_selected_game();
-            mode_.snap(selected_docked_ ? 0.0f : 1.0f);
-            cue(Cue::focus);
-        }
-        return;
-    case Key::l1:
-    case Key::r1:
-        if (library_.page(key == Key::r1 ? 1 : -1))
-        {
-            message_.clear();
-            refresh_selected_game();
-            mode_.snap(selected_docked_ ? 0.0f : 1.0f);
-            cue(Cue::page);
-        }
-        return;
-    case Key::left:
-    case Key::right:
     {
-        if (game == nullptr || game->title_id == 0)
-        {
-            if (game != nullptr)
-                cue(Cue::error);
+        if (count == 0)
             return;
-        }
-        const bool saved = services_.set_docked(game->title_id, !selected_docked_);
-        if (saved)
-            selected_docked_ = !selected_docked_;
-        say(saved ? tr("Saved for this game. Applies on next launch.") :
-                    tr("Could not save console mode. Please try again."),
-            !saved);
-        cue(saved ? Cue::toggle : Cue::error);
+        int next = library_.selected + (key == Key::down ? kColumns : -kColumns);
+        // Down onto a place the last row does not have: its last game.
+        if (next >= count && library_.selected / kColumns < (count - 1) / kColumns)
+            next = count - 1;
+        if (next >= 0 && next < count)
+            go(next);
         return;
     }
+    case Key::left:
+        if (count == 0 || library_.selected % kColumns == 0)
+            return focus_rail();
+        go(library_.selected - 1);
+        return;
+    case Key::right:
+        if (count > 0 && library_.selected % kColumns != kColumns - 1 && library_.selected + 1 < count)
+            go(library_.selected + 1);
+        return;
     case Key::square:
     {
         // A game on download sources: into the download queue, or out of it.
@@ -397,14 +443,16 @@ void Launcher::press_library(Key key)
         }
         game_settings_ = services_.game_settings(game->title_id);
         game_docked_ = selected_docked_;
+        game_from_home_ = false;
         import_source_ = services_.save_transfer_available() ?
                              services_.save_import_source(game->title_id) : SaveSource::none;
         import_armed_ = false;
         delete_armed_ = false;
         read_mods(games_[static_cast<std::size_t>(library_.selected)]);
         open_modal(Modal::game);
-        game_rows_.visible = kDialogRowsShown;
-        game_rows_.pitch = kDialogRowPitch;
+        pane_.snap(0.0f);
+        game_rows_.visible = 10;
+        game_rows_.pitch = kKindPitch;
         game_rows_.reset(dialog_rows(Modal::game), 0);
         return;
     case Key::cross:
@@ -418,6 +466,9 @@ void Launcher::press_library(Key key)
             play_remote(*game);
             return;
         }
+        launch_from_ = {layout::kLeft + static_cast<float>(library_.selected % kColumns) * kCellPitchX,
+                        kGridTop + static_cast<float>(library_.selected / kColumns) * kCellPitchY - grid_rows_.scroll(),
+                        kCover, kCover};
         launch(game->file, game->name, game->cover);
         return;
     default:
@@ -428,256 +479,249 @@ void Launcher::press_library(Key key)
 void Launcher::draw_library(Canvas &c)
 {
     gfx::DrawList &list = c.list;
+    const Theme &t = th();
     const int count = static_cast<int>(games_.size());
-    draw_frame(c, tr("Your games"), tr("Select a game to begin"));
+    const float left = layout::kLeft;
+    draw_frame(c, tr("Library"), count > 0 ? fill(tr("{0} games"), {std::to_string(count)}).c_str() : "");
 
-    // ---- the list ----
-    glass(c, kListPanel, 26.0f, theme::kPanel.with_alpha(0.80f), theme::kPanelEdge.with_alpha(0.55f));
-    text(c, tr("LIBRARY"), 138.0f, baseline(208.0f, 28.0f, theme::kSmall), theme::kSmall,
-         theme::kLimePale, Align::left, 3.0f);
+    // ---- the covers ----
     if (count == 0)
     {
-        text(c, tr("No ROM files found."), kListPanel.x + kListPanel.w * 0.5f,
-             baseline(488.0f, 38.0f, theme::kText24), theme::kText24, theme::kCopy, Align::center);
+        const float cx = left + kGridWidth * 0.5f;
+        icon(c, Icon::library, cx, 460.0f, 96.0f, t.rule);
+        text_shrink(c, games_loaded_ || !home_.setup_ready ? tr("No ROM files found.") : tr("Reading..."), cx,
+                    baseline(540.0f, 38.0f, t.size_text), t.size_text, t.copy, kGridWidth, Align::center);
     }
     else
     {
-        // The window is wider than its rows so the highlight's glow is not cut at the sides.
-        list.push_clip({kWindow.x - 24.0f, kWindow.y - 6.0f, kWindow.w + 48.0f, kWindow.h + 12.0f});
-        const auto row_rect = [&](int row) -> Rect
+        // The window is wider than its covers so the highlight's light is not cut at the sides.
+        list.push_clip({left - 30.0f, kGridTop - 24.0f, kGridWidth + 60.0f, kGridBottom - kGridTop + 24.0f});
+        const float scroll = grid_rows_.scroll();
+        const Rect ring{left + grid_x_.value, kGridTop + grid_y_.value - scroll, kCover, kCover};
+        const int first = grid_rows_.first_row() * kColumns;
+        const int last = std::min(count - 1, (grid_rows_.last_row() + 1) * kColumns - 1);
+        for (int i = first; i <= last; ++i)
         {
-            return {kWindow.x,
-                    kWindow.y + static_cast<float>(row) * library_.pitch - library_.scroll(),
-                    kWindow.w, kRowHeight};
-        };
-        for (int row = library_.first_row(); row <= library_.last_row(); ++row)
-        {
-            list.push_opacity(library_.row_alpha(row, kRowHeight));
-            plate_rest(c, kListPlate, row_rect(row));
-            list.pop_opacity();
-        }
-        plate_focus(c, kListPlate,
-                    {kWindow.x, kWindow.y + library_.cursor() - library_.scroll(), kWindow.w,
-                     kRowHeight},
-                    1.0f);
-        for (int row = library_.first_row(); row <= library_.last_row(); ++row)
-        {
-            const Game &game = games_[static_cast<std::size_t>(row)];
-            const Rect r = row_rect(row);
-            list.push_opacity(library_.row_alpha(row, kRowHeight));
+            const Game &game = games_[static_cast<std::size_t>(i)];
+            const Rect r{left + static_cast<float>(i % kColumns) * kCellPitchX,
+                         kGridTop + static_cast<float>(i / kColumns) * kCellPitchY - scroll, kCover, kCover};
+            // How much of the gliding highlight lies on this cover.
+            const float near = tween::clamp01(1.0f - (std::fabs(r.x - ring.x) + std::fabs(r.y - ring.y)) / 150.0f);
+            const float f = rail_focus_ ? 0.0f : near;
+            const float scale = 1.0f + (0.04f * f - 0.035f * press_ * f) * motion();
+            const float here = arrive(i - first, 0.022f);
+            list.push_opacity(here);
+            list.push_transform(1.0f, 0.0f, 0.0f, 0.0f, (1.0f - here) * 20.0f);
+            list.push_transform(scale, r.x + r.w * 0.5f, r.y + r.h, 0.0f, 0.0f);
+            focus_ring(c, r, t.radius_card, f);
             if (game.remote)
-                remote_cover(c, game.cover, {r.x + 12.0f, r.y + 11.0f, 56.0f, 56.0f}, 8.0f);
+                remote_cover(c, game.cover, r, t.radius_card, 0.5f + 0.7f * f);
             else
-                cover(c, game.cover, {r.x + 12.0f, r.y + 11.0f, 56.0f, 56.0f}, 8.0f);
+                cover(c, game.cover, r, t.radius_card, 0.5f + 0.7f * f);
+            const Download *download = game.remote ? download_of(game.key) : nullptr;
+            if (download != nullptr &&
+                (download->state == DownloadState::downloading || download->state == DownloadState::verifying) &&
+                download->total > 0)
+            {
+                // What is done of its download, over the cover.
+                const float done = std::clamp(static_cast<float>(static_cast<double>(download->done) /
+                                                                 static_cast<double>(download->total)),
+                                              0.0f, 1.0f);
+                list.gradient_rect({r.x, r.y + r.h - 96.0f, r.w, 96.0f}, t.radius_card, t.scrim.with_alpha(0.0f),
+                                   t.scrim.with_alpha(0.86f));
+                text(c, fill(tr("{0}%"), {std::to_string(static_cast<int>(done * 100.0f))}), r.x + r.w - 20.0f,
+                     r.y + r.h - 40.0f, t.size_small, t.title, Align::right);
+                progress_bar(c, {r.x + 20.0f, r.y + r.h - 28.0f, r.w - 40.0f, 8.0f}, done);
+            }
+            list.pop_transform();
+            // Its name on up to two lines (real names are long), and a line about it under that.
+            const float line = look().large_text ? 32.0f : 28.0f;
+            const int name_lines = text_block(c, game.name, r.x, baseline(r.y + kCover + 12.0f, line, 22.0f), 22.0f,
+                                              line, gfx::mix(t.body, t.title, f), kCover, 2);
+            const float under = r.y + kCover + 12.0f + line * static_cast<float>(std::max(1, name_lines));
             if (game.remote)
             {
-                // A game on download sources: where it is or what is happening to it instead of its
-                // format, and its download's progress under its name.
-                Color tone = theme::kMeta;
+                Color tone = t.meta;
                 const std::string state = remote_state(game, &tone);
-                const float taken = text_shrink(c, state, r.x + 730.0f, baseline(r.y, kRowHeight, theme::kSmall),
-                                                theme::kSmall, tone, 200.0f, Align::right);
-                text_fit(c, game.name, r.x + 86.0f, baseline(r.y, kRowHeight, theme::kText24), theme::kText24,
-                         Color::rgb(0xf3f5e9).with_alpha(0.78f), 644.0f - taken - 20.0f);
-                const Download *download = download_of(game.key);
-                if (download != nullptr &&
-                    (download->state == DownloadState::downloading || download->state == DownloadState::verifying) &&
-                    download->total > 0)
-                {
-                    const float done = std::clamp(static_cast<float>(static_cast<double>(download->done) /
-                                                                     static_cast<double>(download->total)),
-                                                  0.0f, 1.0f);
-                    list.rounded_rect({r.x + 86.0f, r.y + kRowHeight - 14.0f, 560.0f, 4.0f}, 2.0f,
-                                      theme::kPanelEdge.with_alpha(0.22f));
-                    list.rounded_rect({r.x + 86.0f, r.y + kRowHeight - 14.0f, std::max(4.0f, 560.0f * done), 4.0f},
-                                      2.0f, theme::kLime);
-                }
+                text_shrink(c, state, r.x, baseline(under, 24.0f, 18.0f), 18.0f, tone, kCover);
             }
             else
             {
-                text_fit(c, game.name, r.x + 86.0f, baseline(r.y, kRowHeight, theme::kText24),
-                         theme::kText24, Color::rgb(0xf3f5e9), 560.0f);
-                text(c, game.format, r.x + 730.0f, baseline(r.y, kRowHeight, theme::kSmall),
-                     theme::kSmall, theme::kMeta, Align::right);
+                text_shrink(c, game.format + "  /  " + game.size, r.x, baseline(under, 24.0f, 18.0f), 18.0f,
+                            gfx::mix(t.faint, t.accent_pale, f), kCover);
             }
+            list.pop_transform();
             list.pop_opacity();
         }
         list.pop_clip();
-        scrollbar(c, library_, 910.0f, kWindow.y, kWindow.h);
+        // More rows wait under the window: it fades out over them.
+        if (grid_rows_.count > grid_rows_.visible && !look().high_contrast)
+            list.gradient_rect({left - 30.0f, kGridBottom - 140.0f, kGridWidth + 60.0f, 140.0f}, 0.0f,
+                               t.base.with_alpha(0.0f), t.base.with_alpha(0.92f));
+        scrollbar(c, grid_rows_, left + kGridWidth + 22.0f, kGridTop, kGridBottom - kGridTop - 152.0f);
     }
-    text(c, list_position(count > 0 ? library_.selected + 1 : 0, count), 898.0f, baseline(866.0f, 28.0f, theme::kSmall), theme::kSmall,
-         theme::kLimePale, Align::right);
 
     // ---- the selected game ----
-    glass(c, kDetailPanel, 26.0f, theme::kPanel.with_alpha(0.80f),
-          theme::kPanelEdge.with_alpha(0.55f));
-    text(c, tr("GAME DETAILS"), 1016.0f, baseline(210.0f, 28.0f, theme::kSmall), theme::kSmall,
-         theme::kLimePale, Align::left, 3.0f);
     const Game *game = count > 0 ? &games_[static_cast<std::size_t>(library_.selected)] : nullptr;
+    const bool remote = game != nullptr && game->remote;
+    const float x = kDetail.x + 36.0f;
+    const float width = kDetail.w - 72.0f;
+    glass(c, kDetail, t.radius_panel, t.panel.with_alpha(0.90f), t.panel_edge.with_alpha(0.42f), 1.2f);
     const float shown = tween::clamp01(detail_.value);
     list.push_opacity(shown);
+    // Its cover again as a band across the top, running out into the panel.
+    const Rect band{kDetail.x + 1.0f, kDetail.y + 1.0f, kDetail.w - 2.0f, 148.0f};
+    if (game != nullptr && !game->cover.empty())
+    {
+        const Cover picture = c.textures.cover(game->cover, kDetail.w);
+        if (picture.texture != 0)
+        {
+            // Drawn taller than the band and cut at its foot, so only its upper corners are round.
+            const Rect tall{band.x, band.y, band.w, band.h + 60.0f};
+            list.push_clip(band);
+            list.rounded_image(picture.texture, tall, {0.0f, 0.27f, 1.0f, tall.h / tall.w}, t.radius_panel - 1.0f,
+                               Color{1.0f, 1.0f, 1.0f, remote ? 0.55f : 0.9f});
+            list.pop_clip();
+        }
+        // (With high contrast the panel is solid, and of its own colour: glass() in widgets.cpp.)
+        const Color ground = look().high_contrast ? gfx::mix(t.scrim, t.panel, 0.4f) : t.panel.with_alpha(0.97f);
+        list.gradient_rect({band.x, band.y + 40.0f, band.w, band.h - 39.0f}, 0.0f, ground.with_alpha(0.0f), ground);
+    }
     list.push_transform(1.0f, 0.0f, 0.0f, 0.0f, (1.0f - shown) * 10.0f * motion());
-    text_block(c, game != nullptr ? game->name : tr("No ROM selected"), 1016.0f,
-               baseline(250.0f, 42.0f, theme::kHeading), theme::kHeading, 42.0f, theme::kTitle,
-               760.0f, 2);
-    if (game != nullptr && game->remote)
-        remote_cover(c, game->cover, {1016.0f, 372.0f, 288.0f, 288.0f}, 14.0f, 0.9f);
-    else
-        cover(c, game != nullptr ? game->cover : std::string{}, {1016.0f, 372.0f, 288.0f, 288.0f},
-              14.0f, 0.9f);
-    if (game == nullptr || game->cover.empty())
-        text_shrink(c, game == nullptr ? tr("Select a game") : tr("No cover art"), 1160.0f,
-                    baseline(676.0f, 30.0f, theme::kSmall), theme::kSmall, theme::kMeta, 288.0f,
-                    Align::center);
-    struct Field
+    kicker(c, tr("GAME DETAILS"), x, baseline(kDetail.y + 162.0f, 30.0f, t.size_small), t.accent, width);
+    float y = kDetail.y + 198.0f;
     {
-        const char *label;
-        std::string value;
-        Color color;
-    };
-    Field fields[] = {
-        {tr("FORMAT"), game != nullptr ? game->format : "-", theme::kValue},
-        {tr("SIZE"), game != nullptr ? game->size : "-", theme::kValue},
-        {tr("ADD-ONS"),
-         game != nullptr ? addons_line(game->addons, game->mods, game->mods_on) : "-",
-         game != nullptr && (!game->addons.empty() || game->mods > 0) ? theme::kLimePale :
-                                                                         theme::kValue},
-        {tr("LANGUAGE"), game != nullptr ? game->language : "-",
-         game != nullptr && !game->language_note.empty() ? theme::kWarning : theme::kValue},
-    };
-    // A game on download sources: what is happening to it and where it is, instead of what it comes
-    // with and its language, which are known once it is on the console.
-    const bool remote = game != nullptr && game->remote;
-    if (remote)
-    {
-        Color tone = theme::kValue;
-        const std::string state = remote_state(*game, &tone);
-        const bool coming = download_of(game->key) != nullptr;
-        fields[2] = {tr("STATE"), coming ? state : std::string{tr("Not on the console")}, coming ? tone : theme::kValue};
-        std::string sources;
-        for (const std::string &name : game->sources)
-            sources += (sources.empty() ? "" : ", ") + name;
-        fields[3] = {game->sources.size() == 1 ? tr("SOURCE") : tr("SOURCES"), sources, theme::kValue};
+        const Heavy heavy(c);
+        const int lines = text_block(c, game != nullptr ? game->name : tr("No ROM selected"), x,
+                                     baseline(y, 46.0f, t.size_lead), t.size_lead, 46.0f, t.title, width, 2, 0.8f);
+        y += 46.0f * static_cast<float>(std::max(1, lines)) + 8.0f;
     }
-    for (int i = 0; i < 4; ++i)
+    if (game != nullptr)
     {
-        const float line = baseline(384.0f + 42.0f * static_cast<float>(i), 30.0f, theme::kSmall);
-        // The name keeps its size up to 200 wide; the value has the rest of the line.
-        const float label =
-            text_shrink(c, fields[i].label, 1336.0f, line, theme::kSmall, theme::kLabel, 200.0f);
-        const float room = 440.0f - label - 16.0f;
-        // What a game comes with is said briefly where the whole line does not fit.
-        if (i == 2 && game != nullptr && !remote && text_width(c, fields[i].value, theme::kSmall) > room)
-            fields[i].value = addons_line(game->addons_short, game->mods, game->mods_on, true);
-        text_shrink(c, fields[i].value, 1776.0f, line, theme::kSmall, fields[i].color, room,
-                    Align::right);
+        text_shrink(c, game->format + "  /  " + game->size, x, baseline(y, 30.0f, 22.0f), 22.0f, t.copy, width);
+        y += 30.0f;
+        text_fit(c, game->file, x, baseline(y, 26.0f, 18.0f), 18.0f, t.faint, width);
+        y += 38.0f;
     }
-    if (game != nullptr && !game->language_note.empty())
-        notice(c, game->language_note, 1776.0f, baseline(544.0f, 28.0f, 18.0f), 18.0f,
-               theme::kWarning, 440.0f, true, Align::right);
-    text(c, tr("FILE"), 1336.0f, baseline(574.0f, 30.0f, theme::kSmall), theme::kSmall, theme::kLabel);
-    text_block(c, game != nullptr ? game->file : "-", 1336.0f,
-               baseline(606.0f, 30.0f, theme::kSmall), theme::kSmall, 30.0f, theme::kValue, 440.0f,
-               3);
+    // What it comes with and the language it will use; where it is, for one still on its sources.
+    if (game != nullptr)
+    {
+        float cx = x;
+        const auto add = [&](const std::string &words, Tone tone)
+        {
+            const float room = x + width - cx;
+            if (words.empty() || (cx > x && chip_width(c, words, tone, 2000.0f) > room))
+                return;
+            cx += chip(c, words, cx, y + 22.0f, tone, room) + 10.0f;
+        };
+        if (remote)
+        {
+            Color tone = t.value;
+            const std::string state = remote_state(*game, &tone);
+            const Download *download = download_of(game->key);
+            add(download != nullptr ? state : std::string{tr("Not on the console")},
+                download != nullptr && download->state == DownloadState::failed ? Tone::warning : Tone::plain);
+            std::string sources;
+            for (const std::string &name : game->sources)
+                sources += (sources.empty() ? "" : ", ") + name;
+            add(sources, Tone::plain);
+        }
+        else
+        {
+            add(game->addons_short.empty() ? game->addons : game->addons_short, Tone::plain);
+            add(game->language, game->language_note.empty() ? Tone::plain : Tone::warning);
+        }
+        y += 56.0f;
+        if (!remote && !game->language_note.empty())
+        {
+            notice(c, game->language_note, x, baseline(y, 26.0f, 18.0f), 18.0f, t.warning, width, false);
+            y += 30.0f;
+        }
+    }
+    // What it is set to: one line each.
+    if (game != nullptr && !remote)
+    {
+        const bool can_configure = game->title_id != 0;
+        const bool has_mods = can_configure && game->mods > 0;
+        struct Line
+        {
+            const char *name;
+            std::string value;
+            Color color;
+        };
+        const Line lines[] = {
+            {tr("Console mode"),
+             can_configure ? std::string{selected_docked_ ? tr("Docked") : tr("Handheld")} : std::string{tr("Unavailable")},
+             can_configure ? t.value : t.meta},
+            {tr("Mods"),
+             !has_mods ? std::string{can_configure ? tr("No mods") : tr("Unavailable")} :
+             game->mods_enabled ? fill(tr("{0} of {1} on"), {std::to_string(game->mods_on), std::to_string(game->mods)}) :
+                                  std::string{tr("Off")},
+             has_mods && game->mods_enabled ? t.accent_pale : t.meta},
+            {tr("Game settings"), can_configure ? changes_text(selected_changes_) : std::string{tr("Unavailable")},
+             selected_changes_ > 0 ? t.accent_pale : t.meta},
+        };
+        for (const Line &line : lines)
+        {
+            const float value = text_shrink(c, line.value, x + width, baseline(y, 46.0f, t.size_small), t.size_small,
+                                            line.color, width * 0.6f, Align::right);
+            text_shrink(c, line.name, x, baseline(y, 46.0f, t.size_small), t.size_small, t.label,
+                        width - value - 20.0f);
+            list.rounded_rect({x, y + 45.0f, width, 1.0f}, 0.0f, t.rule.with_alpha(0.45f));
+            y += 46.0f;
+        }
+        // What it runs with, once that is read, where a long name and a note leave it room over
+        // the buttons.
+        if (!selected_session_.empty() && y + 44.0f <= kDetail.y + kDetail.h - 36.0f - 68.0f - 14.0f - 76.0f - 8.0f)
+        {
+            icon(c, selected_docked_ ? Icon::docked : Icon::handheld, x + 13.0f, y + 28.0f, 26.0f, t.label);
+            text_shrink(c, selected_session_, x + 38.0f, baseline(y + 12.0f, 32.0f, 18.0f), 18.0f, t.meta,
+                        width - 38.0f);
+        }
+    }
     list.pop_transform();
     list.pop_opacity();
 
-    // ---- console mode ----
-    const bool can_configure = game != nullptr && game->title_id != 0;
-    plate_rest(c, kRowPlate, kModeRow);
-    text_shrink(c, tr("Console mode"), kModeRow.x + 26.0f,
-                baseline(kModeRow.y, kModeRow.h, theme::kText24), theme::kText24,
-                can_configure ? theme::kValue : theme::kMeta, 256.0f);
-    if (can_configure)
+    // Its actions, as the buttons that do them.
+    const Rect first{x, kDetail.y + kDetail.h - 36.0f - 68.0f - 14.0f - 76.0f, width, 76.0f};
+    const Rect second{x, kDetail.y + kDetail.h - 36.0f - 68.0f, width, 68.0f};
+    const Download *queued = remote ? download_of(game->key) : nullptr;
+    if (remote)
     {
-        const Rect track{1322.0f, kModeRow.y + 8.0f, 420.0f, kModeRow.h - 16.0f};
-        const float half = track.w * 0.5f;
-        list.rounded_rect(track, 14.0f, Color::rgb(0x0d1814, 0.75f));
-        plate_focus(c, kNavPlate, {track.x + half * mode_.value + 3.0f, track.y + 3.0f, half - 6.0f,
-                                   track.h - 6.0f},
-                    1.0f);
-        const float cy = track.y + track.h * 0.5f;
-        const Color docked = gfx::mix(theme::kLimePale, theme::kValue.with_alpha(0.45f), mode_.value);
-        const Color handheld =
-            gfx::mix(theme::kValue.with_alpha(0.45f), theme::kLimePale, mode_.value);
-        draw_docked(c, track.x + 26.0f, cy, docked);
-        text_shrink(c, tr("Docked"), track.x + 78.0f, baseline(track.y, track.h, theme::kText24),
-                    theme::kText24, docked, half - 78.0f - 10.0f, Align::left, 0.0f, 0.7f);
-        draw_handheld(c, track.x + half + 18.0f, cy, handheld);
-        text_shrink(c, tr("Handheld"), track.x + half + 72.0f,
-                    baseline(track.y, track.h, theme::kText24), theme::kText24, handheld,
-                    half - 72.0f - 10.0f, Align::left, 0.0f, 0.7f);
+        primary_button(c, first, queued != nullptr ? tr("Play when downloaded") : tr("Download and play"), Pad::cross,
+                       0.0f, 0.0f);
+        secondary_button(c, second, queued != nullptr ? tr("Cancel download") : tr("Download"), Pad::square, 0.0f,
+                         0.0f);
     }
     else
     {
-        text_shrink(c, tr("Unavailable"), kModeRow.x + kModeRow.w - 26.0f,
-                    baseline(kModeRow.y, kModeRow.h, theme::kText24), theme::kText24, theme::kMeta,
-                    400.0f, Align::right);
+        primary_button(c, first, tr("Play"), Pad::cross, 0.0f, 0.0f, game != nullptr && home_.setup_ready);
+        secondary_button(c, second, tr("Game settings"), Pad::triangle, 0.0f, 0.0f,
+                         game != nullptr && game->title_id != 0);
     }
-
-    // ---- mods: one switch for all of the game's mods (Square) ----
-    const bool has_mods = can_configure && game->mods > 0;
-    plate_rest(c, kRowPlate, kModsRow);
-    text_shrink(c, tr("Mods"), kModsRow.x + 26.0f, baseline(kModsRow.y, kModsRow.h, theme::kText24),
-                theme::kText24, has_mods ? theme::kValue : theme::kMeta, 256.0f);
-    if (has_mods)
-    {
-        // The switch at the right, as wide as the console mode's control is from the edge; what
-        // it means for this game beside it: how many of its mods are on, or that none is.
-        const float right = kModsRow.x + kModsRow.w - 16.0f;
-        const float on = tween::clamp01(mods_switch_.value);
-        toggle(c, right, kModsRow.y + kModsRow.h * 0.5f, on);
-        const std::string state =
-            game->mods_enabled ? fill(tr("{0} of {1} on"),
-                                      {std::to_string(game->mods_on), std::to_string(game->mods)}) :
-                                 std::string{tr("Off")};
-        text_shrink(c, state, right - 64.0f - 22.0f, baseline(kModsRow.y, kModsRow.h, theme::kSmall),
-                    theme::kSmall, gfx::mix(theme::kMeta, theme::kLimePale, on), 330.0f, Align::right);
-    }
-    else
-    {
-        text_shrink(c, can_configure ? tr("No mods") : tr("Unavailable"),
-                    kModsRow.x + kModsRow.w - 26.0f, baseline(kModsRow.y, kModsRow.h, theme::kText24),
-                    theme::kText24, theme::kMeta, 400.0f, Align::right);
-    }
-    // The console mode is changed with left and right (not on a game that is still on its sources).
-    if (game == nullptr || !game->remote)
-        draw_pad(c, Pad::leftright, 1022.0f, 876.0f, 26.0f);
-    // A message said while Game settings is open belongs to that dialog.
-    const bool said = !message_.empty() && modal_shown_ != Modal::game && modal_shown_ != Modal::mods &&
-                      modal_shown_ != Modal::game_options && modal_shown_ != Modal::mapping;
-    const Download *download = remote ? download_of(game->key) : nullptr;
-    const bool failed = !said && download != nullptr && download->state == DownloadState::failed;
-    const std::string hint = said ? message_ :
-                             failed ? download->error :
-                             remote ? tr("Not on the console yet. Download it to play and to change its settings.") :
-                             can_configure ? tr("Change mode. Saved per game.") :
-                                             tr("Select a readable game to configure its mode.");
-    notice(c, hint, 1060.0f, 883.0f, theme::kSmall,
-           said ? (message_warning_ ? theme::kWarning : theme::kLimePale) : failed ? theme::kWarning : theme::kMeta,
-           700.0f, (said && message_warning_) || failed);
 
     if (remote)
     {
-        // A game on download sources: Square puts it in the queue, or takes it out.
+        // What a failed download said takes the status's place.
+        const std::string failed = queued != nullptr && queued->state == DownloadState::failed ? queued->error :
+                                                                                               std::string{};
         static constexpr Hint kRemote[] = {{Pad::cross, TR("Download and play")},
+                                           {Pad::square, TR("Download")},
                                            {Pad::circle, TR("Back")},
-                                           {Pad::updown, TR("Browse games")},
-                                           {Pad::square, TR("Download")}};
+                                           {Pad::l1, TR("Sections"), Pad::r1}};
         static constexpr Hint kQueued[] = {{Pad::cross, TR("Play when downloaded")},
+                                           {Pad::square, TR("Cancel download")},
                                            {Pad::circle, TR("Back")},
-                                           {Pad::updown, TR("Browse games")},
-                                           {Pad::square, TR("Cancel download")}};
-        draw_footer(c, download != nullptr ? kQueued : kRemote, 4);
+                                           {Pad::l1, TR("Sections"), Pad::r1}};
+        draw_footer(c, queued != nullptr ? kQueued : kRemote, 4, failed);
         return;
     }
-    static constexpr Hint kHints[] = {{Pad::cross, TR("Select")},
-                                      {Pad::circle, TR("Back")},
-                                      {Pad::updown, TR("Browse games")},
-                                      {Pad::leftright, TR("Console mode")},
+    static constexpr Hint kHints[] = {{Pad::cross, TR("Play")},
+                                      {Pad::triangle, TR("Game settings")},
                                       {Pad::square, TR("Mods")},
-                                      {Pad::triangle, TR("Game settings")}};
-    draw_footer(c, kHints, 6);
+                                      {Pad::circle, TR("Back")},
+                                      {Pad::l1, TR("Sections"), Pad::r1}};
+    draw_footer(c, kHints, 5, count > 0 ? list_position(library_.selected + 1, count) : std::string{});
 }
 
 // ---------------------------------------------------------------- game settings dialog
@@ -698,6 +742,15 @@ void Launcher::press_game(Key key)
     case Key::circle:
         close_modal();
         selected_docked_ = game_docked_;
+        // What the Library says of the game follows what was changed here.
+        refresh_selected_game();
+        if (game_from_home_)
+        {
+            // Opened from the home screen: back there.
+            game_from_home_ = false;
+            open(Screen::home, false);
+            home_session_ = session_line(home_.last_title_id);
+        }
         return;
     case Key::up:
     case Key::down:
@@ -723,8 +776,8 @@ void Launcher::press_game(Key key)
     }
     if (kind >= row_video && kind <= row_language)
     {
-        // A kind of setting has its own list.
-        if (key == Key::cross)
+        // A kind of setting has its own list, in the middle of the page.
+        if (key == Key::cross || key == Key::right)
             open_game_options(kind - row_video);
         return;
     }
@@ -732,11 +785,11 @@ void Launcher::press_game(Key key)
     {
         // The game's mods have their own list. It is read again: mods may have been copied in
         // since this dialog opened.
-        if (key != Key::cross)
+        if (key != Key::cross && key != Key::right)
             return;
         read_mods(game);
-        mod_rows_.visible = kDialogRowsShown;
-        mod_rows_.pitch = kDialogRowPitch;
+        mod_rows_.visible = layout::kPaneRows;
+        mod_rows_.pitch = layout::kPanePitch;
         mod_rows_.reset(static_cast<int>(mod_list_.size()), 0);
         modal_ = modal_shown_ = Modal::mods;
         message_.clear();
@@ -820,123 +873,371 @@ void Launcher::press_game(Key key)
     cue(saved ? Cue::toggle : Cue::error);
 }
 
-void Launcher::draw_game(Canvas &c, float open)
+int Launcher::game_changes() const
+{
+    return changes_of(game_settings_);
+}
+
+// The page a game's settings are: its kinds at the left, the one chosen in the middle, what it
+// means at the right. It lies over the Library, beside the rail.
+void Launcher::draw_game_page(Canvas &c, float open)
 {
     gfx::DrawList &list = c.list;
+    const Theme &t = th();
+    if (games_.empty())
+        return;
+    const Game &game = games_[static_cast<std::size_t>(library_.selected)];
+    const float pane = tween::clamp01(pane_.value);
     list.push_opacity(open);
-    list.push_transform(1.0f - 0.03f * (1.0f - open) * motion(), 960.0f, 540.0f, 0.0f,
-                        (1.0f - open) * 26.0f * motion());
-    glass(c, kDialog, 26.0f, theme::kPanel.with_alpha(0.97f), theme::kPanelEdge.with_alpha(0.66f),
-          1.6f);
-    text_shrink(c, tr("Game settings"), 592.0f, baseline(218.0f, 62.0f, theme::kDisplay),
-                theme::kDisplay, theme::kTitle, 736.0f);
-    const Game *game = games_.empty() ? nullptr : &games_[static_cast<std::size_t>(library_.selected)];
-    text_fit(c, game != nullptr ? game->name : std::string{}, 592.0f,
-             baseline(291.0f, 32.0f, theme::kSmall), theme::kSmall, Color::rgb(0xbecbb9), 736.0f);
+    // Its own ground over the Library: the artwork again, further back.
+    list.rounded_rect({0.0f, 0.0f, 1920.0f, 1080.0f}, 0.0f, t.base);
+    if (!look().high_contrast && textures_.backdrop() != 0)
+        list.image(textures_.backdrop(), c.backdrop.art(), {0.0f, 0.0f, 1.0f, 1.0f}, Color{1.0f, 1.0f, 1.0f, 0.22f});
+    list.hgradient_rect({0.0f, 0.0f, 1920.0f, 1080.0f}, 0.0f, t.base.with_alpha(0.55f), t.base.with_alpha(0.25f));
+    list.push_transform(1.0f, 0.0f, 0.0f, (1.0f - open) * 48.0f * motion(), 0.0f);
 
+    // ---- which game, and how much it has of its own ----
+    cover(c, game.cover, {layout::kLeft, 36.0f, 84.0f, 84.0f}, 20.0f, 0.6f);
+    kicker(c, tr("Game settings"), layout::kLeft + 108.0f, baseline(38.0f, 28.0f, t.size_small), t.accent, 900.0f);
+    const float clock = text_width(c, clock_, t.size_heading) + 28.0f;
+    const std::string changed = changes_text(game_changes());
+    const Tone tone = game_changes() > 0 ? Tone::accent : Tone::plain;
+    const float chip_w = chip_width(c, changed, tone, 420.0f);
+    chip(c, changed, layout::kRight - clock - chip_w, layout::kTop + 32.0f, tone, 420.0f);
+    {
+        const Heavy heavy(c);
+        text_fit(c, game.name, layout::kLeft + 108.0f, baseline(66.0f, 54.0f, 44.0f), 44.0f, t.title,
+                 layout::kRight - clock - chip_w - 32.0f - (layout::kLeft + 108.0f));
+    }
+
+    // ---- its kinds of setting ----
+    const int rows = game_rows_.count;
+    const int chosen = std::clamp(game_rows_.selected, 0, std::max(0, rows - 1));
+    const int kind = game_row(chosen);
     // A kind of setting: what the game does differently from Settings, if anything.
-    const auto changed = [this](int category)
+    const auto state = [&](int which) -> std::string
     {
-        const int count = game_overrides(category);
-        return count == 0 ? std::string{tr("Follows Settings")} :
-                            fill(tr("{0} changed"), {std::to_string(count)});
+        switch (which)
+        {
+        case row_mode:
+            return game_docked_ ? tr("Docked") : tr("Handheld");
+        case row_mods:
+            // With the game's Mods switch off (the Library's), none of them is on.
+            return mods_.empty() ? std::string{tr("No mods")} :
+                   !game.mods_enabled ? std::string{tr("Off")} :
+                       fill(tr("{0} of {1} on"),
+                            {std::to_string(std::count_if(mods_.begin(), mods_.end(),
+                                                          [](const Mod &mod) { return mod.enabled; })),
+                             std::to_string(mods_.size())});
+        case row_save:
+            return import_source_ == SaveSource::ryujinx ? tr("Ryujinx save found") :
+                   import_source_ == SaveSource::folder ? tr("Save folder found") : tr("Nothing to import");
+        case row_delete:
+            return game.size;
+        default:
+            return changes_text(game_overrides(which - row_video));
+        }
     };
-    const std::string values[] = {
-        game_docked_ ? tr("Docked") : tr("Handheld"),
-        changed(row_video - row_video),
-        changed(row_performance - row_video),
-        changed(row_audio - row_video),
-        changed(row_controls - row_video),
-        changed(row_system - row_video),
-        changed(row_language - row_video),
-        // With the game's Mods switch off (the Library's), none of them is on.
-        mods_.empty() ? std::string{tr("No mods")} :
-        game != nullptr && !game->mods_enabled ? std::string{tr("Off")} :
-            fill(tr("{0} of {1} on"),
-                 {std::to_string(std::count_if(mods_.begin(), mods_.end(),
-                                               [](const Mod &mod) { return mod.enabled; })),
-                  std::to_string(mods_.size())}),
-        import_source_ == SaveSource::ryujinx ? tr("Ryujinx save found") :
-        import_source_ == SaveSource::folder ? tr("Save folder found") : tr("Nothing to import"),
-        game != nullptr ? game->size : std::string{},
+    const auto there = [&](int which)
+    {
+        return which == row_mode ? true :
+               which == row_mods ? !mods_.empty() && game.mods_enabled :
+               which == row_save ? import_source_ != SaveSource::none :
+               which == row_delete ? false : game_overrides(which - row_video) > 0;
     };
-    static constexpr const char *kLabels[] = {TR("Console mode"), TR("Video"),    TR("Performance"),
-                                              TR("Audio"),        TR("Controls"), TR("System"),
-                                              TR("Language"),     TR("Mods"),     TR("Save data"),
-                                              TR("Delete from console")};
-    // Five rows show; the list scrolls to the others.
-    list.push_clip({kDialogWindow.x - 24.0f, kDialogWindow.y - 6.0f, kDialogWindow.w + 48.0f,
-                    kDialogWindow.h + 12.0f});
-    const auto row_top = [&](int row)
-    { return kDialogRowsTop + static_cast<float>(row) * kDialogRowPitch - game_rows_.scroll(); };
-    for (int row = game_rows_.first_row(); row <= game_rows_.last_row(); ++row)
+    // The highlight: whole while the focus is on the kinds, quieter once it is on the rows.
+    const Rect lit{kKinds.x, kKinds.y + game_rows_.cursor(), kKinds.w, kKindHeight};
+    plate_focus(c, row_plate(), lit, 1.0f - 0.62f * pane);
+    if (!look().high_contrast)
+        list.rounded_rect({lit.x + 14.0f, lit.y + 20.0f, 4.0f, kKindHeight - 40.0f}, 2.0f, t.accent);
+    for (int row = 0; row < rows; ++row)
     {
-        list.push_opacity(game_rows_.row_alpha(row, kDialogRowHeight));
-        plate_rest(c, kRowPlate, {592.0f, row_top(row), 736.0f, kDialogRowHeight});
-        list.pop_opacity();
+        const int which = game_row(row);
+        const float top = kKinds.y + kKindPitch * static_cast<float>(row);
+        const bool on = row == chosen;
+        // Its name, and under it what the game has there: each has the row's whole width, for the
+        // languages whose words are long.
+        text_shrink(c, tr(kKindNames[which]), kKinds.x + 34.0f, baseline(top + 8.0f, 32.0f, t.size_text), t.size_text,
+                    which == row_delete ? t.warning : on ? t.title : t.copy, kKinds.w - 58.0f);
+        text_shrink(c, state(which), kKinds.x + 34.0f, baseline(top + 40.0f, 24.0f, 18.0f), 18.0f,
+                    there(which) && which != row_mode ? t.accent : t.faint, kKinds.w - 58.0f);
     }
-    plate_focus(c, kRowPlate,
-                {592.0f, kDialogRowsTop + game_rows_.cursor() - game_rows_.scroll(), 736.0f,
-                 kDialogRowHeight},
-                1.0f);
-    for (int row = game_rows_.first_row(); row <= game_rows_.last_row(); ++row)
-    {
-        const float top = row_top(row);
-        const float focus = row == option_ ? 1.0f : 0.0f;
-        const int kind = game_row(row);
-        list.push_opacity(game_rows_.row_alpha(row, kDialogRowHeight));
-        // The value first: the row's name takes what it leaves. The kinds of setting, Mods and
-        // Save data say what is there; the console mode is a choice; deleting says the game's size.
-        const bool there = kind == row_mods ? !mods_.empty() && (game == nullptr || game->mods_enabled) :
-                           kind == row_save ? import_source_ != SaveSource::none :
-                           kind == row_delete ? false :
-                                              game_overrides(kind - row_video) > 0;
-        const float taken =
-            kind != row_mode ?
-                text_shrink(c, values[kind], 1292.0f, baseline(top, kDialogRowHeight, theme::kSmall),
-                            theme::kSmall, there ? theme::kLimePale : theme::kMeta, 320.0f,
-                            Align::right) :
-                chooser(c, values[kind], 1296.0f, baseline(top, kDialogRowHeight, theme::kText24),
-                        focus, theme::kLimePale);
-        text_shrink(c, tr(kLabels[kind]), 628.0f, baseline(top, kDialogRowHeight, theme::kText24),
-                    theme::kText24, kind == row_delete ? theme::kWarning : theme::kValue, 664.0f - taken - 28.0f);
-        list.pop_opacity();
-    }
-    list.pop_clip();
-    scrollbar(c, game_rows_, 1340.0f, kDialogWindow.y, kDialogWindow.h);
 
-    if (!message_.empty())
+    // ---- the kind chosen ----
+    const bool active = modal_shown_ != Modal::game;
+    if (kind == row_mode)
+        draw_mode_pane(c, kMiddle);
+    else if (kind == row_mods)
+        draw_mods_pane(c, kMiddle, active);
+    else if (kind == row_save || kind == row_delete)
+        draw_save_pane(c, kMiddle, kind == row_delete);
+    else
+        draw_option_pane(c, kMiddle, kind - row_video, active);
+    draw_explain_pane(c, kExplain, kind);
+
+    // ---- hints ----
+    const float cy = layout::kFooter;
+    const auto hints = [&](const Hint *list_of, int count)
+    { draw_hints(c, list_of, count, layout::kLeft, cy, t.copy, layout::kWidth); };
+    if (modal_shown_ == Modal::mods)
     {
-        // Up to two lines: what Save data answers is longer than a "Saved".
-        notice_block(c, message_, 592.0f, kDialogHints - 6.0f, theme::kSmall, 26.0f,
-                     message_warning_ ? theme::kWarning : theme::kLimePale, 736.0f, 2,
-                     message_warning_);
+        if (mods_.empty())
+        {
+            static constexpr Hint kEmpty[] = {{Pad::square, TR("Create the folder")}, {Pad::circle, TR("Back")}};
+            hints(kEmpty, 2);
+        }
+        else
+        {
+            static constexpr Hint kMods[] = {{Pad::updown, TR("Select")},
+                                             {Pad::cross, TR("Turn on or off")},
+                                             {Pad::circle, TR("Back")}};
+            hints(kMods, 3);
+        }
     }
-    else if (game_row(option_) == row_delete)
+    else if (modal_shown_ == Modal::game_options || modal_shown_ == Modal::mapping)
+    {
+        // What Cross does on the focused row: nothing of its own, open the mapping, or the keyboard.
+        const int action = option_action();
+        if (action == 1)
+        {
+            static constexpr Hint kOpen[] = {
+                {Pad::cross, TR("Open")}, {Pad::leftright, TR("Change")}, {Pad::circle, TR("Back")}};
+            hints(kOpen, 3);
+        }
+        else if (action == 2)
+        {
+            static constexpr Hint kType[] = {
+                {Pad::cross, TR("Edit")}, {Pad::leftright, TR("Change")}, {Pad::circle, TR("Back")}};
+            hints(kType, 3);
+        }
+        else
+        {
+            static constexpr Hint kChange[] = {
+                {Pad::updown, TR("Select")}, {Pad::leftright, TR("Change")}, {Pad::circle, TR("Back")}};
+            hints(kChange, 3);
+        }
+    }
+    else if (kind == row_delete)
     {
         static constexpr Hint kDelete[] = {{Pad::cross, TR("Delete")}, {Pad::circle, TR("Back")}};
-        draw_hints(c, kDelete, 2, 592.0f, kDialogHints, theme::kCopy, 736.0f);
+        hints(kDelete, 2);
     }
-    else if (game_row(option_) == row_save)
+    else if (kind == row_save)
     {
         static constexpr Hint kTransfer[] = {{Pad::cross, TR("Import")},
                                              {Pad::square, TR("Export a copy")},
                                              {Pad::circle, TR("Back")}};
-        draw_hints(c, kTransfer, 3, 592.0f, kDialogHints, theme::kCopy, 736.0f);
+        hints(kTransfer, 3);
     }
-    else if (option_ != row_mode)
+    else if (kind != row_mode)
     {
-        static constexpr Hint kOpen[] = {{Pad::cross, TR("Open")}, {Pad::circle, TR("Back")}};
-        draw_hints(c, kOpen, 2, 592.0f, kDialogHints, theme::kCopy, 736.0f);
+        static constexpr Hint kOpen[] = {{Pad::updown, TR("Select")}, {Pad::cross, TR("Open")}, {Pad::circle, TR("Back")}};
+        hints(kOpen, 3);
     }
     else
     {
         static constexpr Hint kHints[] = {
             {Pad::updown, TR("Select")}, {Pad::leftright, TR("Change")}, {Pad::circle, TR("Back")}};
-        draw_hints(c, kHints, 3, 592.0f, kDialogHints, theme::kCopy, 736.0f);
+        hints(kHints, 3);
     }
     list.pop_transform();
     list.pop_opacity();
+}
+
+// The console mode: the two ways a game can run, the one chosen lit.
+void Launcher::draw_mode_pane(Canvas &c, const Rect &pane)
+{
+    gfx::DrawList &list = c.list;
+    const Theme &t = th();
+    const float width = (pane.w - 20.0f) * 0.5f;
+    for (int i = 0; i < 2; ++i)
+    {
+        const bool chosen = (i == 0) == game_docked_;
+        const Rect r{pane.x + (width + 20.0f) * static_cast<float>(i), pane.y, width, 232.0f};
+        if (chosen && !look().high_contrast)
+            list.bordered_rect(r, t.radius_card, t.accent.with_alpha(0.14f), 1.5f, t.accent.with_alpha(0.75f));
+        else if (chosen)
+            list.bordered_rect(r, t.radius_card, gfx::mix(t.scrim, t.row_focus, 0.7f), 3.0f, t.title);
+        else
+            plate_rest(c, tile_plate(), r);
+        const Color ink = chosen ? t.accent_pale : t.label;
+        icon(c, i == 0 ? Icon::docked : Icon::handheld, r.x + r.w * 0.5f, r.y + 92.0f, 84.0f, ink);
+        text_shrink(c, i == 0 ? tr("Docked") : tr("Handheld"), r.x + r.w * 0.5f, baseline(r.y + 160.0f, 40.0f, 28.0f),
+                    28.0f, chosen ? t.title : t.copy, r.w - 48.0f, Align::center);
+        if (chosen)
+        {
+            list.circle(r.x + r.w - 36.0f, r.y + 36.0f, 16.0f, t.accent);
+            const bool contrast = look().high_contrast;
+            look().high_contrast = false;
+            icon(c, Icon::check, r.x + r.w - 36.0f, r.y + 36.0f, 22.0f, t.on_accent);
+            look().high_contrast = contrast;
+        }
+    }
+}
+
+// The game's mods, each with its switch (and its cheats under it when it lists several).
+void Launcher::draw_mods_pane(Canvas &c, const Rect &pane, bool active)
+{
+    gfx::DrawList &list = c.list;
+    const Theme &t = th();
+    const Game &game = games_[static_cast<std::size_t>(library_.selected)];
+    if (mods_.empty())
+    {
+        text_block(c,
+                   fill(tr("No mods for this game yet. Copy each mod's folder to {0}, next to roms/."),
+                        {services_.mods_folder(game.title_id)}),
+                   pane.x + 8.0f, baseline(pane.y + 8.0f, 40.0f, t.size_text), t.size_text, 40.0f, t.body,
+                   pane.w - 16.0f, 6, kShrink);
+        return;
+    }
+    const float pitch = layout::kPanePitch;
+    const float height = layout::kPaneRow;
+    const float scroll = active ? mod_rows_.scroll() : 0.0f;
+    const int count = static_cast<int>(mod_list_.size());
+    const int first = active ? mod_rows_.first_row() : 0;
+    const int last = active ? mod_rows_.last_row() : std::min(count, layout::kPaneRows) - 1;
+    list.push_opacity(active ? 1.0f : 0.72f);
+    list.push_clip({pane.x - 24.0f, pane.y - 8.0f, pane.w + 48.0f, pitch * (layout::kPaneRows - 1) + height + 16.0f});
+    const auto row_top = [&](int row) { return pane.y + static_cast<float>(row) * pitch - scroll; };
+    for (int row = first; row <= last; ++row)
+    {
+        list.push_opacity(active ? mod_rows_.row_alpha(row, height) : 1.0f);
+        plate_rest(c, row_plate(), {pane.x, row_top(row), pane.w, height});
+        list.pop_opacity();
+    }
+    if (active)
+        plate_focus(c, row_plate(), {pane.x, pane.y + mod_rows_.cursor() - scroll, pane.w, height}, 1.0f);
+    // With the game's Mods switch off (the Library's) no mod is used: their own switches keep
+    // their state, drawn faint.
+    const bool live = game.mods_enabled;
+    const float right = pane.x + pane.w - 28.0f;
+    for (int row = first; row <= last && row < count; ++row)
+    {
+        const ModRow at = mod_list_[static_cast<std::size_t>(row)];
+        const Mod &mod = mods_[static_cast<std::size_t>(at.mod)];
+        const float top = row_top(row);
+        list.push_opacity(active ? mod_rows_.row_alpha(row, height) : 1.0f);
+        if (at.cheat >= 0)
+        {
+            // One of the mod's cheats, set in under it, with its own switch: faint while its mod
+            // is off.
+            const Cheat &cheat = mod.cheats[static_cast<std::size_t>(at.cheat)];
+            const bool used = live && mod.enabled;
+            text_fit(c, cheat.name, pane.x + 68.0f, baseline(top, height, t.size_text), t.size_text,
+                     cheat.enabled && used ? t.value : t.meta, pane.w - 68.0f - 120.0f);
+            list.push_opacity(used ? 1.0f : 0.4f);
+            toggle(c, right, top + height * 0.5f, cheat.enabled ? 1.0f : 0.0f);
+            list.pop_opacity();
+            list.pop_opacity();
+            continue;
+        }
+        // Its name as the player's folder has it, what it changes under it (with how many of
+        // its cheats are chosen when it lists several), its switch.
+        std::string made = mod.kind;
+        if (!mod.cheats.empty())
+            made += ", " + fill(tr("{0} of {1} on"),
+                                {std::to_string(std::count_if(mod.cheats.begin(), mod.cheats.end(),
+                                                              [](const Cheat &cheat) { return cheat.enabled; })),
+                                 std::to_string(mod.cheats.size())});
+        text_fit(c, mod.name, pane.x + 28.0f, baseline(top + 10.0f, 36.0f, t.size_text), t.size_text,
+                 mod.enabled && live ? t.value : t.meta, pane.w - 28.0f - 120.0f);
+        text_shrink(c, made, pane.x + 28.0f, baseline(top + 46.0f, 26.0f, 18.0f), 18.0f, t.meta,
+                    pane.w - 28.0f - 120.0f);
+        list.push_opacity(live ? 1.0f : 0.4f);
+        toggle(c, right, top + height * 0.5f, mod.enabled ? 1.0f : 0.0f);
+        list.pop_opacity();
+        list.pop_opacity();
+    }
+    list.pop_clip();
+    if (active)
+        scrollbar(c, mod_rows_, pane.x + pane.w + 14.0f, pane.y, pitch * (layout::kPaneRows - 1) + height);
+    list.pop_opacity();
+}
+
+// Save data in or out, or the game off the console: what there is, and what the buttons do.
+void Launcher::draw_save_pane(Canvas &c, const Rect &pane, bool removing)
+{
+    const Theme &t = th();
+    const Game &game = games_[static_cast<std::size_t>(library_.selected)];
+    const Rect r{pane.x, pane.y, pane.w, 232.0f};
+    plate_rest(c, tile_plate(), r);
+    icon(c, removing ? Icon::downloads : Icon::sync, r.x + 72.0f, r.y + r.h * 0.5f, 72.0f,
+         removing ? t.warning : t.accent_pale);
+    const float x = r.x + 144.0f;
+    const float width = r.w - 144.0f - 32.0f;
+    if (removing)
+    {
+        text_shrink(c, tr("Delete from console"), x, baseline(r.y + 70.0f, 40.0f, 28.0f), 28.0f, t.warning, width);
+        text_shrink(c, game.format + "  /  " + game.size, x, baseline(r.y + 118.0f, 32.0f, 22.0f), 22.0f, t.copy,
+                    width);
+        return;
+    }
+    text_shrink(c,
+                import_source_ == SaveSource::ryujinx ? tr("Ryujinx save found") :
+                import_source_ == SaveSource::folder ? tr("Save folder found") : tr("Nothing to import"),
+                x, baseline(r.y + 70.0f, 40.0f, 28.0f), 28.0f, import_source_ != SaveSource::none ? t.title : t.copy,
+                width);
+    text_shrink(c, game.name, x, baseline(r.y + 118.0f, 32.0f, 22.0f), 22.0f, t.meta, width);
+}
+
+// What the kind chosen is about, what the game has of its own in it, and what the menu last said.
+void Launcher::draw_explain_pane(Canvas &c, const Rect &pane, int kind)
+{
+    const Theme &t = th();
+    glass(c, {pane.x, pane.y, pane.w, 712.0f}, t.radius_card + 4.0f, t.panel.with_alpha(0.90f),
+          t.panel_edge.with_alpha(0.40f), 0.8f);
+    const float x = pane.x + 32.0f;
+    const float width = pane.w - 64.0f;
+    float y = pane.y + 30.0f;
+    kicker(c, tr(kKindNames[kind]), x, baseline(y, 30.0f, t.size_small), kind == row_delete ? t.warning : t.accent,
+           width);
+    y += 48.0f;
+    const bool rows_have_focus = modal_shown_ == Modal::game_options;
+    const char *about = "";
+    switch (kind)
+    {
+    case row_mode:
+        about = tr("Change mode. Saved per game.");
+        break;
+    case row_video:
+        about = tr("How games are drawn and scaled to your TV.");
+        break;
+    case row_performance:
+        about = tr("Faster games, at some cost in accuracy.");
+        break;
+    case row_audio:
+        about = tr("Game audio; PS5 system-menu music is unchanged.");
+        break;
+    case row_controls:
+        about = tr("Controller shortcuts and supported features.");
+        break;
+    case row_language:
+        about = tr("The language games use when they offer it.");
+        break;
+    default:
+        break;
+    }
+    // What the focused switch does says more than what its kind is about.
+    const std::string detail = rows_have_focus ? option_about(kind - row_video, option_rows_.selected) : std::string{};
+    const std::string words = !detail.empty() ? detail : std::string{about};
+    if (!words.empty())
+    {
+        const int lines = text_block(c, words, x, baseline(y, 32.0f, 22.0f), 22.0f, 32.0f, t.body, width, 7, kShrink);
+        y += 32.0f * static_cast<float>(lines) + 20.0f;
+    }
+    if (kind >= row_video && kind <= row_language)
+    {
+        const int own = game_overrides(kind - row_video);
+        chip(c, changes_text(own), x, y + 22.0f, own > 0 ? Tone::accent : Tone::plain, width);
+    }
+    // What the menu last said, at the foot.
+    if (!message_.empty())
+    {
+        const float top = pane.y + 712.0f - 32.0f - 28.0f * 5.0f;
+        c.list.rounded_rect({x, top - 18.0f, width, 1.0f}, 0.0f, t.rule.with_alpha(0.6f));
+        notice_block(c, message_, x, baseline(top, 28.0f, t.size_small), t.size_small, 28.0f,
+                     message_warning_ ? t.warning : t.accent_pale, width, 5, message_warning_);
+    }
 }
 
 // ---------------------------------------------------------------- a game's mods
@@ -1019,113 +1320,6 @@ void Launcher::press_mods(Key key)
     default:
         return;
     }
-}
-
-void Launcher::draw_mods(Canvas &c, float open)
-{
-    gfx::DrawList &list = c.list;
-    list.push_opacity(open);
-    list.push_transform(1.0f - 0.03f * (1.0f - open) * motion(), 960.0f, 540.0f, 0.0f,
-                        (1.0f - open) * 26.0f * motion());
-    glass(c, kDialog, 26.0f, theme::kPanel.with_alpha(0.97f), theme::kPanelEdge.with_alpha(0.66f),
-          1.6f);
-    text_shrink(c, tr("Mods"), 592.0f, baseline(218.0f, 62.0f, theme::kDisplay), theme::kDisplay,
-                theme::kTitle, 736.0f);
-    const Game *game = games_.empty() ? nullptr : &games_[static_cast<std::size_t>(library_.selected)];
-    text_fit(c, game != nullptr ? game->name : std::string{}, 592.0f,
-             baseline(291.0f, 32.0f, theme::kSmall), theme::kSmall, Color::rgb(0xbecbb9), 736.0f);
-
-    if (mods_.empty())
-    {
-        text_block(c,
-                   fill(tr("No mods for this game yet. Copy each mod's folder to {0}, next to roms/."),
-                        {game != nullptr ? services_.mods_folder(game->title_id) : std::string{}}),
-                   592.0f, baseline(364.0f, 40.0f, theme::kText24), theme::kText24, 40.0f,
-                   theme::kBody, 736.0f, 5, kShrink);
-    }
-    else
-    {
-        list.push_clip({kDialogWindow.x - 24.0f, kDialogWindow.y - 6.0f, kDialogWindow.w + 48.0f,
-                        kDialogWindow.h + 12.0f});
-        const auto row_top = [&](int row)
-        { return kDialogRowsTop + static_cast<float>(row) * kDialogRowPitch - mod_rows_.scroll(); };
-        for (int row = mod_rows_.first_row(); row <= mod_rows_.last_row(); ++row)
-        {
-            list.push_opacity(mod_rows_.row_alpha(row, kDialogRowHeight));
-            plate_rest(c, kRowPlate, {592.0f, row_top(row), 736.0f, kDialogRowHeight});
-            list.pop_opacity();
-        }
-        plate_focus(c, kRowPlate,
-                    {592.0f, kDialogRowsTop + mod_rows_.cursor() - mod_rows_.scroll(), 736.0f,
-                     kDialogRowHeight},
-                    1.0f);
-        // With the game's Mods switch off (the Library's) no mod is used: their own switches keep
-        // their state, drawn faint.
-        const bool live = game == nullptr || game->mods_enabled;
-        for (int row = mod_rows_.first_row(); row <= mod_rows_.last_row(); ++row)
-        {
-            const ModRow at = mod_list_[static_cast<std::size_t>(row)];
-            const Mod &mod = mods_[static_cast<std::size_t>(at.mod)];
-            const float top = row_top(row);
-            list.push_opacity(mod_rows_.row_alpha(row, kDialogRowHeight));
-            if (at.cheat >= 0)
-            {
-                // One of the mod's cheats, set in under it, with its own switch: faint while its
-                // mod is off.
-                const Cheat &cheat = mod.cheats[static_cast<std::size_t>(at.cheat)];
-                const bool used = live && mod.enabled;
-                text_fit(c, cheat.name, 668.0f,
-                         baseline(top + (kDialogRowHeight - 38.0f) * 0.5f, 38.0f, theme::kText24),
-                         theme::kText24, cheat.enabled && used ? theme::kValue : theme::kMeta, 520.0f);
-                list.push_opacity(used ? 1.0f : 0.4f);
-                toggle(c, 1292.0f, top + kDialogRowHeight * 0.5f, cheat.enabled ? 1.0f : 0.0f);
-                list.pop_opacity();
-                list.pop_opacity();
-                continue;
-            }
-            // Its name as the player's folder has it, what it changes under it (with how many of
-            // its cheats are chosen when it lists several), its switch.
-            std::string kind = mod.kind;
-            if (!mod.cheats.empty())
-                kind += ", " + fill(tr("{0} of {1} on"),
-                                    {std::to_string(std::count_if(
-                                         mod.cheats.begin(), mod.cheats.end(),
-                                         [](const Cheat &cheat) { return cheat.enabled; })),
-                                     std::to_string(mod.cheats.size())});
-            text_fit(c, mod.name, 628.0f, baseline(top + 14.0f, 38.0f, theme::kText24),
-                     theme::kText24, mod.enabled && live ? theme::kValue : theme::kMeta, 560.0f);
-            text_shrink(c, kind, 628.0f, baseline(top + 52.0f, 28.0f, theme::kSmall),
-                        theme::kSmall, theme::kMeta, 560.0f);
-            list.push_opacity(live ? 1.0f : 0.4f);
-            toggle(c, 1292.0f, top + kDialogRowHeight * 0.5f, mod.enabled ? 1.0f : 0.0f);
-            list.pop_opacity();
-            list.pop_opacity();
-        }
-        list.pop_clip();
-        scrollbar(c, mod_rows_, 1340.0f, kDialogWindow.y, kDialogWindow.h);
-    }
-
-    if (!message_.empty())
-    {
-        notice_block(c, message_, 592.0f, kDialogHints - 6.0f, theme::kSmall, 26.0f,
-                     message_warning_ ? theme::kWarning : theme::kLimePale, 736.0f, 2,
-                     message_warning_);
-    }
-    else if (mods_.empty())
-    {
-        static constexpr Hint kEmpty[] = {{Pad::square, TR("Create the folder")},
-                                          {Pad::circle, TR("Back")}};
-        draw_hints(c, kEmpty, 2, 592.0f, kDialogHints, theme::kCopy, 736.0f);
-    }
-    else
-    {
-        static constexpr Hint kHints[] = {{Pad::updown, TR("Select")},
-                                          {Pad::cross, TR("Turn on or off")},
-                                          {Pad::circle, TR("Back")}};
-        draw_hints(c, kHints, 3, 592.0f, kDialogHints, theme::kCopy, 736.0f);
-    }
-    list.pop_transform();
-    list.pop_opacity();
 }
 
 } // namespace pe::ui

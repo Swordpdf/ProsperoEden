@@ -64,6 +64,7 @@ class Launcher
     {
         home,
         library,
+        multiplayer, // rooms: the public directory, a private room, the room joined
         settings,
         files,
         language,
@@ -90,7 +91,7 @@ class Launcher
         save_sync,    // a game's save data synced before it starts, or a conflict after (save_sync.cpp)
         sync_setup,   // Settings > Save sync: the profiles and their servers (pairing.cpp)
         pairing,      // a profile paired with a server by a QR code (pairing.cpp)
-        multiplayer,
+        theme,        // Settings > Theme: the launcher's look
     };
     // The update dialog's steps: the offer, installing, stopping it, closing for the helper to
     // finish, and a failure.
@@ -118,9 +119,37 @@ class Launcher
     // Starts it now.
     void start_game(const std::string &file, const std::string &title, const std::string &cover);
     void draw_screen(Canvas &c, Screen screen);
+    // A screen's title and the line beside it, at the top; its hints at the bottom, with what the
+    // menu last said (or `status`) at their right.
     void draw_frame(Canvas &c, const char *title, const char *copy);
-    void draw_footer(Canvas &c, const Hint *hints, int count);
+    void draw_footer(Canvas &c, const Hint *hints, int count, std::string_view status = {});
+
+    // ---- the shell around every screen: the section rail, the clock (shell.cpp) ----
+    static constexpr int kSections = 5; // home, library, multiplayer, settings, about
+    // The section the screen shown belongs to.
+    int section() const;
+    // Whether L1 and R1 change the section here: on a section's own screen, with no dialog open.
+    bool at_section() const;
+    void go_section(int section);
+    // The focus goes to the rail (Left from a screen's left edge), and comes back.
+    void focus_rail();
+    void press_rail(Key key);
+    void draw_scrims(Canvas &c);
+    void draw_rail(Canvas &c);
+    void draw_clock(Canvas &c);
+    // How far the item at `index` of the screen being drawn has arrived, 0..1: a screen's tiles and
+    // covers come one after the other when it opens (at once with reduced motion, and on the
+    // screen that is leaving).
+    float arrive(int index, float step = 0.025f) const;
+    // The size of the picture as every language writes it: "2160p".
+    static const char *output_name(int output);
+    // What a game runs with, on one line: "Docked  /  2x  /  AMD FSR  /  2160p  /  120 Hz".
+    std::string session_line(std::uint64_t title_id);
+    std::string session_line(const GameSettings &game, bool docked);
     void draw_launch(Canvas &c);
+    void draw_opening(Canvas &c);
+    float opening_reveal() const;
+    float opening_handover() const;
     // The notification of a newer release the app cannot install itself, at the top right for ten
     // seconds.
     void draw_update_notice(Canvas &c);
@@ -136,7 +165,9 @@ class Launcher
     void update_controllers(float dt);
     void draw_home(Canvas &c);
     void draw_controllers(Canvas &c);
-    void open_library_at_last();
+    // A game's settings from the home screen (the game to continue, or a recent one): its page
+    // opens over the Library at that game, and closing it comes back to the home screen.
+    void open_game_settings_from_home(const std::string &file);
 
     // ---- library and game settings (library.cpp) ----
     // The game list is read beside the menu: reading every game takes a moment.
@@ -164,12 +195,19 @@ class Launcher
     void draw_library(Canvas &c);
     void refresh_selected_game();
     void press_game(Key key);
-    void draw_game(Canvas &c, float open);
+    // A game's settings as a page of three parts: its kinds of setting at the left, the one chosen
+    // in the middle (`middle` draws it), what it means at the right.
+    void draw_game_page(Canvas &c, float open);
+    void draw_mode_pane(Canvas &c, const Rect &pane);
+    void draw_mods_pane(Canvas &c, const Rect &pane, bool active);
+    void draw_save_pane(Canvas &c, const Rect &pane, bool removing);
+    void draw_explain_pane(Canvas &c, const Rect &pane, int kind);
+    // How many settings the game has of its own, over every kind.
+    int game_changes() const;
     // What a row of the game settings dialog is (GameRow in library.cpp): Save data is there in
     // builds that move saves, and the deleting of a game a download source has (it comes back from there).
     int game_row(int row) const;
     void press_mods(Key key);
-    void draw_mods(Canvas &c, float open);
 
     // ---- a game's own settings by category, and the button mapping (game_options.cpp) ----
     // Categories, in the order of the game settings' rows: video, performance, audio, controls,
@@ -180,7 +218,15 @@ class Launcher
     // The RNG seed is typed on the system keyboard: opens it, and takes its answer when it closes.
     void edit_seed();
     void update_game_options();
-    void draw_game_options(Canvas &c, float open);
+    // A category's rows in the game page's middle part; active: the focus is on them.
+    void draw_option_pane(Canvas &c, const Rect &pane, int category, bool active);
+    // What the focused setting of a category does, where there is something to say.
+    std::string option_about(int category, int row) const;
+    // What Cross does on the focused row of a game's settings: 0 nothing of its own, 1 it opens the
+    // game's button mapping, 2 it opens the keyboard.
+    int option_action() const;
+    // What a Performance switch does (English, marked for translation).
+    static const char *performance_about(int row);
     // How many of a category's settings the game has of its own.
     int game_overrides(int category) const;
     // ---- profiles (profiles.cpp) ----
@@ -254,12 +300,15 @@ class Launcher
 
     // ---- Settings > Save sync and pairing (pairing.cpp) ----
     void open_sync_setup();
-    void open_multiplayer();
+    void enter_multiplayer();
+    // Whether the multiplayer screen has the buttons (no dialog over it).
+    bool in_multiplayer() const;
     void press_multiplayer(Key key);
     void update_multiplayer();
-    void draw_multiplayer(Canvas& c, float open);
+    void draw_multiplayer(Canvas& c);
     void refresh_public_rooms();
-    void draw_public_rooms(Canvas& c);
+    void draw_public_rooms(Canvas& c, const Rect& pane);
+    void draw_room_panel(Canvas& c, const Rect& pane);
     enum class RoomPage { choice, private_room, public_rooms };
     RoomPage room_page_ = RoomPage::choice;
     Eden::Multiplayer::RoomDirectory room_directory_;
@@ -365,9 +414,10 @@ class Launcher
     std::string launch_title_;
     std::string launch_cover_;
     tween::Timer launch_;
+    Rect launch_from_{790.0f, 250.0f, 340.0f, 340.0f}; // where its cover was when it was started
     bool done_ = false;
 
-    // home: 0 continue, 1-3 header, 4 game details, 5-8 recent, 9 view all
+    // home: 0 the main action, 1 game settings, 2-5 recent, 6 view all
     Home home_;
     // The controllers connected now (bit 0 is player 1), and how lit each one's icon is.
     unsigned controllers_ = 0;
@@ -378,6 +428,21 @@ class Launcher
     std::array<tween::Spring, 10> home_springs_{};
     float intro_ = 0.0f;
     bool first_start_ = true;
+    // The opening, when the app has just been started and the launch picture is there: that
+    // picture, the mark over it, then the menu as the picture leaves (draw_opening).
+    bool opening_on_ = false;
+    float opening_ = 0.0f; // seconds since it began
+    std::string home_session_;        // what the home screen's game runs with (session_line)
+    bool home_docked_ = true;         // ... and whether that is docked
+
+    // the rail
+    float screen_time_ = 10.0f;   // seconds since the screen shown was opened
+    bool drawing_shown_ = true;   // the screen being drawn is the one shown (not the one leaving)
+    bool rail_focus_ = false;
+    int rail_index_ = 0;
+    tween::Spring rail_open_;                           // 0 icons only .. 1 with their names
+    std::array<tween::Spring, kSections> rail_springs_{}; // the highlight on each section
+    std::array<tween::Spring, kSections> rail_active_{};  // which section is shown
 
     // library
     std::vector<Game> games_;
@@ -388,10 +453,23 @@ class Launcher
     tween::Spring mode_;   // 0 docked .. 1 handheld
     tween::Spring mods_switch_; // the selected game's Mods switch: 0 off .. 1 on
     tween::Spring detail_; // the details fade in after the selection moves
+    // The Library's covers: four to a row, the rows scrolling; the highlight glides between them.
+    ListView grid_rows_;
+    tween::Spring grid_x_;
+    tween::Spring grid_y_;
+    void sync_grid(bool snap);
+    // What the selected game has of its own is read once the selection rests on it.
+    void read_selected_details();
+    bool selected_read_ = true;
+    int selected_changes_ = 0;       // how many settings the selected game has of its own
+    std::string selected_session_;   // what it runs with (session_line)
+    bool game_from_home_ = false;    // its settings were opened from the home screen: back goes there
+    tween::Spring pane_;             // the game page's focus: 0 on the kinds, 1 on the rows
 
     // settings and dialogs
     Preferences prefs_;
     ListView settings_;
+    std::array<tween::Spring, 12> settings_springs_{}; // the highlight on each tile
     tween::Spring section_;
     int option_ = 0;
     tween::Spring option_cursor_; // highlight position in pixels

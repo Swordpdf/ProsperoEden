@@ -1,10 +1,11 @@
-// ProsperoEden - The launcher: home, library, settings and their dialogs.
+// ProsperoEden - The launcher: home, library, multiplayer, settings and their dialogs.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pe/ui/launcher.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 namespace pe::ui
 {
@@ -32,21 +33,25 @@ Launcher::Launcher(Services &services, Textures &textures, const Fonts &fonts, b
     version_ = services_.version();
     clock_ = services_.clock();
     prefs_ = services_.preferences();
+    // The look the player chose; a theme this build does not have leaves the first in use.
+    use_theme(prefs_.theme);
     sources_ = services_.sources();
     sources_generation_ = sources_.generation; // the list read below has the sources' games
     downloads_ = services_.downloads();
     apply_look();
     read_profiles();
     read_home();
-    const bool continue_ready = home_.setup_ready && home_.last_exists;
-    home_focus_ = continue_ready ? 0 : home_.setup_ready ? 1 : 2;
-    home_springs_[static_cast<std::size_t>(home_focus_)].snap(1.0f);
+    home_session_ = session_line(home_.last_title_id);
+    home_focus_ = 0;
+    home_springs_[0].snap(1.0f);
+    rail_active_[0].snap(1.0f);
+    settings_.wrap = false;
     settings_.visible = 12;
-    settings_.pitch = 52.0f;
     settings_.reset(12, 0);
     section_.snap(1.0f);
     detail_.snap(1.0f);
     cue(home_.launch_failed ? Cue::notify : first_start ? Cue::welcome : Cue::resume);
+    opening_on_ = first_start && textures_.splash() != 0;
     start_scan();
 }
 
@@ -82,7 +87,9 @@ void Launcher::open(Screen screen, bool forward)
     leaving_ = screen_;
     screen_ = screen;
     forward_ = forward;
-    transition_.start(theme::kScreenSeconds);
+    rail_focus_ = false;
+    screen_time_ = 0.0f;
+    transition_.start(th().screen_seconds);
     message_.clear();
     cue(forward ? Cue::open : Cue::back);
 }
@@ -185,7 +192,7 @@ void Launcher::start_game(const std::string &file, const std::string &title, con
     selected_game_ = services_.game_path(file);
     launch_title_ = title;
     launch_cover_ = cover;
-    launch_.start(theme::kLaunchSeconds);
+    launch_.start(th().launch_seconds);
     press_ = 1.0f;
     cue(Cue::launch);
 }
@@ -194,6 +201,12 @@ void Launcher::press(Key key)
 {
     if (!selected_game_.empty())
         return; // a game is starting
+    if (opening_on_ && opening_ < opening_reveal())
+    {
+        // Any button ends the opening's first part: the menu comes at once.
+        opening_ = opening_reveal();
+        return;
+    }
     if (modal_ == Modal::game)
         return press_game(key);
     if (modal_ == Modal::mods)
@@ -214,20 +227,28 @@ void Launcher::press(Key key)
         return press_sources(key);
     if (modal_ == Modal::save_sync)
         return press_save_sync(key);
-    if (modal_ == Modal::multiplayer)
-        return press_multiplayer(key);
     if (modal_ == Modal::sync_setup)
         return press_sync_setup(key);
     if (modal_ == Modal::pairing)
         return press_pairing(key);
     if (modal_ != Modal::none)
         return press_dialog(key);
+    // The rail, and the sections it holds: L1 and R1 go from one to the next.
+    if (rail_focus_)
+        return press_rail(key);
+    if ((key == Key::l1 || key == Key::r1) && at_section())
+    {
+        go_section((section() + (key == Key::r1 ? 1 : kSections - 1)) % kSections);
+        return;
+    }
     switch (screen_)
     {
     case Screen::home:
         return press_home(key);
     case Screen::library:
         return press_library(key);
+    case Screen::multiplayer:
+        return press_multiplayer(key);
     case Screen::settings:
         return press_settings(key);
     case Screen::files:
@@ -236,7 +257,9 @@ void Launcher::press(Key key)
         return press_language(key);
     case Screen::about:
         if (key == Key::circle)
-            open(Screen::home, false);
+            go_section(0);
+        else if (key == Key::left)
+            focus_rail();
         return;
     }
 }
@@ -245,6 +268,19 @@ void Launcher::update(float dt)
 {
     time_ += dt;
     intro_ += dt;
+    if (opening_on_)
+    {
+        opening_ += dt;
+        // The menu's parts arrive as the launch picture leaves, a moment after the mark set off.
+        if (opening_ < opening_reveal() + (look().reduce_motion ? 0.0f : 0.14f))
+            intro_ = 0.0f;
+        if (opening_ >= opening_reveal() + opening_handover())
+        {
+            opening_on_ = false;
+            textures_.drop_splash();
+        }
+    }
+    screen_time_ += dt;
     message_age_ += dt;
     backdrop_.update(dt);
     textures_.pump(dt);
@@ -263,15 +299,37 @@ void Launcher::update(float dt)
     modal_open_.update(dt, 20.0f);
     if (modal_ == Modal::none && modal_open_.value < 0.01f)
         modal_shown_ = Modal::none;
-    dim_.target = screen_ == Screen::home ? 0.0f : 0.30f;
+    dim_.target = screen_ == Screen::home ? 0.0f : 1.0f;
     dim_.update(dt, 8.0f);
 
+    const Theme &t = th();
     for (std::size_t i = 0; i < home_springs_.size(); ++i)
     {
-        home_springs_[i].target = static_cast<int>(i) == home_focus_ ? 1.0f : 0.0f;
-        home_springs_[i].update(dt, theme::kFocusSpring);
+        home_springs_[i].target = static_cast<int>(i) == home_focus_ && !rail_focus_ ? 1.0f : 0.0f;
+        home_springs_[i].update(dt, t.focus_spring);
+    }
+    for (std::size_t i = 0; i < settings_springs_.size(); ++i)
+    {
+        settings_springs_[i].target = static_cast<int>(i) == settings_.selected && !rail_focus_ ? 1.0f : 0.0f;
+        settings_springs_[i].update(dt, t.focus_spring);
+    }
+    rail_open_.target = rail_focus_ ? 1.0f : 0.0f;
+    rail_open_.update(dt, 18.0f);
+    for (int i = 0; i < kSections; ++i)
+    {
+        const std::size_t index = static_cast<std::size_t>(i);
+        rail_springs_[index].target = rail_focus_ && rail_index_ == i ? 1.0f : 0.0f;
+        rail_springs_[index].update(dt, t.focus_spring);
+        rail_active_[index].target = section() == i ? 1.0f : 0.0f;
+        rail_active_[index].update(dt, 14.0f);
     }
     library_.update(dt);
+    grid_rows_.update(dt);
+    grid_x_.update(dt, t.cursor_spring);
+    grid_y_.update(dt, t.cursor_spring);
+    pane_.target = modal_ == Modal::game_options || modal_ == Modal::mods ||
+                           (modal_ == Modal::mapping && mapping_for_game_) ? 1.0f : 0.0f;
+    pane_.update(dt, 18.0f);
     settings_.update(dt);
     files_.update(dt);
     language_.update(dt);
@@ -294,11 +352,13 @@ void Launcher::update(float dt)
     mods_switch_.update(dt, 22.0f);
     detail_.target = 1.0f;
     detail_.update(dt, 14.0f);
+    if (!selected_read_ && screen_ == Screen::library && detail_.value > 0.5f)
+        read_selected_details();
     section_.target = 1.0f;
     section_.update(dt, 14.0f);
     if (modal_ != Modal::none)
         option_cursor_.target = dialog_row_top(modal_, option_);
-    option_cursor_.update(dt, theme::kCursorSpring);
+    option_cursor_.update(dt, t.cursor_spring);
     const std::array<bool, 7> states = switch_states(modal_shown_);
     for (std::size_t i = 0; i < states.size(); ++i)
     {
@@ -373,6 +433,7 @@ void Launcher::update_offer(float dt)
         update_choice_ = 0;
         update_choice_x_.snap(0.0f);
         update_height_.snap(kUpdatePanelHeight);
+        rail_focus_ = false;
         modal_ = modal_shown_ = Modal::update;
         message_.clear();
         cue(Cue::notify);
@@ -381,12 +442,15 @@ void Launcher::update_offer(float dt)
 
 void Launcher::draw_screen(Canvas &c, Screen screen)
 {
+    drawing_shown_ = screen == screen_;
     switch (screen)
     {
     case Screen::home:
         return draw_home(c);
     case Screen::library:
         return draw_library(c);
+    case Screen::multiplayer:
+        return draw_multiplayer(c);
     case Screen::settings:
         return draw_settings(c);
     case Screen::files:
@@ -398,78 +462,156 @@ void Launcher::draw_screen(Canvas &c, Screen screen)
     }
 }
 
-void Launcher::draw_frame(Canvas &c, const char *title, const char *copy)
-{
-    text_shrink(c, title, 108.0f, baseline(62.0f, 64.0f, theme::kDisplay), theme::kDisplay,
-                theme::kTitle, 1704.0f);
-    text_shrink(c, copy, 110.0f, baseline(130.0f, 30.0f, theme::kSmall), theme::kSmall, theme::kCopy,
-                1700.0f);
-}
-
-void Launcher::draw_footer(Canvas &c, const Hint *hints, int count)
-{
-    c.list.rounded_rect({108.0f, 955.0f, 1704.0f, 1.0f}, 0.0f, Color::rgb(0x586d5a, 0.9f));
-    draw_hints(c, hints, count, 108.0f, 987.0f, theme::kCopy, 1704.0f);
-}
-
 void Launcher::draw_update_notice(Canvas &c)
 {
     const float shown = tween::clamp01(update_notice_in_.value);
     if (shown <= 0.01f || update_version_.empty())
         return;
     gfx::DrawList &list = c.list;
+    const Theme &t = th();
     // Top right, over whatever the menu shows; it comes in from the right edge.
-    const Rect panel{1352.0f, 44.0f, 520.0f, 108.0f};
+    const Rect card{1344.0f, 44.0f, 480.0f, 108.0f};
     list.push_opacity(shown);
     list.push_transform(1.0f, 0.0f, 0.0f, (1.0f - shown) * 72.0f * motion(), 0.0f);
-    glass(c, panel, 20.0f, theme::kPanel.with_alpha(0.97f), theme::kLime.with_alpha(0.55f), 1.4f);
-    // A mark at the left: a lime disc with an arrow up.
-    const float cx = panel.x + 48.0f;
-    const float cy = panel.y + 50.0f;
-    list.circle(cx, cy, 20.0f, theme::kLime.with_alpha(0.22f));
-    list.line(cx, cy + 9.0f, cx, cy - 9.0f, 2.6f, theme::kLime);
-    list.line(cx - 8.0f, cy - 2.0f, cx, cy - 10.0f, 2.6f, theme::kLime);
-    list.line(cx + 8.0f, cy - 2.0f, cx, cy - 10.0f, 2.6f, theme::kLime);
-    text_shrink(c, tr("Update available"), panel.x + 88.0f, baseline(panel.y + 18.0f, 34.0f, theme::kText24),
-                theme::kText24, theme::kTitle, panel.w - 112.0f);
-    text_shrink(c, fill(tr("Version {0} is on homebrew.page"), {update_version_}), panel.x + 88.0f,
-                baseline(panel.y + 54.0f, 30.0f, theme::kSmall), theme::kSmall, theme::kCopy,
-                panel.w - 112.0f);
+    glass(c, card, t.radius_card, t.panel.with_alpha(0.97f), t.accent.with_alpha(0.55f), 1.4f);
+    // A mark at the left: a disc of the accent with an arrow up.
+    const float cx = card.x + 48.0f;
+    const float cy = card.y + 50.0f;
+    list.circle(cx, cy, 22.0f, t.accent);
+    list.line(cx, cy + 9.0f, cx, cy - 9.0f, 2.8f, t.on_accent);
+    list.line(cx - 8.0f, cy - 2.0f, cx, cy - 10.0f, 2.8f, t.on_accent);
+    list.line(cx + 8.0f, cy - 2.0f, cx, cy - 10.0f, 2.8f, t.on_accent);
+    {
+        const Heavy heavy(c, 0.6f);
+        text_shrink(c, tr("Update available"), card.x + 88.0f, baseline(card.y + 18.0f, 34.0f, t.size_text),
+                    t.size_text, t.title, card.w - 112.0f);
+    }
+    text_shrink(c, fill(tr("Version {0} is on homebrew.page"), {update_version_}), card.x + 88.0f,
+                baseline(card.y + 54.0f, 30.0f, t.size_small), t.size_small, t.copy, card.w - 112.0f);
     // The time it has left.
     const float left = tween::clamp01(update_notice_left_ / kUpdateNoticeSeconds);
-    list.rounded_rect({panel.x + 20.0f, panel.y + panel.h - 12.0f, (panel.w - 40.0f) * left, 3.0f}, 1.5f,
-                      theme::kLime.with_alpha(0.8f));
+    list.rounded_rect({card.x + 22.0f, card.y + card.h - 12.0f, (card.w - 44.0f) * left, 3.0f}, 1.5f,
+                      t.accent.with_alpha(0.8f));
     list.pop_transform();
     list.pop_opacity();
 }
 
 void Launcher::draw_launch(Canvas &c)
 {
-    const float t = launch_.progress();
-    // The menu dims, the game's cover steps forward, then everything goes dark.
-    const float black = tween::cubic_in_out((t - 0.45f) / 0.55f);
-    const float veil = std::max(0.90f * tween::cubic_out(t / 0.22f), black);
-    c.list.rounded_rect(kScreen, 0.0f, Color::rgb(0x020705, veil));
+    const Theme &t = th();
+    const float p = launch_.progress();
+    // The menu dims, the game's cover steps forward with its name, then everything goes dark.
+    const float black = tween::cubic_in_out((p - 0.50f) / 0.50f);
+    const float veil = std::max(0.88f * tween::cubic_out(p / 0.22f), black);
+    c.list.rounded_rect(kScreen, 0.0f, t.scrim.with_alpha(veil));
 
-    const float appear = tween::back_out(t / 0.38f);
-    const float leave = 1.0f - tween::cubic_in_out((t - 0.60f) / 0.40f);
-    c.list.push_opacity(tween::clamp01(t / 0.18f) * leave);
-    c.list.push_transform(1.0f - 0.14f * (1.0f - appear) * motion(), 960.0f, 470.0f, 0.0f, 0.0f);
-    const Rect art{810.0f, 300.0f, 300.0f, 300.0f};
-    c.list.shadow({art.x - 10.0f, art.y - 4.0f, art.w + 20.0f, art.h + 20.0f}, 30.0f, 70.0f,
-                  theme::kLime.with_alpha(0.22f));
-    cover(c, launch_cover_, art, 20.0f, 1.0f);
-    text(c, tr("STARTING"), 960.0f, 668.0f, theme::kSmall, theme::kLime, Align::center, 4.0f);
-    text_fit(c, launch_title_, 960.0f, 716.0f, theme::kHeading, theme::kTitle, 1300.0f,
-             Align::center);
+    const float leave = 1.0f - tween::cubic_in_out((p - 0.62f) / 0.38f);
+    // The cover flies from where it was pressed to the middle, a little past its size before it
+    // rests; with reduced motion it is simply there.
+    const Rect rest{790.0f, 250.0f, 340.0f, 340.0f};
+    const float fly = look().reduce_motion ? 1.0f : tween::back_out(p / 0.50f);
+    const Rect art{tween::lerp(launch_from_.x, rest.x, fly), tween::lerp(launch_from_.y, rest.y, fly),
+                   tween::lerp(launch_from_.w, rest.w, fly), tween::lerp(launch_from_.h, rest.h, fly)};
+    const float corner = t.radius_card + (t.radius_panel - t.radius_card) * tween::clamp01(fly);
+    c.list.push_opacity(leave * (look().reduce_motion ? tween::clamp01(p / 0.18f) : 1.0f));
+    c.list.shadow({art.x - 30.0f, art.y - 10.0f, art.w + 60.0f, art.h + 60.0f}, 60.0f, 120.0f,
+                  t.highlight.with_alpha(0.16f * tween::clamp01(fly)));
+    cover(c, launch_cover_, art, corner, 1.6f);
+    c.list.pop_opacity();
+    // Its name comes in under it once it is nearly there.
+    const float named = tween::cubic_out((p - 0.22f) / 0.30f);
+    c.list.push_opacity(named * leave);
+    c.list.push_transform(1.0f, 0.0f, 0.0f, 0.0f, (1.0f - named) * 18.0f * motion());
+    kicker(c, tr("STARTING"), 960.0f, 664.0f, t.accent, 1200.0f, Align::center);
+    {
+        const Heavy heavy(c);
+        text_fit(c, launch_title_, 960.0f, 730.0f, t.size_display, t.title, 1400.0f, Align::center);
+    }
     c.list.pop_transform();
     c.list.pop_opacity();
+}
+
+// The opening's two parts, in seconds: the launch picture with the mark over it, then the picture
+// leaving while the mark goes to its place on the rail. With reduced motion the picture is held a
+// moment and fades.
+float Launcher::opening_reveal() const
+{
+    return look().reduce_motion ? 0.30f : 1.05f;
+}
+
+float Launcher::opening_handover() const
+{
+    return look().reduce_motion ? 0.45f : 0.70f;
+}
+
+void Launcher::draw_opening(Canvas &c)
+{
+    gfx::DrawList &list = c.list;
+    const Theme &t = th();
+    const Color white{1.0f, 1.0f, 1.0f, 1.0f};
+    const float reveal = opening_reveal();
+    const float handover = opening_handover();
+    const float leave = tween::cubic_in_out((opening_ - reveal) / handover);
+    // The console's own launch picture, as the console showed it. It is the menu's artwork before
+    // the menu dims it, so it moves to where that artwork lies and the two are one as it leaves.
+    const float nearer = tween::cubic_in_out(opening_ / (reveal + handover)) * motion();
+    const Rect art = backdrop_.art();
+    const Rect picture{tween::lerp(kScreen.x, art.x, nearer), tween::lerp(kScreen.y, art.y, nearer),
+                       tween::lerp(kScreen.w, art.w, nearer), tween::lerp(kScreen.h, art.h, nearer)};
+    list.push_opacity(1.0f - leave);
+    list.image(textures_.splash(), picture, {0.0f, 0.0f, 1.0f, 1.0f}, white);
+    list.pop_opacity();
+    if (look().reduce_motion || textures_.brand() == 0)
+        return;
+
+    // The mark comes forward over the picture's light, then goes to its place on the rail.
+    const float shown = tween::cubic_out((opening_ - 0.12f) / 0.40f);
+    const float settle = tween::back_out(tween::clamp01((opening_ - 0.12f) / 0.55f));
+    const float fly = tween::cubic_in_out((opening_ - reveal) / (handover * 0.68f));
+    const float stay = 1.0f - fly;
+    const float side = tween::lerp(232.0f * (0.84f + 0.16f * settle), 64.0f, fly);
+    const float cx = tween::lerp(960.0f, (layout::kRail - 64.0f) * 0.5f + 32.0f, fly);
+    const float cy = tween::lerp(500.0f, 72.0f, fly);
+    const Rect mark{cx - side * 0.5f, cy - side * 0.5f, side, side};
+    const float corner = tween::lerp(54.0f, 18.0f, fly);
+    // A pool of dusk around it, so the mark and its name read on any picture.
+    list.shadow({cx - 380.0f, cy - 270.0f, 760.0f, 680.0f}, 330.0f, 420.0f, t.base.with_alpha(0.46f * shown * stay));
+    list.shadow({mark.x - 14.0f, mark.y - 14.0f, mark.w + 28.0f, mark.h + 28.0f}, corner + 14.0f, 80.0f,
+                t.highlight.with_alpha(0.34f * shown * stay));
+    list.shadow({mark.x + 4.0f, mark.y + side * 0.10f, mark.w - 8.0f, mark.h - 4.0f}, corner, side * 0.20f,
+                Color{0.0f, 0.0f, 0.0f, 0.55f * shown});
+    list.rounded_image(textures_.brand(), mark, {0.0f, 0.0f, 1.0f, 1.0f}, corner, white.with_alpha(shown));
+    list.bordered_rect(mark, corner, white.with_alpha(0.0f), 1.5f, white.with_alpha(0.16f * shown * stay));
+    // Two rings of light leave it, one after the other.
+    for (const float begun : {0.40f, 0.62f})
+    {
+        const float out = tween::clamp01((opening_ - begun) / 0.62f);
+        if (out <= 0.0f || out >= 1.0f)
+            continue;
+        const float grown = 46.0f * tween::cubic_out(out);
+        list.bordered_rect({mark.x - grown, mark.y - grown, mark.w + 2.0f * grown, mark.h + 2.0f * grown},
+                           corner + grown, white.with_alpha(0.0f), 2.0f,
+                           t.accent.with_alpha(0.55f * std::sin(3.14159265f * out) * (1.0f - out) * stay));
+    }
+
+    // Its name under it, until the mark leaves.
+    const float named = tween::cubic_out((opening_ - 0.38f) / 0.45f);
+    const float gone = tween::cubic_out((opening_ - reveal) / 0.22f);
+    list.push_opacity(named * (1.0f - gone));
+    list.push_transform(1.0f, 0.0f, 0.0f, 0.0f, (1.0f - named) * 16.0f - gone * 10.0f);
+    {
+        const Heavy heavy(c);
+        text(c, "PROSPEROEDEN", 960.0f, 706.0f, 40.0f, t.title, Align::center, 12.0f);
+    }
+    list.pop_transform();
+    list.pop_opacity();
 }
 
 void Launcher::draw(gfx::DrawList &list)
 {
     Canvas c{list, fonts_, textures_, backdrop_, time_};
-    backdrop_.draw(list, textures_, dim_.value);
+    backdrop_.draw(list, textures_, 0.0f);
+    draw_scrims(c);
 
     const bool launching = !selected_game_.empty();
     const float zoom =
@@ -477,17 +619,18 @@ void Launcher::draw(gfx::DrawList &list)
     list.push_transform(zoom, 960.0f, 540.0f, 0.0f, 0.0f);
     if (transition_.running)
     {
-        // The old screen slides away as the new one arrives from the other side.
-        const float t = transition_.progress();
-        const float e = tween::cubic_in_out(t);
+        // The old screen leaves toward the rail as the new one arrives from the other side. The
+        // rail and the artwork stay where they are.
+        const float p = transition_.progress();
+        const float e = tween::cubic_in_out(p);
         const float direction = forward_ ? 1.0f : -1.0f;
-        list.push_opacity(1.0f - tween::cubic_out(t / 0.55f));
-        list.push_transform(1.0f, 0.0f, 0.0f, -direction * 56.0f * e * motion(), 0.0f);
+        list.push_opacity(1.0f - tween::cubic_out(p / 0.55f));
+        list.push_transform(1.0f, 0.0f, 0.0f, -direction * 64.0f * e * motion(), 0.0f);
         draw_screen(c, leaving_);
         list.pop_transform();
         list.pop_opacity();
-        list.push_opacity(tween::cubic_out((t - 0.2f) / 0.8f));
-        list.push_transform(1.0f, 0.0f, 0.0f, direction * 56.0f * (1.0f - e) * motion(), 0.0f);
+        list.push_opacity(tween::cubic_out((p - 0.2f) / 0.8f));
+        list.push_transform(1.0f, 0.0f, 0.0f, direction * 64.0f * (1.0f - e) * motion(), 0.0f);
         draw_screen(c, screen_);
         list.pop_transform();
         list.pop_opacity();
@@ -496,17 +639,21 @@ void Launcher::draw(gfx::DrawList &list)
     {
         draw_screen(c, screen_);
     }
-    if (modal_shown_ != Modal::none)
+
+    // A game's settings are a page of their own over the Library, beside the rail; its button
+    // mapping is a dialog over that page.
+    const float opened = tween::clamp01(modal_open_.value);
+    const bool mapping_of_game = modal_shown_ == Modal::mapping && mapping_for_game_;
+    const bool page = modal_shown_ == Modal::game || modal_shown_ == Modal::mods ||
+                      modal_shown_ == Modal::game_options || mapping_of_game;
+    if (page)
+        draw_game_page(c, opened);
+    draw_rail(c);
+    draw_clock(c);
+    if (modal_shown_ != Modal::none && (!page || mapping_of_game))
     {
-        const float opened = tween::clamp01(modal_open_.value);
-        list.rounded_rect(kScreen, 0.0f, theme::kScrim.with_alpha(0.69f * opened));
-        if (modal_shown_ == Modal::game)
-            draw_game(c, opened);
-        else if (modal_shown_ == Modal::mods)
-            draw_mods(c, opened);
-        else if (modal_shown_ == Modal::game_options)
-            draw_game_options(c, opened);
-        else if (modal_shown_ == Modal::mapping)
+        list.rounded_rect(kScreen, 0.0f, th().scrim.with_alpha(0.72f * opened));
+        if (modal_shown_ == Modal::mapping)
             draw_mapping(c, opened);
         else if (modal_shown_ == Modal::profiles)
             draw_profiles(c, opened);
@@ -518,8 +665,6 @@ void Launcher::draw(gfx::DrawList &list)
             draw_choice(c, opened);
         else if (modal_shown_ == Modal::save_sync)
             draw_save_sync(c, opened);
-        else if (modal_shown_ == Modal::multiplayer)
-            draw_multiplayer(c, opened);
         else if (modal_shown_ == Modal::sync_setup)
             draw_sync_setup(c, opened);
         else if (modal_shown_ == Modal::pairing)
@@ -542,7 +687,12 @@ void Launcher::draw(gfx::DrawList &list)
             list.rounded_rect(kScreen, 0.0f, Color{0.0f, 0.0f, 0.0f, dark});
     }
 
-    // The launcher arrives out of the dark.
+    if (opening_on_)
+    {
+        draw_opening(c);
+        return;
+    }
+    // The launcher arrives out of the dark (after the opening it is there already).
     const float arrival = 1.0f - tween::cubic_out(intro_ / (first_start_ ? 0.7f : 0.45f));
     if (arrival > 0.0f)
         list.rounded_rect(kScreen, 0.0f, Color{0.0f, 0.0f, 0.0f, arrival});

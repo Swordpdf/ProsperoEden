@@ -77,7 +77,7 @@ std::string percent_of(const Download &download)
 
 void progress_bar(gfx::DrawList &list, const Rect &bar, float amount, Color color)
 {
-    list.rounded_rect(bar, bar.h * 0.5f, theme::kPanelEdge.with_alpha(0.22f));
+    list.rounded_rect(bar, bar.h * 0.5f, th().panel_edge.with_alpha(0.22f));
     if (amount > 0.0f)
         list.rounded_rect({bar.x, bar.y, std::max(bar.h, bar.w * std::clamp(amount, 0.0f, 1.0f)), bar.h},
                           bar.h * 0.5f, color);
@@ -99,15 +99,15 @@ void Launcher::remote_cover(Canvas &c, const std::string &path, const Rect &r, f
 {
     cover(c, path, r, radius, shadow);
     // Not on the console: the picture steps back...
-    c.list.rounded_rect(r, radius, Color::rgb(0x020705, 0.45f));
+    c.list.rounded_rect(r, radius, th().scrim.with_alpha(0.45f));
     // ...and a cloud says where it is.
     const float size = std::max(24.0f, r.w * 0.32f);
     const float inset = std::max(4.0f, r.w * 0.05f);
     const float cx = r.x + r.w - inset - size * 0.5f;
     const float cy = r.y + r.h - inset - size * 0.5f;
-    c.list.circle(cx, cy, size * 0.5f, theme::kPanel.with_alpha(0.94f));
-    c.list.ring(cx, cy, size * 0.5f, std::max(1.0f, size * 0.04f), theme::kLimePale.with_alpha(0.55f));
-    cloud(c.list, cx, cy - size * 0.04f, size * 0.60f, theme::kLimePale);
+    c.list.circle(cx, cy, size * 0.5f, th().panel.with_alpha(0.94f));
+    c.list.ring(cx, cy, size * 0.5f, std::max(1.0f, size * 0.04f), th().accent_pale.with_alpha(0.55f));
+    cloud(c.list, cx, cy - size * 0.04f, size * 0.60f, th().accent_pale);
 }
 
 const Download *Launcher::download_of(const std::string &key) const
@@ -124,25 +124,25 @@ std::string Launcher::remote_state(const Game &game, Color *color) const
     if (download == nullptr)
     {
         // Where it is: its source, or how many have it.
-        *color = theme::kMeta;
+        *color = th().meta;
         return game.sources.size() == 1 ? game.sources.front() :
                                           fill(tr("{0} sources"), {std::to_string(game.sources.size())});
     }
     switch (download->state)
     {
     case DownloadState::queued:
-        *color = theme::kLimePale;
+        *color = th().accent_pale;
         return tr("Queued");
     case DownloadState::downloading:
-        *color = theme::kLimePale;
+        *color = th().accent_pale;
         return percent_of(*download);
     case DownloadState::verifying:
-        *color = theme::kLimePale;
+        *color = th().accent_pale;
         return fill(tr("Checking {0}"), {percent_of(*download)});
     case DownloadState::failed:
         break;
     }
-    *color = theme::kWarning;
+    *color = th().warning;
     return tr("Download failed");
 }
 
@@ -309,13 +309,13 @@ void Launcher::draw_choice(Canvas &c, float open)
     list.push_opacity(open);
     list.push_transform(1.0f - 0.03f * (1.0f - open) * motion(), 960.0f, 540.0f, 0.0f,
                         (1.0f - open) * 26.0f * motion());
-    glass(c, kDialog, 26.0f, theme::kPanel.with_alpha(0.97f), theme::kPanelEdge.with_alpha(0.66f), 1.6f);
-    text_shrink(c, tr("Download from"), 592.0f, baseline(218.0f, 62.0f, theme::kDisplay), theme::kDisplay,
-                theme::kTitle, 736.0f);
-    text_fit(c, choice_game_.name, 592.0f, baseline(291.0f, 32.0f, theme::kSmall), theme::kSmall,
-             Color::rgb(0xbecbb9), 736.0f);
+    glass(c, kDialog, th().radius_panel, th().panel.with_alpha(0.97f), th().panel_edge.with_alpha(0.66f), 1.6f);
+    text_shrink(c, tr("Download from"), 592.0f, baseline(218.0f, 62.0f, th().size_display), th().size_display,
+                th().title, 736.0f);
+    text_fit(c, choice_game_.name, 592.0f, baseline(291.0f, 32.0f, th().size_small), th().size_small,
+             th().copy, 736.0f);
     text_shrink(c, tr("Several sources have this game. Which one should it come from?"), 592.0f,
-                baseline(328.0f, 34.0f, theme::kSmall), theme::kSmall, theme::kCopy, 736.0f);
+                baseline(328.0f, 34.0f, th().size_small), th().size_small, th().copy, 736.0f);
 
     list.push_clip({kWindow.x - 24.0f, kWindow.y - 6.0f, kWindow.w + 48.0f, kWindow.h + 12.0f});
     const auto row_top = [&](int row)
@@ -323,10 +323,10 @@ void Launcher::draw_choice(Canvas &c, float open)
     for (int row = choice_rows_.first_row(); row <= choice_rows_.last_row(); ++row)
     {
         list.push_opacity(choice_rows_.row_alpha(row, kRowHeight));
-        plate_rest(c, kRowPlate, {592.0f, row_top(row), 736.0f, kRowHeight});
+        plate_rest(c, row_plate(), {592.0f, row_top(row), 736.0f, kRowHeight});
         list.pop_opacity();
     }
-    plate_focus(c, kRowPlate,
+    plate_focus(c, row_plate(),
                 {592.0f, kRowsTop + choice_rows_.cursor() - choice_rows_.scroll(), 736.0f, kRowHeight}, 1.0f);
     for (int row = choice_rows_.first_row(); row <= choice_rows_.last_row(); ++row)
     {
@@ -340,8 +340,8 @@ void Launcher::draw_choice(Canvas &c, float open)
         for (const SourceInfo &source : sources_.list)
             if (source.name == name)
                 address = source.address;
-        text_fit(c, name, 628.0f, baseline(top + 14.0f, 38.0f, theme::kText24), theme::kText24, theme::kValue, 664.0f);
-        text_fit(c, address, 628.0f, baseline(top + 52.0f, 28.0f, theme::kSmall), theme::kSmall, theme::kMeta, 664.0f);
+        text_fit(c, name, 628.0f, baseline(top + 14.0f, 38.0f, th().size_text), th().size_text, th().value, 664.0f);
+        text_fit(c, address, 628.0f, baseline(top + 52.0f, 28.0f, th().size_small), th().size_small, th().meta, 664.0f);
         list.pop_opacity();
     }
     list.pop_clip();
@@ -349,7 +349,7 @@ void Launcher::draw_choice(Canvas &c, float open)
 
     static constexpr Hint kChoice[] = {
         {Pad::updown, TR("Select")}, {Pad::cross, TR("Download")}, {Pad::circle, TR("Back")}};
-    draw_hints(c, kChoice, 3, 592.0f, kHints, theme::kCopy, 736.0f);
+    draw_hints(c, kChoice, 3, 592.0f, kHints, th().copy, 736.0f);
     list.pop_transform();
     list.pop_opacity();
 }
@@ -402,19 +402,19 @@ void Launcher::draw_download(Canvas &c, float open)
     list.push_opacity(open);
     list.push_transform(1.0f - 0.04f * (1.0f - open) * motion(), kCenterX, 540.0f, 0.0f,
                         (1.0f - open) * 30.0f * motion());
-    glass(c, kPanel, 28.0f, theme::kPanel.with_alpha(0.97f), theme::kLime.with_alpha(0.38f), 1.8f);
+    glass(c, kPanel, 28.0f, th().panel.with_alpha(0.97f), th().accent.with_alpha(0.38f), 1.8f);
     const float hints = kPanel.y + kPanel.h - 54.0f;
     const Download *download = download_of(download_game_.key);
     const bool failed = download != nullptr && download->state == DownloadState::failed;
     const bool checking = download != nullptr && download->state == DownloadState::verifying;
     const bool running = download != nullptr && (download->state == DownloadState::downloading || checking);
-    const Color accent = failed ? theme::kWarning : theme::kLime;
+    const Color accent = failed ? th().warning : th().accent;
     const auto centred = [&](std::string_view value, float top, float line, float size, Color color)
     { text_shrink(c, value, kCenterX, baseline(top, line, size), size, color, kPanel.w - 96.0f, Align::center); };
 
     // The game's cover in the ring, the ring filling as it downloads.
-    list.circle(kCenterX, kRingY, kRingRadius - kRingWidth, theme::kBase.with_alpha(0.55f));
-    list.ring(kCenterX, kRingY, kRingRadius, kRingWidth, theme::kPanelEdge.with_alpha(0.22f));
+    list.circle(kCenterX, kRingY, kRingRadius - kRingWidth, th().base.with_alpha(0.55f));
+    list.ring(kCenterX, kRingY, kRingRadius, kRingWidth, th().panel_edge.with_alpha(0.22f));
     const float amount = tween::clamp01(download_fraction_.value);
     if (running || failed)
         arc(list, kCenterX, kRingY, kRingRadius, kRingWidth, -kPi * 0.5f, 2.0f * kPi * amount, accent);
@@ -424,7 +424,7 @@ void Launcher::draw_download(Canvas &c, float open)
     const float art = (kRingRadius - kRingWidth) * 2.0f * 0.70710678f;
     cover(c, download_game_.cover, {kCenterX - art * 0.5f, kRingY - art * 0.5f, art, art}, 12.0f);
 
-    centred(download_game_.name, 506.0f, 46.0f, theme::kHeading, theme::kTitle);
+    centred(download_game_.name, 506.0f, 46.0f, th().size_heading, th().title);
     std::string state;
     if (failed)
         state = tr("The download stopped");
@@ -443,13 +443,13 @@ void Launcher::draw_download(Canvas &c, float open)
     }
     else
         state = tr("Preparing");
-    centred(state, 560.0f, 32.0f, theme::kText24, failed ? theme::kWarning : theme::kValue);
+    centred(state, 560.0f, 32.0f, th().size_text, failed ? th().warning : th().value);
 
     progress_bar(list, {kPanel.x + 96.0f, 618.0f, kPanel.w - 192.0f, 8.0f}, amount, accent);
     if (failed)
     {
-        notice_block(c, download->error, kPanel.x + 72.0f, baseline(642.0f, 30.0f, theme::kSmall), theme::kSmall, 28.0f,
-                     theme::kCopy, kPanel.w - 144.0f, 2, false);
+        notice_block(c, download->error, kPanel.x + 72.0f, baseline(642.0f, 30.0f, th().size_small), th().size_small, 28.0f,
+                     th().copy, kPanel.w - 144.0f, 2, false);
     }
     else if (download != nullptr && download->total > 0)
     {
@@ -464,27 +464,27 @@ void Launcher::draw_download(Canvas &c, float open)
             line += whole < 90 ? fill(tr("About {0} s left"), {std::to_string(whole)}) :
                                  fill(tr("About {0} min left"), {std::to_string((whole + 59) / 60)});
         }
-        centred(line, 642.0f, 32.0f, theme::kSmall, theme::kLimePale);
+        centred(line, 642.0f, 32.0f, th().size_small, th().accent_pale);
     }
     if (!failed)
     {
         // Where it comes from, and what happens then.
         if (download != nullptr && !download->source.empty())
-            centred(fill(tr("From {0}"), {download->source}), 676.0f, 28.0f, theme::kSmall, theme::kMeta);
-        centred(tr("The game starts when the download is done."), 706.0f, 30.0f, theme::kSmall, theme::kCopy);
+            centred(fill(tr("From {0}"), {download->source}), 676.0f, 28.0f, th().size_small, th().meta);
+        centred(tr("The game starts when the download is done."), 706.0f, 30.0f, th().size_small, th().copy);
     }
 
     if (failed)
     {
         static constexpr Hint kFailed[] = {
             {Pad::cross, TR("Try again")}, {Pad::square, TR("Cancel download")}, {Pad::circle, TR("Close")}};
-        draw_hints(c, kFailed, 3, kPanel.x + 52.0f, hints, theme::kCopy, kPanel.w - 104.0f);
+        draw_hints(c, kFailed, 3, kPanel.x + 52.0f, hints, th().copy, kPanel.w - 104.0f);
     }
     else
     {
         static constexpr Hint kRunning[] = {{Pad::circle, TR("Download in the background")},
                                             {Pad::square, TR("Cancel download")}};
-        draw_hints(c, kRunning, 2, kPanel.x + 52.0f, hints, theme::kCopy, kPanel.w - 104.0f);
+        draw_hints(c, kRunning, 2, kPanel.x + 52.0f, hints, th().copy, kPanel.w - 104.0f);
     }
     list.pop_transform();
     list.pop_opacity();
@@ -576,15 +576,15 @@ void Launcher::draw_sources(Canvas &c, float open)
     list.push_opacity(open);
     list.push_transform(1.0f - 0.03f * (1.0f - open) * motion(), 960.0f, 540.0f, 0.0f,
                         (1.0f - open) * 26.0f * motion());
-    glass(c, kDialog, 26.0f, theme::kPanel.with_alpha(0.97f), theme::kPanelEdge.with_alpha(0.66f), 1.6f);
-    text_shrink(c, tr("Downloads"), 592.0f, baseline(218.0f, 62.0f, theme::kDisplay), theme::kDisplay, theme::kTitle,
+    glass(c, kDialog, th().radius_panel, th().panel.with_alpha(0.97f), th().panel_edge.with_alpha(0.66f), 1.6f);
+    text_shrink(c, tr("Downloads"), 592.0f, baseline(218.0f, 62.0f, th().size_display), th().size_display, th().title,
                 736.0f);
     text_shrink(c, tr("Games on your network, downloaded when you play them."), 592.0f,
-                baseline(291.0f, 32.0f, theme::kSmall), theme::kSmall, Color::rgb(0xbecbb9), 736.0f);
+                baseline(291.0f, 32.0f, th().size_small), th().size_small, th().copy, 736.0f);
     if (sources_.configured)
         text_shrink(c, fill(tr("Downloads need an FTP server running on the console, on port {0}."),
                             {std::to_string(sources_.ftp_port)}),
-                    592.0f, baseline(326.0f, 30.0f, theme::kSmall), theme::kSmall, theme::kMeta, 736.0f);
+                    592.0f, baseline(326.0f, 30.0f, th().size_small), th().size_small, th().meta, 736.0f);
 
     if (!sources_.configured)
     {
@@ -594,23 +594,23 @@ void Launcher::draw_sources(Canvas &c, float open)
                            "does with a RomM server, then open this menu again. Downloads need an FTP server running "
                            "on the console, on port {1}."),
                         {sources_.setup_file, std::to_string(sources_.ftp_port)}),
-                   592.0f, baseline(332.0f, 34.0f, theme::kText24), theme::kText24, 34.0f, theme::kBody, 736.0f, 5,
+                   592.0f, baseline(332.0f, 34.0f, th().size_text), th().size_text, 34.0f, th().body, 736.0f, 5,
                    kShrink);
         if (!sources_.error.empty())
-            notice_block(c, sources_.error, 592.0f, baseline(508.0f, 30.0f, theme::kSmall), theme::kSmall, 28.0f,
-                         theme::kWarning, 736.0f, 2, true);
-        list.bordered_rect({592.0f, 570.0f, 736.0f, 202.0f}, 14.0f, Color::rgb(0x0d1814, 0.75f), 1.0f,
-                           theme::kRowEdge.with_alpha(0.6f));
+            notice_block(c, sources_.error, 592.0f, baseline(508.0f, 30.0f, th().size_small), th().size_small, 28.0f,
+                         th().warning, 736.0f, 2, true);
+        list.bordered_rect({592.0f, 570.0f, 736.0f, 202.0f}, 14.0f, gfx::mix(th().panel, th().row, 0.3f).with_alpha(0.75f), 1.0f,
+                           th().row_edge.with_alpha(0.6f));
         static constexpr const char *kExample[] = {"{ \"sources\": [",
                                                    "    { \"type\": \"romm\", \"name\": \"Home\",",
                                                    "      \"url\": \"http://192.168.1.20:3000\",",
                                                    "      \"token\": \"rmm_...\" }",
                                                    "] }"};
         for (int i = 0; i < 5; ++i)
-            text(c, kExample[i], 620.0f, baseline(588.0f + 34.0f * static_cast<float>(i), 34.0f, theme::kSmall),
-                 theme::kSmall, theme::kLimePale);
+            text(c, kExample[i], 620.0f, baseline(588.0f + 34.0f * static_cast<float>(i), 34.0f, th().size_small),
+                 th().size_small, th().accent_pale);
         static constexpr Hint kBack[] = {{Pad::circle, TR("Back")}};
-        draw_hints(c, kBack, 1, 592.0f, kHints, theme::kCopy, 736.0f);
+        draw_hints(c, kBack, 1, 592.0f, kHints, th().copy, 736.0f);
         list.pop_transform();
         list.pop_opacity();
         return;
@@ -623,10 +623,10 @@ void Launcher::draw_sources(Canvas &c, float open)
     for (int row = source_rows_.first_row(); row <= source_rows_.last_row(); ++row)
     {
         list.push_opacity(source_rows_.row_alpha(row, kRowHeight));
-        plate_rest(c, kRowPlate, {592.0f, row_top(row), 736.0f, kRowHeight});
+        plate_rest(c, row_plate(), {592.0f, row_top(row), 736.0f, kRowHeight});
         list.pop_opacity();
     }
-    plate_focus(c, kRowPlate,
+    plate_focus(c, row_plate(),
                 {592.0f, kRowsTop + source_rows_.cursor() - source_rows_.scroll(), 736.0f, kRowHeight}, 1.0f);
     for (int row = source_rows_.first_row(); row <= source_rows_.last_row(); ++row)
     {
@@ -642,12 +642,12 @@ void Launcher::draw_sources(Canvas &c, float open)
                 source.online     ? fill(source.games == 1 ? tr("{0} game") : tr("{0} games"), {std::to_string(source.games)}) :
                 warning           ? std::string{tr("Not reachable")} :
                                     std::string{tr("Not connected yet")};
-            const float taken = text_shrink(c, state, 1292.0f, baseline(top + 14.0f, 38.0f, theme::kSmall), theme::kSmall,
-                                            warning ? theme::kWarning : theme::kLimePale, 300.0f, Align::right);
-            text_fit(c, source.name, 628.0f, baseline(top + 14.0f, 38.0f, theme::kText24), theme::kText24, theme::kValue,
+            const float taken = text_shrink(c, state, 1292.0f, baseline(top + 14.0f, 38.0f, th().size_small), th().size_small,
+                                            warning ? th().warning : th().accent_pale, 300.0f, Align::right);
+            text_fit(c, source.name, 628.0f, baseline(top + 14.0f, 38.0f, th().size_text), th().size_text, th().value,
                      664.0f - taken - 28.0f);
-            notice(c, warning ? source.error : source.address, 628.0f, baseline(top + 52.0f, 28.0f, theme::kSmall),
-                   theme::kSmall, warning ? theme::kWarning : theme::kMeta, 664.0f, warning);
+            notice(c, warning ? source.error : source.address, 628.0f, baseline(top + 52.0f, 28.0f, th().size_small),
+                   th().size_small, warning ? th().warning : th().meta, 664.0f, warning);
             list.pop_opacity();
             continue;
         }
@@ -660,7 +660,7 @@ void Launcher::draw_sources(Canvas &c, float open)
         }
         const Download &download = downloads_[static_cast<std::size_t>(row - sources)];
         std::string detail;
-        Color tone = theme::kMeta;
+        Color tone = th().meta;
         switch (download.state)
         {
         case DownloadState::queued:
@@ -670,14 +670,14 @@ void Launcher::draw_sources(Canvas &c, float open)
             detail = bytes_label(download.done) + " / " + bytes_label(download.total);
             if (download.rate > 0)
                 detail += "  ·  " + rate_label(download.rate);
-            tone = theme::kLimePale;
+            tone = th().accent_pale;
             break;
         case DownloadState::verifying:
-            tone = theme::kLimePale;
+            tone = th().accent_pale;
             break;
         case DownloadState::failed:
             detail = download.error;
-            tone = theme::kWarning;
+            tone = th().warning;
             break;
         }
         const bool moving = download.state == DownloadState::downloading || download.state == DownloadState::verifying;
@@ -685,15 +685,15 @@ void Launcher::draw_sources(Canvas &c, float open)
             moving ? text(c,
                           download.state == DownloadState::verifying ? fill(tr("Checking {0}"), {percent_of(download)}) :
                                                                        percent_of(download),
-                          1292.0f, baseline(top + 14.0f, 38.0f, theme::kText24), theme::kText24, theme::kLimePale,
+                          1292.0f, baseline(top + 14.0f, 38.0f, th().size_text), th().size_text, th().accent_pale,
                           Align::right) :
                      0.0f;
-        text_fit(c, download.name, 628.0f, baseline(top + 14.0f, 38.0f, theme::kText24), theme::kText24, theme::kValue,
+        text_fit(c, download.name, 628.0f, baseline(top + 14.0f, 38.0f, th().size_text), th().size_text, th().value,
                  664.0f - right - 28.0f);
         if (moving)
-            progress_bar(list, {628.0f, top + 62.0f, 664.0f, 6.0f}, share(download), theme::kLime);
+            progress_bar(list, {628.0f, top + 62.0f, 664.0f, 6.0f}, share(download), th().accent);
         else
-            notice(c, detail, 628.0f, baseline(top + 52.0f, 28.0f, theme::kSmall), theme::kSmall, tone, 664.0f,
+            notice(c, detail, 628.0f, baseline(top + 52.0f, 28.0f, th().size_small), th().size_small, tone, 664.0f,
                    download.state == DownloadState::failed);
         list.pop_opacity();
     }
@@ -701,20 +701,20 @@ void Launcher::draw_sources(Canvas &c, float open)
     scrollbar(c, source_rows_, 1340.0f, kWindow.y, kWindow.h);
     if (downloads_.empty() && sources < kRowsShown)
         text_block(c, tr("No downloads. In the Library, Square puts a game from a source in the queue."), 592.0f,
-                   baseline(kRowsTop + kRowPitch * static_cast<float>(sources) + 10.0f, 30.0f, theme::kSmall),
-                   theme::kSmall, 30.0f, theme::kMeta, 736.0f, 2, kShrink);
+                   baseline(kRowsTop + kRowPitch * static_cast<float>(sources) + 10.0f, 30.0f, th().size_small),
+                   th().size_small, 30.0f, th().meta, 736.0f, 2, kShrink);
 
     // "Reading the game lists..." stands while they are read; what came of them, as any other
     // message, for a few seconds.
     if (!message_.empty() && (lists_asked_ || message_age_ < kMessageSeconds))
     {
-        notice(c, message_, 592.0f, kHints + 7.0f, theme::kSmall,
-               message_warning_ ? theme::kWarning : theme::kLimePale, 736.0f, message_warning_);
+        notice(c, message_, 592.0f, kHints + 7.0f, th().size_small,
+               message_warning_ ? th().warning : th().accent_pale, 736.0f, message_warning_);
     }
     else if (source_rows_.selected < sources)
     {
         static constexpr Hint kList[] = {{Pad::cross, TR("Read the lists again")}, {Pad::circle, TR("Back")}};
-        draw_hints(c, kList, 2, 592.0f, kHints, theme::kCopy, 736.0f);
+        draw_hints(c, kList, 2, 592.0f, kHints, th().copy, 736.0f);
     }
     else
     {
@@ -725,9 +725,9 @@ void Launcher::draw_sources(Canvas &c, float open)
             {Pad::cross, TR("Try again")}, {Pad::square, TR("Cancel download")}, {Pad::circle, TR("Back")}};
         static constexpr Hint kQueued[] = {{Pad::square, TR("Cancel download")}, {Pad::circle, TR("Back")}};
         if (failed)
-            draw_hints(c, kFailed, 3, 592.0f, kHints, theme::kCopy, 736.0f);
+            draw_hints(c, kFailed, 3, 592.0f, kHints, th().copy, 736.0f);
         else
-            draw_hints(c, kQueued, 2, 592.0f, kHints, theme::kCopy, 736.0f);
+            draw_hints(c, kQueued, 2, 592.0f, kHints, th().copy, 736.0f);
     }
     list.pop_transform();
     list.pop_opacity();

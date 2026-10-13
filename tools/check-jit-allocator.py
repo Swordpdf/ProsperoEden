@@ -39,6 +39,14 @@ extern "C" int sceKernelAllocateDirectMemory(std::int64_t, std::int64_t, size_t 
     handles.push_back(fd); assert(ftruncate(fd,size)==0);
     *out=std::int64_t(fd)<<32; return 0;
 }
+// The pool's two ends (src/direct_memory.c), which the heap and the sparse tables ask: not
+// used by this check either, and here the same mocked allocation.
+extern "C" int eden_direct_high(size_t size, size_t alignment, int type, std::int64_t* out) {
+    return sceKernelAllocateDirectMemory(0, std::int64_t{1}<<40, size, alignment, type, out);
+}
+extern "C" int eden_direct_low(size_t size, size_t alignment, int type, std::int64_t* out) {
+    return sceKernelAllocateDirectMemory(0, std::int64_t{1}<<40, size, alignment, type, out);
+}
 extern "C" int sceKernelReleaseDirectMemory(std::int64_t physical, size_t) {
     return close(physical>>32);
 }

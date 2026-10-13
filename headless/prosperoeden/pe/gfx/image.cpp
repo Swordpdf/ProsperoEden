@@ -5,9 +5,45 @@
 #include "pe/gfx/image.hpp"
 
 #include <cstdio>
+#include <cstring>
 
 namespace pe::gfx
 {
+
+bool load_dds_bc7(const std::string &path, Blocks *blocks)
+{
+    *blocks = Blocks{};
+    std::FILE *file = std::fopen(path.c_str(), "rb");
+    if (file == nullptr)
+        return false;
+    // "DDS ", a header of 124 bytes, then the newer header of 20 that names the format.
+    unsigned char header[148]{};
+    const auto word = [&header](int at)
+    {
+        return static_cast<std::uint32_t>(header[at]) | static_cast<std::uint32_t>(header[at + 1]) << 8 |
+               static_cast<std::uint32_t>(header[at + 2]) << 16 | static_cast<std::uint32_t>(header[at + 3]) << 24;
+    };
+    bool ok = std::fread(header, 1, sizeof(header), file) == sizeof(header) &&
+              std::memcmp(header, "DDS ", 4) == 0 && std::memcmp(header + 84, "DX10", 4) == 0;
+    const std::uint32_t height = word(12);
+    const std::uint32_t width = word(16);
+    const std::uint32_t format = word(128); // 98: BC7, 99: BC7 with the sRGB curve named
+    ok = ok && (format == 98 || format == 99) && width > 0 && height > 0 && width <= 8192 && height <= 8192;
+    if (ok)
+    {
+        blocks->bc7.resize(static_cast<std::size_t>((width + 3) / 4) * static_cast<std::size_t>((height + 3) / 4) * 16);
+        ok = std::fread(blocks->bc7.data(), 1, blocks->bc7.size(), file) == blocks->bc7.size();
+    }
+    std::fclose(file);
+    if (!ok)
+    {
+        *blocks = Blocks{};
+        return false;
+    }
+    blocks->width = static_cast<int>(width);
+    blocks->height = static_cast<int>(height);
+    return true;
+}
 
 bool load_tga(const std::string &path, Image *image)
 {

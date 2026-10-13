@@ -43,7 +43,8 @@ msgstr "無法讀取韌體 NCA。請重新安裝韌體。"
 msgid "A pairing is running already."
 msgstr "已有配對正在進行。"
 
-#: pe/ui/home.cpp
+#. The menu's last section: about this app (its credits, where its files go). One short word.
+#: pe/ui/shell.cpp
 msgid "About"
 msgstr "關於"
 
@@ -71,23 +72,9 @@ msgstr "存取權限"
 msgid "Accessibility"
 msgstr "協助工具"
 
-#: pe/ui/settings.cpp
-msgid "ACCESSIBILITY"
-msgstr "協助工具"
-
 #: pe/ui/profiles.cpp
 msgid "Add"
 msgstr "新增"
-
-#. Label: a game's updates, DLC and mods.
-#: pe/ui/library.cpp
-msgid "ADD-ONS"
-msgstr "附加內容"
-
-#. {0}: updates, DLC and mods of the game; {1}: the language it will use.
-#: pe/ui/home.cpp
-msgid "Add-ons: {0}  /  Language: {1}"
-msgstr "附加內容：{0}  /  語言：{1}"
 
 #: pe/ui/remote.cpp
 msgid "Added to the downloads. Settings, Downloads shows the queue."
@@ -96,10 +83,6 @@ msgstr "已加入下載。可在「設定」的「下載」中查看佇列。"
 #: pe/ui/profiles.cpp
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "已新增。叉鍵以此檔案遊玩；左右變更名稱。"
-
-#: pe/ui/settings.cpp
-msgid "Adjust the essentials without leaving your library behind."
-msgstr "不必離開遊戲庫即可調整基本設定。"
 
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
@@ -122,21 +105,18 @@ msgstr "照常"
 msgid "Asking the server for a code..."
 msgstr "正在向伺服器要求代碼..."
 
+#. Setting: how a game's textures in the ASTC format are held in graphics memory. ASTC is a format's name (unchanged).
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "ASTC textures"
+msgstr "ASTC 紋理"
+
 #. A switch. A shader is a small graphics program; keep the word the language's players use for it.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Asynchronous shaders"
 msgstr "非同步著色器"
 
-#: pe/ui/settings.cpp
-msgid "ASYNCHRONOUS SHADERS"
-msgstr "非同步著色器"
-
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Audio"
-msgstr "音訊"
-
-#: pe/ui/settings.cpp
-msgid "AUDIO"
 msgstr "音訊"
 
 #: eden_services.cpp
@@ -175,18 +155,6 @@ msgstr "雙線性"
 msgid "Browse"
 msgstr "瀏覽"
 
-#: pe/ui/library.cpp
-msgid "Browse games"
-msgstr "瀏覽遊戲"
-
-#: pe/ui/settings.cpp
-msgid "Browse settings"
-msgstr "瀏覽設定"
-
-#: pe/ui/settings.cpp
-msgid "Browse the public directory"
-msgstr "瀏覽公開清單"
-
 #: pe/ui/multiplayer.cpp
 msgid "Browse the public directory and choose a room."
 msgstr "瀏覽公開清單並選擇房間。"
@@ -194,10 +162,6 @@ msgstr "瀏覽公開清單並選擇房間。"
 #. Which controller button presses each of the game's buttons.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
-msgstr "按鍵配置"
-
-#: pe/ui/settings.cpp
-msgid "BUTTON MAPPING"
 msgstr "按鍵配置"
 
 #: pe/ui/pairing.cpp, pe/ui/update.cpp
@@ -295,18 +259,19 @@ msgid "Compile ahead"
 msgstr "預先編譯"
 
 #: pe/ui/settings.cpp
-msgid "COMPILE AHEAD"
-msgstr "預先編譯"
-
-#: pe/ui/settings.cpp
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "在遊戲啟動時編譯它先前用過的程式碼，讓新區域的卡頓更少。"
+
+#. A choice of 'ASTC textures': the textures are kept compressed (less memory). Keep it short.
+#: settings_store.h
+msgid "Compressed"
+msgstr "壓縮"
 
 #: pe/ui/multiplayer.cpp
 msgid "Connect using a room address, port and password."
 msgstr "使用房間位址、連接埠和密碼連線。"
 
-#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp
 msgid "Connected"
 msgstr "已連線"
 
@@ -330,7 +295,7 @@ msgstr "主機模式"
 msgid "CONTINUE PLAYING"
 msgstr "繼續遊玩"
 
-#: pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Controller shortcuts and supported features."
 msgstr "控制器快速鍵與支援的功能。"
 
@@ -342,12 +307,8 @@ msgstr "控制器類型"
 msgid "CONTROLLERS"
 msgstr "控制器"
 
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Controls"
-msgstr "操作"
-
-#: pe/ui/settings.cpp
-msgid "CONTROLS"
 msgstr "操作"
 
 #: pe/ui/remote.cpp
@@ -369,10 +330,6 @@ msgstr "無法刪除遊戲。"
 #: eden_services.cpp
 msgid "Could not delete {0}."
 msgstr "無法刪除 {0}。"
-
-#: pe/ui/library.cpp
-msgid "Could not save console mode. Please try again."
-msgstr "無法儲存主機模式。請再試一次。"
 
 #: pe/ui/launcher.cpp
 msgid "Could not save settings. Please try again."
@@ -448,10 +405,6 @@ msgid "Detailed logging"
 msgstr "詳細記錄"
 
 #: pe/ui/settings.cpp
-msgid "DETAILED LOGS"
-msgstr "詳細記錄"
-
-#: pe/ui/settings.cpp
 msgid "Detailed logs apply to the next game launch."
 msgstr "詳細記錄會在下次啟動遊戲時生效。"
 
@@ -459,21 +412,12 @@ msgstr "詳細記錄會在下次啟動遊戲時生效。"
 msgid "Detailed logs on"
 msgstr "詳細記錄已開啟"
 
-#. Button hint: show the game's details.
-#: pe/ui/home.cpp
-msgid "Details"
-msgstr "詳細資料"
-
 #: pe/ui/settings.cpp
 msgid "Diagnostics"
 msgstr "診斷"
 
-#: pe/ui/settings.cpp
-msgid "DIAGNOSTICS"
-msgstr "診斷"
-
 #. Console mode: the console as if connected to a TV. Keep it short (about 9 letters).
-#: pe/ui/library.cpp
+#: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Docked"
 msgstr "TV模式"
 
@@ -526,10 +470,6 @@ msgstr "正在下載 {0}"
 msgid "Downloads"
 msgstr "下載"
 
-#: pe/ui/settings.cpp
-msgid "DOWNLOADS"
-msgstr "下載"
-
 #: pe/ui/remote.cpp
 msgid "Downloads need an FTP server running on the console, on port {0}."
 msgstr "下載需要主機上執行 FTP 伺服器，連接埠為 {0}。"
@@ -562,23 +502,14 @@ msgstr "每個玩家檔案以各自的使用者身分將存檔資料保存在伺
 msgid "Each profile's save data on a server of its own, synced before and after a game."
 msgstr "每個玩家檔案的存檔資料保存在各自的伺服器上，遊戲前後同步。"
 
-#: pe/ui/home.cpp
-msgid "Eden emulator for PlayStation 5"
-msgstr "適用於 PlayStation 5 的 Eden 模擬器"
-
 #: pe/ui/settings.cpp
 msgid "Eden's debug messages in the logs of a game."
 msgstr "遊戲記錄中包含 Eden 的除錯訊息。"
 
 #. A button hint: opens the keyboard to type a number. One short word, and not the word used for Change.
-#: pe/ui/game_options.cpp
+#: pe/ui/library.cpp
 msgid "Edit"
 msgstr "編輯"
-
-#. Label of the shortcut that ends the running game.
-#: pe/ui/settings.cpp
-msgid "END GAME"
-msgstr "結束遊戲"
 
 #: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
@@ -624,20 +555,12 @@ msgstr "已匯出至 {0}。"
 msgid "Faster CPU emulation"
 msgstr "更快的 CPU 模擬"
 
-#: pe/ui/settings.cpp
-msgid "FASTER CPU EMULATION"
-msgstr "更快的 CPU 模擬"
-
 #. A switch: memory transfers to the emulated graphics processor are less exact and faster. DMA is a name (unchanged).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Faster DMA"
 msgstr "更快的 DMA"
 
-#: pe/ui/settings.cpp
-msgid "FASTER DMA"
-msgstr "更快的 DMA"
-
-#: pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Faster games, at some cost in accuracy."
 msgstr "以少許精確度換取更快的遊戲速度。"
 
@@ -645,14 +568,6 @@ msgstr "以少許精確度換取更快的遊戲速度。"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Faster GPU emulation"
 msgstr "更快的 GPU 模擬"
-
-#: pe/ui/settings.cpp
-msgid "FASTER GPU EMULATION"
-msgstr "更快的 GPU 模擬"
-
-#: pe/ui/library.cpp
-msgid "FILE"
-msgstr "檔案"
 
 #. What a mod is made of: files that replace the game's own.
 #: eden_services.cpp, host/fake_services.cpp
@@ -692,17 +607,8 @@ msgstr "依照設定"
 msgid "For every controller. A game can have its own."
 msgstr "適用於所有控制器。每個遊戲也可有自己的配置。"
 
-#: pe/ui/library.cpp
-msgid "FORMAT"
-msgstr "格式"
-
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
-msgstr "FPS 顯示"
-
-#. Label: the frames-per-second counter drawn over a game.
-#: pe/ui/settings.cpp
-msgid "FPS OVERLAY"
 msgstr "FPS 顯示"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -713,7 +619,7 @@ msgstr "補幀倍率"
 msgid "Frame gen target"
 msgstr "補幀目標幀率"
 
-#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Frame generation"
 msgstr "幀生成"
 
@@ -733,16 +639,17 @@ msgstr "法文（加拿大）"
 msgid "From {0}"
 msgstr "來自 {0}"
 
-#: pe/ui/settings.cpp
-msgid "FTP SERVER"
-msgstr "FTP 伺服器"
-
 #. The app can read every folder of the console.
 #: pe/ui/browse.cpp
 msgid "Full filesystem"
 msgstr "完整檔案系統"
 
-#: pe/ui/settings.cpp
+#. A choice of 'ASTC textures': the textures are kept uncompressed (more memory). Keep it short.
+#: settings_store.h
+msgid "Full quality"
+msgstr "完整畫質"
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "遊戲聲音；PS5 系統選單的音樂不受影響。"
 
@@ -750,10 +657,6 @@ msgstr "遊戲聲音；PS5 系統選單的音樂不受影響。"
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
 msgstr "遊戲無法啟動：{0} 詳細資料：{1}"
-
-#: pe/ui/home.cpp
-msgid "Game details"
-msgstr "遊戲詳細資料"
 
 #: pe/ui/library.cpp
 msgid "GAME DETAILS"
@@ -763,20 +666,12 @@ msgstr "遊戲詳細資料"
 msgid "Game files"
 msgstr "遊戲檔案"
 
-#: pe/ui/settings.cpp
-msgid "GAME FILES"
-msgstr "遊戲檔案"
-
-#: pe/ui/library.cpp
+#: pe/ui/home.cpp, pe/ui/library.cpp
 msgid "Game settings"
 msgstr "遊戲設定"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Game volume"
-msgstr "遊戲音量"
-
-#: pe/ui/settings.cpp
-msgid "GAME VOLUME"
 msgstr "遊戲音量"
 
 #: pe/ui/settings.cpp
@@ -820,20 +715,21 @@ msgid "Graphics backend initialization failed. Try another backend in Settings; 
 msgstr "圖形後端初始化失敗。請在設定中嘗試其他後端；驅動程式詳情請見 stderr.log 與 eden_log.txt。"
 
 #. Console mode: the console as if held in the hands. Keep it short (about 9 letters).
-#: pe/ui/game_options.cpp, pe/ui/library.cpp
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Handheld"
 msgstr "手提模式"
-
-#: pe/ui/settings.cpp
-msgid "HIGH CONTRAST"
-msgstr "高對比"
 
 #. A switch: solid dark panels, brighter text.
 #: pe/ui/settings.cpp
 msgid "High contrast"
 msgstr "高對比"
 
-#: pe/ui/settings.cpp
+#. The menu's first section, its opening screen (not a house, and not the PS5's own home screen).
+#: pe/ui/shell.cpp
+msgid "Home"
+msgstr "主頁"
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "遊戲的繪製方式，以及如何縮放至電視。"
 
@@ -855,7 +751,7 @@ msgid "Imported. The save it replaced was backed up."
 msgstr "已匯入。被取代的存檔已備份。"
 
 #. Tag on the language or folder that is in use now.
-#: pe/ui/browse.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp
 msgid "IN USE"
 msgstr "使用中"
 
@@ -899,10 +795,6 @@ msgstr "啟動遊戲前先加入房間，然後在遊戲中選擇本機無線通
 msgid "Join a room successfully or leave it before starting a game."
 msgstr "開始遊戲前，請先加入房間或離開房間。"
 
-#: pe/ui/settings.cpp
-msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
-msgstr "加入 Eden 房間，然後在支援的遊戲中選擇本機無線通訊。所有人都需要相容的遊戲版本。"
-
 #: pe/ui/multiplayer.cpp
 msgid "Join room"
 msgstr "加入房間"
@@ -941,21 +833,13 @@ msgstr "韓國"
 msgid "Korean"
 msgstr "韓文"
 
-#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Language"
-msgstr "語言"
-
-#: pe/ui/library.cpp, pe/ui/settings.cpp
-msgid "LANGUAGE"
 msgstr "語言"
 
 #: pe/ui/browse.cpp
 msgid "LANGUAGES"
 msgstr "語言"
-
-#: pe/ui/settings.cpp
-msgid "LARGER TEXT"
-msgstr "放大文字"
 
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
@@ -966,10 +850,6 @@ msgstr "放大文字"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "上次開啟的遊戲"
-
-#: pe/ui/home.cpp
-msgid "Launch game"
-msgstr "啟動遊戲"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1008,15 +888,11 @@ msgstr "浮點運算精確度較低：更快，但少數遊戲執行異常。"
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "向 GPU 傳輸記憶體的精確度較低：更快，但少數遊戲畫面出錯。"
 
-#: pe/ui/home.cpp
+#: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "遊戲庫"
 
-#: pe/ui/library.cpp
-msgid "LIBRARY"
-msgstr "遊戲庫"
-
-#: pe/ui/pairing.cpp, pe/ui/settings.cpp
+#: pe/ui/pairing.cpp
 msgid "Linked"
 msgstr "已連結"
 
@@ -1028,11 +904,6 @@ msgstr "正在載入公開房間..."
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
 msgstr "最低 GPU 精確度：在要求高的遊戲中更快，但畫面可能出錯。"
 
-#. Headline of the Settings screen.
-#: pe/ui/settings.cpp
-msgid "Make it yours."
-msgstr "隨心自訂。"
-
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "讓選單更容易看清楚、更容易操作。"
@@ -1040,10 +911,6 @@ msgstr "讓選單更容易看清楚、更容易操作。"
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
 msgstr "選單音效使用 ElevenLabs 製作。"
-
-#: pe/ui/settings.cpp
-msgid "MENU SOUNDS"
-msgstr "選單音效"
 
 #: pe/ui/settings.cpp
 msgid "Menu sounds"
@@ -1063,11 +930,11 @@ msgstr "模組"
 msgid "Mods"
 msgstr "模組"
 
-#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/shell.cpp
 msgid "Multiplayer"
 msgstr "多人遊戲"
 
-#: pe/ui/settings.cpp
+#: pe/ui/multiplayer.cpp
 msgid "MULTIPLAYER"
 msgstr "多人遊戲"
 
@@ -1076,15 +943,11 @@ msgid "Mute"
 msgstr "靜音"
 
 #: pe/ui/settings.cpp
-msgid "MUTE"
-msgstr "靜音"
-
-#: pe/ui/settings.cpp
 msgid "Muted"
 msgstr "已靜音"
 
 #. Button hint: move the highlight.
-#: pe/ui/home.cpp, pe/ui/update.cpp
+#: pe/ui/update.cpp
 msgid "Navigate"
 msgstr "移動"
 
@@ -1106,11 +969,6 @@ msgstr "新增檔案"
 msgid "Next launch: {0}"
 msgstr "下次啟動：{0}"
 
-#. Label: the folder used the next time the app starts.
-#: pe/ui/settings.cpp
-msgid "NEXT START"
-msgstr "下次啟動"
-
 #: pe/ui/multiplayer.cpp
 msgid "Nickname"
 msgstr "暱稱"
@@ -1118,10 +976,6 @@ msgstr "暱稱"
 #: pe/ui/multiplayer.cpp
 msgid "Nickname: {0}"
 msgstr "暱稱：{0}"
-
-#: pe/ui/library.cpp
-msgid "No cover art"
-msgstr "沒有封面"
 
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
@@ -1186,7 +1040,7 @@ msgstr "無"
 msgid "Not connected yet"
 msgstr "尚未連線"
 
-#: pe/ui/pairing.cpp, pe/ui/settings.cpp
+#: pe/ui/pairing.cpp
 msgid "Not linked"
 msgstr "未連結"
 
@@ -1198,10 +1052,6 @@ msgstr "未連結：其存檔資料保留在主機上"
 msgid "Not on the console"
 msgstr "不在主機上"
 
-#: pe/ui/library.cpp
-msgid "Not on the console yet. Download it to play and to change its settings."
-msgstr "尚未在主機上。下載後即可遊玩並變更其設定。"
-
 #: pe/ui/pairing.cpp
 msgid "Not paired"
 msgstr "未配對"
@@ -1209,10 +1059,6 @@ msgstr "未配對"
 #: pe/ui/remote.cpp
 msgid "Not reachable"
 msgstr "無法連線"
-
-#: pe/ui/settings.cpp
-msgid "Not readable"
-msgstr "無法讀取"
 
 #: pe/ui/settings.cpp
 msgid "Not set up"
@@ -1228,7 +1074,7 @@ msgstr "沒有可匯入的內容"
 msgid "Off"
 msgstr "關"
 
-#: pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/multiplayer.cpp
 msgid "Offline"
 msgstr "離線"
 
@@ -1237,17 +1083,13 @@ msgstr "離線"
 msgid "On"
 msgstr "開"
 
-#: pe/ui/settings.cpp
-msgid "ON THIS CONSOLE"
-msgstr "本機"
-
 #. Short tag on a folder row.
 #: pe/ui/browse.cpp
 msgid "OPEN"
 msgstr "開啟"
 
 #. Button hint: open the highlighted folder.
-#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Open"
 msgstr "開啟"
 
@@ -1263,11 +1105,6 @@ msgstr "開啟遊戲庫"
 #: pe/ui/game_options.cpp
 msgid "Options"
 msgstr "OPTIONS"
-
-#. Label: see 'Output resolution'.
-#: pe/ui/settings.cpp
-msgid "OUTPUT RESOLUTION"
-msgstr "輸出解析度"
 
 #. Setting: the size of the picture sent to the TV (1080p, 1440p or 2160p). Not the same as 'Resolution', which scales the game's own picture (1x, 2x...).
 #: pe/ui/settings.cpp
@@ -1317,13 +1154,14 @@ msgid "Patch"
 msgstr "修補檔"
 
 #. A settings category: options that make games run faster, at some cost in accuracy.
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "效能"
 
-#: pe/ui/settings.cpp
-msgid "PERFORMANCE"
-msgstr "效能"
+#. Button and button hint: start the game shown. Keep it to one short word.
+#: pe/ui/home.cpp, pe/ui/library.cpp
+msgid "Play"
+msgstr "開始遊戲"
 
 #: pe/ui/save_sync.cpp
 msgid "Play anyway"
@@ -1349,10 +1187,6 @@ msgstr "遊玩中"
 msgid "Playing"
 msgstr "正在遊玩"
 
-#: pe/ui/settings.cpp
-msgid "PLAYING"
-msgstr "正在遊玩"
-
 #: pe/ui/profiles.cpp
 msgid "Playing as {0}"
 msgstr "以 {0} 遊玩"
@@ -1360,10 +1194,6 @@ msgstr "以 {0} 遊玩"
 #: settings_store.h
 msgid "Polish"
 msgstr "波蘭文"
-
-#: pe/ui/settings.cpp
-msgid "Port {0}"
-msgstr "連接埠 {0}"
 
 #: settings_store.h
 msgid "Portuguese"
@@ -1377,10 +1207,6 @@ msgstr "葡萄牙文（巴西）"
 #: pe/ui/browse.cpp
 msgid "Powered by Eden"
 msgstr "Powered by Eden"
-
-#: pe/ui/settings.cpp
-msgid "PREFERENCES"
-msgstr "偏好設定"
 
 #. Update dialog headline while the download starts.
 #: pe/ui/remote.cpp, pe/ui/update.cpp
@@ -1398,10 +1224,6 @@ msgstr "再按一次將取代此遊戲的存檔。目前的存檔會先備份。
 
 #: pe/ui/multiplayer.cpp
 msgid "Private room"
-msgstr "私人房間"
-
-#: pe/ui/settings.cpp
-msgid "PRIVATE ROOM"
 msgstr "私人房間"
 
 #: pe/ui/game_options.cpp
@@ -1426,10 +1248,6 @@ msgstr "玩家檔案 {0}"
 
 #: pe/ui/profiles.cpp, pe/ui/settings.cpp
 msgid "Profiles"
-msgstr "玩家檔案"
-
-#: pe/ui/settings.cpp
-msgid "PROFILES"
 msgstr "玩家檔案"
 
 #: pe/ui/browse.cpp
@@ -1470,17 +1288,8 @@ msgstr "PS5 控制器初始化失敗"
 msgid "PS5 EDITION"
 msgstr "PS5 版"
 
-#. {0} is the version, for example v1.000.030.
-#: pe/ui/home.cpp
-msgid "PS5 EDITION  /  {0}"
-msgstr "PS5 版  /  {0}"
-
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
-msgstr "公開房間"
-
-#: pe/ui/settings.cpp
-msgid "PUBLIC ROOMS"
 msgstr "公開房間"
 
 #: pe/ui/remote.cpp
@@ -1501,10 +1310,6 @@ msgstr "隨機"
 msgid "Reactive flushing"
 msgstr "反應式刷新"
 
-#: pe/ui/settings.cpp
-msgid "REACTIVE FLUSHING"
-msgstr "反應式刷新"
-
 #: pe/ui/remote.cpp
 msgid "Read the lists again"
 msgstr "重新讀取清單"
@@ -1513,7 +1318,7 @@ msgstr "重新讀取清單"
 msgid "Reading the game lists..."
 msgstr "正在讀取遊戲清單..."
 
-#: pe/ui/remote.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/remote.cpp
 msgid "Reading..."
 msgstr "正在讀取..."
 
@@ -1524,10 +1329,6 @@ msgstr "就緒"
 #: pe/ui/home.cpp
 msgid "RECENTLY PLAYED"
 msgstr "最近遊玩"
-
-#: pe/ui/settings.cpp
-msgid "REDUCE MOTION"
-msgstr "減少動態效果"
 
 #. A switch: no drifting, sliding or zooming on screen.
 #: pe/ui/settings.cpp
@@ -1543,12 +1344,7 @@ msgstr "重新整理"
 msgid "Refresh rate"
 msgstr "更新率"
 
-#. Label: see 'Refresh rate'.
-#: pe/ui/settings.cpp
-msgid "REFRESH RATE"
-msgstr "更新率"
-
-#: pe/ui/browse.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "地區"
 
@@ -1564,20 +1360,12 @@ msgstr "重新命名"
 msgid "Renderer"
 msgstr "繪圖器"
 
-#: pe/ui/settings.cpp
-msgid "RENDERER"
-msgstr "繪圖器"
-
 #: pe/ui/game_options.cpp
 msgid "Reset"
 msgstr "重設"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Resolution"
-msgstr "解析度"
-
-#: pe/ui/settings.cpp
-msgid "RESOLUTION"
 msgstr "解析度"
 
 #: pe/ui/game_options.cpp
@@ -1600,10 +1388,6 @@ msgstr "遊戲檔案的資料夾中缺少 ROM"
 #: pe/ui/multiplayer.cpp
 msgid "Room address"
 msgstr "房間位址"
-
-#: pe/ui/settings.cpp
-msgid "Room address and UDP port"
-msgstr "房間位址和 UDP 連接埠"
 
 #: pe/ui/multiplayer.cpp
 msgid "Room {0} of {1}"
@@ -1661,14 +1445,6 @@ msgstr "已找到存檔資料夾"
 msgid "Save sync"
 msgstr "存檔同步"
 
-#: pe/ui/settings.cpp
-msgid "SAVE SYNC"
-msgstr "存檔同步"
-
-#: pe/ui/settings.cpp
-msgid "SAVE-SYNC.JSON"
-msgstr "SAVE-SYNC.JSON"
-
 #: pe/ui/pairing.cpp
 msgid "save-sync.json cannot be read ({0}). Nothing syncs until it is corrected over FTP."
 msgstr "無法讀取 save-sync.json（{0}）。透過 FTP 修正前不會同步任何內容。"
@@ -1698,6 +1474,11 @@ msgstr "已儲存。不支援 120 Hz 的顯示器會維持 60 Hz。"
 msgid "Saved. Applies when a game starts."
 msgstr "已儲存。啟動遊戲時生效。"
 
+#. Shown after choosing 'Full quality' for 'ASTC textures'. 1x is a resolution scale (unchanged). It has two lines: keep it short.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Saved. Full quality uses four times the graphics memory for these textures and can run out above 1x."
+msgstr "已儲存。完整畫質會讓這些紋理佔用四倍的圖形記憶體，高於 1x 時可能耗盡記憶體。"
+
 #: pe/ui/browse.cpp
 msgid "Saved. Reopen ProsperoEden to use this folder."
 msgstr "已儲存。重新開啟 ProsperoEden 後使用此資料夾。"
@@ -1711,22 +1492,15 @@ msgstr "用手機掃描此碼，或開啟下方的網址。"
 msgid "Scroll"
 msgstr "捲動"
 
+#. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
+#: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Sections"
+msgstr "分區"
+
 #. Button hint: choose the highlighted item (not the Select button).
 #: pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/pairing.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
 msgid "Select"
 msgstr "確定"
-
-#: pe/ui/library.cpp
-msgid "Select a game"
-msgstr "選擇遊戲"
-
-#: pe/ui/library.cpp
-msgid "Select a game to begin"
-msgstr "選擇一款遊戲開始"
-
-#: pe/ui/library.cpp
-msgid "Select a readable game to configure its mode."
-msgstr "請選擇一款可讀取的遊戲來設定其模式。"
 
 #. Heading: the language highlighted in the list.
 #: pe/ui/browse.cpp
@@ -1742,14 +1516,9 @@ msgstr "所選的 ROM 已不存在"
 msgid "Server too old for save sync"
 msgstr "伺服器版本過舊，無法同步存檔"
 
-#: pe/ui/home.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Settings"
 msgstr "設定"
-
-#. Label: whether keys and firmware are in place.
-#: pe/ui/settings.cpp
-msgid "SETUP"
-msgstr "設定狀態"
 
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
@@ -1787,10 +1556,6 @@ msgstr "正在顯示先前的清單。"
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "以擁有此玩家檔案存檔資料的使用者身分登入 {0}。"
 
-#: pe/ui/library.cpp
-msgid "SIZE"
-msgstr "大小"
-
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1802,24 +1567,12 @@ msgid "Skip CPU invalidation"
 msgstr "略過 CPU 失效處理"
 
 #: pe/ui/settings.cpp
-msgid "SKIP CPU INVALIDATION"
-msgstr "略過 CPU 失效處理"
-
-#: pe/ui/settings.cpp
 msgid "Skips some checks when a game changes memory the GPU uses: faster, and textures can be stale."
 msgstr "遊戲修改 GPU 使用的記憶體時略過部分檢查：更快，但紋理可能不是最新的。"
 
 #: pe/ui/settings.cpp
 msgid "Solid panels, brighter text and an outlined highlight."
 msgstr "不透明的面板、更亮的文字與帶外框的反白。"
-
-#: pe/ui/library.cpp
-msgid "SOURCE"
-msgstr "來源"
-
-#: pe/ui/library.cpp, pe/ui/settings.cpp
-msgid "SOURCES"
-msgstr "來源"
 
 #: settings_store.h
 msgid "Spanish"
@@ -1852,10 +1605,6 @@ msgstr "匯入存檔前，請先啟動任一款遊戲一次。"
 msgid "STARTING"
 msgstr "啟動中"
 
-#: pe/ui/library.cpp
-msgid "STATE"
-msgstr "狀態"
-
 #: pe/ui/settings.cpp
 msgid "Stops the background drifting and the screens sliding, here and on the loading screen."
 msgstr "停止背景飄移與畫面滑動，載入畫面也適用。"
@@ -1863,10 +1612,6 @@ msgstr "停止背景飄移與畫面滑動，載入畫面也適用。"
 #: pe/ui/browse.cpp
 msgid "Supply your own files"
 msgstr "請自備檔案"
-
-#: pe/ui/settings.cpp
-msgid "SYNC"
-msgstr "同步"
 
 #: pe/ui/save_sync.cpp
 msgid "Sync the save data once more."
@@ -1877,7 +1622,7 @@ msgid "Syncing save data"
 msgstr "正在同步存檔資料"
 
 #. A category of a game's settings: how the emulated console itself behaves.
-#: pe/ui/game_options.cpp, pe/ui/library.cpp
+#: pe/ui/library.cpp
 msgid "System"
 msgstr "系統"
 
@@ -1947,9 +1692,14 @@ msgstr "下載完成後遊戲即會啟動。"
 msgid "The keyboard could not be opened."
 msgstr "無法開啟鍵盤。"
 
-#: pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "遊戲支援時使用的語言。"
+
+#. Under the title Theme: what a theme changes.
+#: pe/ui/settings.cpp
+msgid "The look of this menu."
+msgstr "此選單的外觀。"
 
 #: pe/ui/pairing.cpp
 msgid "The profile or the server is no longer there."
@@ -1988,6 +1738,11 @@ msgstr "來源已沒有此遊戲。"
 msgid "The update could not finish"
 msgstr "無法完成更新"
 
+#. A tile of Settings and its dialog's title: the look of this menu (its colours and artwork).
+#: pe/ui/settings.cpp
+msgid "Theme"
+msgstr "主題"
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "此主機和伺服器上都有對方沒有的存檔資料。要保留哪一個？另一個會保留為備份。"
@@ -2023,7 +1778,7 @@ msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}
 msgstr "若要匯入，請將 Ryujinx 資料夾複製到 ryujinx/，或將存檔複製到 save-import/{0}/（與 roms/ 同層）。"
 
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
-#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp
 msgid "Touchpad"
 msgstr "觸控板"
 
@@ -2031,6 +1786,11 @@ msgstr "觸控板"
 #: pe/ui/game_options.cpp
 msgid "Triangle"
 msgstr "三角鍵"
+
+#. One line about the theme named Canopy: its artwork is a tropical sunset, its panels are dark green glass, its accent colour is lime green.
+#: pe/ui/theme.cpp
+msgid "Tropical dusk, dark green glass and lime."
+msgstr "熱帶暮色、深綠玻璃與青檸色。"
 
 #: pe/ui/pairing.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/update.cpp
 msgid "Try again"
@@ -2102,10 +1862,6 @@ msgstr "更新、DLC"
 msgid "Upscaling filter"
 msgstr "縮放濾鏡"
 
-#: pe/ui/settings.cpp
-msgid "UPSCALING FILTER"
-msgstr "縮放濾鏡"
-
 #: eden_services.cpp
 msgid "USA"
 msgstr "美國"
@@ -2138,10 +1894,6 @@ msgid "Vibration"
 msgstr "震動"
 
 #: pe/ui/settings.cpp
-msgid "VIBRATION"
-msgstr "震動"
-
-#: pe/ui/settings.cpp
 msgid "Vibration off"
 msgstr "震動已關閉"
 
@@ -2153,12 +1905,8 @@ msgstr "震動已開啟"
 msgid "Vibration, button mapping and the shortcuts during a game."
 msgstr "震動、按鍵配置與遊戲中的快捷操作。"
 
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Video"
-msgstr "視訊"
-
-#: pe/ui/settings.cpp
-msgid "VIDEO"
 msgstr "視訊"
 
 #: pe/ui/home.cpp
@@ -2220,10 +1968,6 @@ msgstr "下次會再次詢問。"
 msgid "You are told again at the next sync."
 msgstr "下次同步時會再次提示。"
 
-#: pe/ui/library.cpp
-msgid "Your games"
-msgstr "你的遊戲"
-
 #. Update dialog: installing the new app version keeps the player's files.
 #: pe/ui/update.cpp
 msgid "Your games, saves and settings are kept."
@@ -2263,7 +2007,7 @@ msgid "{0} game lists could not be read."
 msgstr "有 {0} 個遊戲清單無法讀取。"
 
 #. Any number of games other than one (also 0). See '{0} game'.
-#: pe/ui/browse.cpp, pe/ui/remote.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/library.cpp, pe/ui/remote.cpp
 msgid "{0} games"
 msgstr "{0} 款遊戲"
 
@@ -2313,7 +2057,7 @@ msgid "{0} of {1} mods on"
 msgstr "已開啟 {0}/{1} 個模組"
 
 #. How many of a game's mods are switched on: 2 of 3 on.
-#: pe/ui/library.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "{0} of {1} on"
 msgstr "已開啟 {0}/{1}"
 
@@ -2338,7 +2082,7 @@ msgid "{0} · Profile {1}"
 msgstr "{0} · 玩家檔案 {1}"
 
 #. A percentage (a volume): write it as the language does, for example with a space before the sign.
-#: pe/ui/game_options.cpp, pe/ui/remote.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/remote.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
 msgid "{0}%"
 msgstr "{0}%"
 

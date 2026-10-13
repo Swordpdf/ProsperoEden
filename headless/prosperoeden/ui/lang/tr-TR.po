@@ -43,7 +43,8 @@ msgstr "Bir firmware NCA dosyası okunamıyor. Firmware dökümünü yeniden yü
 msgid "A pairing is running already."
 msgstr "Zaten bir eşleştirme sürüyor."
 
-#: pe/ui/home.cpp
+#. The menu's last section: about this app (its credits, where its files go). One short word.
+#: pe/ui/shell.cpp
 msgid "About"
 msgstr "Hakkında"
 
@@ -71,23 +72,9 @@ msgstr "ERİŞİM"
 msgid "Accessibility"
 msgstr "Erişilebilirlik"
 
-#: pe/ui/settings.cpp
-msgid "ACCESSIBILITY"
-msgstr "ERİŞİLEBİLİRLİK"
-
 #: pe/ui/profiles.cpp
 msgid "Add"
 msgstr "Ekle"
-
-#. Label: a game's updates, DLC and mods.
-#: pe/ui/library.cpp
-msgid "ADD-ONS"
-msgstr "EKLENTİLER"
-
-#. {0}: updates, DLC and mods of the game; {1}: the language it will use.
-#: pe/ui/home.cpp
-msgid "Add-ons: {0}  /  Language: {1}"
-msgstr "Eklentiler: {0}  /  Dil: {1}"
 
 #: pe/ui/remote.cpp
 msgid "Added to the downloads. Settings, Downloads shows the queue."
@@ -96,10 +83,6 @@ msgstr "İndirmelere eklendi. Ayarlar, İndirmeler sırayı gösterir."
 #: pe/ui/profiles.cpp
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "Eklendi. Çarpı bu profille oynar; sol ve sağ adını değiştirir."
-
-#: pe/ui/settings.cpp
-msgid "Adjust the essentials without leaving your library behind."
-msgstr "Kütüphanenizden ayrılmadan temel ayarları yapın."
 
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
@@ -122,22 +105,19 @@ msgstr "Her zamanki gibi"
 msgid "Asking the server for a code..."
 msgstr "Sunucudan kod isteniyor..."
 
+#. Setting: how a game's textures in the ASTC format are held in graphics memory. ASTC is a format's name (unchanged).
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "ASTC textures"
+msgstr "ASTC dokuları"
+
 #. A switch. A shader is a small graphics program; keep the word the language's players use for it.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Asynchronous shaders"
 msgstr "Eşzamansız gölgelendiriciler"
 
-#: pe/ui/settings.cpp
-msgid "ASYNCHRONOUS SHADERS"
-msgstr "EŞZAMANSIZ GÖLGELENDİRİCİLER"
-
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Audio"
 msgstr "Ses"
-
-#: pe/ui/settings.cpp
-msgid "AUDIO"
-msgstr "SES"
 
 #: eden_services.cpp
 msgid "Australia"
@@ -175,18 +155,6 @@ msgstr "Bilineer"
 msgid "Browse"
 msgstr "Göz at"
 
-#: pe/ui/library.cpp
-msgid "Browse games"
-msgstr "Oyunlara göz at"
-
-#: pe/ui/settings.cpp
-msgid "Browse settings"
-msgstr "Ayarlara göz at"
-
-#: pe/ui/settings.cpp
-msgid "Browse the public directory"
-msgstr "Herkese açık listeye göz at"
-
 #: pe/ui/multiplayer.cpp
 msgid "Browse the public directory and choose a room."
 msgstr "Herkese açık listeye göz atın ve bir oda seçin."
@@ -195,10 +163,6 @@ msgstr "Herkese açık listeye göz atın ve bir oda seçin."
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
 msgstr "Tuş atama"
-
-#: pe/ui/settings.cpp
-msgid "BUTTON MAPPING"
-msgstr "TUŞ ATAMA"
 
 #: pe/ui/pairing.cpp, pe/ui/update.cpp
 msgid "Cancel"
@@ -295,18 +259,19 @@ msgid "Compile ahead"
 msgstr "Önceden derle"
 
 #: pe/ui/settings.cpp
-msgid "COMPILE AHEAD"
-msgstr "ÖNCEDEN DERLE"
-
-#: pe/ui/settings.cpp
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "Oyunun daha önce kullandığı kodu başlarken derler, böylece yeni alanlar daha az takılır."
+
+#. A choice of 'ASTC textures': the textures are kept compressed (less memory). Keep it short.
+#: settings_store.h
+msgid "Compressed"
+msgstr "Sıkıştırılmış"
 
 #: pe/ui/multiplayer.cpp
 msgid "Connect using a room address, port and password."
 msgstr "Oda adresi, bağlantı noktası ve parola ile bağlanın."
 
-#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp
 msgid "Connected"
 msgstr "Bağlandı"
 
@@ -330,7 +295,7 @@ msgstr "Konsol modu"
 msgid "CONTINUE PLAYING"
 msgstr "OYNAMAYA DEVAM ET"
 
-#: pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Controller shortcuts and supported features."
 msgstr "Kontrol cihazı kısayolları ve desteklenen özellikler."
 
@@ -342,13 +307,9 @@ msgstr "Kontrolcü türü"
 msgid "CONTROLLERS"
 msgstr "KONTROL CİHAZLARI"
 
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Controls"
 msgstr "Kontroller"
-
-#: pe/ui/settings.cpp
-msgid "CONTROLS"
-msgstr "KONTROLLER"
 
 #: pe/ui/remote.cpp
 msgid "Could not cancel the download."
@@ -369,10 +330,6 @@ msgstr "Oyun silinemedi."
 #: eden_services.cpp
 msgid "Could not delete {0}."
 msgstr "{0} silinemedi."
-
-#: pe/ui/library.cpp
-msgid "Could not save console mode. Please try again."
-msgstr "Konsol modu kaydedilemedi. Lütfen tekrar deneyin."
 
 #: pe/ui/launcher.cpp
 msgid "Could not save settings. Please try again."
@@ -448,10 +405,6 @@ msgid "Detailed logging"
 msgstr "Ayrıntılı günlük kaydı"
 
 #: pe/ui/settings.cpp
-msgid "DETAILED LOGS"
-msgstr "AYRINTILI GÜNLÜKLER"
-
-#: pe/ui/settings.cpp
 msgid "Detailed logs apply to the next game launch."
 msgstr "Ayrıntılı günlükler, başlatılan bir sonraki oyunda geçerli olur."
 
@@ -459,21 +412,12 @@ msgstr "Ayrıntılı günlükler, başlatılan bir sonraki oyunda geçerli olur.
 msgid "Detailed logs on"
 msgstr "Ayrıntılı günlükler açık"
 
-#. Button hint: show the game's details.
-#: pe/ui/home.cpp
-msgid "Details"
-msgstr "Ayrıntılar"
-
 #: pe/ui/settings.cpp
 msgid "Diagnostics"
 msgstr "Tanılama"
 
-#: pe/ui/settings.cpp
-msgid "DIAGNOSTICS"
-msgstr "TANILAMA"
-
 #. Console mode: the console as if connected to a TV. Keep it short (about 9 letters).
-#: pe/ui/library.cpp
+#: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Docked"
 msgstr "TV"
 
@@ -526,10 +470,6 @@ msgstr "İndiriliyor: {0}"
 msgid "Downloads"
 msgstr "İndirmeler"
 
-#: pe/ui/settings.cpp
-msgid "DOWNLOADS"
-msgstr "İNDİRMELER"
-
 #: pe/ui/remote.cpp
 msgid "Downloads need an FTP server running on the console, on port {0}."
 msgstr "İndirmeler için konsolda {0} numaralı bağlantı noktasında çalışan bir FTP sunucusu gerekir."
@@ -562,23 +502,14 @@ msgstr "Her profil, kaydedilen verilerini bir sunucuda, oradaki kendi kullanıc�
 msgid "Each profile's save data on a server of its own, synced before and after a game."
 msgstr "Her profilin kaydedilen verileri kendi sunucusunda; oyundan önce ve sonra eşitlenir."
 
-#: pe/ui/home.cpp
-msgid "Eden emulator for PlayStation 5"
-msgstr "PlayStation 5 için Eden emülatörü"
-
 #: pe/ui/settings.cpp
 msgid "Eden's debug messages in the logs of a game."
 msgstr "Eden'in hata ayıklama iletileri bir oyunun günlüklerinde."
 
 #. A button hint: opens the keyboard to type a number. One short word, and not the word used for Change.
-#: pe/ui/game_options.cpp
+#: pe/ui/library.cpp
 msgid "Edit"
 msgstr "Düzenle"
-
-#. Label of the shortcut that ends the running game.
-#: pe/ui/settings.cpp
-msgid "END GAME"
-msgstr "OYUNU KAPAT"
 
 #: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
@@ -624,20 +555,12 @@ msgstr "{0} konumuna dışa aktarıldı."
 msgid "Faster CPU emulation"
 msgstr "Daha hızlı CPU emülasyonu"
 
-#: pe/ui/settings.cpp
-msgid "FASTER CPU EMULATION"
-msgstr "DAHA HIZLI CPU EMÜLASYONU"
-
 #. A switch: memory transfers to the emulated graphics processor are less exact and faster. DMA is a name (unchanged).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Faster DMA"
 msgstr "Daha hızlı DMA"
 
-#: pe/ui/settings.cpp
-msgid "FASTER DMA"
-msgstr "DAHA HIZLI DMA"
-
-#: pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Faster games, at some cost in accuracy."
 msgstr "Doğruluktan biraz ödün vererek daha hızlı oyunlar."
 
@@ -645,14 +568,6 @@ msgstr "Doğruluktan biraz ödün vererek daha hızlı oyunlar."
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Faster GPU emulation"
 msgstr "Daha hızlı GPU emülasyonu"
-
-#: pe/ui/settings.cpp
-msgid "FASTER GPU EMULATION"
-msgstr "DAHA HIZLI GPU EMÜLASYONU"
-
-#: pe/ui/library.cpp
-msgid "FILE"
-msgstr "DOSYA"
 
 #. What a mod is made of: files that replace the game's own.
 #: eden_services.cpp, host/fake_services.cpp
@@ -692,18 +607,9 @@ msgstr "Ayarlara uyar"
 msgid "For every controller. A game can have its own."
 msgstr "Tüm kontrolcüler için. Bir oyunun kendine ait olabilir."
 
-#: pe/ui/library.cpp
-msgid "FORMAT"
-msgstr "BİÇİM"
-
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
 msgstr "FPS sayacı"
-
-#. Label: the frames-per-second counter drawn over a game.
-#: pe/ui/settings.cpp
-msgid "FPS OVERLAY"
-msgstr "FPS SAYACI"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Frame gen multiplier"
@@ -713,7 +619,7 @@ msgstr "Kare üretimi çarpanı"
 msgid "Frame gen target"
 msgstr "Kare üretimi hedefi"
 
-#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Frame generation"
 msgstr "Kare oluşturma"
 
@@ -733,16 +639,17 @@ msgstr "Fransızca (Kanada)"
 msgid "From {0}"
 msgstr "Kaynak: {0}"
 
-#: pe/ui/settings.cpp
-msgid "FTP SERVER"
-msgstr "FTP SUNUCUSU"
-
 #. The app can read every folder of the console.
 #: pe/ui/browse.cpp
 msgid "Full filesystem"
 msgstr "Tüm dosya sistemi"
 
-#: pe/ui/settings.cpp
+#. A choice of 'ASTC textures': the textures are kept uncompressed (more memory). Keep it short.
+#: settings_store.h
+msgid "Full quality"
+msgstr "Tam kalite"
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "Oyun sesi; PS5 sistem menüsü müziği değişmez."
 
@@ -750,10 +657,6 @@ msgstr "Oyun sesi; PS5 sistem menüsü müziği değişmez."
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
 msgstr "Oyun başlatılamadı: {0} Ayrıntılar: {1}"
-
-#: pe/ui/home.cpp
-msgid "Game details"
-msgstr "Oyun ayrıntıları"
 
 #: pe/ui/library.cpp
 msgid "GAME DETAILS"
@@ -763,21 +666,13 @@ msgstr "OYUN AYRINTILARI"
 msgid "Game files"
 msgstr "Oyun dosyaları"
 
-#: pe/ui/settings.cpp
-msgid "GAME FILES"
-msgstr "OYUN DOSYALARI"
-
-#: pe/ui/library.cpp
+#: pe/ui/home.cpp, pe/ui/library.cpp
 msgid "Game settings"
 msgstr "Oyun ayarları"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Game volume"
 msgstr "Oyun ses düzeyi"
-
-#: pe/ui/settings.cpp
-msgid "GAME VOLUME"
-msgstr "OYUN SES DÜZEYİ"
 
 #: pe/ui/settings.cpp
 msgid "Game volume, and the sounds of this menu."
@@ -820,20 +715,21 @@ msgid "Graphics backend initialization failed. Try another backend in Settings; 
 msgstr "Grafik işleyici hazırlanamadı. Ayarlar'da başka bir işleyici deneyin; sürücü ayrıntıları için stderr.log ve eden_log.txt dosyalarına bakın."
 
 #. Console mode: the console as if held in the hands. Keep it short (about 9 letters).
-#: pe/ui/game_options.cpp, pe/ui/library.cpp
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Handheld"
 msgstr "Taşınabilir"
-
-#: pe/ui/settings.cpp
-msgid "HIGH CONTRAST"
-msgstr "YÜKSEK KONTRAST"
 
 #. A switch: solid dark panels, brighter text.
 #: pe/ui/settings.cpp
 msgid "High contrast"
 msgstr "Yüksek kontrast"
 
-#: pe/ui/settings.cpp
+#. The menu's first section, its opening screen (not a house, and not the PS5's own home screen).
+#: pe/ui/shell.cpp
+msgid "Home"
+msgstr "Ana sayfa"
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "Oyunların nasıl çizildiği ve TV'nize nasıl ölçeklendiği."
 
@@ -855,7 +751,7 @@ msgid "Imported. The save it replaced was backed up."
 msgstr "İçe aktarıldı. Yerini aldığı kayıt yedeklendi."
 
 #. Tag on the language or folder that is in use now.
-#: pe/ui/browse.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp
 msgid "IN USE"
 msgstr "KULLANIMDA"
 
@@ -899,10 +795,6 @@ msgstr "Oyun başlatmadan önce bir odaya katılın, ardından oyunda yerel kabl
 msgid "Join a room successfully or leave it before starting a game."
 msgstr "Oyun başlatmadan önce bir odaya katılın veya odadan ayrılın."
 
-#: pe/ui/settings.cpp
-msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
-msgstr "Bir Eden odasına katılın, ardından desteklenen bir oyunda yerel kablosuz oyunu seçin. Herkesin uyumlu bir oyun sürümüne ihtiyacı var."
-
 #: pe/ui/multiplayer.cpp
 msgid "Join room"
 msgstr "Odaya katıl"
@@ -941,21 +833,13 @@ msgstr "Kore"
 msgid "Korean"
 msgstr "Korece"
 
-#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Language"
 msgstr "Dil"
-
-#: pe/ui/library.cpp, pe/ui/settings.cpp
-msgid "LANGUAGE"
-msgstr "DİL"
 
 #: pe/ui/browse.cpp
 msgid "LANGUAGES"
 msgstr "DİLLER"
-
-#: pe/ui/settings.cpp
-msgid "LARGER TEXT"
-msgstr "BÜYÜK METİN"
 
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
@@ -966,10 +850,6 @@ msgstr "Büyük metin"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "Son açılan oyun"
-
-#: pe/ui/home.cpp
-msgid "Launch game"
-msgstr "Oyunu başlat"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1008,15 +888,11 @@ msgstr "Daha az hassas kayan nokta hesabı: daha hızlıdır, ancak birkaç oyun
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "GPU'ya daha az hassas bellek aktarımı: daha hızlıdır, ancak birkaç oyunda grafikler hatalı görünür."
 
-#: pe/ui/home.cpp
+#: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "Kütüphane"
 
-#: pe/ui/library.cpp
-msgid "LIBRARY"
-msgstr "KÜTÜPHANE"
-
-#: pe/ui/pairing.cpp, pe/ui/settings.cpp
+#: pe/ui/pairing.cpp
 msgid "Linked"
 msgstr "Bağlı"
 
@@ -1028,11 +904,6 @@ msgstr "Herkese açık odalar yükleniyor..."
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
 msgstr "En düşük GPU doğruluğu: zorlu oyunlarda daha hızlıdır, ancak grafikler hatalı olabilir."
 
-#. Headline of the Settings screen.
-#: pe/ui/settings.cpp
-msgid "Make it yours."
-msgstr "Kendinize göre ayarlayın."
-
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "Menüyü görmeyi ve takip etmeyi kolaylaştırın."
@@ -1040,10 +911,6 @@ msgstr "Menüyü görmeyi ve takip etmeyi kolaylaştırın."
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
 msgstr "Menü ses efektleri ElevenLabs ile oluşturuldu."
-
-#: pe/ui/settings.cpp
-msgid "MENU SOUNDS"
-msgstr "MENÜ SESLERİ"
 
 #: pe/ui/settings.cpp
 msgid "Menu sounds"
@@ -1063,11 +930,11 @@ msgstr "MODLAR"
 msgid "Mods"
 msgstr "Modlar"
 
-#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/shell.cpp
 msgid "Multiplayer"
 msgstr "Çok oyunculu"
 
-#: pe/ui/settings.cpp
+#: pe/ui/multiplayer.cpp
 msgid "MULTIPLAYER"
 msgstr "ÇOK OYUNCULU"
 
@@ -1076,15 +943,11 @@ msgid "Mute"
 msgstr "Sessize al"
 
 #: pe/ui/settings.cpp
-msgid "MUTE"
-msgstr "SESSİZE AL"
-
-#: pe/ui/settings.cpp
 msgid "Muted"
 msgstr "Sessize alındı"
 
 #. Button hint: move the highlight.
-#: pe/ui/home.cpp, pe/ui/update.cpp
+#: pe/ui/update.cpp
 msgid "Navigate"
 msgstr "Gezin"
 
@@ -1106,11 +969,6 @@ msgstr "Yeni profil"
 msgid "Next launch: {0}"
 msgstr "Sonraki açılış: {0}"
 
-#. Label: the folder used the next time the app starts.
-#: pe/ui/settings.cpp
-msgid "NEXT START"
-msgstr "SONRAKİ AÇILIŞ"
-
 #: pe/ui/multiplayer.cpp
 msgid "Nickname"
 msgstr "Takma ad"
@@ -1118,10 +976,6 @@ msgstr "Takma ad"
 #: pe/ui/multiplayer.cpp
 msgid "Nickname: {0}"
 msgstr "Takma ad: {0}"
-
-#: pe/ui/library.cpp
-msgid "No cover art"
-msgstr "Kapak görseli yok"
 
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
@@ -1186,7 +1040,7 @@ msgstr "Yok"
 msgid "Not connected yet"
 msgstr "Henüz bağlanılmadı"
 
-#: pe/ui/pairing.cpp, pe/ui/settings.cpp
+#: pe/ui/pairing.cpp
 msgid "Not linked"
 msgstr "Bağlı değil"
 
@@ -1198,10 +1052,6 @@ msgstr "Bağlı değil: kaydedilen verileri konsolda kalır"
 msgid "Not on the console"
 msgstr "Konsolda değil"
 
-#: pe/ui/library.cpp
-msgid "Not on the console yet. Download it to play and to change its settings."
-msgstr "Henüz konsolda değil. Oynamak ve ayarlarını değiştirmek için indirin."
-
 #: pe/ui/pairing.cpp
 msgid "Not paired"
 msgstr "Eşleştirilmedi"
@@ -1209,10 +1059,6 @@ msgstr "Eşleştirilmedi"
 #: pe/ui/remote.cpp
 msgid "Not reachable"
 msgstr "Ulaşılamıyor"
-
-#: pe/ui/settings.cpp
-msgid "Not readable"
-msgstr "Okunamıyor"
 
 #: pe/ui/settings.cpp
 msgid "Not set up"
@@ -1228,7 +1074,7 @@ msgstr "İçe aktarılacak kayıt yok"
 msgid "Off"
 msgstr "Kapalı"
 
-#: pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/multiplayer.cpp
 msgid "Offline"
 msgstr "Çevrimdışı"
 
@@ -1237,17 +1083,13 @@ msgstr "Çevrimdışı"
 msgid "On"
 msgstr "Açık"
 
-#: pe/ui/settings.cpp
-msgid "ON THIS CONSOLE"
-msgstr "BU KONSOLDA"
-
 #. Short tag on a folder row.
 #: pe/ui/browse.cpp
 msgid "OPEN"
 msgstr "AÇ"
 
 #. Button hint: open the highlighted folder.
-#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Open"
 msgstr "Aç"
 
@@ -1263,11 +1105,6 @@ msgstr "Kütüphaneyi aç"
 #: pe/ui/game_options.cpp
 msgid "Options"
 msgstr "Options"
-
-#. Label: see 'Output resolution'.
-#: pe/ui/settings.cpp
-msgid "OUTPUT RESOLUTION"
-msgstr "ÇIKIŞ ÇÖZÜNÜRLÜĞÜ"
 
 #. Setting: the size of the picture sent to the TV (1080p, 1440p or 2160p). Not the same as 'Resolution', which scales the game's own picture (1x, 2x...).
 #: pe/ui/settings.cpp
@@ -1317,13 +1154,14 @@ msgid "Patch"
 msgstr "Yama"
 
 #. A settings category: options that make games run faster, at some cost in accuracy.
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "Performans"
 
-#: pe/ui/settings.cpp
-msgid "PERFORMANCE"
-msgstr "PERFORMANS"
+#. Button and button hint: start the game shown. Keep it to one short word.
+#: pe/ui/home.cpp, pe/ui/library.cpp
+msgid "Play"
+msgstr "Oyna"
 
 #: pe/ui/save_sync.cpp
 msgid "Play anyway"
@@ -1349,10 +1187,6 @@ msgstr "oynuyor"
 msgid "Playing"
 msgstr "Oynuyor"
 
-#: pe/ui/settings.cpp
-msgid "PLAYING"
-msgstr "OYNUYOR"
-
 #: pe/ui/profiles.cpp
 msgid "Playing as {0}"
 msgstr "{0} oynuyor"
@@ -1360,10 +1194,6 @@ msgstr "{0} oynuyor"
 #: settings_store.h
 msgid "Polish"
 msgstr "Lehçe"
-
-#: pe/ui/settings.cpp
-msgid "Port {0}"
-msgstr "Bağlantı noktası {0}"
 
 #: settings_store.h
 msgid "Portuguese"
@@ -1377,10 +1207,6 @@ msgstr "Portekizce (Brezilya)"
 #: pe/ui/browse.cpp
 msgid "Powered by Eden"
 msgstr "Gücünü Eden'den alır"
-
-#: pe/ui/settings.cpp
-msgid "PREFERENCES"
-msgstr "TERCİHLER"
 
 #. Update dialog headline while the download starts.
 #: pe/ui/remote.cpp, pe/ui/update.cpp
@@ -1399,10 +1225,6 @@ msgstr "Bu oyunun kaydının üzerine yazmak için tekrar basın. Mevcut kayıt 
 #: pe/ui/multiplayer.cpp
 msgid "Private room"
 msgstr "Özel oda"
-
-#: pe/ui/settings.cpp
-msgid "PRIVATE ROOM"
-msgstr "ÖZEL ODA"
 
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
@@ -1427,10 +1249,6 @@ msgstr "Profil {0}"
 #: pe/ui/profiles.cpp, pe/ui/settings.cpp
 msgid "Profiles"
 msgstr "Profiller"
-
-#: pe/ui/settings.cpp
-msgid "PROFILES"
-msgstr "PROFİLLER"
 
 #: pe/ui/browse.cpp
 msgid "PROJECT CREDITS"
@@ -1470,18 +1288,9 @@ msgstr "PS5 kontrol cihazı hazırlanamadı"
 msgid "PS5 EDITION"
 msgstr "PS5 SÜRÜMÜ"
 
-#. {0} is the version, for example v1.000.030.
-#: pe/ui/home.cpp
-msgid "PS5 EDITION  /  {0}"
-msgstr "PS5 SÜRÜMÜ  /  {0}"
-
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
 msgstr "Herkese açık odalar"
-
-#: pe/ui/settings.cpp
-msgid "PUBLIC ROOMS"
-msgstr "HERKESE AÇIK ODALAR"
 
 #: pe/ui/remote.cpp
 msgid "Queued"
@@ -1501,10 +1310,6 @@ msgstr "Rastgele"
 msgid "Reactive flushing"
 msgstr "Tepkisel boşaltma"
 
-#: pe/ui/settings.cpp
-msgid "REACTIVE FLUSHING"
-msgstr "TEPKİSEL BOŞALTMA"
-
 #: pe/ui/remote.cpp
 msgid "Read the lists again"
 msgstr "Listeleri yeniden oku"
@@ -1513,7 +1318,7 @@ msgstr "Listeleri yeniden oku"
 msgid "Reading the game lists..."
 msgstr "Oyun listeleri okunuyor..."
 
-#: pe/ui/remote.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/remote.cpp
 msgid "Reading..."
 msgstr "Okunuyor..."
 
@@ -1524,10 +1329,6 @@ msgstr "Hazır"
 #: pe/ui/home.cpp
 msgid "RECENTLY PLAYED"
 msgstr "SON OYNANANLAR"
-
-#: pe/ui/settings.cpp
-msgid "REDUCE MOTION"
-msgstr "HAREKETİ AZALTMA"
 
 #. A switch: no drifting, sliding or zooming on screen.
 #: pe/ui/settings.cpp
@@ -1543,12 +1344,7 @@ msgstr "Yenile"
 msgid "Refresh rate"
 msgstr "Yenileme hızı"
 
-#. Label: see 'Refresh rate'.
-#: pe/ui/settings.cpp
-msgid "REFRESH RATE"
-msgstr "YENİLEME HIZI"
-
-#: pe/ui/browse.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "BÖLGE"
 
@@ -1564,10 +1360,6 @@ msgstr "Yeniden adlandır"
 msgid "Renderer"
 msgstr "İşleyici"
 
-#: pe/ui/settings.cpp
-msgid "RENDERER"
-msgstr "İŞLEYİCİ"
-
 #: pe/ui/game_options.cpp
 msgid "Reset"
 msgstr "Sıfırla"
@@ -1575,10 +1367,6 @@ msgstr "Sıfırla"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Resolution"
 msgstr "Çözünürlük"
-
-#: pe/ui/settings.cpp
-msgid "RESOLUTION"
-msgstr "ÇÖZÜNÜRLÜK"
 
 #: pe/ui/game_options.cpp
 msgid "Right Joy-Con"
@@ -1600,10 +1388,6 @@ msgstr "ROM, oyun dosyaları klasöründe yok"
 #: pe/ui/multiplayer.cpp
 msgid "Room address"
 msgstr "Oda adresi"
-
-#: pe/ui/settings.cpp
-msgid "Room address and UDP port"
-msgstr "Oda adresi ve UDP bağlantı noktası"
 
 #: pe/ui/multiplayer.cpp
 msgid "Room {0} of {1}"
@@ -1661,14 +1445,6 @@ msgstr "Kayıt klasörü bulundu"
 msgid "Save sync"
 msgstr "Kayıt eşitleme"
 
-#: pe/ui/settings.cpp
-msgid "SAVE SYNC"
-msgstr "KAYIT EŞİTLEME"
-
-#: pe/ui/settings.cpp
-msgid "SAVE-SYNC.JSON"
-msgstr "SAVE-SYNC.JSON"
-
 #: pe/ui/pairing.cpp
 msgid "save-sync.json cannot be read ({0}). Nothing syncs until it is corrected over FTP."
 msgstr "save-sync.json okunamıyor ({0}). FTP üzerinden düzeltilene kadar hiçbir şey eşitlenmez."
@@ -1698,6 +1474,11 @@ msgstr "Kaydedildi. 120 Hz gösteremeyen ekran 60 Hz'te kalır."
 msgid "Saved. Applies when a game starts."
 msgstr "Kaydedildi. Oyun başlatıldığında geçerli olur."
 
+#. Shown after choosing 'Full quality' for 'ASTC textures'. 1x is a resolution scale (unchanged). It has two lines: keep it short.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Saved. Full quality uses four times the graphics memory for these textures and can run out above 1x."
+msgstr "Kaydedildi. Tam kalite bu dokular için dört kat grafik belleği kullanır ve 1x üzerinde bellek tükenebilir."
+
 #: pe/ui/browse.cpp
 msgid "Saved. Reopen ProsperoEden to use this folder."
 msgstr "Kaydedildi. Bu klasörü kullanmak için ProsperoEden'i yeniden açın."
@@ -1711,22 +1492,15 @@ msgstr "Kodu telefonunuzla tarayın veya aşağıdaki adresi açın."
 msgid "Scroll"
 msgstr "Kaydır"
 
+#. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
+#: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Sections"
+msgstr "Bölümler"
+
 #. Button hint: choose the highlighted item (not the Select button).
 #: pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/pairing.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
 msgid "Select"
 msgstr "Seç"
-
-#: pe/ui/library.cpp
-msgid "Select a game"
-msgstr "Bir oyun seçin"
-
-#: pe/ui/library.cpp
-msgid "Select a game to begin"
-msgstr "Başlamak için bir oyun seçin"
-
-#: pe/ui/library.cpp
-msgid "Select a readable game to configure its mode."
-msgstr "Modunu ayarlamak için okunabilir bir oyun seçin."
 
 #. Heading: the language highlighted in the list.
 #: pe/ui/browse.cpp
@@ -1742,14 +1516,9 @@ msgstr "Seçilen ROM artık mevcut değil"
 msgid "Server too old for save sync"
 msgstr "Sunucu, kayıt eşitleme için çok eski"
 
-#: pe/ui/home.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Settings"
 msgstr "Ayarlar"
-
-#. Label: whether keys and firmware are in place.
-#: pe/ui/settings.cpp
-msgid "SETUP"
-msgstr "KURULUM"
 
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
@@ -1787,10 +1556,6 @@ msgstr "Önceki liste gösteriliyor."
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "{0} üzerinde, bu profilin kaydedilen verilerinin ait olduğu kullanıcı olarak oturum açın."
 
-#: pe/ui/library.cpp
-msgid "SIZE"
-msgstr "BOYUT"
-
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1802,24 +1567,12 @@ msgid "Skip CPU invalidation"
 msgstr "CPU geçersiz kılmayı atla"
 
 #: pe/ui/settings.cpp
-msgid "SKIP CPU INVALIDATION"
-msgstr "CPU GEÇERSİZ KILMAYI ATLA"
-
-#: pe/ui/settings.cpp
 msgid "Skips some checks when a game changes memory the GPU uses: faster, and textures can be stale."
 msgstr "Oyun GPU'nun kullandığı belleği değiştirdiğinde bazı denetimleri atlar: daha hızlıdır, ancak dokular eski kalabilir."
 
 #: pe/ui/settings.cpp
 msgid "Solid panels, brighter text and an outlined highlight."
 msgstr "Opak paneller, daha parlak metin ve çerçeveli vurgu."
-
-#: pe/ui/library.cpp
-msgid "SOURCE"
-msgstr "KAYNAK"
-
-#: pe/ui/library.cpp, pe/ui/settings.cpp
-msgid "SOURCES"
-msgstr "KAYNAKLAR"
 
 #: settings_store.h
 msgid "Spanish"
@@ -1852,10 +1605,6 @@ msgstr "Kayıt içe aktarmadan önce herhangi bir oyunu bir kez başlatın."
 msgid "STARTING"
 msgstr "BAŞLATILIYOR"
 
-#: pe/ui/library.cpp
-msgid "STATE"
-msgstr "DURUM"
-
 #: pe/ui/settings.cpp
 msgid "Stops the background drifting and the screens sliding, here and on the loading screen."
 msgstr "Burada ve yükleme ekranında arka planın süzülmesini ve ekranların kaymasını durdurur."
@@ -1863,10 +1612,6 @@ msgstr "Burada ve yükleme ekranında arka planın süzülmesini ve ekranların 
 #: pe/ui/browse.cpp
 msgid "Supply your own files"
 msgstr "Kendi dosyalarınızı ekleyin"
-
-#: pe/ui/settings.cpp
-msgid "SYNC"
-msgstr "EŞİTLEME"
 
 #: pe/ui/save_sync.cpp
 msgid "Sync the save data once more."
@@ -1877,7 +1622,7 @@ msgid "Syncing save data"
 msgstr "Kaydedilen veriler eşitleniyor"
 
 #. A category of a game's settings: how the emulated console itself behaves.
-#: pe/ui/game_options.cpp, pe/ui/library.cpp
+#: pe/ui/library.cpp
 msgid "System"
 msgstr "Sistem"
 
@@ -1947,9 +1692,14 @@ msgstr "Oyun, indirme bitince başlar."
 msgid "The keyboard could not be opened."
 msgstr "Klavye açılamadı."
 
-#: pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "Oyunlar destekliyorsa kullanılacak dil."
+
+#. Under the title Theme: what a theme changes.
+#: pe/ui/settings.cpp
+msgid "The look of this menu."
+msgstr "Bu menünün görünümü."
 
 #: pe/ui/pairing.cpp
 msgid "The profile or the server is no longer there."
@@ -1988,6 +1738,11 @@ msgstr "Kaynakta bu oyun artık yok."
 msgid "The update could not finish"
 msgstr "Güncelleme tamamlanamadı"
 
+#. A tile of Settings and its dialog's title: the look of this menu (its colours and artwork).
+#: pe/ui/settings.cpp
+msgid "Theme"
+msgstr "Tema"
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "Bu konsolda da sunucuda da diğerinin bilmediği kaydedilen veriler var. Hangisi kalsın? Diğeri yedek olarak saklanır."
@@ -2023,7 +1778,7 @@ msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}
 msgstr "İçe aktarmak için roms/ yanındaki ryujinx/ içine bir Ryujinx klasörü veya save-import/{0}/ içine bir kayıt kopyalayın."
 
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
-#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp
 msgid "Touchpad"
 msgstr "Dokunmatik yüzey"
 
@@ -2031,6 +1786,11 @@ msgstr "Dokunmatik yüzey"
 #: pe/ui/game_options.cpp
 msgid "Triangle"
 msgstr "Üçgen"
+
+#. One line about the theme named Canopy: its artwork is a tropical sunset, its panels are dark green glass, its accent colour is lime green.
+#: pe/ui/theme.cpp
+msgid "Tropical dusk, dark green glass and lime."
+msgstr "Tropik alacakaranlık, koyu yeşil cam ve misket limonu yeşili."
 
 #: pe/ui/pairing.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/update.cpp
 msgid "Try again"
@@ -2102,10 +1862,6 @@ msgstr "GÜNCELLEME, DLC"
 msgid "Upscaling filter"
 msgstr "Ölçekleme filtresi"
 
-#: pe/ui/settings.cpp
-msgid "UPSCALING FILTER"
-msgstr "ÖLÇEKLEME FİLTRESİ"
-
 #: eden_services.cpp
 msgid "USA"
 msgstr "ABD"
@@ -2138,10 +1894,6 @@ msgid "Vibration"
 msgstr "Titreşim"
 
 #: pe/ui/settings.cpp
-msgid "VIBRATION"
-msgstr "TİTREŞİM"
-
-#: pe/ui/settings.cpp
 msgid "Vibration off"
 msgstr "Titreşim kapalı"
 
@@ -2153,13 +1905,9 @@ msgstr "Titreşim açık"
 msgid "Vibration, button mapping and the shortcuts during a game."
 msgstr "Titreşim, tuş atama ve oyun sırasındaki kısayollar."
 
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Video"
 msgstr "Video"
-
-#: pe/ui/settings.cpp
-msgid "VIDEO"
-msgstr "VİDEO"
 
 #: pe/ui/home.cpp
 msgid "VIEW ALL GAMES"
@@ -2220,10 +1968,6 @@ msgstr "Bir dahaki sefere yine sorulur."
 msgid "You are told again at the next sync."
 msgstr "Sonraki eşitlemede yeniden bildirilir."
 
-#: pe/ui/library.cpp
-msgid "Your games"
-msgstr "Oyunlarınız"
-
 #. Update dialog: installing the new app version keeps the player's files.
 #: pe/ui/update.cpp
 msgid "Your games, saves and settings are kept."
@@ -2263,7 +2007,7 @@ msgid "{0} game lists could not be read."
 msgstr "{0} oyun listesi okunamadı."
 
 #. Any number of games other than one (also 0). See '{0} game'.
-#: pe/ui/browse.cpp, pe/ui/remote.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/library.cpp, pe/ui/remote.cpp
 msgid "{0} games"
 msgstr "{0} oyun"
 
@@ -2313,7 +2057,7 @@ msgid "{0} of {1} mods on"
 msgstr "{0}/{1} mod açık"
 
 #. How many of a game's mods are switched on: 2 of 3 on.
-#: pe/ui/library.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "{0} of {1} on"
 msgstr "{0}/{1} açık"
 
@@ -2338,7 +2082,7 @@ msgid "{0} · Profile {1}"
 msgstr "{0} · Profil {1}"
 
 #. A percentage (a volume): write it as the language does, for example with a space before the sign.
-#: pe/ui/game_options.cpp, pe/ui/remote.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/remote.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
 msgid "{0}%"
 msgstr "%{0}"
 

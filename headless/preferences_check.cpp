@@ -108,6 +108,16 @@ int main() {
     assert(video.resolution == 1 && video.upscaling_filter == 1 && video.volume == 40);
     assert(Read(file).find("\"resolution\": \"0.75x\"") != std::string::npos);
     assert(Read(file).find("\"upscaling_filter\": \"fsr\"") != std::string::npos);
+    // ASTC textures: compressed unless the file says full; nothing beyond the list is saved.
+    assert(video.astc_textures == 0);
+    assert(Read(file).find("\"astc_textures\": \"compressed\"") != std::string::npos);
+    video.astc_textures = 1;
+    assert(Eden::SavePreferences(video, file));
+    assert(Eden::LoadPreferences(file).astc_textures == 1);
+    assert(Read(file).find("\"astc_textures\": \"full\"") != std::string::npos);
+    video.astc_textures = 2;
+    assert(!Eden::SavePreferences(video, file));
+    video.astc_textures = 1;
     // The largest scale is 4x; nothing beyond the list is saved.
     video.resolution = 6;
     assert(Eden::SavePreferences(video, file) && Eden::LoadPreferences(file).resolution == 6);
@@ -202,6 +212,18 @@ int main() {
     game = Eden::LoadGameSettings(racer, file);
     assert(game.renderer == -1 && game.resolution == 4 && game.upscaling_filter == -1);
     assert(!Eden::SaveGameSettings(0, {}, file) && !Eden::SaveGameSettings(racer, {2, -1, -1}, file));
+    // The same for the ASTC textures: a game's own choice wins over Settings (full, saved above).
+    assert(game.astc_textures == -1 && Eden::PreferencesFor(racer, file).astc_textures == 1);
+    game.astc_textures = 0;
+    assert(Eden::SaveGameSettings(racer, game, file));
+    assert(Eden::LoadGameSettings(racer, file).astc_textures == 0);
+    assert(Eden::PreferencesFor(racer, file).astc_textures == 0);
+    assert(Eden::PreferencesFor(quest, file).astc_textures == 1);
+    game.astc_textures = 2;
+    assert(!Eden::SaveGameSettings(racer, game, file));
+    game.astc_textures = -1;
+    assert(Eden::SaveGameSettings(racer, game, file));
+    assert(Read(file).find("\"astc_textures\": \"compressed\"") == std::string::npos);
     // The same for the refresh rate.
     assert(game.refresh == -1);
     assert(Eden::SaveGameSettings(racer, {-1, 4, -1, 1}, file));

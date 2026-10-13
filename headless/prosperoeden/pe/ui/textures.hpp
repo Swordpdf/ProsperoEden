@@ -35,6 +35,11 @@ class Textures
 
     // The background art, its blurred copy (frosted panels) and the app icon.
     bool load_art(const std::string &directory);
+    // The picture the console shows while the app starts (sce_sys/pic0.dds), for the opening:
+    // the launcher's first frame is that picture, so the app appears without a cut.
+    bool load_splash(const std::string &path);
+    // The opening is over: the picture is not needed again.
+    void drop_splash();
     // Deletes every texture; the GL context must still be current.
     void release();
 
@@ -49,6 +54,11 @@ class Textures
     std::uint32_t brand() const
     {
         return brand_;
+    }
+    // 0 when the launch picture was not loaded.
+    std::uint32_t splash() const
+    {
+        return splash_;
     }
     // A controller in white on transparent (0 when the picture is missing).
     std::uint32_t controller() const
@@ -85,6 +95,7 @@ class Textures
     std::uint32_t backdrop_blur_ = 0;
     std::uint32_t brand_ = 0;
     std::uint32_t controller_ = 0;
+    std::uint32_t splash_ = 0;
     std::unordered_map<std::string, Entry> covers_;
     std::vector<std::string> queue_;
     std::uint64_t frame_ = 0;

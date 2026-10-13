@@ -159,7 +159,7 @@ limits graceful disconnect cleanup to 500 ms, clears unsent messages on leave, a
 join-success messages received before member information. Existing callers keep their defaults.
 
 The native application now initializes logging and one controller before its launcher loop.
-Settings > Multiplayer offers address, UDP port, nickname and password entry, join/cancel,
+The Multiplayer section of the menu offers address, UDP port, nickname and password entry, join/cancel,
 room status and a scrollable member list with each reported game/version. The connected
 view shows eight members at a time and keeps the scroll position valid when players leave.
 The home footer adds `Multiplayer: Connected` alongside game count and firmware status

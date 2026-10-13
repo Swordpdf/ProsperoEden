@@ -170,9 +170,9 @@ void Launcher::layout_notes(Canvas &c)
         const bool heading = !bullet && !warning && !note && line.size() <= 48 && last != '.' && last != ':' &&
                              last != '!' && last != '?' && last != ',' && last != ';' && last != ')';
 
-        const float size = heading ? theme::kText24 : theme::kSmall;
+        const float size = heading ? th().size_text : th().size_small;
         const float pitch = std::round(text_size(size) * (heading ? 1.45f : 1.6f));
-        const Color color = heading ? theme::kTitle : theme::kBody;
+        const Color color = heading ? th().title : th().body;
         const bool boxed = warning || note;
         const float indent = bullet ? 30.0f : boxed ? 26.0f : 0.0f;
         const float width = kNotesWidth - indent - (boxed ? 22.0f : 0.0f);
@@ -211,9 +211,9 @@ void Launcher::layout_notes(Canvas &c)
         NoteLine out;
         out.text = tr("The rest is on the app's page on homebrew.page.");
         out.y = y;
-        out.height = std::round(text_size(theme::kSmall) * 1.6f);
-        out.size = theme::kSmall;
-        out.color = theme::kMeta;
+        out.height = std::round(text_size(th().size_small) * 1.6f);
+        out.size = th().size_small;
+        out.color = th().meta;
         notes_lines_.push_back(out);
         y += out.height;
     }
@@ -290,7 +290,7 @@ void Launcher::close_notes()
 void Launcher::update_install(float dt)
 {
     update_choice_x_.target = static_cast<float>(update_choice_);
-    update_choice_x_.update(dt, theme::kCursorSpring);
+    update_choice_x_.update(dt, th().cursor_spring);
     if (modal_shown_ != Modal::update)
         return;
     const bool buttons = update_stage_ == UpdateStage::offer || update_stage_ == UpdateStage::failed;
@@ -408,7 +408,7 @@ void Launcher::press_update(Key key)
     }
     case UpdateStage::notes:
     {
-        const float line = std::round(text_size(theme::kSmall) * 1.6f);
+        const float line = std::round(text_size(th().size_small) * 1.6f);
         switch (key)
         {
         case Key::up:
@@ -463,17 +463,17 @@ void Launcher::draw_notes(Canvas &c, float height)
     list.push_transform(1.0f, 0.0f, 0.0f, 0.0f, (1.0f - arrive) * 10.0f * motion());
     const float mark_x = kNotesLeft + 22.0f;
     const float mark_y = kPanel.y + 66.0f;
-    list.circle(mark_x, mark_y, 24.0f, theme::kLime.with_alpha(0.16f));
-    list.ring(mark_x, mark_y, 24.0f, 2.0f, theme::kLime.with_alpha(0.55f));
+    list.circle(mark_x, mark_y, 24.0f, th().accent.with_alpha(0.16f));
+    list.ring(mark_x, mark_y, 24.0f, 2.0f, th().accent.with_alpha(0.55f));
     for (int i = 0; i < 3; ++i)
     {
         const float ly = mark_y - 8.0f + 8.0f * static_cast<float>(i);
-        list.line(mark_x - 9.0f, ly, mark_x + (i == 2 ? 3.0f : 9.0f), ly, 2.6f, theme::kLime);
+        list.line(mark_x - 9.0f, ly, mark_x + (i == 2 ? 3.0f : 9.0f), ly, 2.6f, th().accent);
     }
     text_shrink(c, fill_text(tr("What's new in version {0}"), update_version_), kNotesLeft + 64.0f,
-                baseline(kPanel.y + 42.0f, 48.0f, theme::kHeading), theme::kHeading, theme::kTitle,
+                baseline(kPanel.y + 42.0f, 48.0f, th().size_heading), th().size_heading, th().title,
                 kPanel.w - 128.0f - 64.0f);
-    list.rounded_rect({kNotesLeft, kPanel.y + 112.0f, kPanel.w - 128.0f, 1.0f}, 0.0f, theme::kRule.with_alpha(0.9f));
+    list.rounded_rect({kNotesLeft, kPanel.y + 112.0f, kPanel.w - 128.0f, 1.0f}, 0.0f, th().rule.with_alpha(0.9f));
     list.pop_transform();
     list.pop_opacity();
 
@@ -488,7 +488,7 @@ void Launcher::draw_notes(Canvas &c, float height)
         const float bottom = kNotesTop + box.bottom - scroll;
         if (bottom < area.y || top > area.y + area.h)
             continue;
-        const Color accent = box.warning ? theme::kWarning : theme::kLime;
+        const Color accent = box.warning ? th().warning : th().accent;
         list.push_opacity(arrive);
         list.rounded_rect({kNotesLeft, top, kNotesWidth, bottom - top}, 14.0f, accent.with_alpha(0.09f));
         list.rounded_rect({kNotesLeft, top + 10.0f, 4.0f, bottom - top - 20.0f}, 2.0f, accent.with_alpha(0.85f));
@@ -508,7 +508,7 @@ void Launcher::draw_notes(Canvas &c, float height)
         list.push_opacity(in);
         list.push_transform(1.0f, 0.0f, 0.0f, 0.0f, (1.0f - in) * 14.0f * motion());
         if (line.bullet)
-            list.circle(kNotesLeft + 11.0f, top + line.height * 0.5f, 3.6f, theme::kLime.with_alpha(0.9f));
+            list.circle(kNotesLeft + 11.0f, top + line.height * 0.5f, 3.6f, th().accent.with_alpha(0.9f));
         text(c, line.text, kNotesLeft + line.indent, baseline(top, line.height, line.size), line.size, line.color);
         list.pop_transform();
         list.pop_opacity();
@@ -517,7 +517,7 @@ void Launcher::draw_notes(Canvas &c, float height)
 
     // Soft edges where more text is above or below.
     const float max_scroll = notes_max_scroll();
-    const Color panel = theme::kPanel;
+    const Color panel = th().panel;
     const float above = tween::clamp01(scroll / 40.0f);
     const float below = tween::clamp01((max_scroll - scroll) / 40.0f);
     if (above > 0.0f)
@@ -533,9 +533,9 @@ void Launcher::draw_notes(Canvas &c, float height)
         const float thumb = std::max(48.0f, window * window / notes_height_);
         const float place = tween::clamp01(scroll / max_scroll);
         list.push_opacity(arrive);
-        list.rounded_rect({track_x, area.y, 4.0f, window}, 2.0f, theme::kPanelEdge.with_alpha(0.22f));
+        list.rounded_rect({track_x, area.y, 4.0f, window}, 2.0f, th().panel_edge.with_alpha(0.22f));
         list.rounded_rect({track_x - 1.0f, area.y + (window - thumb) * place, 6.0f, thumb}, 3.0f,
-                          theme::kLime.with_alpha(0.85f));
+                          th().accent.with_alpha(0.85f));
         list.pop_opacity();
     }
 
@@ -543,20 +543,20 @@ void Launcher::draw_notes(Canvas &c, float height)
     const float buttons_top = kPanel.y + height - 178.0f;
     list.push_opacity(arrive);
     for (int i = 0; i < 2; ++i)
-        plate_rest(c, kRowPlate, button_rect(2, static_cast<float>(i), buttons_top));
-    plate_focus(c, kRowPlate, button_rect(2, update_choice_x_.value, buttons_top), 1.0f - 0.25f * press_);
+        plate_rest(c, row_plate(), button_rect(2, static_cast<float>(i), buttons_top));
+    plate_focus(c, row_plate(), button_rect(2, update_choice_x_.value, buttons_top), 1.0f - 0.25f * press_);
     static constexpr const char *kLabels[] = {TR("Update now"), TR("Back")};
     for (int i = 0; i < 2; ++i)
     {
         const Rect r = button_rect(2, static_cast<float>(i), buttons_top);
-        text_shrink(c, tr(kLabels[i]), r.x + r.w * 0.5f, baseline(r.y, r.h, theme::kText24), theme::kText24,
-                    i == update_choice_ ? theme::kTitle : theme::kValue, r.w - 40.0f, Align::center);
+        text_shrink(c, tr(kLabels[i]), r.x + r.w * 0.5f, baseline(r.y, r.h, th().size_text), th().size_text,
+                    i == update_choice_ ? th().title : th().value, r.w - 40.0f, Align::center);
     }
     static constexpr Hint kNotesHints[] = {{Pad::updown, TR("Scroll")},
                                            {Pad::l1, TR("Page"), Pad::r1},
                                            {Pad::cross, TR("Select")},
                                            {Pad::circle, TR("Back")}};
-    draw_hints(c, kNotesHints, 4, kPanel.x + 52.0f, kPanel.y + height - 50.0f, theme::kCopy, kPanel.w - 104.0f);
+    draw_hints(c, kNotesHints, 4, kPanel.x + 52.0f, kPanel.y + height - 50.0f, th().copy, kPanel.w - 104.0f);
     list.pop_opacity();
 }
 
@@ -571,8 +571,8 @@ void Launcher::draw_update(Canvas &c, float open)
     const float height = std::clamp(update_height_.value, kWorkingHeight - 20.0f, kNotesHeight + 20.0f);
     const float lowered = (kPanel.h - height) * 0.5f;
     list.push_transform(1.0f, 0.0f, 0.0f, 0.0f, lowered);
-    glass(c, {kPanel.x, kPanel.y, kPanel.w, height}, 28.0f, theme::kPanel.with_alpha(0.97f),
-          theme::kLime.with_alpha(0.38f), 1.8f);
+    glass(c, {kPanel.x, kPanel.y, kPanel.w, height}, 28.0f, th().panel.with_alpha(0.97f),
+          th().accent.with_alpha(0.38f), 1.8f);
     const float hints = kPanel.y + height - 54.0f;
 
     if (update_stage_ == UpdateStage::notes)
@@ -587,13 +587,13 @@ void Launcher::draw_update(Canvas &c, float open)
     const float t = update_stage_time_;
     const float breathe = 0.5f + 0.5f * std::sin(c.time * 2.4f);
     const bool failed = update_stage_ == UpdateStage::failed;
-    const Color accent = failed ? theme::kWarning : theme::kLime;
+    const Color accent = failed ? th().warning : th().accent;
 
     // A soft glow behind the ring, breathing while it waits.
     list.shadow({kCenterX - kRingRadius, kRingY - kRingRadius, kRingRadius * 2.0f, kRingRadius * 2.0f},
                 kRingRadius, 60.0f, accent.with_alpha(0.10f + 0.08f * breathe));
-    list.circle(kCenterX, kRingY, kRingRadius - kRingWidth, theme::kBase.with_alpha(0.55f));
-    list.ring(kCenterX, kRingY, kRingRadius, kRingWidth, theme::kPanelEdge.with_alpha(0.22f));
+    list.circle(kCenterX, kRingY, kRingRadius - kRingWidth, th().base.with_alpha(0.55f));
+    list.ring(kCenterX, kRingY, kRingRadius, kRingWidth, th().panel_edge.with_alpha(0.22f));
 
     const auto centred = [&](std::string_view value, float top, float line, float size, Color color)
     { text_shrink(c, value, kCenterX, baseline(top, line, size), size, color, kPanel.w - 96.0f, Align::center); };
@@ -601,14 +601,14 @@ void Launcher::draw_update(Canvas &c, float open)
     {
         const int count = static_cast<int>(labels.size());
         for (int i = 0; i < count; ++i)
-            plate_rest(c, kRowPlate, button_rect(count, static_cast<float>(i), kButtonsTop));
-        plate_focus(c, kRowPlate, button_rect(count, update_choice_x_.value, kButtonsTop), 1.0f - 0.25f * press_);
+            plate_rest(c, row_plate(), button_rect(count, static_cast<float>(i), kButtonsTop));
+        plate_focus(c, row_plate(), button_rect(count, update_choice_x_.value, kButtonsTop), 1.0f - 0.25f * press_);
         int i = 0;
         for (const char *label : labels)
         {
             const Rect r = button_rect(count, static_cast<float>(i), kButtonsTop);
-            text_shrink(c, tr(label), r.x + r.w * 0.5f, baseline(r.y, r.h, theme::kText24), theme::kText24,
-                        i == update_choice_ ? theme::kTitle : theme::kValue, r.w - 32.0f, Align::center);
+            text_shrink(c, tr(label), r.x + r.w * 0.5f, baseline(r.y, r.h, th().size_text), th().size_text,
+                        i == update_choice_ ? th().title : th().value, r.w - 32.0f, Align::center);
             ++i;
         }
     };
@@ -628,21 +628,21 @@ void Launcher::draw_update(Canvas &c, float open)
         list.line(kCenterX + 18.0f, ay - 2.0f, kCenterX, ay + 16.0f, 6.0f, accent);
         list.line(kCenterX - 30.0f, kRingY + 38.0f, kCenterX + 30.0f, kRingY + 38.0f, 6.0f, accent.with_alpha(0.85f));
 
-        centred(tr("Update available"), 506.0f, 60.0f, theme::kDisplay, theme::kTitle);
-        centred(fill_text(tr("Version {0} is ready to install."), update_version_), 570.0f, 34.0f, theme::kText24,
-                theme::kValue);
+        centred(tr("Update available"), 506.0f, 60.0f, th().size_display, th().title);
+        centred(fill_text(tr("Version {0} is ready to install."), update_version_), 570.0f, 34.0f, th().size_text,
+                th().value);
         if (update_.size > 0)
-            centred(fill_text(tr("Download size: {0}"), megabytes(update_.size)), 606.0f, 30.0f, theme::kSmall,
-                    theme::kLimePale);
-        centred(tr("Your games, saves and settings are kept."), 640.0f, 28.0f, theme::kSmall, theme::kCopy);
-        centred(tr("ProsperoEden closes to finish the update."), 668.0f, 28.0f, theme::kSmall, theme::kCopy);
+            centred(fill_text(tr("Download size: {0}"), megabytes(update_.size)), 606.0f, 30.0f, th().size_small,
+                    th().accent_pale);
+        centred(tr("Your games, saves and settings are kept."), 640.0f, 28.0f, th().size_small, th().copy);
+        centred(tr("ProsperoEden closes to finish the update."), 668.0f, 28.0f, th().size_small, th().copy);
         if (update_.notes.empty())
             buttons({TR("Update now"), TR("Skip")});
         else
             buttons({TR("Update now"), TR("What's new"), TR("Skip")});
         static constexpr Hint kOfferHints[] = {
             {Pad::leftright, TR("Navigate")}, {Pad::cross, TR("Select")}, {Pad::circle, TR("Skip")}};
-        draw_hints(c, kOfferHints, 3, kPanel.x + 52.0f, hints, theme::kCopy, kPanel.w - 104.0f);
+        draw_hints(c, kOfferHints, 3, kPanel.x + 52.0f, hints, th().copy, kPanel.w - 104.0f);
         break;
     }
     case UpdateStage::working:
@@ -658,10 +658,10 @@ void Launcher::draw_update(Canvas &c, float open)
             // A bright head at the arc's end.
             const float a = -kPi * 0.5f + 2.0f * kPi * share;
             list.circle(kCenterX + kRingRadius * std::cos(a), kRingY + kRingRadius * std::sin(a), kRingWidth * 0.9f,
-                        theme::kLimePale.with_alpha(0.9f));
+                        th().accent_pale.with_alpha(0.9f));
             const int percent = static_cast<int>(share * 100.0f + 0.5f);
             text(c, fill_text(tr("{0}%"), std::to_string(std::min(percent, 100))), kCenterX,
-                 baseline(kRingY - 30.0f, 60.0f, theme::kDisplay), theme::kDisplay, theme::kTitle, Align::center);
+                 baseline(kRingY - 30.0f, 60.0f, th().size_display), th().size_display, th().title, Align::center);
         }
         else
         {
@@ -669,12 +669,12 @@ void Launcher::draw_update(Canvas &c, float open)
             const float turn = update_spin_ * 4.2f;
             const float sweep = kPi * (0.55f + 0.45f * std::sin(update_spin_ * 2.1f));
             arc(list, kCenterX, kRingY, kRingRadius, kRingWidth, turn, sweep,
-                update_stage_ == UpdateStage::cancelling ? theme::kWarning : accent);
+                update_stage_ == UpdateStage::cancelling ? th().warning : accent);
             for (int i = 0; i < 3; ++i)
             {
                 const float wave = 0.5f + 0.5f * std::sin(update_spin_ * 6.0f - static_cast<float>(i) * 0.9f);
                 list.circle(kCenterX - 26.0f + 26.0f * static_cast<float>(i), kRingY - wave * 8.0f * motion(), 7.0f,
-                            theme::kLimePale.with_alpha(0.35f + 0.6f * wave));
+                            th().accent_pale.with_alpha(0.35f + 0.6f * wave));
             }
         }
 
@@ -682,12 +682,12 @@ void Launcher::draw_update(Canvas &c, float open)
                                : phase == UpdatePhase::downloading      ? TR("Downloading")
                                : phase == UpdatePhase::unpacking        ? TR("Unpacking")
                                                                         : TR("Preparing");
-        centred(tr(headline), 512.0f, 46.0f, theme::kHeading, theme::kTitle);
-        centred(fill_text(tr("Version {0}"), update_version_), 560.0f, 30.0f, theme::kSmall, theme::kCopy);
+        centred(tr(headline), 512.0f, 46.0f, th().size_heading, th().title);
+        centred(fill_text(tr("Version {0}"), update_version_), 560.0f, 30.0f, th().size_small, th().copy);
 
         // The bar: the share, or a light running along it while there is none.
         const Rect bar{kPanel.x + 96.0f, 618.0f, kPanel.w - 192.0f, 8.0f};
-        list.rounded_rect(bar, 4.0f, theme::kPanelEdge.with_alpha(0.22f));
+        list.rounded_rect(bar, 4.0f, th().panel_edge.with_alpha(0.22f));
         if (measured || phase == UpdatePhase::unpacking)
         {
             list.rounded_rect({bar.x, bar.y, std::max(bar.h, bar.w * share), bar.h}, 4.0f, accent);
@@ -695,7 +695,7 @@ void Launcher::draw_update(Canvas &c, float open)
             const float sheen = std::fmod(update_spin_ * 0.6f, 1.0f);
             const float sx = bar.x + bar.w * share * sheen;
             list.push_clip({bar.x, bar.y, bar.w * share, bar.h});
-            list.rounded_rect({sx - 40.0f, bar.y, 80.0f, bar.h}, 4.0f, theme::kLimePale.with_alpha(0.45f));
+            list.rounded_rect({sx - 40.0f, bar.y, 80.0f, bar.h}, 4.0f, th().accent_pale.with_alpha(0.45f));
             list.pop_clip();
         }
         else
@@ -719,12 +719,12 @@ void Launcher::draw_update(Canvas &c, float open)
                 line += whole < 90 ? fill_text(tr("About {0} s left"), std::to_string(whole))
                                    : fill_text(tr("About {0} min left"), std::to_string((whole + 59) / 60));
             }
-            centred(line, 646.0f, 32.0f, theme::kSmall, theme::kLimePale);
+            centred(line, 646.0f, 32.0f, th().size_small, th().accent_pale);
         }
         if (update_stage_ == UpdateStage::working)
         {
             static constexpr Hint kWorkingHints[] = {{Pad::circle, TR("Cancel")}};
-            draw_hints(c, kWorkingHints, 1, kPanel.x + 52.0f, hints, theme::kCopy, kPanel.w - 104.0f);
+            draw_hints(c, kWorkingHints, 1, kPanel.x + 52.0f, hints, th().copy, kPanel.w - 104.0f);
         }
         break;
     }
@@ -747,10 +747,10 @@ void Launcher::draw_update(Canvas &c, float open)
             list.line(x1, y1, x1 + (x2 - x1) * second, y1 + (y2 - y1) * second, 9.0f, accent);
         list.pop_transform();
 
-        centred(tr("Update ready"), 506.0f, 60.0f, theme::kDisplay, theme::kTitle);
-        centred(tr("ProsperoEden closes now."), 568.0f, 34.0f, theme::kText24, theme::kValue);
-        centred(fill_text(tr("Open it again to use version {0}."), update_version_), 602.0f, 30.0f, theme::kSmall,
-                theme::kCopy);
+        centred(tr("Update ready"), 506.0f, 60.0f, th().size_display, th().title);
+        centred(tr("ProsperoEden closes now."), 568.0f, 34.0f, th().size_text, th().value);
+        centred(fill_text(tr("Open it again to use version {0}."), update_version_), 602.0f, 30.0f, th().size_small,
+                th().copy);
         // The time until it closes.
         const float left = 1.0f - tween::clamp01(t / kClosingSeconds);
         list.rounded_rect({kPanel.x + 96.0f, 640.0f, (kPanel.w - 192.0f) * left, 4.0f}, 2.0f, accent.with_alpha(0.7f));
@@ -765,14 +765,14 @@ void Launcher::draw_update(Canvas &c, float open)
         list.line(kCenterX + shake, kRingY - 40.0f, kCenterX + shake, kRingY + 12.0f, 10.0f, accent);
         list.circle(kCenterX + shake, kRingY + 38.0f, 7.0f, accent);
 
-        centred(tr("The update could not finish"), 506.0f, 60.0f, theme::kHeading, theme::kTitle);
-        centred(tr("ProsperoEden was not changed."), 570.0f, 34.0f, theme::kText24, theme::kValue);
+        centred(tr("The update could not finish"), 506.0f, 60.0f, th().size_heading, th().title);
+        centred(tr("ProsperoEden was not changed."), 570.0f, 34.0f, th().size_text, th().value);
         if (!update_status_.error.empty())
-            centred(update_status_.error, 612.0f, 30.0f, theme::kSmall, theme::kCopy.with_alpha(0.8f));
+            centred(update_status_.error, 612.0f, 30.0f, th().size_small, th().copy.with_alpha(0.8f));
         buttons({TR("Try again"), TR("Close")});
         static constexpr Hint kFailedHints[] = {
             {Pad::leftright, TR("Navigate")}, {Pad::cross, TR("Select")}, {Pad::circle, TR("Close")}};
-        draw_hints(c, kFailedHints, 3, kPanel.x + 52.0f, hints, theme::kCopy, kPanel.w - 104.0f);
+        draw_hints(c, kFailedHints, 3, kPanel.x + 52.0f, hints, th().copy, kPanel.w - 104.0f);
         break;
     }
     case UpdateStage::notes:

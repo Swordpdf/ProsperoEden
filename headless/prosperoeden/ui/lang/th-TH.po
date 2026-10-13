@@ -43,7 +43,8 @@ msgstr "อ่าน​ไฟล์ NCA ​ของ​เฟิร์มแว�
 msgid "A pairing is running already."
 msgstr "กำลัง​จับคู่​อยู่​แล้ว"
 
-#: pe/ui/home.cpp
+#. The menu's last section: about this app (its credits, where its files go). One short word.
+#: pe/ui/shell.cpp
 msgid "About"
 msgstr "เกี่ยวกับ"
 
@@ -71,23 +72,9 @@ msgstr "การเข้าถึง"
 msgid "Accessibility"
 msgstr "การช่วยการเข้าถึง"
 
-#: pe/ui/settings.cpp
-msgid "ACCESSIBILITY"
-msgstr "การช่วยการเข้าถึง"
-
 #: pe/ui/profiles.cpp
 msgid "Add"
 msgstr "เพิ่ม"
-
-#. Label: a game's updates, DLC and mods.
-#: pe/ui/library.cpp
-msgid "ADD-ONS"
-msgstr "ส่วนเสริม"
-
-#. {0}: updates, DLC and mods of the game; {1}: the language it will use.
-#: pe/ui/home.cpp
-msgid "Add-ons: {0}  /  Language: {1}"
-msgstr "ส่วนเสริม: {0}  /  ภาษา: {1}"
 
 #: pe/ui/remote.cpp
 msgid "Added to the downloads. Settings, Downloads shows the queue."
@@ -96,10 +83,6 @@ msgstr "เพิ่ม​ใน​การ​ดาวน์โหลด​แ
 #: pe/ui/profiles.cpp
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "เพิ่ม​แล้ว กากบาท​เล่น​ด้วย​โปรไฟล์​นี้ ซ้าย​และ​ขวา​เปลี่ยน​ชื่อ"
-
-#: pe/ui/settings.cpp
-msgid "Adjust the essentials without leaving your library behind."
-msgstr "ปรับ​การตั้งค่า​พื้นฐาน​ได้​โดย​ไม่ต้อง​ออกจาก​คลังเกม"
 
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
@@ -122,21 +105,18 @@ msgstr "ตามปกติ"
 msgid "Asking the server for a code..."
 msgstr "กำลัง​ขอ​รหัส​จาก​เซิร์ฟเวอร์..."
 
+#. Setting: how a game's textures in the ASTC format are held in graphics memory. ASTC is a format's name (unchanged).
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "ASTC textures"
+msgstr "เท็กซ์เจอร์ ASTC"
+
 #. A switch. A shader is a small graphics program; keep the word the language's players use for it.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Asynchronous shaders"
 msgstr "เชเดอร์แบบอะซิงโครนัส"
 
-#: pe/ui/settings.cpp
-msgid "ASYNCHRONOUS SHADERS"
-msgstr "เชเดอร์แบบอะซิงโครนัส"
-
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Audio"
-msgstr "เสียง"
-
-#: pe/ui/settings.cpp
-msgid "AUDIO"
 msgstr "เสียง"
 
 #: eden_services.cpp
@@ -175,18 +155,6 @@ msgstr "ไบลิเนียร์"
 msgid "Browse"
 msgstr "เลื่อนดู"
 
-#: pe/ui/library.cpp
-msgid "Browse games"
-msgstr "เลื่อนดูเกม"
-
-#: pe/ui/settings.cpp
-msgid "Browse settings"
-msgstr "เลื่อนดูการตั้งค่า"
-
-#: pe/ui/settings.cpp
-msgid "Browse the public directory"
-msgstr "เรียกดู​รายการ​สาธารณะ"
-
 #: pe/ui/multiplayer.cpp
 msgid "Browse the public directory and choose a room."
 msgstr "เรียกดู​รายการ​สาธารณะ​แล้ว​เลือก​ห้อง"
@@ -194,10 +162,6 @@ msgstr "เรียกดู​รายการ​สาธารณะ​แ
 #. Which controller button presses each of the game's buttons.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
-msgstr "การกำหนดปุ่ม"
-
-#: pe/ui/settings.cpp
-msgid "BUTTON MAPPING"
 msgstr "การกำหนดปุ่ม"
 
 #: pe/ui/pairing.cpp, pe/ui/update.cpp
@@ -295,18 +259,19 @@ msgid "Compile ahead"
 msgstr "คอมไพล์ล่วงหน้า"
 
 #: pe/ui/settings.cpp
-msgid "COMPILE AHEAD"
-msgstr "คอมไพล์ล่วงหน้า"
-
-#: pe/ui/settings.cpp
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "คอมไพล์โค้ดที่เกมเคยใช้ขณะเริ่มเกม พื้นที่ใหม่จึงกระตุกน้อยลง"
+
+#. A choice of 'ASTC textures': the textures are kept compressed (less memory). Keep it short.
+#: settings_store.h
+msgid "Compressed"
+msgstr "บีบอัด"
 
 #: pe/ui/multiplayer.cpp
 msgid "Connect using a room address, port and password."
 msgstr "เชื่อมต่อ​ด้วย​ที่อยู่​ห้อง พอร์ต และ​รหัสผ่าน"
 
-#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp
 msgid "Connected"
 msgstr "เชื่อมต่อ​แล้ว"
 
@@ -330,7 +295,7 @@ msgstr "โหมดเครื่อง"
 msgid "CONTINUE PLAYING"
 msgstr "เล่นต่อ"
 
-#: pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Controller shortcuts and supported features."
 msgstr "ปุ่มลัด​ของ​คอนโทรลเลอร์​และ​ฟีเจอร์​ที่​รองรับ"
 
@@ -342,12 +307,8 @@ msgstr "ประเภทคอนโทรลเลอร์"
 msgid "CONTROLLERS"
 msgstr "คอนโทรลเลอร์"
 
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Controls"
-msgstr "การควบคุม"
-
-#: pe/ui/settings.cpp
-msgid "CONTROLS"
 msgstr "การควบคุม"
 
 #: pe/ui/remote.cpp
@@ -369,10 +330,6 @@ msgstr "ไม่​สามารถ​ลบ​เกม​ได้"
 #: eden_services.cpp
 msgid "Could not delete {0}."
 msgstr "ไม่​สามารถ​ลบ {0} ได้"
-
-#: pe/ui/library.cpp
-msgid "Could not save console mode. Please try again."
-msgstr "บันทึก​โหมดเครื่อง​ไม่ได้ โปรด​ลอง​อีกครั้ง"
 
 #: pe/ui/launcher.cpp
 msgid "Could not save settings. Please try again."
@@ -448,10 +405,6 @@ msgid "Detailed logging"
 msgstr "บันทึกล็อกแบบละเอียด"
 
 #: pe/ui/settings.cpp
-msgid "DETAILED LOGS"
-msgstr "ล็อกแบบละเอียด"
-
-#: pe/ui/settings.cpp
 msgid "Detailed logs apply to the next game launch."
 msgstr "ล็อก​แบบ​ละเอียด​จะ​มีผล​เมื่อ​เริ่มเกม​ครั้งถัดไป"
 
@@ -459,21 +412,12 @@ msgstr "ล็อก​แบบ​ละเอียด​จะ​มีผล
 msgid "Detailed logs on"
 msgstr "เปิดล็อกแบบละเอียด"
 
-#. Button hint: show the game's details.
-#: pe/ui/home.cpp
-msgid "Details"
-msgstr "รายละเอียด"
-
 #: pe/ui/settings.cpp
 msgid "Diagnostics"
 msgstr "การวินิจฉัย"
 
-#: pe/ui/settings.cpp
-msgid "DIAGNOSTICS"
-msgstr "การวินิจฉัย"
-
 #. Console mode: the console as if connected to a TV. Keep it short (about 9 letters).
-#: pe/ui/library.cpp
+#: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Docked"
 msgstr "โหมด TV"
 
@@ -526,10 +470,6 @@ msgstr "กำลังดาวน์โหลด {0}"
 msgid "Downloads"
 msgstr "ดาวน์โหลด"
 
-#: pe/ui/settings.cpp
-msgid "DOWNLOADS"
-msgstr "ดาวน์โหลด"
-
 #: pe/ui/remote.cpp
 msgid "Downloads need an FTP server running on the console, on port {0}."
 msgstr "การ​ดาวน์โหลด​ต้อง​มี​เซิร์ฟเวอร์ FTP ทำงาน​บน​เครื่อง ที่​พอร์ต {0}"
@@ -562,23 +502,14 @@ msgstr "แต่ละ​โปรไฟล์​เก็บ​ข้อมู
 msgid "Each profile's save data on a server of its own, synced before and after a game."
 msgstr "ข้อมูล​เซฟ​ของ​แต่ละ​โปรไฟล์​บน​เซิร์ฟเวอร์​ของ​ตัวเอง ซิงค์​ก่อน​และ​หลัง​เล่น​เกม"
 
-#: pe/ui/home.cpp
-msgid "Eden emulator for PlayStation 5"
-msgstr "อีมูเลเตอร์ Eden สำหรับ PlayStation 5"
-
 #: pe/ui/settings.cpp
 msgid "Eden's debug messages in the logs of a game."
 msgstr "ข้อความ​ดีบัก​ของ Eden ​ใน​ล็อก​ของ​เกม"
 
 #. A button hint: opens the keyboard to type a number. One short word, and not the word used for Change.
-#: pe/ui/game_options.cpp
+#: pe/ui/library.cpp
 msgid "Edit"
 msgstr "แก้ไข"
-
-#. Label of the shortcut that ends the running game.
-#: pe/ui/settings.cpp
-msgid "END GAME"
-msgstr "จบเกม"
 
 #: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
@@ -624,20 +555,12 @@ msgstr "ส่งออก​ไปยัง {0} ​แล้ว"
 msgid "Faster CPU emulation"
 msgstr "จำลอง CPU เร็วขึ้น"
 
-#: pe/ui/settings.cpp
-msgid "FASTER CPU EMULATION"
-msgstr "จำลอง CPU เร็วขึ้น"
-
 #. A switch: memory transfers to the emulated graphics processor are less exact and faster. DMA is a name (unchanged).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Faster DMA"
 msgstr "DMA เร็วขึ้น"
 
-#: pe/ui/settings.cpp
-msgid "FASTER DMA"
-msgstr "DMA เร็วขึ้น"
-
-#: pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Faster games, at some cost in accuracy."
 msgstr "เกมเร็วขึ้น โดยแลกกับความแม่นยำบางส่วน"
 
@@ -645,14 +568,6 @@ msgstr "เกมเร็วขึ้น โดยแลกกับควา�
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Faster GPU emulation"
 msgstr "จำลอง GPU เร็วขึ้น"
-
-#: pe/ui/settings.cpp
-msgid "FASTER GPU EMULATION"
-msgstr "จำลอง GPU เร็วขึ้น"
-
-#: pe/ui/library.cpp
-msgid "FILE"
-msgstr "ไฟล์"
 
 #. What a mod is made of: files that replace the game's own.
 #: eden_services.cpp, host/fake_services.cpp
@@ -692,17 +607,8 @@ msgstr "ตามการตั้งค่า"
 msgid "For every controller. A game can have its own."
 msgstr "สำหรับคอนโทรลเลอร์ทุกตัว แต่ละเกมมีของตัวเองได้"
 
-#: pe/ui/library.cpp
-msgid "FORMAT"
-msgstr "รูปแบบ"
-
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
-msgstr "ตัวแสดง FPS"
-
-#. Label: the frames-per-second counter drawn over a game.
-#: pe/ui/settings.cpp
-msgid "FPS OVERLAY"
 msgstr "ตัวแสดง FPS"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -713,7 +619,7 @@ msgstr "ตัวคูณการสร้างเฟรม"
 msgid "Frame gen target"
 msgstr "เป้าหมายการสร้างเฟรม"
 
-#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Frame generation"
 msgstr "การสร้างเฟรม"
 
@@ -733,16 +639,17 @@ msgstr "ฝรั่งเศส (แคนาดา)"
 msgid "From {0}"
 msgstr "จาก {0}"
 
-#: pe/ui/settings.cpp
-msgid "FTP SERVER"
-msgstr "เซิร์ฟเวอร์ FTP"
-
 #. The app can read every folder of the console.
 #: pe/ui/browse.cpp
 msgid "Full filesystem"
 msgstr "ทั้งระบบไฟล์"
 
-#: pe/ui/settings.cpp
+#. A choice of 'ASTC textures': the textures are kept uncompressed (more memory). Keep it short.
+#: settings_store.h
+msgid "Full quality"
+msgstr "คุณภาพเต็ม"
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "เสียง​ของ​เกม เพลง​ใน​เมนู​ระบบ​ของ PS5 ​ไม่​เปลี่ยน"
 
@@ -750,10 +657,6 @@ msgstr "เสียง​ของ​เกม เพลง​ใน​เม�
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
 msgstr "เริ่มเกม​ไม่ได้: {0} รายละเอียด: {1}"
-
-#: pe/ui/home.cpp
-msgid "Game details"
-msgstr "รายละเอียดเกม"
 
 #: pe/ui/library.cpp
 msgid "GAME DETAILS"
@@ -763,20 +666,12 @@ msgstr "รายละเอียดเกม"
 msgid "Game files"
 msgstr "ไฟล์เกม"
 
-#: pe/ui/settings.cpp
-msgid "GAME FILES"
-msgstr "ไฟล์เกม"
-
-#: pe/ui/library.cpp
+#: pe/ui/home.cpp, pe/ui/library.cpp
 msgid "Game settings"
 msgstr "การตั้งค่าเกม"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Game volume"
-msgstr "ระดับเสียงเกม"
-
-#: pe/ui/settings.cpp
-msgid "GAME VOLUME"
 msgstr "ระดับเสียงเกม"
 
 #: pe/ui/settings.cpp
@@ -820,20 +715,21 @@ msgid "Graphics backend initialization failed. Try another backend in Settings; 
 msgstr "เริ่ม​ระบบ​กราฟิก​ไม่สำเร็จ ลอง​ระบบ​อื่น​ใน​การตั้งค่า ดู​รายละเอียด​ของ​ไดรเวอร์​ได้​ใน stderr.log ​และ eden_log.txt"
 
 #. Console mode: the console as if held in the hands. Keep it short (about 9 letters).
-#: pe/ui/game_options.cpp, pe/ui/library.cpp
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Handheld"
 msgstr "โหมดพกพา"
-
-#: pe/ui/settings.cpp
-msgid "HIGH CONTRAST"
-msgstr "คอนทราสต์สูง"
 
 #. A switch: solid dark panels, brighter text.
 #: pe/ui/settings.cpp
 msgid "High contrast"
 msgstr "คอนทราสต์สูง"
 
-#: pe/ui/settings.cpp
+#. The menu's first section, its opening screen (not a house, and not the PS5's own home screen).
+#: pe/ui/shell.cpp
+msgid "Home"
+msgstr "หน้าหลัก"
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "วิธี​วาด​ภาพ​เกม​และ​ปรับ​ขนาด​ให้​เข้ากับ​ทีวี"
 
@@ -855,7 +751,7 @@ msgid "Imported. The save it replaced was backed up."
 msgstr "นำเข้า​แล้ว เซฟ​ที่​ถูก​แทนที่​ได้​สำรอง​ไว้​แล้ว"
 
 #. Tag on the language or folder that is in use now.
-#: pe/ui/browse.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp
 msgid "IN USE"
 msgstr "ใช้อยู่"
 
@@ -899,10 +795,6 @@ msgstr "เข้าร่วม​ห้อง​ก่อน​เปิด​
 msgid "Join a room successfully or leave it before starting a game."
 msgstr "เข้าร่วม​ห้อง​หรือ​ออก​จาก​ห้อง​ก่อน​เริ่ม​เกม"
 
-#: pe/ui/settings.cpp
-msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
-msgstr "เข้าร่วม​ห้อง Eden แล้ว​เลือก​การเล่น​ไร้สาย​ภายใน​ใน​เกม​ที่​รองรับ ทุกคน​ต้อง​ใช้​เวอร์ชัน​เกม​ที่​เข้ากันได้"
-
 #: pe/ui/multiplayer.cpp
 msgid "Join room"
 msgstr "เข้าร่วม​ห้อง"
@@ -941,21 +833,13 @@ msgstr "เกาหลี"
 msgid "Korean"
 msgstr "เกาหลี"
 
-#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Language"
-msgstr "ภาษา"
-
-#: pe/ui/library.cpp, pe/ui/settings.cpp
-msgid "LANGUAGE"
 msgstr "ภาษา"
 
 #: pe/ui/browse.cpp
 msgid "LANGUAGES"
 msgstr "ภาษา"
-
-#: pe/ui/settings.cpp
-msgid "LARGER TEXT"
-msgstr "ตัวอักษรใหญ่ขึ้น"
 
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
@@ -966,10 +850,6 @@ msgstr "ตัวอักษรใหญ่ขึ้น"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "เกมที่เปิดล่าสุด"
-
-#: pe/ui/home.cpp
-msgid "Launch game"
-msgstr "เริ่มเกม"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1008,15 +888,11 @@ msgstr "คำนวณทศนิยมแม่นยำน้อยลง: �
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "การถ่ายโอนหน่วยความจำไปยัง GPU แม่นยำน้อยลง: เร็วขึ้น แต่บางเกมแสดงกราฟิกผิด"
 
-#: pe/ui/home.cpp
+#: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "คลังเกม"
 
-#: pe/ui/library.cpp
-msgid "LIBRARY"
-msgstr "คลังเกม"
-
-#: pe/ui/pairing.cpp, pe/ui/settings.cpp
+#: pe/ui/pairing.cpp
 msgid "Linked"
 msgstr "เชื่อมโยงแล้ว"
 
@@ -1028,11 +904,6 @@ msgstr "กำลัง​โหลด​ห้อง​สาธารณะ...
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
 msgstr "ความแม่นยำ GPU ต่ำสุด: เร็วขึ้นในเกมหนัก แต่กราฟิกอาจผิดเพี้ยน"
 
-#. Headline of the Settings screen.
-#: pe/ui/settings.cpp
-msgid "Make it yours."
-msgstr "ปรับให้เป็นแบบคุณ"
-
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "ทำให้​เมนู​มองเห็น​และ​ติดตาม​ได้​ง่ายขึ้น"
@@ -1040,10 +911,6 @@ msgstr "ทำให้​เมนู​มองเห็น​และ​ต
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
 msgstr "เสียง​เอฟเฟกต์​ของ​เมนู​สร้าง​ด้วย ElevenLabs"
-
-#: pe/ui/settings.cpp
-msgid "MENU SOUNDS"
-msgstr "เสียงเมนู"
 
 #: pe/ui/settings.cpp
 msgid "Menu sounds"
@@ -1063,11 +930,11 @@ msgstr "ม็อด"
 msgid "Mods"
 msgstr "ม็อด"
 
-#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/shell.cpp
 msgid "Multiplayer"
 msgstr "ผู้เล่น​หลายคน"
 
-#: pe/ui/settings.cpp
+#: pe/ui/multiplayer.cpp
 msgid "MULTIPLAYER"
 msgstr "ผู้เล่น​หลายคน"
 
@@ -1076,15 +943,11 @@ msgid "Mute"
 msgstr "ปิดเสียง"
 
 #: pe/ui/settings.cpp
-msgid "MUTE"
-msgstr "ปิดเสียง"
-
-#: pe/ui/settings.cpp
 msgid "Muted"
 msgstr "ปิดเสียงอยู่"
 
 #. Button hint: move the highlight.
-#: pe/ui/home.cpp, pe/ui/update.cpp
+#: pe/ui/update.cpp
 msgid "Navigate"
 msgstr "เลื่อน"
 
@@ -1106,11 +969,6 @@ msgstr "โปรไฟล์ใหม่"
 msgid "Next launch: {0}"
 msgstr "เปิดครั้งถัดไป: {0}"
 
-#. Label: the folder used the next time the app starts.
-#: pe/ui/settings.cpp
-msgid "NEXT START"
-msgstr "เปิดครั้งถัดไป"
-
 #: pe/ui/multiplayer.cpp
 msgid "Nickname"
 msgstr "ชื่อเล่น"
@@ -1118,10 +976,6 @@ msgstr "ชื่อเล่น"
 #: pe/ui/multiplayer.cpp
 msgid "Nickname: {0}"
 msgstr "ชื่อเล่น: {0}"
-
-#: pe/ui/library.cpp
-msgid "No cover art"
-msgstr "ไม่มีภาพปก"
 
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
@@ -1186,7 +1040,7 @@ msgstr "ไม่มี"
 msgid "Not connected yet"
 msgstr "ยังไม่ได้เชื่อมต่อ"
 
-#: pe/ui/pairing.cpp, pe/ui/settings.cpp
+#: pe/ui/pairing.cpp
 msgid "Not linked"
 msgstr "ไม่ได้เชื่อมโยง"
 
@@ -1198,10 +1052,6 @@ msgstr "ไม่ได้​เชื่อมโยง: ข้อมูล​�
 msgid "Not on the console"
 msgstr "ไม่อยู่ในเครื่อง"
 
-#: pe/ui/library.cpp
-msgid "Not on the console yet. Download it to play and to change its settings."
-msgstr "ยัง​ไม่​อยู่​ใน​เครื่อง ดาวน์โหลด​เพื่อ​เล่น​และ​เปลี่ยน​การตั้งค่า"
-
 #: pe/ui/pairing.cpp
 msgid "Not paired"
 msgstr "ไม่ได้จับคู่"
@@ -1209,10 +1059,6 @@ msgstr "ไม่ได้จับคู่"
 #: pe/ui/remote.cpp
 msgid "Not reachable"
 msgstr "เข้าถึงไม่ได้"
-
-#: pe/ui/settings.cpp
-msgid "Not readable"
-msgstr "อ่านไม่ได้"
 
 #: pe/ui/settings.cpp
 msgid "Not set up"
@@ -1228,7 +1074,7 @@ msgstr "ไม่มีอะไรให้นำเข้า"
 msgid "Off"
 msgstr "ปิด"
 
-#: pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/multiplayer.cpp
 msgid "Offline"
 msgstr "ออฟไลน์"
 
@@ -1237,17 +1083,13 @@ msgstr "ออฟไลน์"
 msgid "On"
 msgstr "เปิด"
 
-#: pe/ui/settings.cpp
-msgid "ON THIS CONSOLE"
-msgstr "บนเครื่องนี้"
-
 #. Short tag on a folder row.
 #: pe/ui/browse.cpp
 msgid "OPEN"
 msgstr "เปิด"
 
 #. Button hint: open the highlighted folder.
-#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Open"
 msgstr "เปิด"
 
@@ -1263,11 +1105,6 @@ msgstr "เปิดคลังเกม"
 #: pe/ui/game_options.cpp
 msgid "Options"
 msgstr "OPTIONS"
-
-#. Label: see 'Output resolution'.
-#: pe/ui/settings.cpp
-msgid "OUTPUT RESOLUTION"
-msgstr "ความละเอียด​เอาต์พุต"
 
 #. Setting: the size of the picture sent to the TV (1080p, 1440p or 2160p). Not the same as 'Resolution', which scales the game's own picture (1x, 2x...).
 #: pe/ui/settings.cpp
@@ -1317,13 +1154,14 @@ msgid "Patch"
 msgstr "แพตช์"
 
 #. A settings category: options that make games run faster, at some cost in accuracy.
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "ประสิทธิภาพ"
 
-#: pe/ui/settings.cpp
-msgid "PERFORMANCE"
-msgstr "ประสิทธิภาพ"
+#. Button and button hint: start the game shown. Keep it to one short word.
+#: pe/ui/home.cpp, pe/ui/library.cpp
+msgid "Play"
+msgstr "เล่น"
 
 #: pe/ui/save_sync.cpp
 msgid "Play anyway"
@@ -1349,10 +1187,6 @@ msgstr "กำลังเล่น"
 msgid "Playing"
 msgstr "กำลังเล่น"
 
-#: pe/ui/settings.cpp
-msgid "PLAYING"
-msgstr "กำลังเล่น"
-
 #: pe/ui/profiles.cpp
 msgid "Playing as {0}"
 msgstr "เล่น​เป็น {0}"
@@ -1360,10 +1194,6 @@ msgstr "เล่น​เป็น {0}"
 #: settings_store.h
 msgid "Polish"
 msgstr "โปแลนด์"
-
-#: pe/ui/settings.cpp
-msgid "Port {0}"
-msgstr "พอร์ต {0}"
 
 #: settings_store.h
 msgid "Portuguese"
@@ -1377,10 +1207,6 @@ msgstr "โปรตุเกส (บราซิล)"
 #: pe/ui/browse.cpp
 msgid "Powered by Eden"
 msgstr "ขับเคลื่อนโดย Eden"
-
-#: pe/ui/settings.cpp
-msgid "PREFERENCES"
-msgstr "การตั้งค่าทั่วไป"
 
 #. Update dialog headline while the download starts.
 #: pe/ui/remote.cpp, pe/ui/update.cpp
@@ -1398,10 +1224,6 @@ msgstr "กด​อีกครั้ง​เพื่อ​แทนที่
 
 #: pe/ui/multiplayer.cpp
 msgid "Private room"
-msgstr "ห้อง​ส่วนตัว"
-
-#: pe/ui/settings.cpp
-msgid "PRIVATE ROOM"
 msgstr "ห้อง​ส่วนตัว"
 
 #: pe/ui/game_options.cpp
@@ -1426,10 +1248,6 @@ msgstr "โปรไฟล์ {0}"
 
 #: pe/ui/profiles.cpp, pe/ui/settings.cpp
 msgid "Profiles"
-msgstr "โปรไฟล์"
-
-#: pe/ui/settings.cpp
-msgid "PROFILES"
 msgstr "โปรไฟล์"
 
 #: pe/ui/browse.cpp
@@ -1470,17 +1288,8 @@ msgstr "เริ่มคอนโทรลเลอร์ PS5 ไม่สำ�
 msgid "PS5 EDITION"
 msgstr "รุ่น PS5"
 
-#. {0} is the version, for example v1.000.030.
-#: pe/ui/home.cpp
-msgid "PS5 EDITION  /  {0}"
-msgstr "รุ่น PS5  /  {0}"
-
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
-msgstr "ห้อง​สาธารณะ"
-
-#: pe/ui/settings.cpp
-msgid "PUBLIC ROOMS"
 msgstr "ห้อง​สาธารณะ"
 
 #: pe/ui/remote.cpp
@@ -1501,10 +1310,6 @@ msgstr "สุ่ม"
 msgid "Reactive flushing"
 msgstr "รีแอกทีฟฟลัชชิง"
 
-#: pe/ui/settings.cpp
-msgid "REACTIVE FLUSHING"
-msgstr "รีแอกทีฟฟลัชชิง"
-
 #: pe/ui/remote.cpp
 msgid "Read the lists again"
 msgstr "อ่านรายการอีกครั้ง"
@@ -1513,7 +1318,7 @@ msgstr "อ่านรายการอีกครั้ง"
 msgid "Reading the game lists..."
 msgstr "กำลัง​อ่าน​รายการ​เกม..."
 
-#: pe/ui/remote.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/remote.cpp
 msgid "Reading..."
 msgstr "กำลังอ่าน..."
 
@@ -1524,10 +1329,6 @@ msgstr "พร้อม"
 #: pe/ui/home.cpp
 msgid "RECENTLY PLAYED"
 msgstr "เล่นล่าสุด"
-
-#: pe/ui/settings.cpp
-msgid "REDUCE MOTION"
-msgstr "ลดการเคลื่อนไหว"
 
 #. A switch: no drifting, sliding or zooming on screen.
 #: pe/ui/settings.cpp
@@ -1543,12 +1344,7 @@ msgstr "รีเฟรช"
 msgid "Refresh rate"
 msgstr "อัตรา​รีเฟรช"
 
-#. Label: see 'Refresh rate'.
-#: pe/ui/settings.cpp
-msgid "REFRESH RATE"
-msgstr "อัตรา​รีเฟรช"
-
-#: pe/ui/browse.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "ภูมิภาค"
 
@@ -1564,20 +1360,12 @@ msgstr "เปลี่ยนชื่อ"
 msgid "Renderer"
 msgstr "ตัวเรนเดอร์"
 
-#: pe/ui/settings.cpp
-msgid "RENDERER"
-msgstr "ตัวเรนเดอร์"
-
 #: pe/ui/game_options.cpp
 msgid "Reset"
 msgstr "รีเซ็ต"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Resolution"
-msgstr "ความละเอียด"
-
-#: pe/ui/settings.cpp
-msgid "RESOLUTION"
 msgstr "ความละเอียด"
 
 #: pe/ui/game_options.cpp
@@ -1600,10 +1388,6 @@ msgstr "ไม่มี ROM ในโฟลเดอร์ไฟล์เกม"
 #: pe/ui/multiplayer.cpp
 msgid "Room address"
 msgstr "ที่อยู่​ห้อง"
-
-#: pe/ui/settings.cpp
-msgid "Room address and UDP port"
-msgstr "ที่อยู่​ห้อง​และ​พอร์ต UDP"
 
 #: pe/ui/multiplayer.cpp
 msgid "Room {0} of {1}"
@@ -1661,14 +1445,6 @@ msgstr "พบโฟลเดอร์เซฟ"
 msgid "Save sync"
 msgstr "ซิงค์ข้อมูลเซฟ"
 
-#: pe/ui/settings.cpp
-msgid "SAVE SYNC"
-msgstr "ซิงค์ข้อมูลเซฟ"
-
-#: pe/ui/settings.cpp
-msgid "SAVE-SYNC.JSON"
-msgstr "SAVE-SYNC.JSON"
-
 #: pe/ui/pairing.cpp
 msgid "save-sync.json cannot be read ({0}). Nothing syncs until it is corrected over FTP."
 msgstr "อ่าน save-sync.json ไม่ได้ ({0}) จะ​ไม่มี​การ​ซิงค์​จนกว่า​จะ​แก้ไข​ผ่าน FTP"
@@ -1698,6 +1474,11 @@ msgstr "บันทึก​แล้ว จอ​ที่​ไม่​ร�
 msgid "Saved. Applies when a game starts."
 msgstr "บันทึก​แล้ว มีผล​เมื่อ​เริ่มเกม"
 
+#. Shown after choosing 'Full quality' for 'ASTC textures'. 1x is a resolution scale (unchanged). It has two lines: keep it short.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Saved. Full quality uses four times the graphics memory for these textures and can run out above 1x."
+msgstr "บันทึก​แล้ว คุณภาพ​เต็ม​ใช้​หน่วยความจำ​กราฟิก​สำหรับ​เท็กซ์เจอร์​เหล่านี้​มากขึ้น 4 เท่า และ​อาจ​หมด​เมื่อ​สูงกว่า 1x"
+
 #: pe/ui/browse.cpp
 msgid "Saved. Reopen ProsperoEden to use this folder."
 msgstr "บันทึก​แล้ว เปิด ProsperoEden ​ใหม่​เพื่อ​ใช้​โฟลเดอร์​นี้"
@@ -1711,22 +1492,15 @@ msgstr "สแกน​รหัส​ด้วย​โทรศัพท์ �
 msgid "Scroll"
 msgstr "เลื่อน"
 
+#. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
+#: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Sections"
+msgstr "ส่วน"
+
 #. Button hint: choose the highlighted item (not the Select button).
 #: pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/pairing.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
 msgid "Select"
 msgstr "เลือก"
-
-#: pe/ui/library.cpp
-msgid "Select a game"
-msgstr "เลือกเกม"
-
-#: pe/ui/library.cpp
-msgid "Select a game to begin"
-msgstr "เลือกเกมเพื่อเริ่ม"
-
-#: pe/ui/library.cpp
-msgid "Select a readable game to configure its mode."
-msgstr "เลือก​เกม​ที่​อ่าน​ได้​เพื่อ​ตั้ง​โหมด​ของ​เกม"
 
 #. Heading: the language highlighted in the list.
 #: pe/ui/browse.cpp
@@ -1742,14 +1516,9 @@ msgstr "ROM ที่เลือกไม่มีอยู่แล้ว"
 msgid "Server too old for save sync"
 msgstr "เซิร์ฟเวอร์เก่าเกินไปสำหรับการซิงค์"
 
-#: pe/ui/home.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Settings"
 msgstr "การตั้งค่า"
-
-#. Label: whether keys and firmware are in place.
-#: pe/ui/settings.cpp
-msgid "SETUP"
-msgstr "การเตรียมระบบ"
 
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
@@ -1787,10 +1556,6 @@ msgstr "กำลัง​แสดง​รายการ​ก่อนหน
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "ลงชื่อ​เข้าใช้ {0} ด้วย​ผู้ใช้​ที่​เป็น​เจ้าของ​ข้อมูล​เซฟ​ของ​โปรไฟล์​นี้"
 
-#: pe/ui/library.cpp
-msgid "SIZE"
-msgstr "ขนาด"
-
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1802,24 +1567,12 @@ msgid "Skip CPU invalidation"
 msgstr "ข้ามการยกเลิกแคชจาก CPU"
 
 #: pe/ui/settings.cpp
-msgid "SKIP CPU INVALIDATION"
-msgstr "ข้ามการยกเลิกแคชจาก CPU"
-
-#: pe/ui/settings.cpp
 msgid "Skips some checks when a game changes memory the GPU uses: faster, and textures can be stale."
 msgstr "ข้ามการตรวจสอบบางอย่างเมื่อเกมเปลี่ยนหน่วยความจำที่ GPU ใช้: เร็วขึ้น แต่เท็กซ์เจอร์อาจไม่อัปเดต"
 
 #: pe/ui/settings.cpp
 msgid "Solid panels, brighter text and an outlined highlight."
 msgstr "แผง​ทึบ ตัวอักษร​สว่างขึ้น ​และ​ไฮไลต์​แบบ​มี​เส้นขอบ"
-
-#: pe/ui/library.cpp
-msgid "SOURCE"
-msgstr "แหล่ง"
-
-#: pe/ui/library.cpp, pe/ui/settings.cpp
-msgid "SOURCES"
-msgstr "แหล่ง"
 
 #: settings_store.h
 msgid "Spanish"
@@ -1852,10 +1605,6 @@ msgstr "เปิด​เกม​ใด​ก็ได้​หนึ่ง​
 msgid "STARTING"
 msgstr "กำลังเริ่ม"
 
-#: pe/ui/library.cpp
-msgid "STATE"
-msgstr "สถานะ"
-
 #: pe/ui/settings.cpp
 msgid "Stops the background drifting and the screens sliding, here and on the loading screen."
 msgstr "หยุด​การ​เคลื่อน​ของ​พื้นหลัง​และ​การ​เลื่อน​ของ​หน้าจอ ทั้ง​ที่นี่​และ​ใน​หน้า​โหลด"
@@ -1863,10 +1612,6 @@ msgstr "หยุด​การ​เคลื่อน​ของ​พื้
 #: pe/ui/browse.cpp
 msgid "Supply your own files"
 msgstr "ใช้ไฟล์ของคุณเอง"
-
-#: pe/ui/settings.cpp
-msgid "SYNC"
-msgstr "ซิงค์"
 
 #: pe/ui/save_sync.cpp
 msgid "Sync the save data once more."
@@ -1877,7 +1622,7 @@ msgid "Syncing save data"
 msgstr "กำลังซิงค์ข้อมูลเซฟ"
 
 #. A category of a game's settings: how the emulated console itself behaves.
-#: pe/ui/game_options.cpp, pe/ui/library.cpp
+#: pe/ui/library.cpp
 msgid "System"
 msgstr "ระบบ"
 
@@ -1947,9 +1692,14 @@ msgstr "เกม​จะ​เริ่ม​เมื่อ​ดาวน์
 msgid "The keyboard could not be opened."
 msgstr "ไม่​สามารถ​เปิด​คีย์บอร์ด​ได้"
 
-#: pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "ภาษา​ที่​เกม​ใช้​เมื่อ​เกม​รองรับ"
+
+#. Under the title Theme: what a theme changes.
+#: pe/ui/settings.cpp
+msgid "The look of this menu."
+msgstr "รูปลักษณ์ของเมนูนี้"
 
 #: pe/ui/pairing.cpp
 msgid "The profile or the server is no longer there."
@@ -1988,6 +1738,11 @@ msgstr "แหล่ง​นี้​ไม่มี​เกม​นี้​
 msgid "The update could not finish"
 msgstr "ไม่สามารถอัปเดตให้เสร็จได้"
 
+#. A tile of Settings and its dialog's title: the look of this menu (its colours and artwork).
+#: pe/ui/settings.cpp
+msgid "Theme"
+msgstr "ธีม"
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "เครื่อง​นี้​และ​เซิร์ฟเวอร์​ต่าง​มี​ข้อมูล​เซฟ​ที่​อีก​ฝั่ง​ไม่​รู้จัก ต้องการ​เก็บ​ของ​ฝั่ง​ใด อีก​ฝั่ง​จะ​เก็บ​ไว้​เป็น​ข้อมูล​สำรอง"
@@ -2023,7 +1778,7 @@ msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}
 msgstr "หาก​ต้องการ​นำเข้า ให้​คัดลอก​โฟลเดอร์ Ryujinx ​ไปที่ ryujinx/ ​หรือ​คัดลอก​เซฟ​ไปที่ save-import/{0}/ ​ข้าง roms/"
 
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
-#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp
 msgid "Touchpad"
 msgstr "ทัชแพด"
 
@@ -2031,6 +1786,11 @@ msgstr "ทัชแพด"
 #: pe/ui/game_options.cpp
 msgid "Triangle"
 msgstr "สามเหลี่ยม"
+
+#. One line about the theme named Canopy: its artwork is a tropical sunset, its panels are dark green glass, its accent colour is lime green.
+#: pe/ui/theme.cpp
+msgid "Tropical dusk, dark green glass and lime."
+msgstr "สนธยาเขตร้อน กระจกสีเขียวเข้ม และสีเขียวมะนาว"
 
 #: pe/ui/pairing.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/update.cpp
 msgid "Try again"
@@ -2102,10 +1862,6 @@ msgstr "อัปเดต, DLC"
 msgid "Upscaling filter"
 msgstr "ฟิลเตอร์ขยายภาพ"
 
-#: pe/ui/settings.cpp
-msgid "UPSCALING FILTER"
-msgstr "ฟิลเตอร์ขยายภาพ"
-
 #: eden_services.cpp
 msgid "USA"
 msgstr "สหรัฐฯ"
@@ -2138,10 +1894,6 @@ msgid "Vibration"
 msgstr "การสั่น"
 
 #: pe/ui/settings.cpp
-msgid "VIBRATION"
-msgstr "การสั่น"
-
-#: pe/ui/settings.cpp
 msgid "Vibration off"
 msgstr "ปิดการสั่น"
 
@@ -2153,12 +1905,8 @@ msgstr "เปิดการสั่น"
 msgid "Vibration, button mapping and the shortcuts during a game."
 msgstr "การสั่น การกำหนดปุ่ม และปุ่มลัดระหว่างเล่นเกม"
 
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Video"
-msgstr "วิดีโอ"
-
-#: pe/ui/settings.cpp
-msgid "VIDEO"
 msgstr "วิดีโอ"
 
 #: pe/ui/home.cpp
@@ -2220,10 +1968,6 @@ msgstr "ครั้งหน้า​จะ​ถาม​อีกครั้
 msgid "You are told again at the next sync."
 msgstr "จะ​แจ้ง​อีกครั้ง​เมื่อ​ซิงค์​ครั้งถัดไป"
 
-#: pe/ui/library.cpp
-msgid "Your games"
-msgstr "เกมของคุณ"
-
 #. Update dialog: installing the new app version keeps the player's files.
 #: pe/ui/update.cpp
 msgid "Your games, saves and settings are kept."
@@ -2263,7 +2007,7 @@ msgid "{0} game lists could not be read."
 msgstr "ไม่​สามารถ​อ่าน​รายการ​เกม {0} รายการ"
 
 #. Any number of games other than one (also 0). See '{0} game'.
-#: pe/ui/browse.cpp, pe/ui/remote.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/library.cpp, pe/ui/remote.cpp
 msgid "{0} games"
 msgstr "{0} เกม"
 
@@ -2313,7 +2057,7 @@ msgid "{0} of {1} mods on"
 msgstr "เปิด​ม็อด {0} จาก {1}"
 
 #. How many of a game's mods are switched on: 2 of 3 on.
-#: pe/ui/library.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "{0} of {1} on"
 msgstr "เปิด {0} จาก {1}"
 
@@ -2338,7 +2082,7 @@ msgid "{0} · Profile {1}"
 msgstr "{0} · โปรไฟล์ {1}"
 
 #. A percentage (a volume): write it as the language does, for example with a space before the sign.
-#: pe/ui/game_options.cpp, pe/ui/remote.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/remote.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
 msgid "{0}%"
 msgstr "{0}%"
 

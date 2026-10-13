@@ -36,6 +36,7 @@
 #include "devices.h"
 #include "diagnostics.h"
 #include "hud.h"
+#include "loading_art.h"
 #include "display_refresh.h"
 #include "log_flusher.h"
 #include "multiplayer_logging.h"
@@ -558,10 +559,12 @@ int main(int argc, char** argv) {
         SCOPE_EXIT { rooms.EndGame(); };
 #ifdef EDEN_DEV_VULKAN
         Eden::Performance::vulkan_cost_enabled = std::filesystem::exists(Eden::AppFile("cost-run.txt"));
+        if (Eden::Performance::vulkan_cost_enabled) Eden::Performance::timers_on = true;  // a cost run
         const bool performance_run = std::filesystem::exists(Eden::AppFile("performance-run.txt"));
 #ifdef EDEN_DEV_PROFILE
         Eden::Performance::texture_budget_log = true;  // EDEN_VULKAN_TEXTURE_BUDGET every 300 frames
-        Eden::Performance::draw_marks = true;          // the phases of a draw, in the EDEN_DEV_ lines
+        Eden::Performance::dev_marks = true;           // a draw's phases and guest thread waits (EDEN_DEV_ lines)
+        Eden::Performance::timers_on = true;           // the timers the development reports read
         // Optional 20 Hz GPU-thread PC samples. The handler must exist before the
         // GPU thread registers, which unblocks SIGUSR2 only while sampling is on.
         const bool pc_sample_run = std::filesystem::exists(Eden::AppFile("pc-sample.txt"));
@@ -611,6 +614,14 @@ int main(int argc, char** argv) {
         const uint64_t game_title = 0;
 #endif
         Eden::session_title.store(game_title);
+        // The loading screen shows the game's cover: the one the launcher keeps of it, found by
+        // the file's name in the game files folder (loading_art.h).
+        {
+            const std::string roms = Eden::AssetsPath("roms/");
+            Eden::Loading::SetArtFromCover(Eden::CoverFile(
+                selected_game.rfind(roms, 0) == 0 ? selected_game.substr(roms.size()) :
+                                                    std::filesystem::path(selected_game).filename().string()));
+        }
         const unsigned cycles = game ? 1 : 3;
         const bool devices = EDEN_DEVICE_FRONTEND;
         if (game) {
@@ -924,6 +935,33 @@ int main(int argc, char** argv) {
             const int resolution = video.resolution;
             const int filter = video.upscaling_filter;
             Settings::values.resolution_setup.SetValue(resolutions[resolution]);
+            // ASTC textures are kept as BC3 unless Settings > Video > ASTC textures, or the game's
+            // own choice, says full quality. The console's GPU has no ASTC, so Eden holds
+            // such a texture decoded, at four bytes a pixel; BC3 takes one. A large open-world game
+            // has two texture arrays of 121 layers in that format: 816 MiB decoded, 204 MiB as BC3.
+            // At 2x, where every render target also has a copy four times its size, that was the
+            // memory a session ran out of within a minute of play, and with BC3 it did not; the GPU
+            // thread's time for a frame was the same either way (26.0 and 25.6 to 26.7 ms). At 1x
+            // it took longer and ended the same way: seventeen minutes into a session one of those
+            // arrays was refused by the allocator and then by the driver. So at every resolution.
+            // Full quality is for a game whose textures show what BC3 loses and that has the
+            // memory to spare.
+            const bool astc_full = video.astc_textures == 1;
+            Settings::values.astc_recompression.SetValue(astc_full ? Settings::AstcRecompression::Uncompressed
+                                                                   : Settings::AstcRecompression::Bc3);
+            // Kept as BC3, a texture is decoded and compressed on the CPU, and Eden does that inside
+            // the draw that first uses it, with both GPU caches locked: 130 to 290 ms for a draw
+            // where a frame's 4,000 draws take 18 together, three seconds for a texture array of
+            // 121 layers. New scenery brought several such frames in a row (41 in a session of
+            // five minutes), the drops to 10 or 15 frames a second. On another thread (Eden's own
+            // asynchronous mode) the texture shows a moment later and no frame waits for it: 6
+            // such frames in the same play. A light screen (loading, a menu) still converts in
+            // place, so nothing is drawn there before it is ready (headless/astc_policy.h, which the
+            // Vulkan texture cache asks; the OpenGL one has no such rule and keeps converting in
+            // place). At full quality nothing is compressed, and the GPU decodes the texture.
+            Settings::values.accelerate_astc.SetValue(!astc_full && backend == Eden::GraphicsBackend::Vulkan
+                                                          ? Settings::AstcDecodeMode::CpuAsynchronous
+                                                          : Settings::AstcDecodeMode::Gpu);
             Settings::values.scaling_filter.SetValue(filters[filter]);
             Settings::UpdateRescalingInfo();
 #ifdef EDEN_PS5_FRAMEGEN
@@ -1006,7 +1044,7 @@ int main(int argc, char** argv) {
             Eden::Report("launch", (std::string("Resolution ") + Eden::kResolutionKeys[resolution] + ", " +
                                     Eden::kUpscalingFilterLabels[filter] + ", output " +
                                     Eden::kOutputKeys[video.output] + ", " + Eden::kRefreshKeys[refresh] +
-                                    " Hz").c_str());
+                                    " Hz, ASTC textures " + (astc_full ? "decoded" : "as BC3")).c_str());
             // Speed against accuracy ("performance" in the settings file, settings_store.h): each
             // one is off unless chosen there, for every game or for this one. The levels start
             // every session at their exact values (above), so one that is not chosen is off.
@@ -1171,6 +1209,8 @@ int main(int argc, char** argv) {
         }
         {
 #ifdef EDEN_PS5_OPENGL
+            static unsigned memory_session = 0;
+            Eden::Performance::ReportSessionMemory("start", ++memory_session);
             Eden::BootTrace::Line("opening the graphics window (%s)", backend == Eden::GraphicsBackend::Vulkan ? "Vulkan" : "OpenGL");
             Eden::GraphicsWindow window(backend == Eden::GraphicsBackend::Vulkan);
             Eden::BootTrace::Line("graphics window open");
@@ -1806,6 +1846,9 @@ int main(int argc, char** argv) {
             }
         }
         passed("core_destroyed");
+#ifdef EDEN_PS5_OPENGL
+        Eden::Performance::ReportSessionMemory("end", 0);
+#endif
         if (devices && pad) {
             pad.reset();
             LOG_INFO(Frontend, "EDEN_DEVICE_FRONTEND_PASS");

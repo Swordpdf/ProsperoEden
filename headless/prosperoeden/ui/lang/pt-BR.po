@@ -43,7 +43,8 @@ msgstr "Não foi possível ler um NCA do firmware. Reinstale o dump do firmware.
 msgid "A pairing is running already."
 msgstr "Já há um pareamento em andamento."
 
-#: pe/ui/home.cpp
+#. The menu's last section: about this app (its credits, where its files go). One short word.
+#: pe/ui/shell.cpp
 msgid "About"
 msgstr "Sobre"
 
@@ -71,23 +72,9 @@ msgstr "ACESSO"
 msgid "Accessibility"
 msgstr "Acessibilidade"
 
-#: pe/ui/settings.cpp
-msgid "ACCESSIBILITY"
-msgstr "ACESSIBILIDADE"
-
 #: pe/ui/profiles.cpp
 msgid "Add"
 msgstr "Adicionar"
-
-#. Label: a game's updates, DLC and mods.
-#: pe/ui/library.cpp
-msgid "ADD-ONS"
-msgstr "COMPLEMENTOS"
-
-#. {0}: updates, DLC and mods of the game; {1}: the language it will use.
-#: pe/ui/home.cpp
-msgid "Add-ons: {0}  /  Language: {1}"
-msgstr "Complementos: {0}  /  Idioma: {1}"
 
 #: pe/ui/remote.cpp
 msgid "Added to the downloads. Settings, Downloads shows the queue."
@@ -96,10 +83,6 @@ msgstr "Adicionado aos downloads. Configurações, Downloads mostra a fila."
 #: pe/ui/profiles.cpp
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "Adicionado. Xis joga com este perfil; esquerda e direita mudam o nome."
-
-#: pe/ui/settings.cpp
-msgid "Adjust the essentials without leaving your library behind."
-msgstr "Ajuste o essencial sem sair da sua biblioteca."
 
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
@@ -122,22 +105,19 @@ msgstr "Como de costume"
 msgid "Asking the server for a code..."
 msgstr "Pedindo um código ao servidor..."
 
+#. Setting: how a game's textures in the ASTC format are held in graphics memory. ASTC is a format's name (unchanged).
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "ASTC textures"
+msgstr "Texturas ASTC"
+
 #. A switch. A shader is a small graphics program; keep the word the language's players use for it.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Asynchronous shaders"
 msgstr "Shaders assíncronos"
 
-#: pe/ui/settings.cpp
-msgid "ASYNCHRONOUS SHADERS"
-msgstr "SHADERS ASSÍNCRONOS"
-
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Audio"
 msgstr "Áudio"
-
-#: pe/ui/settings.cpp
-msgid "AUDIO"
-msgstr "ÁUDIO"
 
 #: eden_services.cpp
 msgid "Australia"
@@ -175,18 +155,6 @@ msgstr "Bilinear"
 msgid "Browse"
 msgstr "Navegar"
 
-#: pe/ui/library.cpp
-msgid "Browse games"
-msgstr "Percorrer jogos"
-
-#: pe/ui/settings.cpp
-msgid "Browse settings"
-msgstr "Percorrer opções"
-
-#: pe/ui/settings.cpp
-msgid "Browse the public directory"
-msgstr "Explorar o diretório público"
-
 #: pe/ui/multiplayer.cpp
 msgid "Browse the public directory and choose a room."
 msgstr "Explore o diretório público e escolha uma sala."
@@ -195,10 +163,6 @@ msgstr "Explore o diretório público e escolha uma sala."
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
 msgstr "Mapeamento de botões"
-
-#: pe/ui/settings.cpp
-msgid "BUTTON MAPPING"
-msgstr "MAPEAMENTO DE BOTÕES"
 
 #: pe/ui/pairing.cpp, pe/ui/update.cpp
 msgid "Cancel"
@@ -295,18 +259,19 @@ msgid "Compile ahead"
 msgstr "Compilar antes"
 
 #: pe/ui/settings.cpp
-msgid "COMPILE AHEAD"
-msgstr "COMPILAR ANTES"
-
-#: pe/ui/settings.cpp
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "Compila ao iniciar o código que o jogo já usou, para que novas áreas travem menos."
+
+#. A choice of 'ASTC textures': the textures are kept compressed (less memory). Keep it short.
+#: settings_store.h
+msgid "Compressed"
+msgstr "Comprimidas"
 
 #: pe/ui/multiplayer.cpp
 msgid "Connect using a room address, port and password."
 msgstr "Conecte usando o endereço, a porta e a senha da sala."
 
-#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp
 msgid "Connected"
 msgstr "Conectado"
 
@@ -330,7 +295,7 @@ msgstr "Modo do console"
 msgid "CONTINUE PLAYING"
 msgstr "CONTINUE JOGANDO"
 
-#: pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Controller shortcuts and supported features."
 msgstr "Atalhos do controle e recursos compatíveis."
 
@@ -342,13 +307,9 @@ msgstr "Tipo de controle"
 msgid "CONTROLLERS"
 msgstr "CONTROLES"
 
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Controls"
 msgstr "Controles"
-
-#: pe/ui/settings.cpp
-msgid "CONTROLS"
-msgstr "CONTROLES"
 
 #: pe/ui/remote.cpp
 msgid "Could not cancel the download."
@@ -369,10 +330,6 @@ msgstr "Não foi possível excluir o jogo."
 #: eden_services.cpp
 msgid "Could not delete {0}."
 msgstr "Não foi possível excluir {0}."
-
-#: pe/ui/library.cpp
-msgid "Could not save console mode. Please try again."
-msgstr "Não foi possível salvar o modo do console. Tente novamente."
 
 #: pe/ui/launcher.cpp
 msgid "Could not save settings. Please try again."
@@ -448,10 +405,6 @@ msgid "Detailed logging"
 msgstr "Registro detalhado"
 
 #: pe/ui/settings.cpp
-msgid "DETAILED LOGS"
-msgstr "REGISTROS DETALHADOS"
-
-#: pe/ui/settings.cpp
 msgid "Detailed logs apply to the next game launch."
 msgstr "Os registros detalhados valem a partir do próximo jogo iniciado."
 
@@ -459,21 +412,12 @@ msgstr "Os registros detalhados valem a partir do próximo jogo iniciado."
 msgid "Detailed logs on"
 msgstr "Registros detalhados ativados"
 
-#. Button hint: show the game's details.
-#: pe/ui/home.cpp
-msgid "Details"
-msgstr "Detalhes"
-
 #: pe/ui/settings.cpp
 msgid "Diagnostics"
 msgstr "Diagnóstico"
 
-#: pe/ui/settings.cpp
-msgid "DIAGNOSTICS"
-msgstr "DIAGNÓSTICO"
-
 #. Console mode: the console as if connected to a TV. Keep it short (about 9 letters).
-#: pe/ui/library.cpp
+#: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Docked"
 msgstr "TV"
 
@@ -526,10 +470,6 @@ msgstr "Baixando {0}"
 msgid "Downloads"
 msgstr "Downloads"
 
-#: pe/ui/settings.cpp
-msgid "DOWNLOADS"
-msgstr "DOWNLOADS"
-
 #: pe/ui/remote.cpp
 msgid "Downloads need an FTP server running on the console, on port {0}."
 msgstr "Os downloads precisam de um servidor FTP em execução no console, na porta {0}."
@@ -562,23 +502,14 @@ msgstr "Cada perfil guarda seus dados salvos em um servidor, como um usuário pr
 msgid "Each profile's save data on a server of its own, synced before and after a game."
 msgstr "Os dados salvos de cada perfil em um servidor, sincronizados antes e depois de um jogo."
 
-#: pe/ui/home.cpp
-msgid "Eden emulator for PlayStation 5"
-msgstr "Emulador Eden para PlayStation 5"
-
 #: pe/ui/settings.cpp
 msgid "Eden's debug messages in the logs of a game."
 msgstr "As mensagens de depuração do Eden nos registros de um jogo."
 
 #. A button hint: opens the keyboard to type a number. One short word, and not the word used for Change.
-#: pe/ui/game_options.cpp
+#: pe/ui/library.cpp
 msgid "Edit"
 msgstr "Editar"
-
-#. Label of the shortcut that ends the running game.
-#: pe/ui/settings.cpp
-msgid "END GAME"
-msgstr "ENCERRAR JOGO"
 
 #: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
@@ -624,20 +555,12 @@ msgstr "Exportado para {0}."
 msgid "Faster CPU emulation"
 msgstr "Emulação de CPU mais rápida"
 
-#: pe/ui/settings.cpp
-msgid "FASTER CPU EMULATION"
-msgstr "EMULAÇÃO DE CPU MAIS RÁPIDA"
-
 #. A switch: memory transfers to the emulated graphics processor are less exact and faster. DMA is a name (unchanged).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Faster DMA"
 msgstr "DMA mais rápido"
 
-#: pe/ui/settings.cpp
-msgid "FASTER DMA"
-msgstr "DMA MAIS RÁPIDO"
-
-#: pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Faster games, at some cost in accuracy."
 msgstr "Jogos mais rápidos, com alguma perda de precisão."
 
@@ -645,14 +568,6 @@ msgstr "Jogos mais rápidos, com alguma perda de precisão."
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Faster GPU emulation"
 msgstr "Emulação de GPU mais rápida"
-
-#: pe/ui/settings.cpp
-msgid "FASTER GPU EMULATION"
-msgstr "EMULAÇÃO DE GPU MAIS RÁPIDA"
-
-#: pe/ui/library.cpp
-msgid "FILE"
-msgstr "ARQUIVO"
 
 #. What a mod is made of: files that replace the game's own.
 #: eden_services.cpp, host/fake_services.cpp
@@ -692,18 +607,9 @@ msgstr "Segue as Configurações"
 msgid "For every controller. A game can have its own."
 msgstr "Para todos os controles. Cada jogo pode ter o seu."
 
-#: pe/ui/library.cpp
-msgid "FORMAT"
-msgstr "FORMATO"
-
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
 msgstr "Contador de FPS"
-
-#. Label: the frames-per-second counter drawn over a game.
-#: pe/ui/settings.cpp
-msgid "FPS OVERLAY"
-msgstr "CONTADOR DE FPS"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Frame gen multiplier"
@@ -713,7 +619,7 @@ msgstr "Multiplicador de geração de quadros"
 msgid "Frame gen target"
 msgstr "Meta de geração de quadros"
 
-#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Frame generation"
 msgstr "Geração de quadros"
 
@@ -733,16 +639,17 @@ msgstr "Francês (Canadá)"
 msgid "From {0}"
 msgstr "De {0}"
 
-#: pe/ui/settings.cpp
-msgid "FTP SERVER"
-msgstr "SERVIDOR FTP"
-
 #. The app can read every folder of the console.
 #: pe/ui/browse.cpp
 msgid "Full filesystem"
 msgstr "Sistema de arquivos completo"
 
-#: pe/ui/settings.cpp
+#. A choice of 'ASTC textures': the textures are kept uncompressed (more memory). Keep it short.
+#: settings_store.h
+msgid "Full quality"
+msgstr "Qualidade total"
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "Áudio dos jogos; a música do menu do PS5 não muda."
 
@@ -750,10 +657,6 @@ msgstr "Áudio dos jogos; a música do menu do PS5 não muda."
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
 msgstr "Não foi possível iniciar o jogo: {0} Detalhes: {1}"
-
-#: pe/ui/home.cpp
-msgid "Game details"
-msgstr "Detalhes do jogo"
 
 #: pe/ui/library.cpp
 msgid "GAME DETAILS"
@@ -763,21 +666,13 @@ msgstr "DETALHES DO JOGO"
 msgid "Game files"
 msgstr "Arquivos de jogo"
 
-#: pe/ui/settings.cpp
-msgid "GAME FILES"
-msgstr "ARQUIVOS DE JOGO"
-
-#: pe/ui/library.cpp
+#: pe/ui/home.cpp, pe/ui/library.cpp
 msgid "Game settings"
 msgstr "Configurações do jogo"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Game volume"
 msgstr "Volume do jogo"
-
-#: pe/ui/settings.cpp
-msgid "GAME VOLUME"
-msgstr "VOLUME DO JOGO"
 
 #: pe/ui/settings.cpp
 msgid "Game volume, and the sounds of this menu."
@@ -820,20 +715,21 @@ msgid "Graphics backend initialization failed. Try another backend in Settings; 
 msgstr "Falha ao inicializar o renderizador. Tente outro em Configurações; veja stderr.log e eden_log.txt para detalhes do driver."
 
 #. Console mode: the console as if held in the hands. Keep it short (about 9 letters).
-#: pe/ui/game_options.cpp, pe/ui/library.cpp
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Handheld"
 msgstr "Portátil"
-
-#: pe/ui/settings.cpp
-msgid "HIGH CONTRAST"
-msgstr "ALTO CONTRASTE"
 
 #. A switch: solid dark panels, brighter text.
 #: pe/ui/settings.cpp
 msgid "High contrast"
 msgstr "Alto contraste"
 
-#: pe/ui/settings.cpp
+#. The menu's first section, its opening screen (not a house, and not the PS5's own home screen).
+#: pe/ui/shell.cpp
+msgid "Home"
+msgstr "Início"
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "Como os jogos são desenhados e ajustados à sua TV."
 
@@ -855,7 +751,7 @@ msgid "Imported. The save it replaced was backed up."
 msgstr "Importado. Os dados substituídos ficaram em backup."
 
 #. Tag on the language or folder that is in use now.
-#: pe/ui/browse.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp
 msgid "IN USE"
 msgstr "EM USO"
 
@@ -899,10 +795,6 @@ msgstr "Entre em uma sala antes de iniciar um jogo e escolha o modo sem fio loca
 msgid "Join a room successfully or leave it before starting a game."
 msgstr "Entre em uma sala ou saia dela antes de iniciar um jogo."
 
-#: pe/ui/settings.cpp
-msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
-msgstr "Entre em uma sala do Eden e escolha o modo sem fio local em um jogo compatível. Todos precisam de uma versão compatível do jogo."
-
 #: pe/ui/multiplayer.cpp
 msgid "Join room"
 msgstr "Entrar na sala"
@@ -941,21 +833,13 @@ msgstr "Coreia"
 msgid "Korean"
 msgstr "Coreano"
 
-#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Language"
 msgstr "Idioma"
-
-#: pe/ui/library.cpp, pe/ui/settings.cpp
-msgid "LANGUAGE"
-msgstr "IDIOMA"
 
 #: pe/ui/browse.cpp
 msgid "LANGUAGES"
 msgstr "IDIOMAS"
-
-#: pe/ui/settings.cpp
-msgid "LARGER TEXT"
-msgstr "TEXTO MAIOR"
 
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
@@ -966,10 +850,6 @@ msgstr "Texto maior"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "Último jogo aberto"
-
-#: pe/ui/home.cpp
-msgid "Launch game"
-msgstr "Iniciar jogo"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1008,15 +888,11 @@ msgstr "Cálculo de ponto flutuante menos exato: mais rápido, mas alguns jogos 
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "Transferências de memória para a GPU menos exatas: mais rápido, mas alguns jogos mostram gráficos errados."
 
-#: pe/ui/home.cpp
+#: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "Biblioteca"
 
-#: pe/ui/library.cpp
-msgid "LIBRARY"
-msgstr "BIBLIOTECA"
-
-#: pe/ui/pairing.cpp, pe/ui/settings.cpp
+#: pe/ui/pairing.cpp
 msgid "Linked"
 msgstr "Vinculado"
 
@@ -1028,11 +904,6 @@ msgstr "Carregando salas públicas..."
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
 msgstr "Menor precisão de GPU: mais rápida em jogos exigentes, mas os gráficos podem ficar errados."
 
-#. Headline of the Settings screen.
-#: pe/ui/settings.cpp
-msgid "Make it yours."
-msgstr "Deixe do seu jeito."
-
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "Deixe o menu mais fácil de ver e acompanhar."
@@ -1040,10 +911,6 @@ msgstr "Deixe o menu mais fácil de ver e acompanhar."
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
 msgstr "Efeitos sonoros do menu feitos com ElevenLabs."
-
-#: pe/ui/settings.cpp
-msgid "MENU SOUNDS"
-msgstr "SONS DO MENU"
 
 #: pe/ui/settings.cpp
 msgid "Menu sounds"
@@ -1063,11 +930,11 @@ msgstr "MODS"
 msgid "Mods"
 msgstr "Mods"
 
-#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/shell.cpp
 msgid "Multiplayer"
 msgstr "Multijogador"
 
-#: pe/ui/settings.cpp
+#: pe/ui/multiplayer.cpp
 msgid "MULTIPLAYER"
 msgstr "MULTIJOGADOR"
 
@@ -1076,15 +943,11 @@ msgid "Mute"
 msgstr "Mudo"
 
 #: pe/ui/settings.cpp
-msgid "MUTE"
-msgstr "MUDO"
-
-#: pe/ui/settings.cpp
 msgid "Muted"
 msgstr "Sem som"
 
 #. Button hint: move the highlight.
-#: pe/ui/home.cpp, pe/ui/update.cpp
+#: pe/ui/update.cpp
 msgid "Navigate"
 msgstr "Navegar"
 
@@ -1106,11 +969,6 @@ msgstr "Novo perfil"
 msgid "Next launch: {0}"
 msgstr "Na próxima abertura: {0}"
 
-#. Label: the folder used the next time the app starts.
-#: pe/ui/settings.cpp
-msgid "NEXT START"
-msgstr "PRÓXIMA ABERTURA"
-
 #: pe/ui/multiplayer.cpp
 msgid "Nickname"
 msgstr "Apelido"
@@ -1118,10 +976,6 @@ msgstr "Apelido"
 #: pe/ui/multiplayer.cpp
 msgid "Nickname: {0}"
 msgstr "Apelido: {0}"
-
-#: pe/ui/library.cpp
-msgid "No cover art"
-msgstr "Sem capa"
 
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
@@ -1186,7 +1040,7 @@ msgstr "Nenhum"
 msgid "Not connected yet"
 msgstr "Ainda não conectado"
 
-#: pe/ui/pairing.cpp, pe/ui/settings.cpp
+#: pe/ui/pairing.cpp
 msgid "Not linked"
 msgstr "Não vinculado"
 
@@ -1198,10 +1052,6 @@ msgstr "Não vinculado: os dados salvos ficam no console"
 msgid "Not on the console"
 msgstr "Não está no console"
 
-#: pe/ui/library.cpp
-msgid "Not on the console yet. Download it to play and to change its settings."
-msgstr "Ainda não está no console. Baixe o jogo para jogar e alterar as configurações dele."
-
 #: pe/ui/pairing.cpp
 msgid "Not paired"
 msgstr "Não pareado"
@@ -1209,10 +1059,6 @@ msgstr "Não pareado"
 #: pe/ui/remote.cpp
 msgid "Not reachable"
 msgstr "Inacessível"
-
-#: pe/ui/settings.cpp
-msgid "Not readable"
-msgstr "Ilegível"
 
 #: pe/ui/settings.cpp
 msgid "Not set up"
@@ -1228,7 +1074,7 @@ msgstr "Nada para importar"
 msgid "Off"
 msgstr "Desativado"
 
-#: pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/multiplayer.cpp
 msgid "Offline"
 msgstr "Offline"
 
@@ -1237,17 +1083,13 @@ msgstr "Offline"
 msgid "On"
 msgstr "Ativado"
 
-#: pe/ui/settings.cpp
-msgid "ON THIS CONSOLE"
-msgstr "NESTE CONSOLE"
-
 #. Short tag on a folder row.
 #: pe/ui/browse.cpp
 msgid "OPEN"
 msgstr "ABRIR"
 
 #. Button hint: open the highlighted folder.
-#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Open"
 msgstr "Abrir"
 
@@ -1263,11 +1105,6 @@ msgstr "Abrir biblioteca"
 #: pe/ui/game_options.cpp
 msgid "Options"
 msgstr "Options"
-
-#. Label: see 'Output resolution'.
-#: pe/ui/settings.cpp
-msgid "OUTPUT RESOLUTION"
-msgstr "RESOLUÇÃO DE SAÍDA"
 
 #. Setting: the size of the picture sent to the TV (1080p, 1440p or 2160p). Not the same as 'Resolution', which scales the game's own picture (1x, 2x...).
 #: pe/ui/settings.cpp
@@ -1317,13 +1154,14 @@ msgid "Patch"
 msgstr "Patch"
 
 #. A settings category: options that make games run faster, at some cost in accuracy.
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "Desempenho"
 
-#: pe/ui/settings.cpp
-msgid "PERFORMANCE"
-msgstr "DESEMPENHO"
+#. Button and button hint: start the game shown. Keep it to one short word.
+#: pe/ui/home.cpp, pe/ui/library.cpp
+msgid "Play"
+msgstr "Jogar"
 
 #: pe/ui/save_sync.cpp
 msgid "Play anyway"
@@ -1349,10 +1187,6 @@ msgstr "jogando"
 msgid "Playing"
 msgstr "Jogando"
 
-#: pe/ui/settings.cpp
-msgid "PLAYING"
-msgstr "JOGANDO"
-
 #: pe/ui/profiles.cpp
 msgid "Playing as {0}"
 msgstr "Jogando como {0}"
@@ -1360,10 +1194,6 @@ msgstr "Jogando como {0}"
 #: settings_store.h
 msgid "Polish"
 msgstr "Polonês"
-
-#: pe/ui/settings.cpp
-msgid "Port {0}"
-msgstr "Porta {0}"
 
 #: settings_store.h
 msgid "Portuguese"
@@ -1377,10 +1207,6 @@ msgstr "Português (Brasil)"
 #: pe/ui/browse.cpp
 msgid "Powered by Eden"
 msgstr "Com a tecnologia do Eden"
-
-#: pe/ui/settings.cpp
-msgid "PREFERENCES"
-msgstr "PREFERÊNCIAS"
 
 #. Update dialog headline while the download starts.
 #: pe/ui/remote.cpp, pe/ui/update.cpp
@@ -1399,10 +1225,6 @@ msgstr "Pressione de novo para substituir os dados salvos deste jogo. Os atuais 
 #: pe/ui/multiplayer.cpp
 msgid "Private room"
 msgstr "Sala privada"
-
-#: pe/ui/settings.cpp
-msgid "PRIVATE ROOM"
-msgstr "SALA PRIVADA"
 
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
@@ -1427,10 +1249,6 @@ msgstr "Perfil {0}"
 #: pe/ui/profiles.cpp, pe/ui/settings.cpp
 msgid "Profiles"
 msgstr "Perfis"
-
-#: pe/ui/settings.cpp
-msgid "PROFILES"
-msgstr "PERFIS"
 
 #: pe/ui/browse.cpp
 msgid "PROJECT CREDITS"
@@ -1470,18 +1288,9 @@ msgstr "Falha ao inicializar o controle do PS5"
 msgid "PS5 EDITION"
 msgstr "EDIÇÃO PS5"
 
-#. {0} is the version, for example v1.000.030.
-#: pe/ui/home.cpp
-msgid "PS5 EDITION  /  {0}"
-msgstr "EDIÇÃO PS5  /  {0}"
-
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
 msgstr "Salas públicas"
-
-#: pe/ui/settings.cpp
-msgid "PUBLIC ROOMS"
-msgstr "SALAS PÚBLICAS"
 
 #: pe/ui/remote.cpp
 msgid "Queued"
@@ -1501,10 +1310,6 @@ msgstr "Aleatória"
 msgid "Reactive flushing"
 msgstr "Descarga reativa"
 
-#: pe/ui/settings.cpp
-msgid "REACTIVE FLUSHING"
-msgstr "DESCARGA REATIVA"
-
 #: pe/ui/remote.cpp
 msgid "Read the lists again"
 msgstr "Ler as listas de novo"
@@ -1513,7 +1318,7 @@ msgstr "Ler as listas de novo"
 msgid "Reading the game lists..."
 msgstr "Lendo as listas de jogos..."
 
-#: pe/ui/remote.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/remote.cpp
 msgid "Reading..."
 msgstr "Lendo..."
 
@@ -1524,10 +1329,6 @@ msgstr "Pronto"
 #: pe/ui/home.cpp
 msgid "RECENTLY PLAYED"
 msgstr "JOGADOS RECENTEMENTE"
-
-#: pe/ui/settings.cpp
-msgid "REDUCE MOTION"
-msgstr "REDUZIR MOVIMENTO"
 
 #. A switch: no drifting, sliding or zooming on screen.
 #: pe/ui/settings.cpp
@@ -1543,12 +1344,7 @@ msgstr "Atualizar"
 msgid "Refresh rate"
 msgstr "Taxa de atualização"
 
-#. Label: see 'Refresh rate'.
-#: pe/ui/settings.cpp
-msgid "REFRESH RATE"
-msgstr "TAXA DE ATUALIZAÇÃO"
-
-#: pe/ui/browse.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "REGIÃO"
 
@@ -1564,10 +1360,6 @@ msgstr "Renomear"
 msgid "Renderer"
 msgstr "Renderizador"
 
-#: pe/ui/settings.cpp
-msgid "RENDERER"
-msgstr "RENDERIZADOR"
-
 #: pe/ui/game_options.cpp
 msgid "Reset"
 msgstr "Redefinir"
@@ -1575,10 +1367,6 @@ msgstr "Redefinir"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Resolution"
 msgstr "Resolução"
-
-#: pe/ui/settings.cpp
-msgid "RESOLUTION"
-msgstr "RESOLUÇÃO"
 
 #: pe/ui/game_options.cpp
 msgid "Right Joy-Con"
@@ -1600,10 +1388,6 @@ msgstr "ROM ausente da pasta de arquivos de jogo"
 #: pe/ui/multiplayer.cpp
 msgid "Room address"
 msgstr "Endereço da sala"
-
-#: pe/ui/settings.cpp
-msgid "Room address and UDP port"
-msgstr "Endereço da sala e porta UDP"
 
 #: pe/ui/multiplayer.cpp
 msgid "Room {0} of {1}"
@@ -1661,14 +1445,6 @@ msgstr "Pasta de dados encontrada"
 msgid "Save sync"
 msgstr "Sincronização de dados salvos"
 
-#: pe/ui/settings.cpp
-msgid "SAVE SYNC"
-msgstr "SINCRONIZAÇÃO DE DADOS SALVOS"
-
-#: pe/ui/settings.cpp
-msgid "SAVE-SYNC.JSON"
-msgstr "SAVE-SYNC.JSON"
-
 #: pe/ui/pairing.cpp
 msgid "save-sync.json cannot be read ({0}). Nothing syncs until it is corrected over FTP."
 msgstr "Não é possível ler save-sync.json ({0}). Nada é sincronizado até que seja corrigido por FTP."
@@ -1698,6 +1474,11 @@ msgstr "Salvo. Uma tela que não aceita 120 Hz continua em 60 Hz."
 msgid "Saved. Applies when a game starts."
 msgstr "Salvo. Vale a partir do próximo jogo iniciado."
 
+#. Shown after choosing 'Full quality' for 'ASTC textures'. 1x is a resolution scale (unchanged). It has two lines: keep it short.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Saved. Full quality uses four times the graphics memory for these textures and can run out above 1x."
+msgstr "Salvo. A qualidade total usa quatro vezes mais memória gráfica para essas texturas e pode esgotá-la acima de 1x."
+
 #: pe/ui/browse.cpp
 msgid "Saved. Reopen ProsperoEden to use this folder."
 msgstr "Salvo. Reabra o ProsperoEden para usar esta pasta."
@@ -1711,22 +1492,15 @@ msgstr "Escaneie o código com o celular ou abra o endereço abaixo."
 msgid "Scroll"
 msgstr "Rolar"
 
+#. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
+#: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Sections"
+msgstr "Seções"
+
 #. Button hint: choose the highlighted item (not the Select button).
 #: pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/pairing.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
 msgid "Select"
 msgstr "Selecionar"
-
-#: pe/ui/library.cpp
-msgid "Select a game"
-msgstr "Selecione um jogo"
-
-#: pe/ui/library.cpp
-msgid "Select a game to begin"
-msgstr "Selecione um jogo para começar"
-
-#: pe/ui/library.cpp
-msgid "Select a readable game to configure its mode."
-msgstr "Selecione um jogo legível para configurar o modo."
 
 #. Heading: the language highlighted in the list.
 #: pe/ui/browse.cpp
@@ -1742,14 +1516,9 @@ msgstr "A ROM selecionada não está mais disponível"
 msgid "Server too old for save sync"
 msgstr "Servidor antigo demais para a sincronização"
 
-#: pe/ui/home.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Settings"
 msgstr "Configurações"
-
-#. Label: whether keys and firmware are in place.
-#: pe/ui/settings.cpp
-msgid "SETUP"
-msgstr "PREPARAÇÃO"
 
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
@@ -1787,10 +1556,6 @@ msgstr "Mostrando a lista anterior."
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "Entre em {0} como o usuário a quem pertencem os dados salvos deste perfil."
 
-#: pe/ui/library.cpp
-msgid "SIZE"
-msgstr "TAMANHO"
-
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1802,24 +1567,12 @@ msgid "Skip CPU invalidation"
 msgstr "Ignorar invalidação da CPU"
 
 #: pe/ui/settings.cpp
-msgid "SKIP CPU INVALIDATION"
-msgstr "IGNORAR INVALIDAÇÃO DA CPU"
-
-#: pe/ui/settings.cpp
 msgid "Skips some checks when a game changes memory the GPU uses: faster, and textures can be stale."
 msgstr "Ignora algumas verificações quando o jogo altera memória usada pela GPU: mais rápido, mas as texturas podem ficar desatualizadas."
 
 #: pe/ui/settings.cpp
 msgid "Solid panels, brighter text and an outlined highlight."
 msgstr "Painéis sólidos, texto mais claro e destaque com contorno."
-
-#: pe/ui/library.cpp
-msgid "SOURCE"
-msgstr "FONTE"
-
-#: pe/ui/library.cpp, pe/ui/settings.cpp
-msgid "SOURCES"
-msgstr "FONTES"
 
 #: settings_store.h
 msgid "Spanish"
@@ -1852,10 +1605,6 @@ msgstr "Inicie qualquer jogo uma vez antes de importar dados salvos."
 msgid "STARTING"
 msgstr "INICIANDO"
 
-#: pe/ui/library.cpp
-msgid "STATE"
-msgstr "ESTADO"
-
 #: pe/ui/settings.cpp
 msgid "Stops the background drifting and the screens sliding, here and on the loading screen."
 msgstr "Para o movimento do fundo e o deslizar das telas, aqui e na tela de carregamento."
@@ -1863,10 +1612,6 @@ msgstr "Para o movimento do fundo e o deslizar das telas, aqui e na tela de carr
 #: pe/ui/browse.cpp
 msgid "Supply your own files"
 msgstr "Use seus próprios arquivos"
-
-#: pe/ui/settings.cpp
-msgid "SYNC"
-msgstr "SINCRONIZAÇÃO"
 
 #: pe/ui/save_sync.cpp
 msgid "Sync the save data once more."
@@ -1877,7 +1622,7 @@ msgid "Syncing save data"
 msgstr "Sincronizando dados salvos"
 
 #. A category of a game's settings: how the emulated console itself behaves.
-#: pe/ui/game_options.cpp, pe/ui/library.cpp
+#: pe/ui/library.cpp
 msgid "System"
 msgstr "Sistema"
 
@@ -1947,9 +1692,14 @@ msgstr "O jogo inicia quando o download terminar."
 msgid "The keyboard could not be opened."
 msgstr "Não foi possível abrir o teclado."
 
-#: pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "O idioma que os jogos usam quando o oferecem."
+
+#. Under the title Theme: what a theme changes.
+#: pe/ui/settings.cpp
+msgid "The look of this menu."
+msgstr "A aparência deste menu."
 
 #: pe/ui/pairing.cpp
 msgid "The profile or the server is no longer there."
@@ -1988,6 +1738,11 @@ msgstr "A fonte não tem mais este jogo."
 msgid "The update could not finish"
 msgstr "Não foi possível concluir a atualização"
 
+#. A tile of Settings and its dialog's title: the look of this menu (its colours and artwork).
+#: pe/ui/settings.cpp
+msgid "Theme"
+msgstr "Tema"
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "Este console e o servidor têm dados salvos que o outro não conhece. Quais devem ficar? Os outros são guardados como backup."
@@ -2023,7 +1778,7 @@ msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}
 msgstr "Para importar, copie uma pasta do Ryujinx para ryujinx/ ou os dados salvos para save-import/{0}/, ao lado de roms/."
 
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
-#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp
 msgid "Touchpad"
 msgstr "Touchpad"
 
@@ -2031,6 +1786,11 @@ msgstr "Touchpad"
 #: pe/ui/game_options.cpp
 msgid "Triangle"
 msgstr "Triângulo"
+
+#. One line about the theme named Canopy: its artwork is a tropical sunset, its panels are dark green glass, its accent colour is lime green.
+#: pe/ui/theme.cpp
+msgid "Tropical dusk, dark green glass and lime."
+msgstr "Entardecer tropical, vidro verde-escuro e verde-limão."
 
 #: pe/ui/pairing.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/update.cpp
 msgid "Try again"
@@ -2102,10 +1862,6 @@ msgstr "ATUALIZAÇÕES, DLC"
 msgid "Upscaling filter"
 msgstr "Filtro de ampliação"
 
-#: pe/ui/settings.cpp
-msgid "UPSCALING FILTER"
-msgstr "FILTRO DE AMPLIAÇÃO"
-
 #: eden_services.cpp
 msgid "USA"
 msgstr "EUA"
@@ -2138,10 +1894,6 @@ msgid "Vibration"
 msgstr "Vibração"
 
 #: pe/ui/settings.cpp
-msgid "VIBRATION"
-msgstr "VIBRAÇÃO"
-
-#: pe/ui/settings.cpp
 msgid "Vibration off"
 msgstr "Vibração desativada"
 
@@ -2153,13 +1905,9 @@ msgstr "Vibração ativada"
 msgid "Vibration, button mapping and the shortcuts during a game."
 msgstr "Vibração, mapeamento de botões e os atalhos durante o jogo."
 
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Video"
 msgstr "Vídeo"
-
-#: pe/ui/settings.cpp
-msgid "VIDEO"
-msgstr "VÍDEO"
 
 #: pe/ui/home.cpp
 msgid "VIEW ALL GAMES"
@@ -2220,10 +1968,6 @@ msgstr "A pergunta volta na próxima vez."
 msgid "You are told again at the next sync."
 msgstr "O aviso volta na próxima sincronização."
 
-#: pe/ui/library.cpp
-msgid "Your games"
-msgstr "Seus jogos"
-
 #. Update dialog: installing the new app version keeps the player's files.
 #: pe/ui/update.cpp
 msgid "Your games, saves and settings are kept."
@@ -2263,7 +2007,7 @@ msgid "{0} game lists could not be read."
 msgstr "Não foi possível ler {0} listas de jogos."
 
 #. Any number of games other than one (also 0). See '{0} game'.
-#: pe/ui/browse.cpp, pe/ui/remote.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/library.cpp, pe/ui/remote.cpp
 msgid "{0} games"
 msgstr "{0} jogos"
 
@@ -2313,7 +2057,7 @@ msgid "{0} of {1} mods on"
 msgstr "{0} de {1} mods ativados"
 
 #. How many of a game's mods are switched on: 2 of 3 on.
-#: pe/ui/library.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "{0} of {1} on"
 msgstr "{0} de {1} ativados"
 
@@ -2338,7 +2082,7 @@ msgid "{0} · Profile {1}"
 msgstr "{0} · Perfil {1}"
 
 #. A percentage (a volume): write it as the language does, for example with a space before the sign.
-#: pe/ui/game_options.cpp, pe/ui/remote.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/remote.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
 msgid "{0}%"
 msgstr "{0}%"
 

@@ -56,10 +56,18 @@ replace('''                    (double)period / 1e6);
 replace('   wsi->base.get_support =', '   videoout_ref();\n\n   wsi->base.get_support =')
 replace('   if (wsi)\n      vk_free(alloc, wsi);',
         '   if (wsi) {\n      videoout_unref();\n      vk_free(alloc, wsi);\n      wsi_device->wsi[VK_ICD_WSI_PLATFORM_DISPLAY] = NULL;\n   }')
+# What a built driver is recorded by (EDEN_WSI_SHA256): the display source as adapted, and a name
+# for the state of the other files adapted below. Change the name with them, and the driver is
+# built again wherever it was built before (tools/prepare-build.sh).
+OTHER_ADAPTATIONS = 'winsys-submission-statistics-on-request'
+digest = hashlib.sha256((text + OTHER_ADAPTATIONS).encode()).hexdigest()
+if sys.argv[1:2] == ['--digest']:
+    print(digest)
+    sys.exit(0)
 if sys.argv[1:2] == ['--check']:
-    # Is the driver that was built (its recorded display source, EDEN_WSI_SHA256) this adaptation?
+    # Is the driver that was built this adaptation?
     recorded = Path(sys.argv[2]).read_text().split()[0] if Path(sys.argv[2]).is_file() else ''
-    sys.exit(0 if recorded == hashlib.sha256(text.encode()).hexdigest() else 1)
+    sys.exit(0 if recorded == digest else 1)
 changed = not target.exists() or target.read_text() != text
 if changed:
     target.write_text(text)
@@ -75,6 +83,15 @@ print(f'RADV WSI adaptation changed={changed} sha256={hashlib.sha256(text.encode
 for relative, replacements in {
     # Restore the pinned upload path: explicit CPU flush did not affect HUD corruption.
     'src/amd/vulkan/radv_cmd_buffer.c': [],
+    # The winsys writes a line of submission statistics every ten seconds, on the thread that
+    # submits and with the submit lock held. On the console the submission that writes it takes
+    # about 85 ms where the others take a quarter of a millisecond: one frame of 115 ms every
+    # ten seconds, in every game. The line is written when RADV_PS5_SUBMIT_STATS is set.
+    'src/amd/vulkan/winsys/ps5/radv_ps5_cs.c': [
+        ('   if (now - radv_ps5_submit_window.window_start < 10ull * 1000 * 1000 * 1000)\n      return;\n',
+         '   static int statistics = -1;\n   if (statistics < 0)\n      statistics = getenv("RADV_PS5_SUBMIT_STATS") != NULL;\n'
+         '   if (!statistics || now - radv_ps5_submit_window.window_start < 10ull * 1000 * 1000 * 1000)\n      return;\n'),
+    ],
     'src/amd/vulkan/radv_physical_device.c': [
         ('   if (result == VK_ERROR_INCOMPATIBLE_DRIVER || result == VK_ERROR_INITIALIZATION_FAILED)\n      return VK_SUCCESS;',
          '   if (result != VK_SUCCESS) fprintf(stderr, "radv/ps5: physical device creation result=%d\\n", result);\n   if (result == VK_ERROR_INCOMPATIBLE_DRIVER || result == VK_ERROR_INITIALIZATION_FAILED)\n      return VK_SUCCESS;'),

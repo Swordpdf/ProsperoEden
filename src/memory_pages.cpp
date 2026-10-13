@@ -17,6 +17,15 @@
 // Keep CPU heaps/tables and JIT views out of RADV's high-word-2 GPU window.
 // This is a non-fixed hint: the kernel retains ownership of collision handling.
 constexpr std::uintptr_t cpu_mapping_hint = 0x1000000000ull;
+// Where the guest's own memory is mapped: above every address a guest can have (2^39, the end of
+// the 39-bit address space of a 64-bit title). A guest page table entry is the page's host
+// address less its guest address, and zero means "no pointer" (common/page_table.h). At the
+// general hint the guest's memory sat at 67 to 71 GiB, inside the guest's address space: a game
+// that mapped 2 MiB there at the matching offset got 512 entries of zero ("memory mapping base
+// yield a nullptr within the table"), read zeros from that memory, jumped to address 0 and was
+// restarted as a guest fault. A hint, as the other is: where the system places the block instead
+// is reported (EDEN_GUEST_MEMORY).
+constexpr std::uintptr_t guest_memory_hint = 0x8000000000ull;
 static bool cpu_mapping_address(void* base) {
     return reinterpret_cast<std::uintptr_t>(base) >= 0x300000000ull && base != MAP_FAILED;
 }
@@ -98,7 +107,8 @@ const Header& header_of(const void* pointer, std::size_t page) {
 // PS5 direct memory is real memory from the first byte: there is no page the system fills in
 // when it is first touched. A block from here is dense and zeroed. What must not be dense (the
 // guest page tables, the heap) uses the two families below.
-void* AllocateMemoryPages(std::size_t size) noexcept {
+namespace {
+void* AllocatePagesAt(std::size_t size, [[maybe_unused]] std::uintptr_t hint) noexcept {
     const long page = sysconf(_SC_PAGESIZE);
     const std::size_t lead = page > 0 ? lead_size(size, static_cast<std::size_t>(page)) : 0;
     const auto total = page > 0 ? allocation_size(size, page, lead) : 0;
@@ -106,7 +116,7 @@ void* AllocateMemoryPages(std::size_t size) noexcept {
     void* base = nullptr;
     std::int64_t physical = -1;
 #ifdef PS5_NATIVE
-    base = reinterpret_cast<void*>(cpu_mapping_hint);
+    base = reinterpret_cast<void*>(hint);
     const auto limit = sceKernelGetDirectMemorySize();
     auto rc = sceKernelAllocateDirectMemory(0, limit, total, lead, 12, &physical);
     if (rc != 0) {
@@ -138,6 +148,30 @@ void* AllocateMemoryPages(std::size_t size) noexcept {
     auto* data = static_cast<std::uint8_t*>(base) + lead;
     new (data - page) Header{physical, total, lead};
     return data;
+}
+} // namespace
+
+void* AllocateMemoryPages(std::size_t size) noexcept {
+#ifdef PS5_NATIVE
+    return AllocatePagesAt(size, cpu_mapping_hint);
+#else
+    return AllocatePagesAt(size, 0);
+#endif
+}
+
+// The guest's memory (host_memory.cpp): as AllocateMemoryPages, above the guest's address space.
+void* AllocateGuestMemory(std::size_t size) noexcept {
+#ifdef PS5_NATIVE
+    void* base = AllocatePagesAt(size, guest_memory_hint);
+    if (!base) base = AllocatePagesAt(size, cpu_mapping_hint);
+    char line[112];
+    const int length = std::snprintf(line, sizeof(line), "EDEN_GUEST_MEMORY va=%p bytes=%zu above_guest=%d\n", base, size,
+                                     int(reinterpret_cast<std::uintptr_t>(base) >= guest_memory_hint));
+    if (length > 0) Report(line);
+    return base;
+#else
+    return AllocatePagesAt(size, 0);
+#endif
 }
 
 #ifdef PS5_NATIVE
@@ -241,11 +275,19 @@ SparseRange* SparseRangeOf(std::uintptr_t address) {
 }
 
 #ifdef PS5_NATIVE
+// From as high in the pool as there is room (src/direct_memory.c): what is committed this way,
+// the heap's pieces, stays for good, while a game's memory and its graphics come and go below.
+extern "C" int eden_direct_high(std::size_t size, std::size_t alignment, int type, std::int64_t* start);
+// Where the system puts it: a 2 MiB block of this file's, which a session gives back.
+extern "C" int eden_direct_low(std::size_t size, std::size_t alignment, int type, std::int64_t* start);
+#endif
+
+#ifdef PS5_NATIVE
 std::int64_t zero_block = -1;
 
 // A 2 MiB block of direct memory, zeroed through a mapping of its own that is gone again.
 bool ZeroedBlock(std::int64_t* physical) {
-    if (sceKernelAllocateDirectMemory(0, sceKernelGetDirectMemorySize(), SparseSlot, SparseSlot, 12, physical) != 0)
+    if (eden_direct_low(SparseSlot, SparseSlot, 12, physical) != 0)
         return false;
     void* view = reinterpret_cast<void*>(cpu_mapping_hint);
     if (sceKernelMapDirectMemory(&view, SparseSlot, PROT_READ | PROT_WRITE, 0, *physical, SparseSlot) != 0) {
@@ -506,8 +548,7 @@ bool CommitMemoryRange(void* address, std::size_t size) noexcept {
         return false;
 #ifdef PS5_NATIVE
     std::int64_t physical = -1;
-    if (sceKernelAllocateDirectMemory(0, sceKernelGetDirectMemorySize(), size, LargePage, 12, &physical) != 0)
-        return false;
+    if (eden_direct_high(size, LargePage, 12, &physical) != 0) return false;
     void* at = address;
     if (sceKernelMapDirectMemory(&at, size, PROT_READ | PROT_WRITE, MAP_FIXED, physical, LargePage) != 0 ||
         at != address) {

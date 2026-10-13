@@ -179,11 +179,11 @@ void Launcher::draw_profiles(Canvas &c, float open)
     list.push_opacity(open);
     list.push_transform(1.0f - 0.03f * (1.0f - open) * motion(), 960.0f, 540.0f, 0.0f,
                         (1.0f - open) * 26.0f * motion());
-    glass(c, kDialog, 26.0f, theme::kPanel.with_alpha(0.97f), theme::kPanelEdge.with_alpha(0.66f), 1.6f);
-    text_shrink(c, tr("Profiles"), 592.0f, baseline(218.0f, 62.0f, theme::kDisplay), theme::kDisplay,
-                theme::kTitle, 736.0f);
+    glass(c, kDialog, th().radius_panel, th().panel.with_alpha(0.97f), th().panel_edge.with_alpha(0.66f), 1.6f);
+    text_shrink(c, tr("Profiles"), 592.0f, baseline(218.0f, 62.0f, th().size_display), th().size_display,
+                th().title, 736.0f);
     text_shrink(c, tr("Each profile keeps its own save data, settings and recent games."), 592.0f,
-                baseline(291.0f, 32.0f, theme::kSmall), theme::kSmall, Color::rgb(0xbecbb9), 736.0f);
+                baseline(291.0f, 32.0f, th().size_small), th().size_small, th().copy, 736.0f);
 
     const int count = static_cast<int>(profiles_.size());
     list.push_clip({kWindow.x - 24.0f, kWindow.y - 6.0f, kWindow.w + 48.0f, kWindow.h + 12.0f});
@@ -192,10 +192,10 @@ void Launcher::draw_profiles(Canvas &c, float open)
     for (int row = profile_rows_.first_row(); row <= profile_rows_.last_row(); ++row)
     {
         list.push_opacity(profile_rows_.row_alpha(row, kRowHeight));
-        plate_rest(c, kRowPlate, {592.0f, row_top(row), 736.0f, kRowHeight});
+        plate_rest(c, row_plate(), {592.0f, row_top(row), 736.0f, kRowHeight});
         list.pop_opacity();
     }
-    plate_focus(c, kRowPlate, {592.0f, kRowsTop + profile_rows_.cursor() - profile_rows_.scroll(), 736.0f, kRowHeight},
+    plate_focus(c, row_plate(), {592.0f, kRowsTop + profile_rows_.cursor() - profile_rows_.scroll(), 736.0f, kRowHeight},
                 1.0f);
     for (int row = profile_rows_.first_row(); row <= profile_rows_.last_row(); ++row)
     {
@@ -206,10 +206,10 @@ void Launcher::draw_profiles(Canvas &c, float open)
             // A plus, and what the row does.
             const float cx = 644.0f;
             const float cy = top + kRowHeight * 0.5f;
-            list.line(cx - 10.0f, cy, cx + 10.0f, cy, 2.6f, theme::kLime);
-            list.line(cx, cy - 10.0f, cx, cy + 10.0f, 2.6f, theme::kLime);
-            text_shrink(c, tr("New profile"), 676.0f, baseline(top, kRowHeight, theme::kText24), theme::kText24,
-                        theme::kValue, 628.0f);
+            list.line(cx - 10.0f, cy, cx + 10.0f, cy, 2.6f, th().accent);
+            list.line(cx, cy - 10.0f, cx, cy + 10.0f, 2.6f, th().accent);
+            text_shrink(c, tr("New profile"), 676.0f, baseline(top, kRowHeight, th().size_text), th().size_text,
+                        th().value, 628.0f);
         }
         else
         {
@@ -217,10 +217,10 @@ void Launcher::draw_profiles(Canvas &c, float open)
             // Who is playing is said at the right, in the colour of things that are on.
             float taken = 0.0f;
             if (profile.playing)
-                taken = text_shrink(c, tr("Playing"), 1296.0f, baseline(top, kRowHeight, theme::kSmall),
-                                    theme::kSmall, theme::kLime, 220.0f, Align::right);
-            text_shrink(c, profile.name, 628.0f, baseline(top, kRowHeight, theme::kText24), theme::kText24,
-                        theme::kValue, 668.0f - taken - 28.0f);
+                taken = text_shrink(c, tr("Playing"), 1296.0f, baseline(top, kRowHeight, th().size_small),
+                                    th().size_small, th().accent, 220.0f, Align::right);
+            text_shrink(c, profile.name, 628.0f, baseline(top, kRowHeight, th().size_text), th().size_text,
+                        th().value, 668.0f - taken - 28.0f);
         }
         list.pop_opacity();
     }
@@ -229,13 +229,13 @@ void Launcher::draw_profiles(Canvas &c, float open)
 
     if (!message_.empty())
     {
-        notice_block(c, message_, 592.0f, kHints - 6.0f, theme::kSmall, 26.0f,
-                     message_warning_ ? theme::kWarning : theme::kLimePale, 736.0f, 2, message_warning_);
+        notice_block(c, message_, 592.0f, kHints - 6.0f, th().size_small, 26.0f,
+                     message_warning_ ? th().warning : th().accent_pale, 736.0f, 2, message_warning_);
     }
     else if (profile_rows_.selected >= count)
     {
         static constexpr Hint kHintsRow[] = {{Pad::cross, TR("Add")}, {Pad::circle, TR("Back")}};
-        draw_hints(c, kHintsRow, 2, 592.0f, kHints, theme::kCopy, 736.0f);
+        draw_hints(c, kHintsRow, 2, 592.0f, kHints, th().copy, 736.0f);
     }
     else
     {
@@ -243,7 +243,7 @@ void Launcher::draw_profiles(Canvas &c, float open)
                                              {Pad::leftright, TR("Rename")},
                                              {Pad::square, TR("Remove")},
                                              {Pad::circle, TR("Back")}};
-        draw_hints(c, kHintsRow, 4, 592.0f, kHints, theme::kCopy, 736.0f);
+        draw_hints(c, kHintsRow, 4, 592.0f, kHints, th().copy, 736.0f);
     }
     list.pop_transform();
     list.pop_opacity();

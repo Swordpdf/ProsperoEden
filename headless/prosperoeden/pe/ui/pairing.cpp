@@ -189,13 +189,13 @@ void Launcher::draw_sync_setup(Canvas &c, float open)
     list.push_opacity(open);
     list.push_transform(1.0f - 0.03f * (1.0f - open) * motion(), 960.0f, 540.0f, 0.0f,
                         (1.0f - open) * 26.0f * motion());
-    glass(c, kDialog, 26.0f, theme::kPanel.with_alpha(0.97f), theme::kPanelEdge.with_alpha(0.66f), 1.6f);
+    glass(c, kDialog, th().radius_panel, th().panel.with_alpha(0.97f), th().panel_edge.with_alpha(0.66f), 1.6f);
     const bool choosing = sync_setup_choosing_;
     const std::string chosen = sync_setup_profile_ < static_cast<int>(sync_setup_.profiles.size()) ?
                                    sync_setup_.profiles[static_cast<std::size_t>(sync_setup_profile_)].name :
                                    std::string{};
     text_shrink(c, choosing ? fill(tr("Pair {0} with"), {chosen}) : std::string{tr("Save sync")}, 592.0f,
-                baseline(218.0f, 62.0f, theme::kDisplay), theme::kDisplay, theme::kTitle, 736.0f);
+                baseline(218.0f, 62.0f, th().size_display), th().size_display, th().title, 736.0f);
     const bool said = !message_.empty() && message_age_ < 6.0f;
     notice_block(c,
                  said             ? message_ :
@@ -207,8 +207,8 @@ void Launcher::draw_sync_setup(Canvas &c, float open)
                                     std::string{tr("Each profile keeps its save data on a server, as its own user "
                                                    "there. Pair one with Cross: no typing, your phone does the "
                                                    "signing in.")},
-                 592.0f, baseline(296.0f, 32.0f, theme::kSmall), theme::kSmall, 32.0f,
-                 said && message_warning_ ? theme::kWarning : !sync_setup_.error.empty() ? theme::kWarning : theme::kCopy,
+                 592.0f, baseline(296.0f, 32.0f, th().size_small), th().size_small, 32.0f,
+                 said && message_warning_ ? th().warning : !sync_setup_.error.empty() ? th().warning : th().copy,
                  736.0f, 3, false);
 
     list.push_clip({kWindow.x - 24.0f, kWindow.y - 6.0f, kWindow.w + 48.0f, kWindow.h + 12.0f});
@@ -217,11 +217,11 @@ void Launcher::draw_sync_setup(Canvas &c, float open)
     for (int row = sync_setup_rows_.first_row(); row <= sync_setup_rows_.last_row(); ++row)
     {
         list.push_opacity(sync_setup_rows_.row_alpha(row, kRowHeight));
-        plate_rest(c, kRowPlate, {592.0f, row_top(row), 736.0f, kRowHeight});
+        plate_rest(c, row_plate(), {592.0f, row_top(row), 736.0f, kRowHeight});
         list.pop_opacity();
     }
     if (sync_setup_rows_.count > 0)
-        plate_focus(c, kRowPlate,
+        plate_focus(c, row_plate(),
                     {592.0f, kRowsTop + sync_setup_rows_.cursor() - sync_setup_rows_.scroll(), 736.0f, kRowHeight}, 1.0f);
     for (int row = sync_setup_rows_.first_row(); row <= sync_setup_rows_.last_row(); ++row)
     {
@@ -229,8 +229,8 @@ void Launcher::draw_sync_setup(Canvas &c, float open)
         std::string title;
         std::string line;
         std::string state;
-        Color tone = theme::kMeta;
-        Color state_tone = theme::kMeta;
+        Color tone = th().meta;
+        Color state_tone = th().meta;
         if (choosing)
         {
             if (row >= static_cast<int>(pair_servers_.size()))
@@ -247,24 +247,24 @@ void Launcher::draw_sync_setup(Canvas &c, float open)
             if (!profile.note.empty())
             {
                 line = profile.note;
-                tone = theme::kWarning;
+                tone = th().warning;
             }
             else
             {
                 line = profile.linked ? profile.server : std::string{tr("Not linked: its save data stays on the console")};
             }
             state = profile.linked ? (profile.note.empty() ? tr("Linked") : tr("Needs attention")) : tr("Not linked");
-            state_tone = profile.linked && profile.note.empty() ? theme::kLimePale : theme::kMeta;
+            state_tone = profile.linked && profile.note.empty() ? th().accent_pale : th().meta;
             if (profile.current)
                 title += "  ·  " + std::string{tr("playing")};
         }
         list.push_opacity(sync_setup_rows_.row_alpha(row, kRowHeight));
         const float taken = state.empty() ? 0.0f :
-                                            text(c, state, 1292.0f, baseline(top + 14.0f, 38.0f, theme::kSmall), theme::kSmall,
+                                            text(c, state, 1292.0f, baseline(top + 14.0f, 38.0f, th().size_small), th().size_small,
                                                  state_tone, Align::right);
-        text_fit(c, title, 628.0f, baseline(top + 14.0f, 38.0f, theme::kText24), theme::kText24, theme::kValue,
+        text_fit(c, title, 628.0f, baseline(top + 14.0f, 38.0f, th().size_text), th().size_text, th().value,
                  664.0f - taken - 24.0f);
-        text_fit(c, line, 628.0f, baseline(top + 52.0f, 28.0f, theme::kSmall), theme::kSmall, tone, 664.0f);
+        text_fit(c, line, 628.0f, baseline(top + 52.0f, 28.0f, th().size_small), th().size_small, tone, 664.0f);
         list.pop_opacity();
     }
     list.pop_clip();
@@ -281,11 +281,11 @@ void Launcher::draw_sync_setup(Canvas &c, float open)
     static constexpr Hint kServerHints[] = {
         {Pad::updown, TR("Select")}, {Pad::cross, TR("Pair")}, {Pad::circle, TR("Back")}};
     if (choosing)
-        draw_hints(c, kServerHints, 3, 592.0f, kHints, theme::kCopy, 736.0f);
+        draw_hints(c, kServerHints, 3, 592.0f, kHints, th().copy, 736.0f);
     else if (linked)
-        draw_hints(c, kLinkedHints, 4, 592.0f, kHints, theme::kCopy, 736.0f);
+        draw_hints(c, kLinkedHints, 4, 592.0f, kHints, th().copy, 736.0f);
     else
-        draw_hints(c, kProfileHints, 3, 592.0f, kHints, theme::kCopy, 736.0f);
+        draw_hints(c, kProfileHints, 3, 592.0f, kHints, th().copy, 736.0f);
     list.pop_transform();
     list.pop_opacity();
 }
@@ -344,19 +344,19 @@ void Launcher::draw_pairing(Canvas &c, float open)
     list.push_opacity(open);
     list.push_transform(1.0f - 0.03f * (1.0f - open) * motion(), 960.0f, 540.0f, 0.0f,
                         (1.0f - open) * 26.0f * motion());
-    glass(c, kPairPanel, 28.0f, theme::kPanel.with_alpha(0.98f), theme::kLime.with_alpha(0.38f), 1.8f);
+    glass(c, kPairPanel, 28.0f, th().panel.with_alpha(0.98f), th().accent.with_alpha(0.38f), 1.8f);
     text_shrink(c, fill(tr("Pair {0}"), {pairing_.profile}), kPairPanel.x + 48.0f,
-                baseline(kPairPanel.y + 34.0f, 62.0f, theme::kDisplay), theme::kDisplay, theme::kTitle,
+                baseline(kPairPanel.y + 34.0f, 62.0f, th().size_display), th().size_display, th().title,
                 kPairPanel.w - 96.0f);
-    text_fit(c, fill(tr("with {0}"), {pairing_.server}), kPairPanel.x + 48.0f, baseline(kPairPanel.y + 98.0f, 32.0f, theme::kSmall),
-             theme::kSmall, Color::rgb(0xbecbb9), kPairPanel.w - 96.0f);
+    text_fit(c, fill(tr("with {0}"), {pairing_.server}), kPairPanel.x + 48.0f, baseline(kPairPanel.y + 98.0f, 32.0f, th().size_small),
+             th().size_small, th().copy, kPairPanel.w - 96.0f);
 
     // The QR code: dark modules on white, with the quiet zone it needs around it. Once it is
     // over, it fades: there is nothing to scan any more.
     const bool live = pairing_.stage == PairingStage::waiting || pairing_.stage == PairingStage::asking ||
                       pairing_.stage == PairingStage::idle;
     list.push_opacity(live ? 1.0f : 0.12f);
-    list.rounded_rect(kQrBox, 18.0f, Color::rgb(0xffffff));
+    list.rounded_rect(kQrBox, 18.0f, Color{1.0f, 1.0f, 1.0f, 1.0f});
     if (pairing_qr_.size > 0)
     {
         const int quiet = 4;
@@ -365,7 +365,7 @@ void Launcher::draw_pairing(Canvas &c, float open)
         // On whole pixels: no seams between the modules.
         const float x0 = std::floor(kQrBox.x + (kQrBox.w - side) * 0.5f);
         const float y0 = std::floor(kQrBox.y + (kQrBox.h - side) * 0.5f);
-        const Color ink = Color::rgb(0x111111);
+        const Color ink = Color{0.067f, 0.067f, 0.067f, 1.0f};
         for (int y = 0; y < pairing_qr_.size; ++y)
             for (int x = 0; x < pairing_qr_.size;)
             {
@@ -388,7 +388,7 @@ void Launcher::draw_pairing(Canvas &c, float open)
     {
         // Asking the server for a code: a turning arc where the code will be.
         arc(list, kQrBox.x + kQrBox.w * 0.5f, kQrBox.y + kQrBox.h * 0.5f, 60.0f, 8.0f, pairing_time_ * 4.2f,
-            3.14159265f * (0.55f + 0.45f * std::sin(pairing_time_ * 2.1f)), theme::kLimeDeep);
+            3.14159265f * (0.55f + 0.45f * std::sin(pairing_time_ * 2.1f)), th().accent_deep);
     }
     list.pop_opacity();
 
@@ -397,44 +397,44 @@ void Launcher::draw_pairing(Canvas &c, float open)
     const float width = kPairPanel.x + kPairPanel.w - 48.0f - x;
     const auto step = [&](const char *number, const std::string &value, float top)
     {
-        text(c, number, x, baseline(top, 34.0f, theme::kText24), theme::kText24, theme::kLime);
-        notice_block(c, value, x + 40.0f, baseline(top, 34.0f, theme::kSmall), theme::kSmall, 30.0f, theme::kCopy,
+        text(c, number, x, baseline(top, 34.0f, th().size_text), th().size_text, th().accent);
+        notice_block(c, value, x + 40.0f, baseline(top, 34.0f, th().size_small), th().size_small, 30.0f, th().copy,
                      width - 40.0f, 2, false);
     };
     switch (pairing_.stage)
     {
     case PairingStage::idle:
     case PairingStage::asking:
-        text_shrink(c, tr("Asking the server for a code..."), x, baseline(360.0f, 40.0f, theme::kText24), theme::kText24,
-                    theme::kValue, width);
+        text_shrink(c, tr("Asking the server for a code..."), x, baseline(360.0f, 40.0f, th().size_text), th().size_text,
+                    th().value, width);
         break;
     case PairingStage::waiting:
         step("1", tr("Scan the code with your phone, or open the address below."), 340.0f);
         step("2", fill(tr("Sign in to {0} as the user this profile's save data belongs to."), {pairing_.server}), 416.0f);
         step("3", tr("Check that the code there is this one, and approve."), 492.0f);
-        text(c, spaced(pairing_.code), x + 40.0f, baseline(556.0f, 72.0f, theme::kDisplay), theme::kDisplay,
-             theme::kTitle, Align::left, 6.0f);
-        text_fit(c, pairing_.address, x + 40.0f, baseline(636.0f, 30.0f, theme::kSmall), theme::kSmall, theme::kMeta,
+        text(c, spaced(pairing_.code), x + 40.0f, baseline(556.0f, 72.0f, th().size_display), th().size_display,
+             th().title, Align::left, 6.0f);
+        text_fit(c, pairing_.address, x + 40.0f, baseline(636.0f, 30.0f, th().size_small), th().size_small, th().meta,
                  width - 40.0f);
         text_fit(c, fill(tr("Waiting for the approval  ·  the code works {0} more"), {minutes(pairing_.seconds_left)}),
-                 x + 40.0f, baseline(684.0f, 30.0f, theme::kSmall), theme::kSmall, theme::kLimePale, width - 40.0f);
+                 x + 40.0f, baseline(684.0f, 30.0f, th().size_small), th().size_small, th().accent_pale, width - 40.0f);
         break;
     case PairingStage::done:
-        text_shrink(c, tr("Paired"), x, baseline(360.0f, 52.0f, theme::kHeading), theme::kHeading, theme::kLime, width);
+        text_shrink(c, tr("Paired"), x, baseline(360.0f, 52.0f, th().size_heading), th().size_heading, th().accent, width);
         notice_block(c,
                      pairing_.user.empty() ?
                          std::string{tr("The profile's save data syncs with the server from now on.")} :
                          fill(tr("The profile's save data syncs as {0} from now on."), {pairing_.user}),
-                     x, baseline(424.0f, 32.0f, theme::kSmall), theme::kSmall, 32.0f, theme::kCopy, width, 3, false);
+                     x, baseline(424.0f, 32.0f, th().size_small), th().size_small, 32.0f, th().copy, width, 3, false);
         break;
     case PairingStage::failed:
-        text_shrink(c, tr("Not paired"), x, baseline(360.0f, 52.0f, theme::kHeading), theme::kHeading,
-                    theme::kWarning, width);
+        text_shrink(c, tr("Not paired"), x, baseline(360.0f, 52.0f, th().size_heading), th().size_heading,
+                    th().warning, width);
         notice_block(c,
                      pairing_.denied  ? std::string{tr("It was declined on the server.")} :
                      pairing_.expired ? std::string{tr("Nobody approved the code in time.")} :
                                         pairing_.error,
-                     x, baseline(424.0f, 32.0f, theme::kSmall), theme::kSmall, 32.0f, theme::kWarning, width, 3, false);
+                     x, baseline(424.0f, 32.0f, th().size_small), th().size_small, 32.0f, th().warning, width, 3, false);
         break;
     }
 
@@ -443,11 +443,11 @@ void Launcher::draw_pairing(Canvas &c, float open)
     static constexpr Hint kFailed[] = {{Pad::cross, TR("Try again")}, {Pad::circle, TR("Back")}};
     const float hints = kPairPanel.y + kPairPanel.h - 54.0f;
     if (pairing_.stage == PairingStage::done)
-        draw_hints(c, kDone, 1, x, hints, theme::kCopy, width);
+        draw_hints(c, kDone, 1, x, hints, th().copy, width);
     else if (pairing_.stage == PairingStage::failed)
-        draw_hints(c, kFailed, 2, x, hints, theme::kCopy, width);
+        draw_hints(c, kFailed, 2, x, hints, th().copy, width);
     else
-        draw_hints(c, kWaiting, 1, x, hints, theme::kCopy, width);
+        draw_hints(c, kWaiting, 1, x, hints, th().copy, width);
     list.pop_transform();
     list.pop_opacity();
 }

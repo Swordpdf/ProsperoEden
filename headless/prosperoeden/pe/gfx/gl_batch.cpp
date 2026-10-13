@@ -246,6 +246,29 @@ std::uint32_t GlBatch::create_texture(int width, int height, const std::uint8_t 
     return texture;
 }
 
+std::uint32_t GlBatch::create_bc7_texture(int width, int height, const std::uint8_t *blocks, std::size_t size)
+{
+    constexpr GLenum kBc7 = 0x8E8C; // GL_COMPRESSED_RGBA_BPTC_UNORM
+    while (glGetError() != GL_NO_ERROR)
+    {
+    }
+    GLuint texture = 0;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glCompressedTexImage2D(GL_TEXTURE_2D, 0, kBc7, width, height, 0, static_cast<GLsizei>(size), blocks);
+    if (glGetError() != GL_NO_ERROR)
+    {
+        glDeleteTextures(1, &texture);
+        return 0;
+    }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    return texture;
+}
+
 void GlBatch::delete_texture(std::uint32_t texture)
 {
     if (texture != 0)

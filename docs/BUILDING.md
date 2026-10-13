@@ -83,7 +83,7 @@ Inside this repository, in `.deps/`:
   modify Eden's files: the PS5 frontend in `headless/` replaces and derives sources at
   configure time (`headless/inject.cmake`).
 - **FFmpeg** at the commit Eden pins, built with only the decoders games use.
-- **PS5 OpenGL 4.6 SDK 1.0.0** (release archive), for the launcher and the OpenGL renderer.
+- **PS5 OpenGL 4.6 SDK 1.0.2** (release archive), for the launcher and the OpenGL renderer.
 - **OpenSSL, zlib, libcurl and libpsl** from pacbrew v0.40.2.
 - **LLVM 18.1.8 compiler-rt** emulated-TLS sources and **fmt 12.1.0** headers.
 - **PS5-Lapy-JB-Daemon** at its pinned compatibility-fork commit, its pinned **ps5log** build input,
@@ -118,6 +118,8 @@ The tools that made them are in `tools/launcher`:
 - `process-sfx.py` trims and levels the raw sound effects (needs `ffmpeg` and `numpy`).
 - `bake-loading-text.py` writes the lettering of the loading screen
   (`headless/loading_text.glsl`).
+- `loading-preview.sh` draws the loading screen on a PC at a few moments of a game's start, with
+  the shader both renderers use (`headless/loading_scene.glsl`) and a cover of your choice.
 - `preview.sh` draws every launcher screen on a PC (Mesa's software renderer, sample games) to
   PNG files or a video, with the same code, shaders and font as on the console.
 - `strings.py` keeps the translations: `extract` writes the template (`launcher.pot`) from the

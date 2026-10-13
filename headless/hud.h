@@ -93,14 +93,26 @@ struct HudSnapshot {
     uint32_t x{28}, y{30}, loading{};
 };
 static_assert(sizeof(HudSnapshot) == 128); // Vulkan guarantees at least 128 push-constant bytes.
-// What a game's start is doing, for the loading screen (loading_scene.glsl draws it: the steps
-// one under the other and a progress bar). main.cpp says which step the start is at; the bar's
-// share of each step is an estimate, except while shaders are built, where it is counted. Within
-// a step of unknown length the bar creeps towards the step's end and never reaches it.
+// What a game's start is doing, for the loading screen (loading_scene.glsl draws it: the game's
+// cover with a line of light going round it, and the step under it). main.cpp says which step the
+// start is at; each step's share of the line is an estimate, except while shaders are built, where
+// it is counted. Within a step of unknown length the line creeps towards the step's end and never
+// reaches it.
 namespace Loading {
 enum class Step : uint32_t { none, game, graphics, shaders, starting };
 inline std::atomic<uint32_t> step{0}, built{0}, total{0};
 inline std::atomic<int64_t> since{0};  // when the step began, in milliseconds
+// The cover in the screen's picture: its width, and its height 16 bits up; 0 without one
+// (loading_art.h).
+inline std::atomic<uint32_t> art_size{0};
+// The launcher's theme for the screen: its accent, pale accent, deep accent and base colours as
+// 0x01RRGGBB. 0: the shader's own, which are Canopy's.
+inline std::array<std::atomic<uint32_t>, 4> palette{};
+inline void Palette(uint32_t accent, uint32_t pale, uint32_t deep, uint32_t base) {
+    const uint32_t colours[]{accent, pale, deep, base};
+    for (size_t i = 0; i < palette.size(); ++i)
+        palette[i].store(0x01000000u | (colours[i] & 0xffffffu), std::memory_order_relaxed);
+}
 inline int64_t Now() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now().time_since_epoch()).count();
@@ -114,7 +126,7 @@ inline void Shaders(size_t done, size_t of) {
     built.store(static_cast<uint32_t>(done), std::memory_order_relaxed);
     total.store(static_cast<uint32_t>(of), std::memory_order_relaxed);
 }
-// Where the bar should stand, 0 to 1.
+// How far the start should be shown to be, 0 to 1 (loading_scene.glsl knows each step's share).
 inline double Target(int64_t now) {
     static constexpr double kFrom[] = {0.0, 0.02, 0.25, 0.40, 0.90}, kTo[] = {0.02, 0.25, 0.40, 0.90, 0.99};
     const uint32_t at = std::min<uint32_t>(step.load(std::memory_order_relaxed), 4);
@@ -127,8 +139,9 @@ inline double Target(int64_t now) {
     return kFrom[at] + (kTo[at] - kFrom[at]) * part;
 }
 // What the shader is given (the overlay's 24 words): the step, the progress in thousandths,
-// the shaders built and their total, the seconds the step has lasted. The bar moves towards
-// its target a little with every picture and never back within one start.
+// the shaders built and their total, the seconds and then the milliseconds the step has lasted,
+// the cover's size, the progress in millionths, and from the ninth word the theme's colours. The
+// progress moves towards its target a little with every picture and never back within one start.
 inline std::array<uint32_t, 24> State() {
     static double shown = 0;
     static int64_t last = 0;
@@ -145,7 +158,12 @@ inline std::array<uint32_t, 24> State() {
     state[1] = static_cast<uint32_t>(std::clamp(shown, 0.0, 1.0) * 1000.0);
     state[2] = built.load(std::memory_order_relaxed);
     state[3] = total.load(std::memory_order_relaxed);
-    state[4] = static_cast<uint32_t>(std::clamp<int64_t>((now - since.load(std::memory_order_relaxed)) / 1000, 0, 99999));
+    const int64_t lasted = std::max<int64_t>(now - since.load(std::memory_order_relaxed), 0);
+    state[4] = static_cast<uint32_t>(std::min<int64_t>(lasted / 1000, 99999));
+    state[5] = static_cast<uint32_t>(std::min<int64_t>(lasted, 600000));
+    state[6] = art_size.load(std::memory_order_relaxed);
+    state[7] = static_cast<uint32_t>(std::clamp(shown, 0.0, 1.0) * 1000000.0);
+    for (size_t i = 0; i < palette.size(); ++i) state[8 + i] = palette[i].load(std::memory_order_relaxed);
     return state;
 }
 } // namespace Loading

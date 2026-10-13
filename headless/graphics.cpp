@@ -16,6 +16,7 @@
 #include <cstring>
 #include <time.h>
 #include "hud.h"
+#include "loading_art.h"
 #include "network/network.h"
 #include "loading_scene_glsl.h"
 #include "preferences.h"
@@ -221,6 +222,7 @@ public:
             glDeleteVertexArrays(1, &hud_vao);
             glDeleteProgram(loading_program);
             glDeleteVertexArrays(1, &loading_vao);
+            glDeleteTextures(1, &loading_texture);
             DoneCurrent();
             Cleanup(eglDestroyContext(display, hud_context), "HUD context");
         }
@@ -347,7 +349,8 @@ private:
         Check(eglMakeCurrent(display, surface, surface, hud_context), "loading current");
         SCOPE_EXIT { Cleanup(eglMakeCurrent(display, surface, surface, context), "loading restore"); };
         if (!loading_program) {
-            const std::string fragment = std::string("#version 330 core\n") + kLoadingSceneGlsl +
+            const std::string fragment = std::string("#version 330 core\nuniform sampler2D loading_art;\n") +
+                kLoadingSceneGlsl +
                 "uniform vec2 size; uniform float seconds; uniform uint state[24]; out vec4 color;\n"
                 "void main(){ color = vec4(loading_scene(gl_FragCoord.xy, size, seconds, state), 1.0); }\n";
             const char* sources[]{
@@ -384,6 +387,19 @@ private:
             }
             loading_program = program;
             glGenVertexArrays(1, &loading_vao);
+            // Its picture (loading_art.h): the game's cover and its blurred copy, or one clear
+            // texel for a game without a cover.
+            const Loading::Art art = Loading::GetArt();
+            glGenTextures(1, &loading_texture);
+            glBindTexture(GL_TEXTURE_2D, loading_texture);
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+            glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, art.width, art.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                         art.rgba.data());
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         }
         EGLint width{}, height{};
         Check(eglQuerySurface(display, surface, EGL_WIDTH, &width) &&
@@ -395,6 +411,9 @@ private:
         glViewport(0, 0, width, height);
         glUniform2f(glGetUniformLocation(loading_program, "size"), float(width), float(height));
         glUniform1f(glGetUniformLocation(loading_program, "seconds"), float(seconds));
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, loading_texture);
+        glUniform1i(glGetUniformLocation(loading_program, "loading_art"), 0);
         // What the start is doing (hud.h).
         const auto state = Loading::State();
         glUniform1uiv(glGetUniformLocation(loading_program, "state[0]"), state.size(), state.data());
@@ -466,7 +485,7 @@ private:
     bool loading{true}, loading_failed{};
     double loading_start{-1};
     LoadingPace loading_pace;
-    GLuint loading_program{}, loading_vao{};
+    GLuint loading_program{}, loading_vao{}, loading_texture{};
     unsigned startup_guest_frames{};
     StartupGate startup_gate;
     HudClock clock;

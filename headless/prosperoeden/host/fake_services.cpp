@@ -42,7 +42,7 @@ constexpr Sample kSamples[] = {
     {"Pocket Rally Turbo", "NSP", "1.9 GB", "", 0, "English (US)", "", 0x202020, 0xe85d04, 0xf8f9fa},
     {"Cloudline", "NSP", "3.3 GB", "", 1, "English (US)", "", 0x5fa8d3, 0xcae9ff, 0x1b4965},
     {"Ember Knights II", "XCI", "9.6 GB", "2.4.0", 5, "English (US)", "", 0x3d0c02, 0xd62828, 0xfcbf49},
-    {"Paper Garden", "NSP", "840.5 MB", "", 0, "English (US)", "", 0xf1e3c6, 0x90be6d, 0x386641},
+    {"Paper Garden and the Clockwork Orchard", "NSP", "840.5 MB", "", 0, "English (US)", "", 0xf1e3c6, 0x90be6d, 0x386641},
     {"Neon Drifters", "NSP", "5.2 GB", "1.0.3", 0, "English (US)", "", 0x10002b, 0x7b2cbf, 0x5ef2ff},
     {"Caf\xC3\xA9 Nocturne", "NSP", "2.7 GB", "", 0, "French", "", 0x2b1d0e, 0xa9713c, 0xf6e7cb},
     {"Sky Shepherds", "XCI", "4.4 GB", "", 3, "English (US)", "", 0x457b9d, 0xa8dadc, 0xf1faee, true},
@@ -127,6 +127,7 @@ constexpr const char *kResolutionLabels[] = {"0.5x (faster, softer)", "0.75x (fa
                                              "3x (slower)", "4x (slowest)"};
 const std::vector<std::string> kResolutionKeys = {"0.5x", "0.75x", "1x", "1.5x", "2x", "3x", "4x"};
 constexpr const char *kFilterLabels[] = {"Bilinear", "AMD FSR", "Bicubic", "Nearest"};
+constexpr const char *kAstcLabels[] = {"Compressed", "Full quality"};
 constexpr const char *kLanguageLabels[] = {
     "English (US)", "English (UK)", "French", "French (Canada)", "German", "Italian", "Spanish",
     "Spanish (Latin America)", "Portuguese", "Portuguese (Brazil)", "Dutch", "Russian", "Polish",
@@ -289,6 +290,11 @@ const std::vector<std::string> &FakeServices::resolution_keys()
 const std::vector<std::string> &FakeServices::filter_labels()
 {
     static const std::vector<std::string> labels = translated(kFilterLabels);
+    return labels;
+}
+const std::vector<std::string> &FakeServices::astc_labels()
+{
+    static const std::vector<std::string> labels = translated(kAstcLabels);
     return labels;
 }
 const std::vector<std::string> &FakeServices::language_labels()

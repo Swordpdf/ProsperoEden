@@ -95,6 +95,9 @@ inline Totals gpu_fence_drain, gpu_present_wait, gpu_queue_full;
 // lookahead stopped). calls = drains, requested_bytes = images covered: one drain per image in the
 // unbatched case is the stall to drive out.
 inline Totals gc_batched_drain, gc_unbatched_drain;
+// Images and buffers the allocator's budget refused and that were asked for again outside it
+// (tools/prepare-vulkan-port.py, the Vulkan allocator).
+inline std::atomic<unsigned long long> outside_budget{0};
 // Guest threads entering the GPU caches: CPU writes to tracked pages and flush-area lookups.
 inline Totals guest_cpu_write, guest_cpu_read;
 // Those entries take the buffer and texture cache locks, which the GPU thread holds for one draw at
@@ -104,6 +107,13 @@ inline Totals guest_cpu_write, guest_cpu_read;
 // pinned alone, so the spin takes no CPU from the lock holder.
 inline std::atomic<unsigned> cache_lock_spins{256};
 inline std::atomic<unsigned long long> cache_lock_contended{0}, cache_lock_blocked{0};
+// Guest threads that have gone to sleep on one of those locks. The GPU thread gives a lock up
+// after every draw and takes it again for the next within a microsecond, long before a thread
+// asleep on it has woken: a guest thread that did not get the lock while spinning stayed out
+// until the GPU thread ran out of draws, the rest of the frame (three guest cores each held
+// for 110 ms of a 150 ms frame, in a large open-world game). So the GPU thread looks here
+// before it takes the locks for a draw (YieldToGuests), and lets the sleepers in first.
+inline std::atomic<int> cache_lock_sleepers{0};
 template <typename Mutex>
 inline void GuestCacheLock(Mutex& mutex) {
     if (mutex.try_lock()) return;
@@ -113,7 +123,20 @@ inline void GuestCacheLock(Mutex& mutex) {
         if (mutex.try_lock()) return;
     }
     cache_lock_blocked.fetch_add(1, std::memory_order_relaxed);
+    cache_lock_sleepers.fetch_add(1, std::memory_order_acq_rel);
     mutex.lock();
+    cache_lock_sleepers.fetch_sub(1, std::memory_order_acq_rel);
+}
+// The GPU thread, holding neither cache lock, before it takes them for a draw: while a guest
+// thread sleeps on one, wait for it to have the lock (it wakes within a fraction of a
+// millisecond, and what it does under the lock is short). Bounded at about 2 ms, for a
+// sleeper that is held up by something else. One load of a counter when nobody waits.
+inline void YieldToGuests() {
+    if (cache_lock_sleepers.load(std::memory_order_relaxed) == 0) return;
+    const auto now = [] { return Common::g_wall_clock.GetTimeNS().count(); };
+    const long long until = now() + 2'000'000;
+    while (cache_lock_sleepers.load(std::memory_order_acquire) != 0 && now() < until)
+        for (int pause = 0; pause < 16; ++pause) __builtin_ia32_pause();
 }
 // Guest waits: nvhost_ctrl syncpoint event registration -> signal, and
 // BufferQueueProducer::DequeueBuffer waiting for a free buffer slot.
@@ -294,7 +317,11 @@ void RecordHle(const char* service, unsigned command, long long ns);
 // dev-settings gc_dirty=upstream restores Eden's rule.
 inline std::atomic<bool> gc_keep_dirty{true};
 inline std::atomic<bool> graphics_memory_short{false};
-inline constexpr std::size_t kShortMemory = std::size_t{384} << 20;
+// 1 GiB: the pool is the CPU's too, and the largest thing a game asked of it at once was a
+// block of 486 MiB (a texture array of 121 layers, decoded before it is uploaded). With 384 MiB
+// here the collector let the pool run down to 620 MiB in one block at 2x, and that request
+// ended the session.
+inline constexpr std::size_t kShortMemory = std::size_t{1} << 30;
 // Development: the texture cache reports its memory use and marks every 300 frames.
 inline std::atomic<bool> texture_budget_log{false};
 // "Is memory short?", installed by the PS5 build (performance.cpp, GraphicsMemoryShort). This
@@ -378,18 +405,29 @@ inline std::array<JitCallbacks, 4> jit_callbacks{};
 inline void CountJit(std::atomic<unsigned long long>& counter) {
     counter.fetch_add(1, std::memory_order_relaxed);
 }
+// What a game session finds and what it leaves of the memory the CPU shares with the GPU, in
+// one line of the log. Called before a session's graphics start and after everything of the
+// session is gone, so two sessions of one run can be compared.
+void ReportSessionMemory(const char* phase, unsigned session);
 // GPU thread only (Vulkan frame report): cumulative GPU-thread idle/dispatch/wait
 // totals with the owner's CPU clock, then a guest-core CPU snapshot.
 void ReportGpuThread(unsigned frame);
 inline std::atomic<unsigned> capture_passes{};
 
+// A Timer counts only when timers are on: in a development build (set when a game starts) and
+// in a cost run. Only development reports read the totals, and timers sit on hot paths: one a
+// draw on the GPU thread, one for every guest read of memory the GPU caches follow (several
+// thousand of each a frame in a large game). Elsewhere a Timer is one look at this flag.
+inline std::atomic<bool> timers_on{false};
 class Timer {
 public:
     explicit Timer(Totals& target, unsigned long long bytes = 0)
-        : totals(target), requested_bytes(bytes), start(Common::g_wall_clock.GetTimeNS()) {}
+        : totals(target), requested_bytes(bytes), on(timers_on.load(std::memory_order_relaxed)),
+          start(on ? Common::g_wall_clock.GetTimeNS() : std::chrono::nanoseconds{}) {}
     Timer(const Timer&) = delete;
     Timer& operator=(const Timer&) = delete;
     ~Timer() {
+        if (!on) return;
         const auto elapsed = (Common::g_wall_clock.GetTimeNS() - start).count();
         totals.nanoseconds.fetch_add(static_cast<unsigned long long>(elapsed), std::memory_order_relaxed);
         if (requested_bytes) totals.requested_bytes.fetch_add(requested_bytes, std::memory_order_relaxed);
@@ -398,6 +436,7 @@ public:
 private:
     Totals& totals;
     unsigned long long requested_bytes;
+    bool on;
     std::chrono::nanoseconds start;
 };
 
@@ -407,15 +446,17 @@ private:
 // overlap. An early return out of the sequence leaves the tail unmarked - that is what the outer
 // Timer is still charging - and the phase that never ran simply does not call this.
 //
-// Only a development build counts them (draw_marks, set when a game starts there). A draw
+// Only a development build counts them (dev_marks, set when a game starts there). A draw
 // passes about twenty marks, a clock read and two additions each, and only a development
 // run's report reads the totals: elsewhere a mark is one look at this flag, and the clock it
 // would measure from is not read either (MarkStart). A flag and not an #ifdef: this header
-// must read the same in every library that includes it.
-inline std::atomic<bool> draw_marks{false};
-inline long long MarkStart() { return draw_marks.load(std::memory_order_relaxed) ? NowNs() : 0; }
+// must read the same in every library that includes it. The waits of guest threads
+// (WaitBegin, WaitEnd, NoteRunnable) are counted under the same flag: their hooks sit under
+// the scheduler lock (headless/CMakeLists.txt, k_thread.cpp).
+inline std::atomic<bool> dev_marks{false};
+inline long long MarkStart() { return dev_marks.load(std::memory_order_relaxed) ? NowNs() : 0; }
 inline void Mark(Totals& totals, long long& since) {
-    if (!draw_marks.load(std::memory_order_relaxed)) return;
+    if (!dev_marks.load(std::memory_order_relaxed)) return;
     const auto now = NowNs();
     const auto elapsed = now - since;
     since = now;

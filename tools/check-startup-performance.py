@@ -50,6 +50,11 @@ std::uint64_t Faults() noexcept { return 0; }
 int main() {
     using namespace Eden::Performance;
     PlatformChecks();
+    // A Timer counts only while timers are on (development builds and cost runs).
+    Totals untimed;
+    for (unsigned i = 0; i < 1000; ++i) { Timer timer(untimed, 16); }
+    assert(untimed.calls == 0 && untimed.requested_bytes == 0 && untimed.nanoseconds == 0);
+    timers_on = true;
     Totals timed;
     for (unsigned i = 0; i < 1000; ++i) { Timer timer(timed, 16); }
     assert(timed.calls == 1000 && timed.requested_bytes == 16000 && timed.nanoseconds > 0);

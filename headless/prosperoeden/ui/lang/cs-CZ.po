@@ -43,7 +43,8 @@ msgstr "Některý ze souborů NCA firmwaru nelze přečíst. Nainstaluj dump fir
 msgid "A pairing is running already."
 msgstr "Párování už probíhá."
 
-#: pe/ui/home.cpp
+#. The menu's last section: about this app (its credits, where its files go). One short word.
+#: pe/ui/shell.cpp
 msgid "About"
 msgstr "O aplikaci"
 
@@ -71,23 +72,9 @@ msgstr "PŘÍSTUP"
 msgid "Accessibility"
 msgstr "Přístupnost"
 
-#: pe/ui/settings.cpp
-msgid "ACCESSIBILITY"
-msgstr "PŘÍSTUPNOST"
-
 #: pe/ui/profiles.cpp
 msgid "Add"
 msgstr "Přidat"
-
-#. Label: a game's updates, DLC and mods.
-#: pe/ui/library.cpp
-msgid "ADD-ONS"
-msgstr "DOPLŇKY"
-
-#. {0}: updates, DLC and mods of the game; {1}: the language it will use.
-#: pe/ui/home.cpp
-msgid "Add-ons: {0}  /  Language: {1}"
-msgstr "Doplňky: {0}  /  Jazyk: {1}"
 
 #: pe/ui/remote.cpp
 msgid "Added to the downloads. Settings, Downloads shows the queue."
@@ -96,10 +83,6 @@ msgstr "Přidáno ke stahování. Frontu ukazuje Nastavení, Stahování."
 #: pe/ui/profiles.cpp
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "Přidáno. Křížek hraje za tento profil; vlevo a vpravo mění jeho jméno."
-
-#: pe/ui/settings.cpp
-msgid "Adjust the essentials without leaving your library behind."
-msgstr "Uprav si to podstatné a knihovnu měj stále po ruce."
 
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
@@ -122,22 +105,19 @@ msgstr "Jako obvykle"
 msgid "Asking the server for a code..."
 msgstr "Žádám server o kód..."
 
+#. Setting: how a game's textures in the ASTC format are held in graphics memory. ASTC is a format's name (unchanged).
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "ASTC textures"
+msgstr "Textury ASTC"
+
 #. A switch. A shader is a small graphics program; keep the word the language's players use for it.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Asynchronous shaders"
 msgstr "Asynchronní shadery"
 
-#: pe/ui/settings.cpp
-msgid "ASYNCHRONOUS SHADERS"
-msgstr "ASYNCHRONNÍ SHADERY"
-
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Audio"
 msgstr "Zvuk"
-
-#: pe/ui/settings.cpp
-msgid "AUDIO"
-msgstr "ZVUK"
 
 #: eden_services.cpp
 msgid "Australia"
@@ -175,18 +155,6 @@ msgstr "Bilineární"
 msgid "Browse"
 msgstr "Procházet"
 
-#: pe/ui/library.cpp
-msgid "Browse games"
-msgstr "Procházet hry"
-
-#: pe/ui/settings.cpp
-msgid "Browse settings"
-msgstr "Procházet nastavení"
-
-#: pe/ui/settings.cpp
-msgid "Browse the public directory"
-msgstr "Procházet veřejný seznam"
-
 #: pe/ui/multiplayer.cpp
 msgid "Browse the public directory and choose a room."
 msgstr "Projdi veřejný seznam a vyber místnost."
@@ -195,10 +163,6 @@ msgstr "Projdi veřejný seznam a vyber místnost."
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Button mapping"
 msgstr "Mapování tlačítek"
-
-#: pe/ui/settings.cpp
-msgid "BUTTON MAPPING"
-msgstr "MAPOVÁNÍ TLAČÍTEK"
 
 #: pe/ui/pairing.cpp, pe/ui/update.cpp
 msgid "Cancel"
@@ -295,18 +259,19 @@ msgid "Compile ahead"
 msgstr "Kompilace předem"
 
 #: pe/ui/settings.cpp
-msgid "COMPILE AHEAD"
-msgstr "KOMPILACE PŘEDEM"
-
-#: pe/ui/settings.cpp
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
 msgstr "Při startu zkompiluje kód, který hra už použila, takže se nové oblasti méně zadrhávají."
+
+#. A choice of 'ASTC textures': the textures are kept compressed (less memory). Keep it short.
+#: settings_store.h
+msgid "Compressed"
+msgstr "Komprimované"
 
 #: pe/ui/multiplayer.cpp
 msgid "Connect using a room address, port and password."
 msgstr "Připoj se pomocí adresy místnosti, portu a hesla."
 
-#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp
 msgid "Connected"
 msgstr "Připojeno"
 
@@ -330,7 +295,7 @@ msgstr "Režim konzole"
 msgid "CONTINUE PLAYING"
 msgstr "POKRAČOVAT VE HRANÍ"
 
-#: pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Controller shortcuts and supported features."
 msgstr "Zkratky na ovladači a podporované funkce."
 
@@ -342,13 +307,9 @@ msgstr "Typ ovladače"
 msgid "CONTROLLERS"
 msgstr "OVLADAČE"
 
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Controls"
 msgstr "Ovládání"
-
-#: pe/ui/settings.cpp
-msgid "CONTROLS"
-msgstr "OVLÁDÁNÍ"
 
 #: pe/ui/remote.cpp
 msgid "Could not cancel the download."
@@ -369,10 +330,6 @@ msgstr "Hru se nepodařilo smazat."
 #: eden_services.cpp
 msgid "Could not delete {0}."
 msgstr "{0} se nepodařilo smazat."
-
-#: pe/ui/library.cpp
-msgid "Could not save console mode. Please try again."
-msgstr "Režim konzole se nepodařilo uložit. Zkus to znovu."
 
 #: pe/ui/launcher.cpp
 msgid "Could not save settings. Please try again."
@@ -448,10 +405,6 @@ msgid "Detailed logging"
 msgstr "Podrobné logování"
 
 #: pe/ui/settings.cpp
-msgid "DETAILED LOGS"
-msgstr "PODROBNÉ LOGY"
-
-#: pe/ui/settings.cpp
 msgid "Detailed logs apply to the next game launch."
 msgstr "Podrobné logy platí od příštího spuštění hry."
 
@@ -459,21 +412,12 @@ msgstr "Podrobné logy platí od příštího spuštění hry."
 msgid "Detailed logs on"
 msgstr "Podrobné logy zapnuty"
 
-#. Button hint: show the game's details.
-#: pe/ui/home.cpp
-msgid "Details"
-msgstr "Podrobnosti"
-
 #: pe/ui/settings.cpp
 msgid "Diagnostics"
 msgstr "Diagnostika"
 
-#: pe/ui/settings.cpp
-msgid "DIAGNOSTICS"
-msgstr "DIAGNOSTIKA"
-
 #. Console mode: the console as if connected to a TV. Keep it short (about 9 letters).
-#: pe/ui/library.cpp
+#: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Docked"
 msgstr "V doku"
 
@@ -526,10 +470,6 @@ msgstr "Stahování {0}"
 msgid "Downloads"
 msgstr "Stahování"
 
-#: pe/ui/settings.cpp
-msgid "DOWNLOADS"
-msgstr "STAHOVÁNÍ"
-
 #: pe/ui/remote.cpp
 msgid "Downloads need an FTP server running on the console, on port {0}."
 msgstr "Stahování potřebuje FTP server spuštěný na konzoli na portu {0}."
@@ -562,23 +502,14 @@ msgstr "Každý profil má uložená data na serveru jako vlastní uživatel. Sp
 msgid "Each profile's save data on a server of its own, synced before and after a game."
 msgstr "Uložená data každého profilu na vlastním serveru, synchronizovaná před hrou a po ní."
 
-#: pe/ui/home.cpp
-msgid "Eden emulator for PlayStation 5"
-msgstr "Emulátor Eden pro PlayStation 5"
-
 #: pe/ui/settings.cpp
 msgid "Eden's debug messages in the logs of a game."
 msgstr "Ladicí zprávy Edenu v lozích hry."
 
 #. A button hint: opens the keyboard to type a number. One short word, and not the word used for Change.
-#: pe/ui/game_options.cpp
+#: pe/ui/library.cpp
 msgid "Edit"
 msgstr "Upravit"
-
-#. Label of the shortcut that ends the running game.
-#: pe/ui/settings.cpp
-msgid "END GAME"
-msgstr "UKONČIT HRU"
 
 #: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
@@ -624,20 +555,12 @@ msgstr "Exportováno do {0}."
 msgid "Faster CPU emulation"
 msgstr "Rychlejší emulace CPU"
 
-#: pe/ui/settings.cpp
-msgid "FASTER CPU EMULATION"
-msgstr "RYCHLEJŠÍ EMULACE CPU"
-
 #. A switch: memory transfers to the emulated graphics processor are less exact and faster. DMA is a name (unchanged).
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Faster DMA"
 msgstr "Rychlejší DMA"
 
-#: pe/ui/settings.cpp
-msgid "FASTER DMA"
-msgstr "RYCHLEJŠÍ DMA"
-
-#: pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Faster games, at some cost in accuracy."
 msgstr "Rychlejší hry za cenu menší přesnosti."
 
@@ -645,14 +568,6 @@ msgstr "Rychlejší hry za cenu menší přesnosti."
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Faster GPU emulation"
 msgstr "Rychlejší emulace GPU"
-
-#: pe/ui/settings.cpp
-msgid "FASTER GPU EMULATION"
-msgstr "RYCHLEJŠÍ EMULACE GPU"
-
-#: pe/ui/library.cpp
-msgid "FILE"
-msgstr "SOUBOR"
 
 #. What a mod is made of: files that replace the game's own.
 #: eden_services.cpp, host/fake_services.cpp
@@ -692,18 +607,9 @@ msgstr "Podle Nastavení"
 msgid "For every controller. A game can have its own."
 msgstr "Pro všechny ovladače. Hra může mít vlastní."
 
-#: pe/ui/library.cpp
-msgid "FORMAT"
-msgstr "FORMÁT"
-
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
 msgstr "Počítadlo FPS"
-
-#. Label: the frames-per-second counter drawn over a game.
-#: pe/ui/settings.cpp
-msgid "FPS OVERLAY"
-msgstr "POČÍTADLO FPS"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Frame gen multiplier"
@@ -713,7 +619,7 @@ msgstr "Násobek generování snímků"
 msgid "Frame gen target"
 msgstr "Cíl generování snímků"
 
-#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Frame generation"
 msgstr "Generování snímků"
 
@@ -733,16 +639,17 @@ msgstr "Francouzština (Kanada)"
 msgid "From {0}"
 msgstr "Zdroj: {0}"
 
-#: pe/ui/settings.cpp
-msgid "FTP SERVER"
-msgstr "FTP SERVER"
-
 #. The app can read every folder of the console.
 #: pe/ui/browse.cpp
 msgid "Full filesystem"
 msgstr "Celý souborový systém"
 
-#: pe/ui/settings.cpp
+#. A choice of 'ASTC textures': the textures are kept uncompressed (more memory). Keep it short.
+#: settings_store.h
+msgid "Full quality"
+msgstr "Plná kvalita"
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "Zvuk her; hudba v systémové nabídce PS5 se nemění."
 
@@ -750,10 +657,6 @@ msgstr "Zvuk her; hudba v systémové nabídce PS5 se nemění."
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
 msgstr "Hru se nepodařilo spustit: {0} Podrobnosti: {1}"
-
-#: pe/ui/home.cpp
-msgid "Game details"
-msgstr "Podrobnosti o hře"
 
 #: pe/ui/library.cpp
 msgid "GAME DETAILS"
@@ -763,21 +666,13 @@ msgstr "PODROBNOSTI O HŘE"
 msgid "Game files"
 msgstr "Herní soubory"
 
-#: pe/ui/settings.cpp
-msgid "GAME FILES"
-msgstr "HERNÍ SOUBORY"
-
-#: pe/ui/library.cpp
+#: pe/ui/home.cpp, pe/ui/library.cpp
 msgid "Game settings"
 msgstr "Nastavení hry"
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Game volume"
 msgstr "Hlasitost her"
-
-#: pe/ui/settings.cpp
-msgid "GAME VOLUME"
-msgstr "HLASITOST HER"
 
 #: pe/ui/settings.cpp
 msgid "Game volume, and the sounds of this menu."
@@ -820,20 +715,21 @@ msgid "Graphics backend initialization failed. Try another backend in Settings; 
 msgstr "Inicializace rendereru se nezdařila. Zkus v Nastavení jiný renderer; podrobnosti o grafickém ovladači najdeš v souborech stderr.log a eden_log.txt."
 
 #. Console mode: the console as if held in the hands. Keep it short (about 9 letters).
-#: pe/ui/game_options.cpp, pe/ui/library.cpp
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Handheld"
 msgstr "Přenosný"
-
-#: pe/ui/settings.cpp
-msgid "HIGH CONTRAST"
-msgstr "VYSOKÝ KONTRAST"
 
 #. A switch: solid dark panels, brighter text.
 #: pe/ui/settings.cpp
 msgid "High contrast"
 msgstr "Vysoký kontrast"
 
-#: pe/ui/settings.cpp
+#. The menu's first section, its opening screen (not a house, and not the PS5's own home screen).
+#: pe/ui/shell.cpp
+msgid "Home"
+msgstr "Domů"
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "Jak se hry vykreslují a škálují na televizi."
 
@@ -855,7 +751,7 @@ msgid "Imported. The save it replaced was backed up."
 msgstr "Importováno. Nahrazená data byla zálohována."
 
 #. Tag on the language or folder that is in use now.
-#: pe/ui/browse.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp
 msgid "IN USE"
 msgstr "POUŽÍVÁ SE"
 
@@ -899,10 +795,6 @@ msgstr "Před spuštěním hry vstup do místnosti a pak ve hře zvol místní b
 msgid "Join a room successfully or leave it before starting a game."
 msgstr "Před spuštěním hry vstup do místnosti, nebo ji opusť."
 
-#: pe/ui/settings.cpp
-msgid "Join an Eden room, then choose Local Wireless in a supported game. Everyone needs a compatible game version."
-msgstr "Vstup do místnosti Eden a pak v podporované hře zvol místní bezdrátovou hru. Všichni potřebují kompatibilní verzi hry."
-
 #: pe/ui/multiplayer.cpp
 msgid "Join room"
 msgstr "Vstoupit do místnosti"
@@ -941,21 +833,13 @@ msgstr "Korea"
 msgid "Korean"
 msgstr "Korejština"
 
-#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Language"
 msgstr "Jazyk"
-
-#: pe/ui/library.cpp, pe/ui/settings.cpp
-msgid "LANGUAGE"
-msgstr "JAZYK"
 
 #: pe/ui/browse.cpp
 msgid "LANGUAGES"
 msgstr "JAZYKY"
-
-#: pe/ui/settings.cpp
-msgid "LARGER TEXT"
-msgstr "VĚTŠÍ PÍSMO"
 
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
@@ -966,10 +850,6 @@ msgstr "Větší písmo"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "Naposledy spuštěná hra"
-
-#: pe/ui/home.cpp
-msgid "Launch game"
-msgstr "Spustit hru"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1008,15 +888,11 @@ msgstr "Méně přesné výpočty s plovoucí čárkou: rychlejší, několik he
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "Méně přesné přenosy paměti do GPU: rychlejší, několik her ale zobrazuje chybnou grafiku."
 
-#: pe/ui/home.cpp
+#: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "Knihovna"
 
-#: pe/ui/library.cpp
-msgid "LIBRARY"
-msgstr "KNIHOVNA"
-
-#: pe/ui/pairing.cpp, pe/ui/settings.cpp
+#: pe/ui/pairing.cpp
 msgid "Linked"
 msgstr "Propojeno"
 
@@ -1028,11 +904,6 @@ msgstr "Načítání veřejných místností..."
 msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
 msgstr "Nejnižší přesnost GPU: rychlejší v náročných hrách, grafika ale může být chybná."
 
-#. Headline of the Settings screen.
-#: pe/ui/settings.cpp
-msgid "Make it yours."
-msgstr "Nastav si to po svém."
-
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "Udělej si nabídku čitelnější a přehlednější."
@@ -1040,10 +911,6 @@ msgstr "Udělej si nabídku čitelnější a přehlednější."
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
 msgstr "Zvukové efekty nabídky vytvořeny pomocí ElevenLabs."
-
-#: pe/ui/settings.cpp
-msgid "MENU SOUNDS"
-msgstr "ZVUKY NABÍDKY"
 
 #: pe/ui/settings.cpp
 msgid "Menu sounds"
@@ -1063,11 +930,11 @@ msgstr "MODY"
 msgid "Mods"
 msgstr "Mody"
 
-#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/shell.cpp
 msgid "Multiplayer"
 msgstr "Hra více hráčů"
 
-#: pe/ui/settings.cpp
+#: pe/ui/multiplayer.cpp
 msgid "MULTIPLAYER"
 msgstr "HRA VÍCE HRÁČŮ"
 
@@ -1076,15 +943,11 @@ msgid "Mute"
 msgstr "Ztlumení"
 
 #: pe/ui/settings.cpp
-msgid "MUTE"
-msgstr "ZTLUMENÍ"
-
-#: pe/ui/settings.cpp
 msgid "Muted"
 msgstr "Ztlumeno"
 
 #. Button hint: move the highlight.
-#: pe/ui/home.cpp, pe/ui/update.cpp
+#: pe/ui/update.cpp
 msgid "Navigate"
 msgstr "Navigace"
 
@@ -1106,11 +969,6 @@ msgstr "Nový profil"
 msgid "Next launch: {0}"
 msgstr "Po restartu: {0}"
 
-#. Label: the folder used the next time the app starts.
-#: pe/ui/settings.cpp
-msgid "NEXT START"
-msgstr "PO RESTARTU"
-
 #: pe/ui/multiplayer.cpp
 msgid "Nickname"
 msgstr "Přezdívka"
@@ -1118,10 +976,6 @@ msgstr "Přezdívka"
 #: pe/ui/multiplayer.cpp
 msgid "Nickname: {0}"
 msgstr "Přezdívka: {0}"
-
-#: pe/ui/library.cpp
-msgid "No cover art"
-msgstr "Žádný obal"
 
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
@@ -1186,7 +1040,7 @@ msgstr "Žádné"
 msgid "Not connected yet"
 msgstr "Zatím nepřipojeno"
 
-#: pe/ui/pairing.cpp, pe/ui/settings.cpp
+#: pe/ui/pairing.cpp
 msgid "Not linked"
 msgstr "Nepropojeno"
 
@@ -1198,10 +1052,6 @@ msgstr "Nepropojeno: uložená data zůstávají na konzoli"
 msgid "Not on the console"
 msgstr "Není na konzoli"
 
-#: pe/ui/library.cpp
-msgid "Not on the console yet. Download it to play and to change its settings."
-msgstr "Zatím není na konzoli. Stáhni ji, ať ji lze hrát a nastavit."
-
 #: pe/ui/pairing.cpp
 msgid "Not paired"
 msgstr "Nespárováno"
@@ -1209,10 +1059,6 @@ msgstr "Nespárováno"
 #: pe/ui/remote.cpp
 msgid "Not reachable"
 msgstr "Nelze se připojit"
-
-#: pe/ui/settings.cpp
-msgid "Not readable"
-msgstr "Nelze přečíst"
 
 #: pe/ui/settings.cpp
 msgid "Not set up"
@@ -1228,7 +1074,7 @@ msgstr "Nic k importu"
 msgid "Off"
 msgstr "Vypnuto"
 
-#: pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+#: pe/ui/multiplayer.cpp
 msgid "Offline"
 msgstr "Offline"
 
@@ -1237,17 +1083,13 @@ msgstr "Offline"
 msgid "On"
 msgstr "Zapnuto"
 
-#: pe/ui/settings.cpp
-msgid "ON THIS CONSOLE"
-msgstr "NA TÉTO KONZOLI"
-
 #. Short tag on a folder row.
 #: pe/ui/browse.cpp
 msgid "OPEN"
 msgstr "OTEVŘÍT"
 
 #. Button hint: open the highlighted folder.
-#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Open"
 msgstr "Otevřít"
 
@@ -1263,11 +1105,6 @@ msgstr "Otevřít knihovnu"
 #: pe/ui/game_options.cpp
 msgid "Options"
 msgstr "Options"
-
-#. Label: see 'Output resolution'.
-#: pe/ui/settings.cpp
-msgid "OUTPUT RESOLUTION"
-msgstr "VÝSTUPNÍ ROZLIŠENÍ"
 
 #. Setting: the size of the picture sent to the TV (1080p, 1440p or 2160p). Not the same as 'Resolution', which scales the game's own picture (1x, 2x...).
 #: pe/ui/settings.cpp
@@ -1317,13 +1154,14 @@ msgid "Patch"
 msgstr "Patch"
 
 #. A settings category: options that make games run faster, at some cost in accuracy.
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "Výkon"
 
-#: pe/ui/settings.cpp
-msgid "PERFORMANCE"
-msgstr "VÝKON"
+#. Button and button hint: start the game shown. Keep it to one short word.
+#: pe/ui/home.cpp, pe/ui/library.cpp
+msgid "Play"
+msgstr "Hrát"
 
 #: pe/ui/save_sync.cpp
 msgid "Play anyway"
@@ -1349,10 +1187,6 @@ msgstr "hraje"
 msgid "Playing"
 msgstr "Hraje"
 
-#: pe/ui/settings.cpp
-msgid "PLAYING"
-msgstr "HRAJE"
-
 #: pe/ui/profiles.cpp
 msgid "Playing as {0}"
 msgstr "Hraje {0}"
@@ -1360,10 +1194,6 @@ msgstr "Hraje {0}"
 #: settings_store.h
 msgid "Polish"
 msgstr "Polština"
-
-#: pe/ui/settings.cpp
-msgid "Port {0}"
-msgstr "Port {0}"
 
 #: settings_store.h
 msgid "Portuguese"
@@ -1377,10 +1207,6 @@ msgstr "Portugalština (Brazílie)"
 #: pe/ui/browse.cpp
 msgid "Powered by Eden"
 msgstr "Běží na emulátoru Eden"
-
-#: pe/ui/settings.cpp
-msgid "PREFERENCES"
-msgstr "PŘEDVOLBY"
 
 #. Update dialog headline while the download starts.
 #: pe/ui/remote.cpp, pe/ui/update.cpp
@@ -1399,10 +1225,6 @@ msgstr "Dalším stisknutím nahradíš uložená data této hry. Stávající s
 #: pe/ui/multiplayer.cpp
 msgid "Private room"
 msgstr "Soukromá místnost"
-
-#: pe/ui/settings.cpp
-msgid "PRIVATE ROOM"
-msgstr "SOUKROMÁ MÍSTNOST"
 
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
@@ -1427,10 +1249,6 @@ msgstr "Profil {0}"
 #: pe/ui/profiles.cpp, pe/ui/settings.cpp
 msgid "Profiles"
 msgstr "Profily"
-
-#: pe/ui/settings.cpp
-msgid "PROFILES"
-msgstr "PROFILY"
 
 #: pe/ui/browse.cpp
 msgid "PROJECT CREDITS"
@@ -1470,18 +1288,9 @@ msgstr "Inicializace ovladače PS5 se nezdařila"
 msgid "PS5 EDITION"
 msgstr "EDICE PS5"
 
-#. {0} is the version, for example v1.000.030.
-#: pe/ui/home.cpp
-msgid "PS5 EDITION  /  {0}"
-msgstr "EDICE PS5  /  {0}"
-
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
 msgstr "Veřejné místnosti"
-
-#: pe/ui/settings.cpp
-msgid "PUBLIC ROOMS"
-msgstr "VEŘEJNÉ MÍSTNOSTI"
 
 #: pe/ui/remote.cpp
 msgid "Queued"
@@ -1501,10 +1310,6 @@ msgstr "Náhodný"
 msgid "Reactive flushing"
 msgstr "Reaktivní flushování"
 
-#: pe/ui/settings.cpp
-msgid "REACTIVE FLUSHING"
-msgstr "REAKTIVNÍ FLUSHOVÁNÍ"
-
 #: pe/ui/remote.cpp
 msgid "Read the lists again"
 msgstr "Načíst seznamy znovu"
@@ -1513,7 +1318,7 @@ msgstr "Načíst seznamy znovu"
 msgid "Reading the game lists..."
 msgstr "Načítání seznamů her..."
 
-#: pe/ui/remote.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/remote.cpp
 msgid "Reading..."
 msgstr "Načítání..."
 
@@ -1524,10 +1329,6 @@ msgstr "Připraveno"
 #: pe/ui/home.cpp
 msgid "RECENTLY PLAYED"
 msgstr "NAPOSLEDY HRANÉ"
-
-#: pe/ui/settings.cpp
-msgid "REDUCE MOTION"
-msgstr "OMEZENÍ POHYBU"
 
 #. A switch: no drifting, sliding or zooming on screen.
 #: pe/ui/settings.cpp
@@ -1543,12 +1344,7 @@ msgstr "Obnovit"
 msgid "Refresh rate"
 msgstr "Obnovovací frekvence"
 
-#. Label: see 'Refresh rate'.
-#: pe/ui/settings.cpp
-msgid "REFRESH RATE"
-msgstr "OBNOVOVACÍ FREKVENCE"
-
-#: pe/ui/browse.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "REGION"
 
@@ -1564,10 +1360,6 @@ msgstr "Přejmenovat"
 msgid "Renderer"
 msgstr "Renderer"
 
-#: pe/ui/settings.cpp
-msgid "RENDERER"
-msgstr "RENDERER"
-
 #: pe/ui/game_options.cpp
 msgid "Reset"
 msgstr "Obnovit"
@@ -1575,10 +1367,6 @@ msgstr "Obnovit"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Resolution"
 msgstr "Rozlišení"
-
-#: pe/ui/settings.cpp
-msgid "RESOLUTION"
-msgstr "ROZLIŠENÍ"
 
 #: pe/ui/game_options.cpp
 msgid "Right Joy-Con"
@@ -1600,10 +1388,6 @@ msgstr "Ve složce herních souborů chybí ROM"
 #: pe/ui/multiplayer.cpp
 msgid "Room address"
 msgstr "Adresa místnosti"
-
-#: pe/ui/settings.cpp
-msgid "Room address and UDP port"
-msgstr "Adresa místnosti a port UDP"
 
 #: pe/ui/multiplayer.cpp
 msgid "Room {0} of {1}"
@@ -1661,14 +1445,6 @@ msgstr "Nalezena složka s daty"
 msgid "Save sync"
 msgstr "Synchronizace uložených dat"
 
-#: pe/ui/settings.cpp
-msgid "SAVE SYNC"
-msgstr "SYNCHRONIZACE ULOŽENÝCH DAT"
-
-#: pe/ui/settings.cpp
-msgid "SAVE-SYNC.JSON"
-msgstr "SAVE-SYNC.JSON"
-
 #: pe/ui/pairing.cpp
 msgid "save-sync.json cannot be read ({0}). Nothing syncs until it is corrected over FTP."
 msgstr "Soubor save-sync.json nelze přečíst ({0}). Dokud ho neopravíš přes FTP, nic se nesynchronizuje."
@@ -1698,6 +1474,11 @@ msgstr "Uloženo. Displej, který 120 Hz nezvládne, zůstane na 60 Hz."
 msgid "Saved. Applies when a game starts."
 msgstr "Uloženo. Projeví se při spuštění hry."
 
+#. Shown after choosing 'Full quality' for 'ASTC textures'. 1x is a resolution scale (unchanged). It has two lines: keep it short.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Saved. Full quality uses four times the graphics memory for these textures and can run out above 1x."
+msgstr "Uloženo. Plná kvalita zabere pro tyto textury čtyřikrát víc grafické paměti a nad 1x může paměť dojít."
+
 #: pe/ui/browse.cpp
 msgid "Saved. Reopen ProsperoEden to use this folder."
 msgstr "Uloženo. Pro použití této složky spusť ProsperoEden znovu."
@@ -1711,22 +1492,15 @@ msgstr "Naskenuj kód telefonem, nebo otevři adresu níže."
 msgid "Scroll"
 msgstr "Posunout"
 
+#. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
+#: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Sections"
+msgstr "Sekce"
+
 #. Button hint: choose the highlighted item (not the Select button).
 #: pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/pairing.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
 msgid "Select"
 msgstr "Vybrat"
-
-#: pe/ui/library.cpp
-msgid "Select a game"
-msgstr "Vyber hru"
-
-#: pe/ui/library.cpp
-msgid "Select a game to begin"
-msgstr "Začni výběrem hry"
-
-#: pe/ui/library.cpp
-msgid "Select a readable game to configure its mode."
-msgstr "Vyber hru, kterou lze přečíst, a nastav její režim."
 
 #. Heading: the language highlighted in the list.
 #: pe/ui/browse.cpp
@@ -1742,14 +1516,9 @@ msgstr "Vybraný soubor ROM už není k dispozici"
 msgid "Server too old for save sync"
 msgstr "Server je pro synchronizaci příliš starý"
 
-#: pe/ui/home.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Settings"
 msgstr "Nastavení"
-
-#. Label: whether keys and firmware are in place.
-#: pe/ui/settings.cpp
-msgid "SETUP"
-msgstr "KONFIGURACE"
 
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
@@ -1787,10 +1556,6 @@ msgstr "Zobrazuje se předchozí seznam."
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "Přihlas se k {0} jako uživatel, kterému patří uložená data tohoto profilu."
 
-#: pe/ui/library.cpp
-msgid "SIZE"
-msgstr "VELIKOST"
-
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1802,24 +1567,12 @@ msgid "Skip CPU invalidation"
 msgstr "Přeskočit invalidaci CPU"
 
 #: pe/ui/settings.cpp
-msgid "SKIP CPU INVALIDATION"
-msgstr "PŘESKOČIT INVALIDACI CPU"
-
-#: pe/ui/settings.cpp
 msgid "Skips some checks when a game changes memory the GPU uses: faster, and textures can be stale."
 msgstr "Přeskočí některé kontroly, když hra změní paměť používanou GPU: rychlejší, textury ale mohou být zastaralé."
 
 #: pe/ui/settings.cpp
 msgid "Solid panels, brighter text and an outlined highlight."
 msgstr "Neprůhledné panely, jasnější písmo a orámované zvýraznění."
-
-#: pe/ui/library.cpp
-msgid "SOURCE"
-msgstr "ZDROJ"
-
-#: pe/ui/library.cpp, pe/ui/settings.cpp
-msgid "SOURCES"
-msgstr "ZDROJE"
 
 #: settings_store.h
 msgid "Spanish"
@@ -1852,10 +1605,6 @@ msgstr "Před importem uložených dat jednou spusť libovolnou hru."
 msgid "STARTING"
 msgstr "SPOUŠTĚNÍ"
 
-#: pe/ui/library.cpp
-msgid "STATE"
-msgstr "STAV"
-
 #: pe/ui/settings.cpp
 msgid "Stops the background drifting and the screens sliding, here and on the loading screen."
 msgstr "Zastaví pohyb pozadí a posouvání obrazovek, tady i na načítací obrazovce."
@@ -1863,10 +1612,6 @@ msgstr "Zastaví pohyb pozadí a posouvání obrazovek, tady i na načítací ob
 #: pe/ui/browse.cpp
 msgid "Supply your own files"
 msgstr "Přidej vlastní soubory"
-
-#: pe/ui/settings.cpp
-msgid "SYNC"
-msgstr "SYNCHRONIZACE"
 
 #: pe/ui/save_sync.cpp
 msgid "Sync the save data once more."
@@ -1877,7 +1622,7 @@ msgid "Syncing save data"
 msgstr "Synchronizují se uložená data"
 
 #. A category of a game's settings: how the emulated console itself behaves.
-#: pe/ui/game_options.cpp, pe/ui/library.cpp
+#: pe/ui/library.cpp
 msgid "System"
 msgstr "Systém"
 
@@ -1947,9 +1692,14 @@ msgstr "Hra se spustí po dokončení stahování."
 msgid "The keyboard could not be opened."
 msgstr "Klávesnici se nepodařilo otevřít."
 
-#: pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "The language games use when they offer it."
 msgstr "Jazyk, který hry použijí, pokud ho nabízejí."
+
+#. Under the title Theme: what a theme changes.
+#: pe/ui/settings.cpp
+msgid "The look of this menu."
+msgstr "Vzhled této nabídky."
 
 #: pe/ui/pairing.cpp
 msgid "The profile or the server is no longer there."
@@ -1988,6 +1738,11 @@ msgstr "Zdroj už tuto hru nemá."
 msgid "The update could not finish"
 msgstr "Aktualizaci nelze dokončit"
 
+#. A tile of Settings and its dialog's title: the look of this menu (its colours and artwork).
+#: pe/ui/settings.cpp
+msgid "Theme"
+msgstr "Motiv"
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "Konzole i server mají uložená data, která druhá strana nezná. Která mají zůstat? Ta druhá se uchovají jako záloha."
@@ -2023,7 +1778,7 @@ msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}
 msgstr "Pro import zkopíruj složku Ryujinx do ryujinx/ nebo uložená data do save-import/{0}/, vedle roms/."
 
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
-#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp
 msgid "Touchpad"
 msgstr "Dotykový panel"
 
@@ -2031,6 +1786,11 @@ msgstr "Dotykový panel"
 #: pe/ui/game_options.cpp
 msgid "Triangle"
 msgstr "Trojúhelník"
+
+#. One line about the theme named Canopy: its artwork is a tropical sunset, its panels are dark green glass, its accent colour is lime green.
+#: pe/ui/theme.cpp
+msgid "Tropical dusk, dark green glass and lime."
+msgstr "Tropický soumrak, tmavě zelené sklo a limetková."
 
 #: pe/ui/pairing.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/update.cpp
 msgid "Try again"
@@ -2102,10 +1862,6 @@ msgstr "AKTUALIZACE, DLC"
 msgid "Upscaling filter"
 msgstr "Filtr škálování"
 
-#: pe/ui/settings.cpp
-msgid "UPSCALING FILTER"
-msgstr "FILTR ŠKÁLOVÁNÍ"
-
 #: eden_services.cpp
 msgid "USA"
 msgstr "USA"
@@ -2138,10 +1894,6 @@ msgid "Vibration"
 msgstr "Vibrace"
 
 #: pe/ui/settings.cpp
-msgid "VIBRATION"
-msgstr "VIBRACE"
-
-#: pe/ui/settings.cpp
 msgid "Vibration off"
 msgstr "Vibrace vypnuty"
 
@@ -2153,13 +1905,9 @@ msgstr "Vibrace zapnuty"
 msgid "Vibration, button mapping and the shortcuts during a game."
 msgstr "Vibrace, mapování tlačítek a zkratky během hry."
 
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Video"
 msgstr "Video"
-
-#: pe/ui/settings.cpp
-msgid "VIDEO"
-msgstr "VIDEO"
 
 #: pe/ui/home.cpp
 msgid "VIEW ALL GAMES"
@@ -2220,10 +1968,6 @@ msgstr "Příště přijde dotaz znovu."
 msgid "You are told again at the next sync."
 msgstr "Při příští synchronizaci se upozornění zobrazí znovu."
 
-#: pe/ui/library.cpp
-msgid "Your games"
-msgstr "Tvoje hry"
-
 #. Update dialog: installing the new app version keeps the player's files.
 #: pe/ui/update.cpp
 msgid "Your games, saves and settings are kept."
@@ -2263,7 +2007,7 @@ msgid "{0} game lists could not be read."
 msgstr "Nenačtené seznamy her: {0}."
 
 #. Any number of games other than one (also 0). See '{0} game'.
-#: pe/ui/browse.cpp, pe/ui/remote.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/library.cpp, pe/ui/remote.cpp
 msgid "{0} games"
 msgstr "Hry: {0}"
 
@@ -2313,7 +2057,7 @@ msgid "{0} of {1} mods on"
 msgstr "Zapnuté mody: {0} z {1}"
 
 #. How many of a game's mods are switched on: 2 of 3 on.
-#: pe/ui/library.cpp
+#: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "{0} of {1} on"
 msgstr "Zapnuto: {0} z {1}"
 
@@ -2338,7 +2082,7 @@ msgid "{0} · Profile {1}"
 msgstr "{0} · Profil {1}"
 
 #. A percentage (a volume): write it as the language does, for example with a space before the sign.
-#: pe/ui/game_options.cpp, pe/ui/remote.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/remote.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
 msgid "{0}%"
 msgstr "{0} %"
 

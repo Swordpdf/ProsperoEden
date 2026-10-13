@@ -60,6 +60,18 @@ inline std::string ConfigDir() { return std::string{kDataDir} + "/config"; }
 // The logs alone have a place in the sandbox: they are how a start without access is looked into.
 inline std::string LogsDir() { return FilesystemAccess() ? std::string{kDataDir} + "/logs" : "/download0/eden-headless-g7"; }
 inline std::string CoversDir() { return std::string{kDataDir} + "/covers"; }
+// A game's cover in that folder. Covers are keyed by the ROM's file name in the game files
+// folder, not its full path, so they survive a new game files folder.
+inline unsigned int HashPath(std::string_view path) {
+    unsigned int hash = 2166136261u;
+    for (const unsigned char byte : path) hash = (hash ^ byte) * 16777619u;
+    return hash;
+}
+inline std::string CoverFile(std::string_view file) {
+    char name[16]{};
+    std::snprintf(name, sizeof(name), "/%08x.tga", HashPath(file));
+    return CoversDir() + name;
+}
 inline std::string UserDir() { return std::string{kDataDir} + "/user"; }
 inline std::string ConfigFile(std::string_view name) { return ConfigDir() + "/" + std::string(name); }
 inline std::string LogFile(std::string_view name) { return LogsDir() + "/" + std::string(name); }
