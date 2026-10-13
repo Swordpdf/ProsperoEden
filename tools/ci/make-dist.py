@@ -6,15 +6,17 @@
 
 dist/ProsperoEden-vX.Y.Z.zip (the folder plus README, LICENSE and THIRD_PARTY_NOTICES; fixed
 timestamps, so equal inputs give equal bytes), SHA256SUMS (of the ZIP) and release-notes.md (the
-README's "Changes in vX.Y.Z" section).
+changelog's "vX.Y.Z" section, docs/CHANGELOG.md).
 """
 import hashlib
 import json
+import os
 import pathlib
 import re
 import shutil
 import sys
 import zipfile
+from urllib.parse import urljoin
 
 root = pathlib.Path(__file__).resolve().parents[2]
 args = sys.argv[1:]
@@ -53,10 +55,17 @@ if unstripped.exists():
     symbols.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(unstripped, symbols)
     print(f'{symbols} (keep it with the release: crash reports are read with it)')
-readme = (root / 'README.md').read_text()
-match = re.search(rf'^## Changes in {re.escape(tag)}\n(.*?)(?=^## )', readme, re.M | re.S)
+# The release notes: this version's section of the changelog. A link that is relative there (to
+# another guide, to another version) would lead nowhere on the release's page, so it is pointed
+# at the file as the tag has it.
+changelog = (root / 'docs/CHANGELOG.md').read_text()
+match = re.search(rf'^## {re.escape(tag)}\n(.*?)(?=^## |\Z)', changelog, re.M | re.S)
 if match:
-    (dist / 'release-notes.md').write_text(match.group(1).strip() + '\n')
+    repository = os.environ.get('GITHUB_REPOSITORY', 'blackbearreloaded/ProsperoEden')
+    here = f'https://github.com/{repository}/blob/{tag}/docs/CHANGELOG.md'
+    notes = re.sub(r'\]\((?!https?://|mailto:)([^)\s]+)\)', lambda link: f']({urljoin(here, link.group(1))})',
+                   match.group(1).strip())
+    (dist / 'release-notes.md').write_text(notes + '\n')
 else:
-    print(f'README.md has no "## Changes in {tag}" section; no release-notes.md', file=sys.stderr)
+    print(f'docs/CHANGELOG.md has no "## {tag}" section; no release-notes.md', file=sys.stderr)
 print(f'{archive} {digest}')

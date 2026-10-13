@@ -211,7 +211,7 @@ dependencies are reused instead of fetched) for a build on your own machine.
   the pull request's own head commit. A newer push to a pull request, or a newer manual or
   nightly run on the same branch, cancels the run in progress.
 - **Tag `vX.Y.Z`** (by itself, when the tag is pushed): builds and checks them the same way, checks that the tag matches the package
-  version, and publishes a pre-release with the ZIP and `SHA256SUMS` (a second job). The release notes come from the README's "Changes in vX.Y.Z" section.
+  version, and publishes a pre-release with the ZIP and `SHA256SUMS` (a second job). The release notes come from the "vX.Y.Z" section of [the changelog](CHANGELOG.md).
 - Every run also keeps `build/symbols/` as an artifact with `-symbols` after the name: 90 days
   for a tag, 7 days otherwise.
 - A tag's or a manual run's ZIP is attested (signed build provenance): a release ZIP built by
@@ -232,7 +232,8 @@ To cut a release:
 
 1. Bump `contentVersion` in `sce_sys/param.json` (the launcher is built with it, and the package
    carries the file).
-2. Add the "Changes in" section to the README.
+2. Add the version's section at the top of [the changelog](CHANGELOG.md), and name the version as the
+   current release in the README.
 3. Test the build on a console.
 4. Push a `vX.Y.Z` tag.
 5. Keep `build/symbols/ProsperoEden-vX.Y.Z.elf` from the build that was published (crash reports
