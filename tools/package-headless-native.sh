@@ -87,7 +87,10 @@ built = re.search(r'EDEN_APP_VERSION "([0-9.]+)"',
 assert built == value['contentVersion'], f'the program says {built}, param.json {value["contentVersion"]}'
 # The console gives a 120 Hz output (Settings > Video, headless/display_refresh.h) only to a title
 # that declares it. Declaring it changes nothing by itself: the output stays at 60 Hz until asked.
-assert int(value['attribute3']) & 0x80040 == 0x80040, 'param.json no longer declares the 120 Hz output'
+# With it goes bit 18, a variable refresh rate as system software 6.02 already knows it: bit 19
+# (the newer way to say so) is refused there as an unknown parameter, and the title is then
+# listed without a variable refresh rate at all.
+assert int(value['attribute3']) & 0x40040 == 0x40040, 'param.json no longer declares the 120 Hz output'
 # Bit 22: PS5 Pro memory mode, a 13,504 MiB direct memory pool instead of 12,288 MiB on a Pro.
 assert int(value['attribute3']) & 0x400000, 'param.json no longer asks for PS5 Pro memory mode'
 runpy.run_path(str(root / 'tools/load_alignment.py'))['check_load_alignment']((app / 'eboot.bin').read_bytes())
