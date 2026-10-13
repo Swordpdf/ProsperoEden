@@ -1944,6 +1944,17 @@ endif()
 string(REPLACE "${npad_update}"
     "        auto& controller = controller_data[aruid_index][controller_idx];\n        if (controller.device == nullptr) {\n            continue;  // ProsperoEden: this applet resource is not activated yet\n        }\n        const auto is_connected = controller.device->IsConnected();"
     npad_source "${npad_source}")
+# Since 67bada77 the NPad registers its controller callbacks in its constructor, before the HID
+# service hands it an applet resource: a motion sample from the pad thread in that window called
+# through the null resource (page fault in NPad::ControllerUpdate at boot, seen on the console).
+set(npad_entry "void NPad::ControllerUpdate(Kernel::KernelCore& kernel, Core::HID::ControllerTriggerType type, std::size_t controller_idx) {\n")
+string(FIND "${npad_source}" "${npad_entry}" npad_entry_at)
+if(npad_entry_at LESS 0)
+    message(FATAL_ERROR "Pinned NPad::ControllerUpdate changed")
+endif()
+string(REPLACE "${npad_entry}"
+    "${npad_entry}    if (applet_resource_holder.applet_resource == nullptr) {\n        return;  // ProsperoEden: the HID service has not set this NPad up yet\n    }\n"
+    npad_source "${npad_source}")
 write_derived("${PORT_BUILD_DIR}/npad.cpp" "${npad_source}")
 get_target_property(npad_sources hid_core SOURCES)
 list(FILTER npad_sources EXCLUDE REGEX "(^|/)npad\\.cpp$")
