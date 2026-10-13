@@ -164,8 +164,9 @@ And to the people who contribute code:
 - **matschi95** ([GitHub](https://github.com/matschi95)), for the RomM integration (browsing, downloading and playing games from your own server, and save sync) and for finding and fixing the stutter that log writes caused every few seconds.
 - **v0ltfault** ([GitHub](https://github.com/v0ltfault)), for tracking down why every game ended at its first picture on system software 7.40, with a fix and a write-up of the findings.
 - **gyn7561** ([GitHub](https://github.com/gyn7561)), for bringing frame generation to the PS5, with its settings, and for the log lines that say why it is or is not running.
-- **Bauls Deep** ([GitHub](https://github.com/bawsdeep)), for the Nix shell that sets up the whole build environment with one command.
+- **Bauls Deep** ([GitHub](https://github.com/bawsdeep)), for the Nix shell that sets up the whole build environment with one command, for the texture collector's lookahead, where the fix for the half-second freezes began, and for the development timers and the recorded-input replay.
 - **lunar-me** ([GitHub](https://github.com/lunar-me)), for a correction to the README.
+- **OverkillLabs** ([GitHub](https://github.com/OverkillLabs3)), for the fix that keeps the fast path for exclusive memory accesses with Faster CPU emulation on.
 - **EIREXE** ([GitHub](https://github.com/EIREXE)), for the RNG seed per game, which lets mods that tell an emulator from a console by where the game is loaded work.
 - **rpromas** ([GitHub](https://github.com/rpromas)), for finding and fixing the crash in games that open the microphone.
 

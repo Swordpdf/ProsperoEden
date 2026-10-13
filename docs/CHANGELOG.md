@@ -23,6 +23,16 @@ What changed in each release of ProsperoEden, newest first. A release's notes on
 - **PS5 OpenGL SDK 1.0.2** for the launcher and the OpenGL renderer (it was 1.0.0). A game whose shaders are compiled inside its first frames is no longer ended on its first run with the OpenGL renderer, the menu no longer loses a frame of about 180 ms every few seconds while **Write logs at once** is on, and drawing fixes from [Mihawk](https://github.com/mihawk-99) and [mpereiraesaa](https://github.com/mpereiraesaa) are in.
 - **A single Joy-Con held upright.** A game that gives a player one Joy-Con to hold upright is played with the whole DualSense: the shapes are that Joy-Con's four buttons, the D-pad and either stick are its stick, and L1/R1 and L2/R2 are its shoulder buttons.
 
+**Thanks** to the people whose work is in this release:
+
+- [Bauls Deep](https://github.com/bawsdeep), for the texture collector's lookahead, where the fix for the half-second freezes began, and for the development timers and the recorded-input replay.
+- [EIREXE](https://github.com/EIREXE), for the RNG seed per game.
+- [rpromas](https://github.com/rpromas), for finding and fixing the crash in games that open the microphone.
+- [OverkillLabs](https://github.com/OverkillLabs3), for the fix that keeps the fast path for exclusive memory accesses with Faster CPU emulation on.
+- [Mihawk](https://github.com/mihawk-99) and [mpereiraesaa](https://github.com/mpereiraesaa), for the drawing fixes in the OpenGL SDK, and Mihawk for the Vulkan driver all of this runs on.
+
+And to everyone who tests ProsperoEden on their own console and reports what they find.
+
 ## v1.000.110
 
 - **Multiplayer through Eden rooms (new, experimental).** ProsperoEden can join an Eden room, so a game's Local Wireless mode reaches other players over the internet: other PS5 consoles running ProsperoEden, and Eden on a PC. Open **Multiplayer** (a section of the menu: R1 twice from the home screen), join a room, then start the game and choose its Local Wireless mode. The home screen shows when a room is connected, the game overlay shows the delay to the room in milliseconds, and when the connection is lost the game closes and the launcher says why. See the [setup guide](https://github.com/blackbearreloaded/ProsperoEden/blob/main/docs/MULTIPLAYER.md).
