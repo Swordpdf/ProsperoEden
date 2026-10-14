@@ -153,7 +153,7 @@ struct Preferences {
     // end so the aggregate initialisations the checks use still mean what they did.
     int hud_size = 0;        // index into kHudSizeKeys: 0 regular, 1 medium, 2 large
     int hud_corner = 0;      // index into kHudCornerKeys: which corner of the picture it stands in
-    bool hud_colors = false; // the line in its inks rather than one (bake-loading-text.py)
+    bool hud_colors = true;  // the line in its inks rather than one (bake-loading-text.py)
     // What the overlay's line may say, bit by bit (hud.h's kHudField*): the pieces the user has
     // chosen to show. All of them by default.
     int hud_fields = 0xff;

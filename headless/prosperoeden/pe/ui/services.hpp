@@ -328,7 +328,7 @@ struct Preferences
     // Settings > Video: the overlay's chip (the same values Eden::Preferences keeps).
     int hud_size = 0;   // 0 regular, 1 medium, 2 large
     int hud_corner = 0; // 0 top left, 1 top right, 2 bottom left, 3 bottom right
-    bool hud_colors = false; // the line in its inks rather than one
+    bool hud_colors = true;  // the line in its inks rather than one
     // What the overlay's line may say, bit by bit (hud.h's kHudField*): the pieces the user has
     // chosen to show. All of them by default.
     int hud_fields = 0xff;
