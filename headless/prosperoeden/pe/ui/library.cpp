@@ -688,15 +688,16 @@ void Launcher::draw_library(Canvas &c)
     const Download *queued = remote ? download_of(game->key) : nullptr;
     if (remote)
     {
-        primary_button(c, first, queued != nullptr ? tr("Play when downloaded") : tr("Download and play"), Pad::cross,
-                       0.0f, 0.0f);
-        secondary_button(c, second, queued != nullptr ? tr("Cancel download") : tr("Download"), Pad::square, 0.0f,
-                         0.0f);
+        primary_button(c, first, queued != nullptr ? tr("Play when downloaded") : tr("Download and play"),
+                       translate_hint(Pad::cross), 0.0f, 0.0f);
+        secondary_button(c, second, queued != nullptr ? tr("Cancel download") : tr("Download"),
+                         translate_hint(Pad::square), 0.0f, 0.0f);
     }
     else
     {
-        primary_button(c, first, tr("Play"), Pad::cross, 0.0f, 0.0f, game != nullptr && home_.setup_ready);
-        secondary_button(c, second, tr("Game settings"), Pad::triangle, 0.0f, 0.0f,
+        primary_button(c, first, tr("Play"), translate_hint(Pad::cross), 0.0f, 0.0f,
+                       game != nullptr && home_.setup_ready);
+        secondary_button(c, second, tr("Game settings"), translate_hint(Pad::triangle), 0.0f, 0.0f,
                          game != nullptr && game->title_id != 0);
     }
 
@@ -978,7 +979,7 @@ void Launcher::draw_game_page(Canvas &c, float open)
     // ---- hints ----
     const float cy = layout::kFooter;
     const auto hints = [&](const Hint *list_of, int count)
-    { draw_hints(c, list_of, count, layout::kLeft, cy, t.copy, layout::kWidth); };
+    { draw_menu_hints(c, list_of, count, layout::kLeft, cy, t.copy, layout::kWidth); };
     if (modal_shown_ == Modal::mods)
     {
         if (mods_.empty())

@@ -390,7 +390,7 @@ void Launcher::draw_multiplayer(Canvas& c) {
         draw_public_rooms(c, kPane);
         static constexpr Hint kHints[]{{Pad::cross, TR("Select")}, {Pad::leftright, TR("Page")},
                                        {Pad::triangle, TR("Refresh")}, {Pad::circle, TR("Back")}};
-        draw_hints(c, kHints, 4, layout::kLeft, layout::kFooter, t.copy, layout::kWidth);
+        draw_menu_hints(c, kHints, 4, layout::kLeft, layout::kFooter, t.copy, layout::kWidth);
         return;
     }
     // The private room's form (also what shows while a room is being joined or left).
@@ -404,8 +404,8 @@ void Launcher::draw_multiplayer(Canvas& c) {
         const float f = row == room_row_ ? 1.0f : 0.0f;
         if (row == 4) {
             // The form's action, as a button.
-            if (idle) primary_button(c, {rect.x, rect.y + 8, 420, 76}, tr(labels[row]), Pad::cross, f, press_);
-            else secondary_button(c, {rect.x, rect.y + 8, 420, 76}, tr(labels[row]), Pad::cross, f, press_);
+            if (idle) primary_button(c, {rect.x, rect.y + 8, 420, 76}, tr(labels[row]), translate_hint(Pad::cross), f, press_);
+            else secondary_button(c, {rect.x, rect.y + 8, 420, 76}, tr(labels[row]), translate_hint(Pad::cross), f, press_);
             continue;
         }
         plate(c, row_plate(), rect, f);
@@ -420,6 +420,6 @@ void Launcher::draw_multiplayer(Canvas& c) {
                      message_warning_ ? t.warning : t.accent_pale, kPane.w, 2, message_warning_);
     static constexpr Hint kHints[]{{Pad::cross, TR("Select")}, {Pad::square, TR("Go offline")},
                                    {Pad::circle, TR("Back")}};
-    draw_hints(c, kHints, 3, layout::kLeft, layout::kFooter, t.copy, layout::kWidth);
+    draw_menu_hints(c, kHints, 3, layout::kLeft, layout::kFooter, t.copy, layout::kWidth);
 }
 } // namespace pe::ui

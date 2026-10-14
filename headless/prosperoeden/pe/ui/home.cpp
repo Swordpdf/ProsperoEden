@@ -297,8 +297,9 @@ void Launcher::draw_home(Canvas &c)
         const float top = below + 112.0f;
         const float first_width = std::clamp(text_width(c, first, 28.0f) + 152.0f, 240.0f, 520.0f);
         const float second_width = std::clamp(text_width(c, second, 28.0f) + 140.0f, 240.0f, 520.0f);
-        primary_button(c, {left, top, first_width, 88.0f}, first, Pad::cross, focus(kMain), press_);
-        secondary_button(c, {left + first_width + 20.0f, top, second_width, 88.0f}, second, Pad::triangle,
+        primary_button(c, {left, top, first_width, 88.0f}, first, translate_hint(Pad::cross), focus(kMain), press_);
+        secondary_button(c, {left + first_width + 20.0f, top, second_width, 88.0f}, second,
+                         translate_hint(Pad::triangle),
                          focus(kGameSettings), press_, continue_ready);
         // What it runs with.
         if (continue_ready && !home_session_.empty())
