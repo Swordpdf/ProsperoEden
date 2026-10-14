@@ -146,6 +146,7 @@ inline std::atomic<int64_t> since{0};  // when the step began, in milliseconds
 inline std::atomic<uint32_t> art_size{0};
 // The launcher's theme for the screen: its accent, pale accent, deep accent and base colours as
 // 0x01RRGGBB. 0: the shader's own, which are Canopy's.
+inline std::atomic<bool> runtime_scene_active{false};
 inline std::array<std::atomic<uint32_t>, 4> palette{};
 inline void Palette(uint32_t accent, uint32_t pale, uint32_t deep, uint32_t base) {
     const uint32_t colours[]{accent, pale, deep, base};
@@ -203,6 +204,7 @@ inline std::array<uint32_t, 24> State() {
     state[6] = art_size.load(std::memory_order_relaxed);
     state[7] = static_cast<uint32_t>(std::clamp(shown, 0.0, 1.0) * 1000000.0);
     for (size_t i = 0; i < palette.size(); ++i) state[8 + i] = palette[i].load(std::memory_order_relaxed);
+    state[23] = runtime_scene_active.load(std::memory_order_relaxed) ? 0x50454c31u : 0;
     return state;
 }
 } // namespace Loading

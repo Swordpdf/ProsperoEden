@@ -960,10 +960,6 @@ msgstr "중간"
 msgid "Memory"
 msgstr "메모리"
 
-#: pe/ui/game_options.cpp, pe/ui/settings.cpp
-msgid "Menu keybinds"
-msgstr "메뉴 버튼"
-
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
 msgstr "메뉴 효과음은 ElevenLabs로 제작했습니다."
@@ -1568,10 +1564,6 @@ msgstr "휴대폰으로 코드를 스캔하거나 아래 주소를 여세요."
 msgid "Scroll"
 msgstr "스크롤"
 
-#: pe/ui/game_options.cpp
-msgid "Secondary"
-msgstr "보조 동작"
-
 #. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
 #: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Sections"
@@ -2043,10 +2035,6 @@ msgstr "새로운 기능"
 #: pe/ui/update.cpp
 msgid "What's new in version {0}"
 msgstr "버전 {0}의 새로운 기능"
-
-#: pe/ui/game_options.cpp
-msgid "Which face button does what in the menu."
-msgstr "메뉴에서 어떤 버튼이 무엇을 하는지."
 
 #: pe/ui/settings.cpp
 msgid "Who is playing. Each profile keeps its own save data and settings."

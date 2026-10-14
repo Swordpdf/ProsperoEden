@@ -960,10 +960,6 @@ msgstr "متوسط"
 msgid "Memory"
 msgstr "الذاكرة"
 
-#: pe/ui/game_options.cpp, pe/ui/settings.cpp
-msgid "Menu keybinds"
-msgstr "أزرار القائمة"
-
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
 msgstr "المؤثرات الصوتية للقائمة صُنعت باستخدام ElevenLabs."
@@ -1568,10 +1564,6 @@ msgstr "امسح الرمز بهاتفك أو افتح العنوان أدناه
 msgid "Scroll"
 msgstr "تمرير"
 
-#: pe/ui/game_options.cpp
-msgid "Secondary"
-msgstr "ثانوي"
-
 #. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
 #: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Sections"
@@ -2043,10 +2035,6 @@ msgstr "ما الجديد"
 #: pe/ui/update.cpp
 msgid "What's new in version {0}"
 msgstr "ما الجديد في الإصدار {0}"
-
-#: pe/ui/game_options.cpp
-msgid "Which face button does what in the menu."
-msgstr "أي زر أمامي يقوم بأي إجراء في القائمة."
 
 #: pe/ui/settings.cpp
 msgid "Who is playing. Each profile keeps its own save data and settings."

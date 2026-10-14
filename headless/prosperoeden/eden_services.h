@@ -62,6 +62,7 @@ public:
     int filesystem_access() override;
 
     std::vector<pe::ui::Profile> profiles() override;
+    std::string profile_key(int index) override;
     bool choose_profile(int index) override;
     int add_profile() override;
     bool rename_profile(int index, int step) override;

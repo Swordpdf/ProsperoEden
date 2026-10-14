@@ -117,6 +117,7 @@ shutil.copy2(root / 'build/fixture' / fixture_name, app / 'core-homebrew.nro')
     'hardware_qualified': False,
 }, indent=2) + '\n')
 PY
+cp "$root/launcher-runtime.json" "$app/launcher-runtime.json"
 llvm-readobj-18 --dyn-symbols --needed-libs "$out/llvm-pie.elf" > "$out/imports.txt"
 "$builder" self --inspect --file "$app/eboot.bin" > "$out/fself-inspection.txt"
 sha256sum "$app/eboot.bin" "$app/core-homebrew.nro" "$app/sce_module/libc.prx" \

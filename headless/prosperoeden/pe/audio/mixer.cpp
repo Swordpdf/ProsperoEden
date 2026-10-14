@@ -114,6 +114,12 @@ bool Mixer::stop_all()
     return post(command);
 }
 
+std::uint64_t Mixer::stop_all_fenced()
+{
+    Command command; command.type = CommandType::stop_all; command.fence = ++fence_next_;
+    return post(command) ? command.fence : 0;
+}
+
 Mixer::Voice &Mixer::allocate_voice()
 {
     Voice *oldest = &voices_[0];
@@ -155,6 +161,7 @@ void Mixer::apply(const Command &command)
     case CommandType::stop_all:
         for (Voice &voice : voices_)
             voice.active = false;
+        if (command.fence) fence_done_.store(command.fence, std::memory_order_release);
         break;
     case CommandType::stream_swap:
         streams_[command.slot] = command.ring;

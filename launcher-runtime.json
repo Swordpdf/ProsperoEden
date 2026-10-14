@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "host_contract": "launcher-v1.0",
+  "supports": "launcher-v1.0",
+  "api_major": 1,
+  "api_minor": 0,
+  "capabilities": [
+    "draw.atlas.v1",
+    "actions.launch.v1",
+    "audio.named-events.v1",
+    "loading.scene.v1",
+    "state.v1"
+  ]
+}

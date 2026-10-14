@@ -16,7 +16,7 @@ namespace pe::host
 {
 
 // A made-up library: invented titles with drawn covers, settings kept in memory.
-class FakeServices final : public ui::Services
+class FakeServices : public ui::Services
 {
   public:
     // covers_directory receives one drawn cover per sample game.

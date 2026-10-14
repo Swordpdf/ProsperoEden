@@ -54,23 +54,4 @@ inline ButtonMapping Assign(ButtonMapping mapping, int game, int pad) {
     mapping[game] = pad;
     return mapping;
 }
-
-// The launcher's own menu buttons (Settings > Controls > Menu keybinds): which face button presses
-// each core menu action. Only the four face buttons take part, each once; the D-pad, the shoulders
-// and Options stay fixed.
-enum MenuAction : int { menu_select, menu_back, menu_secondary, menu_settings, kMenuActions };
-// Their names in the settings file.
-inline constexpr const char* kMenuActionKeys[kMenuActions] = {"select", "back", "secondary", "settings"};
-using MenuBinding = std::array<int, kMenuActions>;  // menu action -> face DualSense button (0-3)
-// Select on Cross, Back on Circle, the secondary action on Square, game settings on Triangle.
-inline constexpr MenuBinding kDefaultMenuBinding = {pad_cross, pad_circle, pad_square, pad_triangle};
-
-inline bool ValidMenuBinding(const MenuBinding& binding) {
-    std::array<bool, kMenuActions> used{};
-    for (const int pad : binding) {
-        if (pad < 0 || pad >= kMenuActions || used[pad]) return false;
-        used[pad] = true;
-    }
-    return true;
-}
 } // namespace Eden

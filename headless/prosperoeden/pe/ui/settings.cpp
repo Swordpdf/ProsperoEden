@@ -31,12 +31,12 @@ enum Category
     kDownloads,
     kSaveSync,
     kLanguage,
-    kTheme,
+    kAppearance,
     kCategoryCount,
 };
 constexpr const char *kCategories[kCategoryCount] = {
     TR("Profiles"), TR("Video"), TR("Performance"), TR("Audio"), TR("Controls"), TR("Accessibility"),
-    TR("Diagnostics"), TR("Game files"), TR("Downloads"), TR("Save sync"), TR("Language"), TR("Theme")};
+    TR("Diagnostics"), TR("Game files"), TR("Downloads"), TR("Save sync"), TR("Language"), TR("Appearance")};
 constexpr Icon kIcons[kCategoryCount] = {
     Icon::profile, Icon::video, Icon::performance, Icon::audio, Icon::controls, Icon::accessibility,
     Icon::diagnostics, Icon::files, Icon::downloads, Icon::sync, Icon::language, Icon::theme};
@@ -120,20 +120,6 @@ enum PerformanceRow : int
 constexpr int kPerformanceRowsShown = 4;
 constexpr Rect kPerformanceWindow{592.0f, kVideoRowsTop, 736.0f,
                                   kVideoRowPitch * (kPerformanceRowsShown - 1) + kVideoRowHeight};
-// The Controls dialog's rows, under its shortcuts: three of the four show and the list scrolls.
-constexpr float kControlsRowsTop = 510.0f;
-constexpr int kControlsRowsShown = 3;
-constexpr Rect kControlsWindow{592.0f, kControlsRowsTop, 736.0f,
-                               kVideoRowPitch * (kControlsRowsShown - 1) + kVideoRowHeight};
-// The Controls rows, in order.
-enum ControlRow : int
-{
-    kControlVibration,
-    kControlStrength,
-    kControlMapping,
-    kControlMenuKeys,
-    kControlRows,
-};
 // The sizes of Preferences::output, as every language writes them.
 constexpr const char *kOutputs[] = {"1080p", "1440p", "2160p"};
 
@@ -170,6 +156,9 @@ void Launcher::press_settings(Key key)
     const int before = at;
     switch (key)
     {
+    case Key::options:
+        launcher_picker_ = true;
+        return;
     case Key::circle:
         go_section(0);
         return;
@@ -228,17 +217,12 @@ void Launcher::press_settings(Key key)
             break;
         case kControls:
             open_modal(Modal::controls);
-            controls_rows_.visible = kControlsRowsShown;
-            controls_rows_.pitch = kVideoRowPitch;
-            controls_rows_.reset(dialog_rows(Modal::controls), 0);
             break;
         case kAccessibility:
             open_modal(Modal::accessibility);
             break;
-        case kTheme:
-            open_modal(Modal::theme);
-            option_ = theme_index();
-            option_cursor_.snap(dialog_row_top(Modal::theme, option_));
+        case kAppearance:
+            open_modal(Modal::appearance);
             break;
         default:
             open_modal(Modal::diagnostics);
@@ -288,7 +272,7 @@ void Launcher::draw_settings(Canvas &c)
                                                                                            std::to_string(sync_setup_.profiles.size())});
         }(),
         pick(services_.language_labels(), prefs_.language),
-        t.name,
+        tr("Theme and launcher"),
     };
     for (int i = 0; i < kCategoryCount; ++i)
     {
@@ -358,8 +342,8 @@ void Launcher::draw_settings(Canvas &c)
     case kLanguage:
         about = tr("The language games use when they offer it.");
         break;
-    case kTheme:
-        about = tr(t.summary);
+    case kAppearance:
+        about = tr("Choose a theme or change the launcher layout.");
         break;
     default:
         break;
@@ -376,8 +360,8 @@ void Launcher::draw_settings(Canvas &c)
     list.pop_opacity();
 
     static constexpr Hint kHints[] = {
-        {Pad::cross, TR("Select")}, {Pad::circle, TR("Back")}, {Pad::l1, TR("Sections"), Pad::r1}};
-    draw_footer(c, kHints, 3, home_.system_status);
+        {Pad::cross, TR("Select")}, {Pad::options, TR("Launcher")}, {Pad::circle, TR("Back")}, {Pad::l1, TR("Sections"), Pad::r1}};
+    draw_footer(c, kHints, 4, home_.system_status);
 }
 
 const char *Launcher::performance_about(int row)
@@ -411,6 +395,8 @@ int Launcher::dialog_rows(Modal modal) const
     case Modal::audio:
     case Modal::accessibility:
         return 3;
+    case Modal::appearance:
+        return 2;
     case Modal::theme:
         return static_cast<int>(themes().size());
     case Modal::game:
@@ -421,8 +407,8 @@ int Launcher::dialog_rows(Modal modal) const
                (library_.selected < static_cast<int>(games_.size()) &&
                         !games_[static_cast<std::size_t>(library_.selected)].sources.empty() &&
                         !games_[static_cast<std::size_t>(library_.selected)].remote ? 1 : 0);
-    case Modal::controls:     // vibration, its strength, the button mapping, the menu's own buttons
-        return kControlRows;
+    case Modal::controls:     // vibration, its strength, the button mapping
+        return 3;
     case Modal::diagnostics:  // detailed logging, logs written at once
         return 2;
     default:
@@ -436,6 +422,7 @@ float Launcher::dialog_row_top(Modal modal, int row) const
     {
     case Modal::audio:
     case Modal::accessibility:
+    case Modal::appearance:
     case Modal::theme:
         return 370.0f + 102.0f * static_cast<float>(row);
     case Modal::performance: // four of its rows show; the list scrolls to the others
@@ -444,8 +431,8 @@ float Launcher::dialog_row_top(Modal modal, int row) const
         return kVideoRowsTop + kVideoRowPitch * static_cast<float>(row) - video_rows_.scroll();
     case Modal::game:
         return 334.0f + 96.0f * static_cast<float>(row);
-    case Modal::controls: // under the shortcuts; the list scrolls
-        return kControlsRowsTop + kVideoRowPitch * static_cast<float>(row) - controls_rows_.scroll();
+    case Modal::controls: // under the shortcuts
+        return 528.0f + 96.0f * static_cast<float>(row);
     case Modal::diagnostics: // under the setup's state
         return 500.0f + 102.0f * static_cast<float>(row);
     default:
@@ -461,15 +448,21 @@ void Launcher::press_dialog(Key key)
     const int step = key == Key::left ? -1 : 1;
     if (key == Key::circle)
     {
-        close_modal();
+        if (modal_ == Modal::theme)
+        {
+            modal_ = modal_shown_ = Modal::appearance;
+            option_ = 0;
+            option_cursor_.snap(dialog_row_top(Modal::appearance, option_));
+            message_.clear();
+            cue(Cue::back);
+        }
+        else
+            close_modal();
         return;
     }
-    if ((key == Key::up || key == Key::down) &&
-        (modal_ == Modal::video || modal_ == Modal::performance || modal_ == Modal::controls))
+    if ((key == Key::up || key == Key::down) && (modal_ == Modal::video || modal_ == Modal::performance))
     {
-        ListView &rows_view = modal_ == Modal::video      ? video_rows_
-                              : modal_ == Modal::controls ? controls_rows_
-                                                          : performance_rows_;
+        ListView &rows_view = modal_ == Modal::video ? video_rows_ : performance_rows_;
         if (rows_view.move(key == Key::down ? 1 : -1))
         {
             option_ = rows_view.selected;
@@ -487,6 +480,23 @@ void Launcher::press_dialog(Key key)
     }
     if (!adjust && !activate)
         return;
+    if (modal_ == Modal::appearance)
+    {
+        if (!activate)
+            return;
+        if (option_ == 0)
+        {
+            open_modal(Modal::theme);
+            option_ = theme_index();
+            option_cursor_.snap(dialog_row_top(Modal::theme, option_));
+        }
+        else
+        {
+            launcher_picker_ = true;
+            cue(Cue::open);
+        }
+        return;
+    }
     if (modal_ == Modal::theme)
     {
         // The look changes on the spot, and is kept for the next start.
@@ -583,21 +593,14 @@ void Launcher::press_dialog(Key key)
         break;
     }
     case Modal::controls:
-        if (option_ == kControlMapping)
+        if (option_ == 2)
         {
             // The button mapping has its own list (game_options.cpp).
             if (activate)
                 open_mapping(false);
             return;
         }
-        if (option_ == kControlMenuKeys)
-        {
-            // The menu's own buttons have their own list (game_options.cpp).
-            if (activate)
-                open_menu_mapping();
-            return;
-        }
-        if (option_ == kControlStrength)
+        if (option_ == 1)
         {
             // The strength: a quarter at a time, never off (the switch above is for that).
             if (!adjust)
@@ -683,6 +686,10 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         title = tr("Accessibility");
         copy = tr("Make the menu easier to see and follow.");
         break;
+    case Modal::appearance:
+        title = tr("Appearance");
+        copy = tr("Theme and launcher settings.");
+        break;
     case Modal::theme:
         title = tr("Theme");
         copy = tr("The look of this menu.");
@@ -698,17 +705,11 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
                 th().copy, 736.0f);
 
     const int rows = dialog_rows(modal);
-    // Video's rows scroll in a window of five, Performance's in one of four and Controls' in one
-    // of three under its shortcuts; the other dialogs show all of theirs.
-    const bool scrolls =
-        modal == Modal::video || modal == Modal::performance || modal == Modal::controls;
-    const ListView &rows_view = modal == Modal::performance    ? performance_rows_
-                                : modal == Modal::controls     ? controls_rows_
-                                                               : video_rows_;
-    const Rect &window = modal == Modal::performance    ? kPerformanceWindow
-                         : modal == Modal::controls     ? kControlsWindow
-                                                        : kVideoWindow;
-    const float rows_top = modal == Modal::controls ? kControlsRowsTop : kVideoRowsTop;
+    // Video's rows scroll in a window of five and Performance's in one of four; the other dialogs
+    // show all of theirs.
+    const bool scrolls = modal == Modal::video || modal == Modal::performance;
+    const ListView &rows_view = modal == Modal::performance ? performance_rows_ : video_rows_;
+    const Rect &window = modal == Modal::performance ? kPerformanceWindow : kVideoWindow;
     const int first = scrolls ? rows_view.first_row() : 0;
     const int last = scrolls ? rows_view.last_row() : rows - 1;
     if (scrolls)
@@ -721,7 +722,7 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
     }
     plate_focus(c, row_plate(),
                 {592.0f,
-                 scrolls ? rows_top + rows_view.cursor() - rows_view.scroll() :
+                 scrolls ? kVideoRowsTop + rows_view.cursor() - rows_view.scroll() :
                            option_cursor_.value,
                  736.0f, 94.0f},
                 1.0f);
@@ -847,38 +848,24 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
             text_shrink(c, tr(kShortcuts[i].action), 802.0f, baseline(top, 54.0f, 22.0f), 22.0f,
                         th().body, 526.0f);
         }
-        for (int row = first; row <= last; ++row)
+        label(0, tr("Vibration"), kToggle);
+        toggle(c, 1292.0f, row_centre(0), knob);
+        // The button mapping: as usual or changed, opened with Cross.
+        const float shown = text_shrink(
+            c, prefs_.mapping == kDefaultMapping ? tr("As usual") : tr("Changed"), 1292.0f,
+            baseline(dialog_row_top(modal, 2), 94.0f, th().size_small), th().size_small,
+            prefs_.mapping == kDefaultMapping ? th().meta : th().accent_pale, 320.0f, Align::right);
+        label(2, tr("Button mapping"), shown);
+        // The vibration's strength: a level row, as the volumes are.
         {
-            list.push_opacity(rows_view.row_alpha(row, kVideoRowHeight));
-            if (row == kControlVibration)
-            {
-                label(row, tr("Vibration"), kToggle);
-                toggle(c, 1292.0f, row_centre(row), knob);
-            }
-            else if (row == kControlStrength)
-            {
-                const float value =
-                    text(c, percent(prefs_.vibration_strength), 1292.0f,
-                         baseline(dialog_row_top(modal, row), 94.0f, th().size_text), th().size_text,
-                         th().accent_pale, Align::right);
-                const float gap = std::max(96.0f, value + 20.0f);
-                level_bar(c, 1292.0f - gap, row_centre(row), 260.0f,
-                          static_cast<float>(prefs_.vibration_strength) / 100.0f,
-                          option_ == row ? 1.0f : 0.0f);
-                label(row, tr("Vibration strength"), 260.0f + gap);
-            }
-            else
-            {
-                // An opener (Button mapping, Menu keybinds): as usual or changed, opened with Cross.
-                const bool changed = row == kControlMapping ? prefs_.mapping != kDefaultMapping
-                                                            : prefs_.menu_bind != kDefaultMenuBinding;
-                const float shown = text_shrink(
-                    c, changed ? tr("Changed") : tr("As usual"), 1292.0f,
-                    baseline(dialog_row_top(modal, row), 94.0f, th().size_small), th().size_small,
-                    changed ? th().accent_pale : th().meta, 320.0f, Align::right);
-                label(row, row == kControlMapping ? tr("Button mapping") : tr("Menu keybinds"), shown);
-            }
-            list.pop_opacity();
+            const float value =
+                text(c, percent(prefs_.vibration_strength), 1292.0f,
+                     baseline(dialog_row_top(modal, 1), 94.0f, th().size_text), th().size_text, th().accent_pale,
+                     Align::right);
+            const float gap = std::max(96.0f, value + 20.0f);
+            level_bar(c, 1292.0f - gap, row_centre(1), 260.0f,
+                      static_cast<float>(prefs_.vibration_strength) / 100.0f, option_ == 1 ? 1.0f : 0.0f);
+            label(1, tr("Vibration strength"), 260.0f + gap);
         }
         break;
     }
@@ -921,6 +908,22 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         text_block(c, tr(kAbout[std::clamp(option_, 0, 2)]), 592.0f,
                    baseline(700.0f, 30.0f, th().size_small), th().size_small, 30.0f, th().meta, 736.0f,
                    2, kShrink);
+        break;
+    }
+    case Modal::appearance:
+    {
+        static constexpr const char *kNames[] = {TR("Theme"), TR("Launcher")};
+        for (int row = 0; row < rows; ++row)
+        {
+            const float shown = row == 0 ? text_shrink(c, th().name, 1292.0f,
+                                            baseline(dialog_row_top(modal, row), 94.0f, th().size_small),
+                                            th().size_small, th().meta, 320.0f, Align::right) : 0.0f;
+            label(row, tr(kNames[row]), shown);
+        }
+        const char* about = option_ == 0 ? tr("Choose the colours and appearance of this menu.") :
+                                         tr("Use another home screen, library and menu layout.");
+        text_block(c, about, 592.0f, baseline(700.0f, 30.0f, th().size_small), th().size_small,
+                   30.0f, th().meta, 736.0f, 2, kShrink);
         break;
     }
     case Modal::theme:
@@ -979,8 +982,8 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
     }
 
     // Under the rows: Video's five, Performance's four with their line of text, and Controls'
-    // that scroll under its shortcuts all end lower than the other dialogs' rows.
-    const float foot = scrolls ? 848.0f : 811.0f;
+    // three under its shortcuts end lower than the other dialogs' three.
+    const float foot = scrolls || modal == Modal::controls ? 848.0f : 811.0f;
     if (!message_.empty() && scrolls)
     {
         // Two lines, placed as a game's own settings place theirs: what a Video choice costs
@@ -993,28 +996,40 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         notice(c, message_, 592.0f, foot + 7.0f, th().size_small,
                message_warning_ ? th().warning : th().accent_pale, 736.0f, message_warning_);
     }
-    else if (modal == Modal::controls && (option_ == kControlMapping || option_ == kControlMenuKeys))
+    else if (modal == Modal::controls && option_ == 2)
     {
         static constexpr Hint kOpen[] = {
             {Pad::updown, TR("Select")}, {Pad::cross, TR("Open")}, {Pad::circle, TR("Back")}};
-        draw_menu_hints(c, kOpen, 3, 592.0f, foot, th().copy, 736.0f);
+        draw_hints(c, kOpen, 3, 592.0f, foot, th().copy, 736.0f);
     }
     else if (modal == Modal::video && option_ == video_overlay_options)
     {
         static constexpr Hint kOpen[] = {
             {Pad::updown, TR("Select")}, {Pad::cross, TR("Open")}, {Pad::circle, TR("Back")}};
-        draw_menu_hints(c, kOpen, 3, 592.0f, foot, th().copy, 736.0f);
+        draw_hints(c, kOpen, 3, 592.0f, foot, th().copy, 736.0f);
+    }
+    else if (modal == Modal::appearance)
+    {
+        static constexpr Hint kOpen[] = {
+            {Pad::updown, TR("Select")}, {Pad::cross, TR("Open")}, {Pad::circle, TR("Back")}};
+        draw_hints(c, kOpen, 3, 592.0f, foot, th().copy, 736.0f);
+    }
+    else if (modal == Modal::theme)
+    {
+        static constexpr Hint kApply[] = {
+            {Pad::updown, TR("Select")}, {Pad::cross, TR("Apply")}, {Pad::circle, TR("Back")}};
+        draw_hints(c, kApply, 3, 592.0f, foot, th().copy, 736.0f);
     }
     else if (rows > 1)
     {
         static constexpr Hint kHints[] = {
             {Pad::updown, TR("Select")}, {Pad::leftright, TR("Change")}, {Pad::circle, TR("Back")}};
-        draw_menu_hints(c, kHints, 3, 592.0f, foot, th().copy, 736.0f);
+        draw_hints(c, kHints, 3, 592.0f, foot, th().copy, 736.0f);
     }
     else
     {
         static constexpr Hint kHints[] = {{Pad::cross, TR("Change")}, {Pad::circle, TR("Back")}};
-        draw_menu_hints(c, kHints, 2, 592.0f, foot, th().copy, 736.0f);
+        draw_hints(c, kHints, 2, 592.0f, foot, th().copy, 736.0f);
     }
     list.pop_transform();
     list.pop_opacity();
@@ -1155,7 +1170,7 @@ void Launcher::draw_hud(Canvas &c, float open)
     {
         static constexpr Hint kHints[] = {
             {Pad::updown, TR("Select")}, {Pad::leftright, TR("Change")}, {Pad::circle, TR("Back")}};
-        draw_menu_hints(c, kHints, 3, 592.0f, foot, th().copy, 736.0f);
+        draw_hints(c, kHints, 3, 592.0f, foot, th().copy, 736.0f);
     }
     list.pop_transform();
     list.pop_opacity();

@@ -275,36 +275,6 @@ inline ButtonMapping assign_button(ButtonMapping mapping, int game, int pad)
     return mapping;
 }
 
-// The launcher's own menu buttons (Settings > Controls > Menu keybinds): which face button presses
-// each core menu action. Only the four face buttons take part, each once; the D-pad, the shoulders
-// and Options stay fixed (headless/button_mapping.h). The action order is select, back, secondary,
-// game settings, matching Key's first four (cross, circle, square, triangle).
-constexpr int kMenuActions = 4;
-using MenuBinding = std::array<int, kMenuActions>; // menu action -> face button (Cross 0 Triangle 3)
-constexpr MenuBinding kDefaultMenuBinding = {0, 1, 2, 3};
-// The menu action a pressed face button means under this binding; the buttons that are not part of
-// it pass through unchanged.
-inline Key menu_key_for(Key pressed, const MenuBinding &binding)
-{
-    const int physical = static_cast<int>(pressed);
-    if (physical < 0 || physical >= kMenuActions)
-        return pressed;
-    for (int action = 0; action < kMenuActions; ++action)
-        if (binding[static_cast<std::size_t>(action)] == physical)
-            return static_cast<Key>(action);
-    return pressed;
-}
-// An action takes the face button; the action that had it gets this one's old one.
-inline MenuBinding assign_menu(MenuBinding binding, int action, int pad)
-{
-    if (action < 0 || action >= kMenuActions || pad < 0 || pad >= kMenuActions) return binding;
-    for (int other = 0; other < kMenuActions; ++other)
-        if (other != action && binding[static_cast<std::size_t>(other)] == pad)
-            binding[static_cast<std::size_t>(other)] = binding[static_cast<std::size_t>(action)];
-    binding[static_cast<std::size_t>(action)] = pad;
-    return binding;
-}
-
 // One of the people who play on this console.
 struct Profile
 {
@@ -362,8 +332,6 @@ struct Preferences
     // What the overlay's line may say, bit by bit (hud.h's kHudField*): the pieces the user has
     // chosen to show. All of them by default.
     int hud_fields = 0xff;
-    // Which face button presses each core menu action (Settings > Controls > Menu keybinds).
-    MenuBinding menu_bind = kDefaultMenuBinding;
 };
 
 // What one game does differently from Settings (Library > Game settings). Each value is -1 while
@@ -525,6 +493,10 @@ class Services
         return {};
     }
     // The profile games start with from now on.
+    virtual std::string profile_key(int index) {
+        const auto list=profiles();
+        return index>=0 && index<static_cast<int>(list.size()) ? std::to_string(index)+":"+list[index].name : std::string{};
+    }
     virtual bool choose_profile(int)
     {
         return false;

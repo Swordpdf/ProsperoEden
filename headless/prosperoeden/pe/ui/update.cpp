@@ -556,7 +556,7 @@ void Launcher::draw_notes(Canvas &c, float height)
                                            {Pad::l1, TR("Page"), Pad::r1},
                                            {Pad::cross, TR("Select")},
                                            {Pad::circle, TR("Back")}};
-    draw_menu_hints(c, kNotesHints, 4, kPanel.x + 52.0f, kPanel.y + height - 50.0f, th().copy, kPanel.w - 104.0f);
+    draw_hints(c, kNotesHints, 4, kPanel.x + 52.0f, kPanel.y + height - 50.0f, th().copy, kPanel.w - 104.0f);
     list.pop_opacity();
 }
 
@@ -642,7 +642,7 @@ void Launcher::draw_update(Canvas &c, float open)
             buttons({TR("Update now"), TR("What's new"), TR("Skip")});
         static constexpr Hint kOfferHints[] = {
             {Pad::leftright, TR("Navigate")}, {Pad::cross, TR("Select")}, {Pad::circle, TR("Skip")}};
-        draw_menu_hints(c, kOfferHints, 3, kPanel.x + 52.0f, hints, th().copy, kPanel.w - 104.0f);
+        draw_hints(c, kOfferHints, 3, kPanel.x + 52.0f, hints, th().copy, kPanel.w - 104.0f);
         break;
     }
     case UpdateStage::working:
@@ -724,7 +724,7 @@ void Launcher::draw_update(Canvas &c, float open)
         if (update_stage_ == UpdateStage::working)
         {
             static constexpr Hint kWorkingHints[] = {{Pad::circle, TR("Cancel")}};
-            draw_menu_hints(c, kWorkingHints, 1, kPanel.x + 52.0f, hints, th().copy, kPanel.w - 104.0f);
+            draw_hints(c, kWorkingHints, 1, kPanel.x + 52.0f, hints, th().copy, kPanel.w - 104.0f);
         }
         break;
     }
@@ -772,7 +772,7 @@ void Launcher::draw_update(Canvas &c, float open)
         buttons({TR("Try again"), TR("Close")});
         static constexpr Hint kFailedHints[] = {
             {Pad::leftright, TR("Navigate")}, {Pad::cross, TR("Select")}, {Pad::circle, TR("Close")}};
-        draw_menu_hints(c, kFailedHints, 3, kPanel.x + 52.0f, hints, th().copy, kPanel.w - 104.0f);
+        draw_hints(c, kFailedHints, 3, kPanel.x + 52.0f, hints, th().copy, kPanel.w - 104.0f);
         break;
     }
     case UpdateStage::notes:

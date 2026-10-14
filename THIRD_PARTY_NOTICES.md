@@ -86,3 +86,7 @@ builds on the following projects, each under its own license.
 
 ProsperoEden exists thanks to the Eden maintainers and contributors, Mihawk,
 mpereiraesaa, John Törnblom, SvenGDK, and the whole PS5 homebrew community.
+
+## Lua 5.4.9
+
+Embedded launcher scripting runtime. Copyright Lua.org, PUC-Rio. MIT license; see `third_party/lua/LICENSE.txt`. Source and checksum: `third_party/lua/SOURCE.json`.

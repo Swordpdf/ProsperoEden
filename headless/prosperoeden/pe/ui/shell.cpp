@@ -322,31 +322,8 @@ void Launcher::draw_footer(Canvas &c, const Hint *hints, int count, std::string_
                        message_warning_ ? t.warning : t.accent_pale, 900.0f, message_warning_, Align::right);
     else if (!status.empty())
         taken = text_shrink(c, status, layout::kRight, line, t.size_small, t.muted, 700.0f, Align::right);
-    draw_menu_hints(c, hints, count, layout::kLeft, layout::kFooter, t.copy,
-                    layout::kWidth - (taken > 0.0f ? taken + 48.0f : 0.0f));
-}
-
-Pad Launcher::translate_hint(Pad glyph) const
-{
-    // The four face buttons stand for the four remappable actions; nothing else moves.
-    static constexpr Pad kFace[kMenuActions] = {Pad::cross, Pad::circle, Pad::square, Pad::triangle};
-    for (int action = 0; action < kMenuActions; ++action)
-        if (glyph == kFace[action])
-            return kFace[prefs_.menu_bind[static_cast<std::size_t>(action)]];
-    return glyph;
-}
-
-float Launcher::draw_menu_hints(Canvas &c, const Hint *hints, int count, float x, float cy, Color color,
-                               float max_width)
-{
-    std::vector<Hint> translated(static_cast<std::size_t>(count));
-    for (int i = 0; i < count; ++i)
-    {
-        translated[static_cast<std::size_t>(i)] = hints[i];
-        translated[static_cast<std::size_t>(i)].button = translate_hint(hints[i].button);
-        translated[static_cast<std::size_t>(i)].second = translate_hint(hints[i].second);
-    }
-    return draw_hints(c, translated.data(), count, x, cy, color, max_width);
+    draw_hints(c, hints, count, layout::kLeft, layout::kFooter, t.copy,
+               layout::kWidth - (taken > 0.0f ? taken + 48.0f : 0.0f));
 }
 
 const char *Launcher::output_name(int output)

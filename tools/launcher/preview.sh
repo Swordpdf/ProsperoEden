@@ -34,21 +34,41 @@ for source in "${sources[@]}"; do
     objects+=("$object")
     # Rebuild when the source or any launcher header is newer than the object.
     if [[ ! -e $object || $source -nt $object ]] ||
-        [[ -n $(find "$source_dir/pe" "$source_dir/host" -name '*.hpp' -newer "$object" -print -quit) ]]; then
+        [[ $relative != pe/gfx/harfbuzz.cpp && -n $(find "$source_dir/pe" "$source_dir/host" -name '*.hpp' -newer "$object" -print -quit) ]]; then
         # HarfBuzz is not ours to tidy: its warnings are off.
         warnings=(-Wall -Wextra)
         [[ $relative == pe/gfx/harfbuzz.cpp ]] && warnings=(-w)
         "$cxx" -std=c++20 -O2 "${warnings[@]}" -DGL_GLEXT_PROTOTYPES=1 -I"$source_dir" \
-            -I"$source_dir/host" -I"$root/tools/launcher/stb" -I"$root/third_party" -I"$harfbuzz" -I"$kit" \
+            -I"$source_dir/host" -I"$root/third_party/lua" -I"$root/tools/launcher/stb" -I"$root/third_party" -I"$harfbuzz" -I"$kit" \
             -c "$source" -o "$object" &
         pids+=($!)
+        if [[ ${#pids[@]} -ge ${HOST_BUILD_JOBS:-2} ]]; then
+            wait "${pids[0]}"
+            pids=("${pids[@]:1}")
+        fi
     fi
 done
 for pid in "${pids[@]}"; do wait "$pid"; done
-"$cxx" "${objects[@]}" -lEGL -lGL -lm -o "$build/pe_preview"
+for source in "$root"/third_party/lua/*.c; do
+    name=${source##*/}
+    case $name in lua.c|luac.c|linit.c|liolib.c|loslib.c|loadlib.c|ldblib.c) continue;; esac
+    object="$build/obj/lua_${name}.o"
+    if [[ ! -e $object || $source -nt $object ]]; then
+        "$cxx" -x c++ -std=c++20 -O2 -w -include "$root/third_party/lua/runtime_api.hpp" -I"$root/third_party/lua" -c "$source" -o "$object"
+    fi
+    objects+=("$object")
+done
+for source in "$source_dir"/pe/audio/*.cpp; do
+    object="$build/obj/audio_${source##*/}.o"
+    if [[ ! -e $object || $source -nt $object || -n $(find "$source_dir/pe/audio" -name '*.hpp' -newer "$object" -print -quit) ]]; then
+        "$cxx" -std=c++20 -O2 -I"$source_dir" -c "$source" -o "$object"
+    fi
+    objects+=("$object")
+done
+"$cxx" "${objects[@]}" -lEGL -lGL -lm -pthread -o "$build/pe_preview"
 
 run() {
-    EGL_PLATFORM=surfaceless LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe "$build/pe_preview" "$@"
+    EGL_PLATFORM=surfaceless LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe MESA_GL_VERSION_OVERRIDE=4.6 MESA_GLSL_VERSION_OVERRIDE=460 "$build/pe_preview" "$@"
 }
 if [[ ${1:-} == --tour ]]; then
     video=${2:?video file}

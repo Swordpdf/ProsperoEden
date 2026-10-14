@@ -1,3 +1,4 @@
+#ifndef PE_RUNTIME_PREVIEW
 // ProsperoEden - Launcher preview on a PC: draws the real screens to PNG files.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -1324,3 +1325,5 @@ int main(int argc, char **argv)
         std::fprintf(stderr, "%s %.2f: %s\n", fit.second ? "cut" : "shrunk", fit.first, text.c_str());
     return stage.ok ? 0 : 1;
 }
+
+#endif

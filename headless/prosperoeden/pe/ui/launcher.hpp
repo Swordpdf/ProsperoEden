@@ -12,6 +12,7 @@
 #include <future>
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace pe::ui
 {
@@ -28,6 +29,8 @@ class Launcher
     Launcher(const Launcher &) = delete;
     Launcher &operator=(const Launcher &) = delete;
 
+    void accept_update_offer(const UpdateOffer& offer) { update_=offer; update_version_=offer.version; notes_laid_out_=false; update_waiting_=offer.installable; }
+    bool take_launcher_picker() { return std::exchange(launcher_picker_, false); }
     void press(Key key);
     void update(float dt);
     void draw(gfx::DrawList &list);
@@ -60,6 +63,7 @@ class Launcher
     }
 
   private:
+    bool launcher_picker_ = false;
     enum class Screen : std::uint8_t
     {
         home,
@@ -83,7 +87,6 @@ class Launcher
         mods,         // a game's mods, opened from its settings
         game_options, // one category of a game's own settings, opened from its settings
         mapping,      // the button mapping: Settings > Controls', or a game's own
-        menu_mapping, // the menu's own buttons: Settings > Controls > Menu keybinds
         hud,          // the overlay's options: Settings > Video > Overlay options
         profiles,     // who is playing: Settings > Profiles
         update,       // a newer release of the app: install it or not (update.cpp)
@@ -93,7 +96,8 @@ class Launcher
         save_sync,    // a game's save data synced before it starts, or a conflict after (save_sync.cpp)
         sync_setup,   // Settings > Save sync: the profiles and their servers (pairing.cpp)
         pairing,      // a profile paired with a server by a QR code (pairing.cpp)
-        theme,        // Settings > Theme: the launcher's look
+        appearance,   // Settings > Appearance: theme and launcher settings
+        theme,        // Settings > Appearance > Theme: the launcher's look
     };
     // The update dialog's steps: the offer, installing, stopping it, closing for the helper to
     // finish, and a failure.
@@ -125,11 +129,6 @@ class Launcher
     // menu last said (or `status`) at their right.
     void draw_frame(Canvas &c, const char *title, const char *copy);
     void draw_footer(Canvas &c, const Hint *hints, int count, std::string_view status = {});
-    // The remappable menu buttons: a hint or button face that names Cross, Circle, Square or
-    // Triangle shows the face button the user has bound to that action instead (shell.cpp).
-    Pad translate_hint(Pad glyph) const;
-    float draw_menu_hints(Canvas &c, const Hint *hints, int count, float x, float cy, Color color,
-                          float max_width = 0.0f);
 
     // ---- the shell around every screen: the section rail, the clock (shell.cpp) ----
     static constexpr int kSections = 5; // home, library, multiplayer, settings, about
@@ -245,10 +244,6 @@ class Launcher
     void open_mapping(bool for_game);
     void press_mapping(Key key);
     void draw_mapping(Canvas &c, float open);
-    // The menu's own buttons, opened from Settings > Controls > Menu keybinds (game_options.cpp).
-    void open_menu_mapping();
-    void press_menu_mapping(Key key);
-    void draw_menu_mapping(Canvas &c, float open);
 
     // ---- settings and its dialogs (settings.cpp) ----
     void press_settings(Key key);
@@ -492,7 +487,6 @@ class Launcher
     ListView video_rows_; // the Video dialog's rows (more than it shows)
     ListView hud_rows_;   // the overlay's options (Modal::hud, more than it shows)
     ListView performance_rows_; // the Performance dialog's rows (more than it shows)
-    ListView controls_rows_;    // the Controls dialog's rows (more than it shows)
     GameSettings game_settings_;
     bool game_docked_ = true;
     SaveSource import_source_ = SaveSource::none; // what Save data could import for the game
@@ -514,7 +508,6 @@ class Launcher
     std::future<std::optional<std::int64_t>> seed_edit_;  // the keyboard, while it is open
     bool mapping_for_game_ = false; // the mapping dialog edits the game's own mapping
     ListView mapping_rows_;
-    ListView menu_mapping_rows_; // the menu keybinds dialog's rows
     std::vector<Profile> profiles_; // the people who play on this console
     std::string playing_;           // the one games start as
     ListView profile_rows_;

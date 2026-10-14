@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pe/ui/launcher.hpp"
+#include "pe/ui/launch_commit.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -188,8 +189,8 @@ void Launcher::start_game(const std::string &file, const std::string &title, con
         cue(Cue::error);
         return;
     }
-    services_.will_play(file);
-    selected_game_ = services_.game_path(file);
+    selected_game_ = commit_launch(services_, file);
+    if (selected_game_.empty()) { say(tr("Game cannot start now."), true); cue(Cue::error); return; }
     launch_title_ = title;
     launch_cover_ = cover;
     launch_.start(th().launch_seconds);
@@ -207,7 +208,6 @@ void Launcher::press(Key key)
         opening_ = opening_reveal();
         return;
     }
-    key = menu_key_for(key, prefs_.menu_bind); // the core menu buttons the user has chosen
     if (modal_ == Modal::game)
         return press_game(key);
     if (modal_ == Modal::mods)
@@ -216,8 +216,6 @@ void Launcher::press(Key key)
         return press_game_options(key);
     if (modal_ == Modal::mapping)
         return press_mapping(key);
-    if (modal_ == Modal::menu_mapping)
-        return press_menu_mapping(key);
     if (modal_ == Modal::hud)
         return press_hud(key);
     if (modal_ == Modal::profiles)
@@ -340,12 +338,10 @@ void Launcher::update(float dt)
     language_.update(dt);
     video_rows_.update(dt);
     performance_rows_.update(dt);
-    controls_rows_.update(dt);
     game_rows_.update(dt);
     mod_rows_.update(dt);
     option_rows_.update(dt);
     mapping_rows_.update(dt);
-    menu_mapping_rows_.update(dt);
     hud_rows_.update(dt);
     profile_rows_.update(dt);
     source_rows_.update(dt);
@@ -663,8 +659,6 @@ void Launcher::draw(gfx::DrawList &list)
         list.rounded_rect(kScreen, 0.0f, th().scrim.with_alpha(0.72f * opened));
         if (modal_shown_ == Modal::mapping)
             draw_mapping(c, opened);
-        else if (modal_shown_ == Modal::menu_mapping)
-            draw_menu_mapping(c, opened);
         else if (modal_shown_ == Modal::hud)
             draw_hud(c, opened);
         else if (modal_shown_ == Modal::profiles)

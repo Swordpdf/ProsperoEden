@@ -705,9 +705,8 @@ foreach(bits 32 64)
     set(derived "${PORT_BUILD_DIR}/arm_dynarmic_${bits}.cpp")
     # The overlay's four core loads (performance.h, SampleCoreCpu): each core reads its own CPU
     # time after a run when the overlay has asked, which on the console only the thread itself
-    # can. The development build reads more at the same place (SampleCpu, below). Only the
-    # console's app has the overlay and links performance.cpp; the PC checks link this core without it.
-    if(PS5_NATIVE AND NOT EDEN_DEV_PROFILE)
+    # can. The development build reads more at the same place (SampleCpu, below).
+    if(NOT EDEN_DEV_PROFILE)
         string(PREPEND wrapper "#include \"${EDEN_PORT_DIR}/performance.h\"
 ")
         set(core_run_site "    return TranslateHaltReason(m_jit->Run());")
@@ -2681,8 +2680,10 @@ if(EDEN_PS5_OPENGL)
     # the same two files (vulkan_hud.frag).
     file(READ "${EDEN_PORT_DIR}/loading_text.glsl" loading_wordmark)
     file(READ "${EDEN_PORT_DIR}/loading_scene.glsl" loading_scene)
+    file(READ "${EDEN_PORT_DIR}/runtime_loading.glsl" runtime_loading_scene)
+    string(REPLACE "#include \"runtime_loading.glsl\"" "${runtime_loading_scene}" loading_scene "${loading_scene}")
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-        "${EDEN_PORT_DIR}/loading_text.glsl" "${EDEN_PORT_DIR}/loading_scene.glsl")
+        "${EDEN_PORT_DIR}/loading_text.glsl" "${EDEN_PORT_DIR}/loading_scene.glsl" "${EDEN_PORT_DIR}/runtime_loading.glsl")
     write_derived("${PORT_BUILD_DIR}/include/loading_scene_glsl.h"
         "// Generated from loading_text.glsl and loading_scene.glsl.\n#pragma once\ninline constexpr const char* kLoadingSceneGlsl = R\"glsl(\n${loading_wordmark}${loading_scene})glsl\";\n")
     # The baked font alone, for the overlay (the loading screen's shader carries the whole scene
@@ -2746,7 +2747,14 @@ endif()
             list(APPEND launcher_sources "${ui_kit}/ui/theme.cpp")
             set_source_files_properties("${ui_kit}/ui/theme.cpp" "${launcher_dir}/pe/ui/theme_kit.cpp"
                 PROPERTIES INCLUDE_DIRECTORIES "${ui_kit}")
-            target_sources(eden-headless PRIVATE ${launcher_sources})
+            list(APPEND launcher_sources "${launcher_dir}/pe/ui/runtime_launcher.cpp")
+            set(launcher_lua_dir "${PORT_ROOT}/third_party/lua")
+            file(GLOB launcher_lua_sources "${launcher_lua_dir}/*.c")
+            list(FILTER launcher_lua_sources EXCLUDE REGEX "/(lua|luac|linit|liolib|loslib|loadlib|ldblib)\\.c$")
+            set_source_files_properties(${launcher_lua_sources} PROPERTIES LANGUAGE CXX
+                COMPILE_OPTIONS "-w;-include;${launcher_lua_dir}/runtime_api.hpp")
+            target_include_directories(eden-headless PRIVATE "${launcher_lua_dir}")
+            target_sources(eden-headless PRIVATE ${launcher_sources} ${launcher_lua_sources})
             # Download sources and their queue (remote/remote.h), with their backends (remote/source.h,
             # backends.h) and the console's FTP server that writes the files (remote/ftp.h); their
             # HTTP (remote/http.c) is linked into the update check's object below, with its libcurl.

@@ -960,10 +960,6 @@ msgstr "Střední"
 msgid "Memory"
 msgstr "Paměť"
 
-#: pe/ui/game_options.cpp, pe/ui/settings.cpp
-msgid "Menu keybinds"
-msgstr "Tlačítka nabídky"
-
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
 msgstr "Zvukové efekty nabídky vytvořeny pomocí ElevenLabs."
@@ -1568,10 +1564,6 @@ msgstr "Naskenuj kód telefonem, nebo otevři adresu níže."
 msgid "Scroll"
 msgstr "Posunout"
 
-#: pe/ui/game_options.cpp
-msgid "Secondary"
-msgstr "Vedlejší"
-
 #. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
 #: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Sections"
@@ -2043,10 +2035,6 @@ msgstr "Co je nového"
 #: pe/ui/update.cpp
 msgid "What's new in version {0}"
 msgstr "Co je nového ve verzi {0}"
-
-#: pe/ui/game_options.cpp
-msgid "Which face button does what in the menu."
-msgstr "Které tlačítko na čele ovladače dělá co v nabídce."
 
 #: pe/ui/settings.cpp
 msgid "Who is playing. Each profile keeps its own save data and settings."

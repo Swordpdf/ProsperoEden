@@ -157,8 +157,6 @@ struct Preferences {
     // What the overlay's line may say, bit by bit (hud.h's kHudField*): the pieces the user has
     // chosen to show. All of them by default.
     int hud_fields = 0xff;
-    // Which face button presses each core menu action (Settings > Controls > Menu keybinds).
-    MenuBinding menu_bind = kDefaultMenuBinding;
 };
 
 inline int KeyIndex(const std::string& value, const char* const* keys, int count, int fallback) {
@@ -342,28 +340,6 @@ inline Json MappingJson(const ButtonMapping& mapping) {
     return result;
 }
 
-// A menu button binding as the file names it: the default with the actions it names. One that names
-// a face button twice, or none of the four, is the fallback.
-inline MenuBinding MenuMapping(const Json& document, const Json::json_pointer& at, const MenuBinding& fallback) {
-    if (!document.contains(at) || !document.at(at).is_object()) return fallback;
-    MenuBinding result = kDefaultMenuBinding;
-    for (const auto& [name, value] : document.at(at).items()) {
-        const int action = KeyIndex(name, kMenuActionKeys, kMenuActions, -1);
-        const int pad = value.is_string() ? KeyIndex(value.get<std::string>(), kPadButtonKeys, kMenuActions, -1) : -1;
-        if (action < 0 || pad < 0) return fallback;
-        result[action] = pad;
-    }
-    return ValidMenuBinding(result) ? result : fallback;
-}
-// What differs from the default, by name.
-inline Json MenuMappingJson(const MenuBinding& binding) {
-    Json result = Json::object();
-    for (int action = 0; action < kMenuActions; ++action)
-        if (binding[action] != kDefaultMenuBinding[action])
-            result[kMenuActionKeys[action]] = kPadButtonKeys[binding[action]];
-    return result;
-}
-
 inline bool Bool(const Json& document, const Json::json_pointer& at, bool fallback) {
     return document.contains(at) && document.at(at).is_boolean() ? document.at(at).get<bool>() : fallback;
 }
@@ -434,8 +410,6 @@ inline Preferences LoadPreferences(const std::string& file = SettingsFile()) {
     result.high_contrast = Settings::Bool(document, Json::json_pointer("/accessibility/high_contrast"), false);
     result.reduce_motion = Settings::Bool(document, Json::json_pointer("/accessibility/reduce_motion"), false);
     result.mapping = Settings::Mapping(document, Json::json_pointer("/controls/mapping"), kDefaultMapping);
-    result.menu_bind =
-        Settings::MenuMapping(document, Json::json_pointer("/controls/menu_mapping"), kDefaultMenuBinding);
     return result;
 }
 
@@ -450,8 +424,7 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
         value.language < 0 || value.language >= int(std::size(kLanguageKeys)) ||
         value.hud_size < 0 || value.hud_size >= int(std::size(kHudSizeKeys)) ||
         value.hud_corner < 0 || value.hud_corner >= int(std::size(kHudCornerKeys)) ||
-        value.hud_fields < 0 || value.hud_fields > 0x1ff || !ValidMapping(value.mapping) ||
-        !ValidMenuBinding(value.menu_bind)) return false;
+        value.hud_fields < 0 || value.hud_fields > 0x1ff || !ValidMapping(value.mapping)) return false;
     Settings::Json document = Settings::Load(file);
     document["version"] = 1;
     document["video"]["renderer"] = value.backend == GraphicsBackend::Vulkan ? "vulkan" : "opengl";
@@ -475,8 +448,6 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
     document["controls"]["vibration_strength"] = value.vibration_strength;
     if (value.mapping == kDefaultMapping) document["controls"].erase("mapping");
     else document["controls"]["mapping"] = Settings::MappingJson(value.mapping);
-    if (value.menu_bind == kDefaultMenuBinding) document["controls"].erase("menu_mapping");
-    else document["controls"]["menu_mapping"] = Settings::MenuMappingJson(value.menu_bind);
     document["system"]["language"] = kLanguageKeys[value.language];
     document["diagnostics"]["detailed_logging"] = value.detailed_logging;
     document["diagnostics"]["immediate_logs"] = value.immediate_logs;

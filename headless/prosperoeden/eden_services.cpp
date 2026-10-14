@@ -812,6 +812,11 @@ std::vector<pe::ui::Profile> EdenServices::profiles() {
     return list;
 }
 
+std::string EdenServices::profile_key(int index) {
+    const auto who=Eden::Profiles::Resolve(user_);
+    return index>=0 && index<static_cast<int>(who.profiles.size()) ? who.profiles[index].Key() : std::string{};
+}
+
 bool EdenServices::choose_profile(int index) {
     if (rooms_.GetSnapshot().phase != Eden::Multiplayer::Phase::Idle) return false;
     const auto who = Eden::Profiles::Resolve(user_);
@@ -985,7 +990,6 @@ pe::ui::Preferences EdenServices::preferences() {
     result.reactive_flushing = speed.reactive_flushing;
     result.skip_invalidation = speed.skip_invalidation;
     result.mapping = saved.mapping;
-    result.menu_bind = saved.menu_bind;
     return result;
 }
 
@@ -1018,7 +1022,6 @@ bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     value.reduce_motion = preferences.reduce_motion;
     value.theme = preferences.theme;
     value.mapping = preferences.mapping;
-    value.menu_bind = preferences.menu_bind;
     Eden::PerformanceSettings speed = Eden::LoadPerformance(0);
     speed.block_list = preferences.block_list;
     speed.async_shaders = preferences.async_shaders;
