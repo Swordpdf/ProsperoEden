@@ -139,7 +139,7 @@ struct Preferences {
     int frame_gen_target = 0;            // index into kFrameGenTargetKeys (0 is "auto")
     int frame_gen_multiplier = 0;        // index into kFrameGenMultiplierKeys (0 is 2x)
     bool vibration = true;
-    int vibration_strength = 100;        // percent of what a game asks for: 5 to 100, in steps of 5
+    int vibration_strength = 100;        // percent of DualSense motor output: 5 to 100, in steps of 5
     int language = 0;                    // index into kLanguageKeys (English (US), Eden's default)
     int menu_volume = 70;                // the launcher's own sounds, 0 (off) to 100
     bool large_text = false;             // Settings > Accessibility: the launcher's look

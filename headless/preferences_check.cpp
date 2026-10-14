@@ -193,7 +193,7 @@ int main() {
         assert(Eden::SavePreferences(controls, file));
         assert(Eden::LoadPreferences(file).vibration_strength == strength);
     }
-    for (const auto [strength, expected] : {std::pair{0, 5}, {9, 5}, {14, 10}, {105, 100}}) {
+    for (const auto& [strength, expected] : {std::pair{0, 5}, {9, 5}, {14, 10}, {105, 100}}) {
         controls.vibration_strength = strength;
         assert(Eden::SavePreferences(controls, file));
         assert(Eden::LoadPreferences(file).vibration_strength == expected);

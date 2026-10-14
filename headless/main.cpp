@@ -1199,6 +1199,7 @@ int main(int argc, char** argv) {
             const auto controls = Eden::PreferencesFor(game_title);
             Settings::values.vibration_enabled.SetValue(controls.vibration);
             pad->SetMapping(controls.mapping);
+            pad->SetVibrationStrength(controls.vibration_strength);
             Eden::Report("launch", (std::string("Controls: vibration ") +
                                     (controls.vibration ? std::to_string(controls.vibration_strength) + "%" : "off") +
                                     ", buttons " + (controls.mapping == Eden::kDefaultMapping ? std::string("as usual") :
@@ -1216,17 +1217,16 @@ int main(int argc, char** argv) {
                 player.connected = handheld ? false : index == 0 || (connected & (1u << index)) != 0;
                 player.controller_type = handheld ? Settings::ControllerType::ProController :
                                                     Eden::ControllerSetting(controls.controller);
-                // DualSense rumble (headless/pad.cpp) at the strength of Settings > Controls: a
-                // percentage of what the game asks for.
+                // Strength is applied after the amplitude curve, at the DualSense motor output.
                 player.vibration_enabled = true;
-                player.vibration_strength = controls.vibration_strength;
+                player.vibration_strength = 100;
             }
             {
                 auto& player = Settings::values.players.GetValue()[8];  // Eden's handheld controller
                 player.connected = handheld;
                 player.controller_type = Settings::ControllerType::Handheld;
                 player.vibration_enabled = true;
-                player.vibration_strength = controls.vibration_strength;
+                player.vibration_strength = 100;
             }
             if (controls.controller >= 0)
                 Eden::Report("launch", (std::string("Controller type: ") +

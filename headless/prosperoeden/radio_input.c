@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <time.h>
 
@@ -72,6 +73,7 @@ static int32_t pad_handle = -1;
 /* A vibration started by radio_input_pulse: when it ends (0: none runs). */
 static uint64_t pulse_ends_at;
 static bool pulse_mode_set;
+static int pulse_mode_result;
 #define PULSE_MILLISECONDS 350u
 static bool owns_user_service;
 /* Every signed-in user's controller, for the home screen's controller display. Player 1 (slot 0)
@@ -244,6 +246,7 @@ bool radio_input_init(void)
         radio_input_shutdown();
         return false;
     }
+    pulse_mode_set = false;
     queue_read = queue_write = 0;
     button_state = 0;
     analog_key = -1;
@@ -269,10 +272,17 @@ void radio_input_pulse(unsigned percent)
     if(pad_handle < 0 || percent == 0) return;
     if(percent > 100) percent = 100;
     /* The two-motor mode the games use (headless/pad.cpp): 2 is the compatible mode. */
-    if(!pulse_mode_set) pulse_mode_set = scePadSetVibrationMode(pad_handle, 2) == 0;
-    /* Both motors, as a game's strong rumble drives them, scaled as the setting scales a game's. */
+    if(!pulse_mode_set) {
+        pulse_mode_result = scePadSetVibrationMode(pad_handle, 2);
+        pulse_mode_set = pulse_mode_result == 0;
+    }
+    /* The same final motor scaling as the game's rumble (headless/pad.cpp). */
     const pad_vibration_t pulse = {(uint8_t)(255u * percent / 100u), (uint8_t)(160u * percent / 100u)};
-    if(scePadSetVibration(pad_handle, &pulse) == 0) pulse_ends_at = monotonic_milliseconds() + PULSE_MILLISECONDS;
+    const int result = scePadSetVibration(pad_handle, &pulse);
+    fprintf(stderr, "EDEN_PAD_PULSE strength=%u large=%u small=%u mode_rc=%#x result=%#x\n",
+            percent, (unsigned)pulse.large_motor, (unsigned)pulse.small_motor,
+            (unsigned)pulse_mode_result, (unsigned)result);
+    if(result == 0) pulse_ends_at = monotonic_milliseconds() + PULSE_MILLISECONDS;
 }
 
 void radio_input_poll(void)

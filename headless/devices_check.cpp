@@ -496,7 +496,28 @@ void CheckPad() {
             CHECK(state.vibrations[1].large_motor == 0); CHECK(state.vibrations[1].small_motor == 0);
             CHECK(handheld->SetVibration({.high_amplitude = 1.0f, .type = Type::Exponential}) == DriverResult::Success);
             CHECK(pad.Poll()); CHECK(state.vibrations.size() == 3); CHECK(state.vibrations[2].small_motor == 255);
+            for (const auto& [strength, expected] : {std::pair{5, 12}, {10, 25}, {25, 63},
+                                                   {100, 255}, {0, 0}, {-10, 0}, {110, 255}}) {
+                pad.SetVibrationStrength(strength);
+                CHECK(left->SetVibration({.low_amplitude = 1.0f, .high_amplitude = 1.0f,
+                                         .type = Type::Exponential}) == DriverResult::Success);
+                CHECK(pad.Poll());
+                CHECK(state.vibrations.back().large_motor == expected);
+                CHECK(state.vibrations.back().small_motor == expected);
+            }
+            pad.SetVibrationStrength(5);
+            CHECK(left->SetVibration({.low_amplitude = 0.25f, .high_amplitude = 0.5f,
+                                     .type = Type::Exponential}) == DriverResult::Success);
+            CHECK(pad.Poll());
+            CHECK(state.vibrations.back().large_motor == 5 && state.vibrations.back().small_motor == 8);
+            CHECK(handheld->SetVibration({.low_amplitude = 1.0f, .high_amplitude = 1.0f,
+                                         .type = Type::Exponential}) == DriverResult::Success);
+            CHECK(pad.Poll());
+            CHECK(state.vibrations.back().large_motor == 12 && state.vibrations.back().small_motor == 12);
+            pad.SetVibrationStrength(100);
+            std::puts("DualSense motor output: 5/10/25/100 percent, clamped limits and handheld scaling PASS");
         }
+        const auto rumble_count = state.vibrations.size();
 
         auto button = Common::Input::CreateInputDeviceFromString("engine:virtual_gamepad,port:0,button:0");
         std::vector<bool> changes;
@@ -519,8 +540,8 @@ void CheckPad() {
         }
         state.read_result = 0; consume(); pad.Close(); pad.Close();
         CHECK(!pad.Engine().GetButton({}, 9));
-        CHECK(state.vibrations.size() == 4); // Closing stops the motors.
-        CHECK(state.vibrations[3].large_motor == 0); CHECK(state.vibrations[3].small_motor == 0);
+        CHECK(state.vibrations.size() == rumble_count + 1); // Closing stops the motors.
+        CHECK(state.vibrations.back().large_motor == 0); CHECK(state.vibrations.back().small_motor == 0);
         CHECK(state.pad_closes == 1); CHECK(state.user_terminations == 1);
     }
     state.user_init_result = -1; // A service owned by the embedding application.

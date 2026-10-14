@@ -79,6 +79,7 @@ public:
     // Which DualSense button presses each of the game's buttons (button_mapping.h), for every
     // controller. Set before the first poll of a session.
     void SetMapping(const ButtonMapping& value) { mapping = ValidMapping(value) ? value : kDefaultMapping; }
+    void SetVibrationStrength(int percent);
     // How a player's controller is used: as usual, or in place of a single left or right Joy-Con.
     // A single Joy-Con has one stick and one cluster of four buttons, and its game reads nothing
     // else. Held upright, Consume makes the whole DualSense that Joy-Con: the shapes are its four
@@ -112,6 +113,7 @@ private:
     float deadzone;
     float trigger_threshold;
     ButtonMapping mapping = kDefaultMapping;
+    int vibration_strength = 100;
     std::array<Slot, kMaxPlayers> slots{};
     std::array<std::atomic<Grip>, kMaxPlayers> grips{};
     bool owns_user_service = false;
@@ -122,6 +124,7 @@ private:
     unsigned polls_since_scan = 0;
     u64 polls = 0, samples_read = 0, usable_samples = 0, intercepted_samples = 0, circle_samples = 0, read_errors = 0;
     u64 rumble_updates = 0, rumble_errors = 0;
+    u8 rumble_peak_large = 0, rumble_peak_small = 0;
     int rumble_last_error = 0;
     int last_result = 0;
 };

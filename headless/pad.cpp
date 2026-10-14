@@ -127,6 +127,9 @@ Pad::~Pad() {
     Common::Input::UnregisterInputFactory("virtual_gamepad");
     Common::Input::UnregisterOutputFactory("virtual_gamepad");
 }
+void Pad::SetVibrationStrength(int percent) {
+    vibration_strength = std::clamp(percent, 0, 100);
+}
 bool Pad::Open() {
     if (slots[0].handle >= 0) return true;
     owns_user_service = sceUserServiceInitialize(nullptr) == 0;
@@ -209,9 +212,10 @@ void Pad::Close() {
         const int closed = scePadClose(slots[player].handle);
         if (player == 0) {
             LOG_INFO(Input, "EDEN_PAD_CLOSED polls={} samples={} usable={} intercepted={} circle={} errors={} last={} close={} "
-                     "rumble={} rumble_errors={} rumble_last={:#x}",
+                     "rumble={} rumble_errors={} rumble_last={:#x} rumble_strength={} rumble_peak={}/{}",
                      polls, samples_read, usable_samples, intercepted_samples, circle_samples, read_errors, last_result, closed,
-                     rumble_updates, rumble_errors, static_cast<unsigned>(rumble_last_error));
+                     rumble_updates, rumble_errors, static_cast<unsigned>(rumble_last_error),
+                     vibration_strength, rumble_peak_large, rumble_peak_small);
         }
         slots[player] = {};
     }
@@ -241,8 +245,12 @@ bool Pad::Poll() {
         if (handle < 0) continue;
         PadEngine::Rumble rumble;
         if (engine->TakeRumble(player, rumble)) {
-            const ps5::pad::Vibration vibration{.large_motor = rumble.large, .small_motor = rumble.small};
+            const ps5::pad::Vibration vibration{
+                .large_motor = static_cast<u8>(rumble.large * vibration_strength / 100),
+                .small_motor = static_cast<u8>(rumble.small * vibration_strength / 100)};
             const int result = scePadSetVibration(handle, &vibration);
+            rumble_peak_large = std::max(rumble_peak_large, vibration.large_motor);
+            rumble_peak_small = std::max(rumble_peak_small, vibration.small_motor);
             ++rumble_updates;
             if (result < 0) { ++rumble_errors; rumble_last_error = result; }
         }
