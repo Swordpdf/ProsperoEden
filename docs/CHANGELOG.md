@@ -2,6 +2,24 @@
 
 What changed in each release of ProsperoEden, newest first. A release's notes on GitHub are its section here.
 
+## v1.002.000
+
+- **More free memory for demanding games.** The console's memory is one pool shared by the emulated console, the emulator itself and the graphics, and part of it was held without being used. The emulated console's memory, the code caches and a reserve on the system's side now take memory only when they need it. A large open-world game at 2x has about 3.5 GiB free during play instead of 2.2 GiB, at the same frame rate, so a long session runs out of memory far later.
+- **PS5 Pro memory mode.** On a PS5 Pro, ProsperoEden asks for the larger memory pool the console offers: 13.5 GiB instead of 12 GiB. A line at launch (`memory:` in `stderr.log`) says whether it is active. Contributed by [OverkillLabs](https://github.com/OverkillLabs3).
+- **"Ran out of graphics memory" less often above 1x.** The part that frees textures no game is using could stop looking before it had freed anything, so graphics memory filled up although much of it could be freed. Contributed by [mzet97](https://github.com/mzet97).
+- **Vibration strength (new setting).** **Settings > Controls > Vibration strength** sets how strong the DualSense vibrates: 25%, 50%, 75% or 100% of what a game asks for. The controller answers each change with a short vibration at the new strength, so the level is chosen by feel.
+- **A game without your language starts in English.** With a language chosen that a game does not have, the game started in the next language of the console's own order: with Brazilian Portuguese that was Spanish. It now gets the chosen language or a variant of it when it has one, and English otherwise.
+- **Variable refresh rate on older system software.** On system software 6.02 the console did not know the way ProsperoEden declared a variable refresh rate and listed the app without one. It is now declared the way older system software knows.
+
+**Thanks** to the people whose work is in this release:
+
+- [OverkillLabs](https://github.com/OverkillLabs3), for PS5 Pro memory mode, measured on a PS5 Pro.
+- [mzet97](https://github.com/mzet97), for finding and fixing why the texture collector stopped freeing graphics memory.
+- [Mihawk](https://github.com/mihawk-99), for the measurements of the console's memory pools that the memory work builds on, and for the Vulkan driver all of this runs on.
+- [tonysantosl](https://github.com/tonysantosl), for reporting the language that games fell back to, and [zh522130](https://github.com/zh522130), for asking for a vibration that can be turned down.
+
+And to everyone who tests ProsperoEden on their own console and reports what they find.
+
 ## v1.001.000
 
 - **A new launcher.** The menu was rebuilt. Five sections sit on a rail at the left (Home, Library, Multiplayer, Settings, About): L1 and R1 go from one to the next, and Left from a screen's edge opens the rail. Home is built around the game to continue, with its cover and what it runs with. The Library shows your games as covers, with the chosen game's details beside them. A game's settings are a page of their own, and Settings is a board of tiles.

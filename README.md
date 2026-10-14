@@ -10,7 +10,7 @@
 
 **ProsperoEden is an unofficial PlayStation 5 port of [Eden](https://github.com/eden-emulator/mirror)** - an accurate, high-performance emulator. All credit for the emulator core belongs to the Eden project and its contributors. ProsperoEden is not affiliated with or endorsed by the Eden team or Sony.
 
-This is an early alpha. Video, audio, controller input, and saves have been confirmed working. Compatibility and performance will vary between games. The current release is **v1.001.000**. What changed in it, and in every release before, is in the [changelog](docs/CHANGELOG.md#v1001000).
+This is an early alpha. Video, audio, controller input, and saves have been confirmed working. Compatibility and performance will vary between games. The current release is **v1.002.000**. What changed in it, and in every release before, is in the [changelog](docs/CHANGELOG.md#v1002000).
 
 ## Source code
 
@@ -166,7 +166,7 @@ And to the people who contribute code:
 - **gyn7561** ([GitHub](https://github.com/gyn7561)), for bringing frame generation to the PS5, with its settings, and for the log lines that say why it is or is not running.
 - **Bauls Deep** ([GitHub](https://github.com/bawsdeep)), for the Nix shell that sets up the whole build environment with one command, for the texture collector's lookahead, where the fix for the half-second freezes began, and for the development timers and the recorded-input replay.
 - **lunar-me** ([GitHub](https://github.com/lunar-me)), for a correction to the README.
-- **OverkillLabs** ([GitHub](https://github.com/OverkillLabs3)), for the fix that keeps the fast path for exclusive memory accesses with Faster CPU emulation on.
+- **OverkillLabs** ([GitHub](https://github.com/OverkillLabs3)), for the fix that keeps the fast path for exclusive memory accesses with Faster CPU emulation on, and for PS5 Pro memory mode.
 - **EIREXE** ([GitHub](https://github.com/EIREXE)), for the RNG seed per game, which lets mods that tell an emulator from a console by where the game is loaded work.
 - **rpromas** ([GitHub](https://github.com/rpromas)), for finding and fixing the crash in games that open the microphone.
 - **mzet97** ([GitHub](https://github.com/mzet97)), for finding and fixing why the texture collector stopped freeing graphics memory, which let it fill up at resolutions above 1x.
