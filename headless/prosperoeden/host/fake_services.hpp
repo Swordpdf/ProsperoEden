@@ -70,6 +70,13 @@ class FakeServices final : public ui::Services
     {
         return connected_controllers;
     }
+    void vibration_pulse(int percent) override
+    {
+        last_pulse = percent;
+        ++pulses;
+    }
+    int last_pulse = 0; // the vibration the menu last asked for, and how many it asked for
+    int pulses = 0;
     std::string version() override
     {
         return "v1.000.040";

@@ -30,6 +30,9 @@ extern int scePadInit(void);
 extern int scePadOpen(int32_t user_id, int32_t port_type, int32_t index,
                       const void * param);
 extern int scePadClose(int32_t handle);
+typedef struct { uint8_t large_motor; uint8_t small_motor; } pad_vibration_t;
+extern int scePadSetVibration(int32_t handle, const pad_vibration_t * vibration);
+extern int scePadSetVibrationMode(int32_t handle, int32_t mode);
 extern int scePadRead(int32_t handle, void * data, int32_t num);
 extern int scePadReadState(int32_t handle, void * data);
 extern int scePadGetHandle(int32_t user_id, int32_t port_type, int32_t index);
@@ -66,6 +69,10 @@ static uint64_t shoulder_repeat_at;
 static int dpad_key = -1;
 static uint64_t dpad_repeat_at;
 static int32_t pad_handle = -1;
+/* A vibration started by radio_input_pulse: when it ends (0: none runs). */
+static uint64_t pulse_ends_at;
+static bool pulse_mode_set;
+#define PULSE_MILLISECONDS 350u
 static bool owns_user_service;
 /* Every signed-in user's controller, for the home screen's controller display. Player 1 (slot 0)
    drives the menu; the other slots only tell whether their controller is connected. */
@@ -250,9 +257,28 @@ bool radio_input_init(void)
     return true;
 }
 
+static void pulse_stop(void)
+{
+    const pad_vibration_t still = {0, 0};
+    if(pulse_ends_at != 0 && pad_handle >= 0) scePadSetVibration(pad_handle, &still);
+    pulse_ends_at = 0;
+}
+
+void radio_input_pulse(unsigned percent)
+{
+    if(pad_handle < 0 || percent == 0) return;
+    if(percent > 100) percent = 100;
+    /* The two-motor mode the games use (headless/pad.cpp): 2 is the compatible mode. */
+    if(!pulse_mode_set) pulse_mode_set = scePadSetVibrationMode(pad_handle, 2) == 0;
+    /* Both motors, as a game's strong rumble drives them, scaled as the setting scales a game's. */
+    const pad_vibration_t pulse = {(uint8_t)(255u * percent / 100u), (uint8_t)(160u * percent / 100u)};
+    if(scePadSetVibration(pad_handle, &pulse) == 0) pulse_ends_at = monotonic_milliseconds() + PULSE_MILLISECONDS;
+}
+
 void radio_input_poll(void)
 {
     if(pad_handle < 0) return;
+    if(pulse_ends_at != 0 && monotonic_milliseconds() >= pulse_ends_at) pulse_stop();
     const int count = scePadRead(pad_handle, samples, PAD_SAMPLE_CAPACITY);
     for(int i = 0; i < count; ++i) process_sample(samples[i]);
     poll_players();
@@ -303,6 +329,7 @@ bool radio_input_pressed(radio_input_key_t key)
 
 void radio_input_shutdown(void)
 {
+    pulse_stop();
     for(unsigned player = 1; player < MAX_PLAYERS; ++player) close_player(player);
     close_player(0);
     if(pad_handle >= 0) {

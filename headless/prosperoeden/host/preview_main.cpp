@@ -579,9 +579,9 @@ void pictures(Stage &s)
     s.press({Key::down, Key::left});
     s.wait(0.4f);
     s.shoot("17-controls-strength");
-    if (s.services.preferences().vibration_strength != 75)
+    if (s.services.preferences().vibration_strength != 75 || s.services.last_pulse != 75 || s.services.pulses != 1)
     {
-        std::fprintf(stderr, "error: the vibration strength did not reach the settings\n");
+        std::fprintf(stderr, "error: the vibration strength did not reach the settings or the controller\n");
         s.ok = false;
     }
     s.press({Key::right});

@@ -391,6 +391,12 @@ class Services
     {
         return 1u;
     }
+    // A short vibration of the controller at `percent` of full strength: what the strength
+    // being set in Settings > Controls feels like.
+    virtual void vibration_pulse(int percent)
+    {
+        (void)percent;
+    }
     virtual std::string version() = 0; // "v1.000.040"
     // A newer release than this one is listed (asked once per launch): handed over once, when the
     // answer has come.

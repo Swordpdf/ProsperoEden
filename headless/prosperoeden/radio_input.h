@@ -37,6 +37,10 @@ bool radio_input_pressed(radio_input_key_t key);
 /* The players whose controller is connected (bit 0: the one driving the menu; bits 1-3: the
    other signed-in users), as of the last poll. */
 unsigned radio_input_controllers(void);
+/* A short vibration of the controller driving the menu, at `percent` (1-100) of full strength:
+   what a strength setting feels like. It ends by itself (radio_input_poll), and a new one
+   replaces the one that runs. */
+void radio_input_pulse(unsigned percent);
 void radio_input_shutdown(void);
 
 #ifdef __cplusplus

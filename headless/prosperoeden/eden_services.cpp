@@ -658,6 +658,9 @@ std::string EdenServices::clock() {
 }
 
 unsigned EdenServices::controllers() { return radio_input_controllers(); }
+void EdenServices::vibration_pulse(int percent) {
+    if (percent > 0) radio_input_pulse(static_cast<unsigned>(percent));
+}
 
 std::string EdenServices::version() {
     // "01.000.040" reads as v1.000.040.
