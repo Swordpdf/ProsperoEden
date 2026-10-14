@@ -442,9 +442,18 @@ bool SparseTablesAvailable() noexcept {
 namespace {
 // A sparse range of `size` bytes: every slot reads as zeroes until CommitSparsePage gives it a
 // block of its own. Null when the size is too small for one or the platform refuses.
+const char* sparse_refused = "";  // why the last sparse range was refused, for the log
 void* NewSparseRange(std::size_t size, bool guest) {
+    sparse_refused = "";
     const std::size_t span = (size + SparseSlot - 1) / SparseSlot * SparseSlot;
-    if (size < 2 * SparseSlot || span < size || !SparseAvailable()) return nullptr;
+    if (size < 2 * SparseSlot || span < size) {
+        sparse_refused = "too-small";
+        return nullptr;
+    }
+    if (!SparseAvailable()) {
+        sparse_refused = "platform";
+        return nullptr;
+    }
     const std::lock_guard lock{sparse_mutex};
     SparseRange* free_range = nullptr;
     for (auto& range : sparse_ranges)
@@ -452,11 +461,21 @@ void* NewSparseRange(std::size_t size, bool guest) {
             free_range = &range;
             break;
         }
+    if (free_range == nullptr) {
+        sparse_refused = "no-range";
+        return nullptr;
+    }
     const std::size_t slots = span / SparseSlot;
     auto* owned = free_range ? new (std::nothrow) std::atomic<bool>[slots] : nullptr;
     auto* physical = owned ? new (std::nothrow) std::int64_t[slots] : nullptr;
-    void* address = physical ? ReserveSparse(span, guest) : nullptr;
+    if (physical == nullptr) {
+        delete[] owned;
+        sparse_refused = "no-table";
+        return nullptr;
+    }
+    void* address = ReserveSparse(span, guest);
     if (address == nullptr) {
+        sparse_refused = "reserve";
         delete[] owned;
         delete[] physical;
         return nullptr;
@@ -518,8 +537,21 @@ void CommitSparsePage(std::uintptr_t page) noexcept;
 
 void* AllocateGuestMemoryWhereUsed(std::size_t size) noexcept {
     // Development A/B: dev-settings guest_memory=whole takes the block whole, as before.
-    void* base = DevSetting("guest_memory=whole") ? nullptr : NewSparseRange(size, true);
-    if (base == nullptr) return AllocateGuestMemory(size);
+    const bool whole = DevSetting("guest_memory=whole");
+    void* base = whole ? nullptr : NewSparseRange(size, true);
+    if (base == nullptr) {
+        // The block taken whole is `size` of the pool the CPU shares with the GPU, at the moment
+        // the game starts. Say which step refused the block backed where used, so a layout above
+        // the Switch's own 4 GiB that will not fit is one log line and not a session that dies
+        // somewhere else.
+        const char* why = whole ? "asked-for" : sparse_refused;
+        char line[128];
+        const int length = std::snprintf(line, sizeof(line),
+                                         "EDEN_GUEST_MEMORY sparse refused bytes=%zu step=%s\n", size,
+                                         why && *why ? why : "unknown");
+        if (length > 0) Report(line);
+        return AllocateGuestMemory(size);
+    }
     char line[112];
     const int length = std::snprintf(line, sizeof(line), "EDEN_GUEST_MEMORY va=%p bytes=%zu above_guest=1 backed=where-used\n",
                                      base, size);

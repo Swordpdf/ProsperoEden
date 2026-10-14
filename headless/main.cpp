@@ -1082,6 +1082,25 @@ int main(int argc, char** argv) {
             if (speed.unsafe_dma) Settings::values.dma_accuracy.SetValue(Settings::DmaAccuracy::Unsafe);
             Settings::values.use_reactive_flushing.SetValue(speed.reactive_flushing);
             Settings::values.skip_cpu_inner_invalidation.SetValue(speed.skip_invalidation);
+            // Settings > Performance > Console memory: the memory the guest's console is told it has
+            // (Eden's memory layout). A mod that keeps a heap of its own asks the kernel how much
+            // memory there is and reserves what it wants from it; on the Switch's own 4 GiB it finds
+            // less than it asked for and the game stops before its first picture, which is the
+            // kernel's "jumped to an unmapped address" and not a crash of ours. The larger layouts
+            // are the console's developer memories: the guest's kernel divides the larger block the
+            // same way, so the mod's heap is there. Above 4 GiB the guest's memory is the block
+            // backed where the kernel uses it (src/memory_pages.cpp), so the pool below only has to
+            // hold what a session touches, not the whole of it.
+            Settings::values.memory_layout_mode =
+                speed.memory_layout == 1 ? Settings::MemoryLayout::Memory_6Gb
+                : speed.memory_layout == 2 ? Settings::MemoryLayout::Memory_8Gb
+                                           : Settings::MemoryLayout::Memory_4Gb;
+            Eden::Report("launch",
+                         ("Memory layout: " + std::string{Eden::kMemoryLayoutKeys[speed.memory_layout]} +
+                          " (" + std::to_string(Eden::kMemoryLayoutGib[speed.memory_layout]) +
+                          " GiB), direct memory pool " +
+                          std::to_string(sceKernelGetDirectMemorySize() >> 20) + " MiB")
+                             .c_str());
             // The block list is off unless the settings turn it on (block-list.txt in the app
             // folder still does, further down).
             if (!dev_block_list) Eden::JitList::enabled = speed.block_list;

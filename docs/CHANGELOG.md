@@ -2,6 +2,10 @@
 
 What changed in each release of ProsperoEden, newest first. A release's notes on GitHub are its section here.
 
+## Unreleased
+
+- **A larger console memory, for the mods that ask for it.** `memory_layout` in the settings file tells a game its console has 6 GiB or 8 GiB instead of the 4 GiB every game has, the way the console's developer units are. A mod that keeps a block of memory of its own measures what the game is told and reserves from it, so a mod that wants more than 4 GiB stops the game before its first picture; with the larger memory it finds what it asked for. The extra is taken from the console's pool only where the session touches it. For now it is in the settings file, for every game or for one; see [Console memory](SETTINGS.md#console-memory).
+
 ## v1.002.000
 
 - **More free memory for demanding games.** The console's memory is one pool shared by the emulated console, the emulator itself and the graphics, and part of it was held without being used. The emulated console's memory, the code caches and a reserve on the system's side now take memory only when they need it. A large open-world game at 2x has about 3.5 GiB free during play instead of 2.2 GiB, at the same frame rate, so a long session runs out of memory far later.

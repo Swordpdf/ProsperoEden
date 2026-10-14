@@ -58,5 +58,24 @@ for name in ('block_list', 'async_shaders', 'fast_gpu', 'unsafe_cpu', 'unsafe_dm
     assert f'speed.{name} = preferences.{name};' in save, name
 assert 'Eden::PerformanceSettings speed = Eden::LoadPerformance(0);' in save
 assert 'Eden::SavePerformance(0, speed)' in save
+# The console memory a game is told it has ("memory_layout", for a mod that keeps a heap of its
+# own). Every session starts at the Switch's own 4 GiB, and the game's choice replaces it before
+# the emulator is built, because that is when the guest's memory block is taken.
+assert 'Settings::values.memory_layout_mode = Settings::MemoryLayout::Memory_4Gb;' in release
+layout = release.index('Settings::values.memory_layout_mode =\n')
+assert read < layout < release.index('Core::System system;')
+for case in ('speed.memory_layout == 1 ? Settings::MemoryLayout::Memory_6Gb',
+             'speed.memory_layout == 2 ? Settings::MemoryLayout::Memory_8Gb',
+             'Settings::MemoryLayout::Memory_4Gb;'):
+    assert case in release[layout:layout + 600], case
+assert 'Memory layout: ' in release  # the session says which one it uses
+assert 'inline constexpr const char* kMemoryLayoutKeys[] = {"4Gb", "6Gb", "8Gb"};' in store
+assert 'int memory_layout = 0;' in store
+assert 'kMemoryLayoutKeys[value.memory_layout]' in store
+# Above the Switch's own 4 GiB the block is the one backed where the kernel uses it, and a refusal
+# says which step refused it instead of leaving the session to die somewhere else.
+pages = (root / 'src/memory_pages.cpp').read_text()
+assert 'void* AllocateGuestMemoryWhereUsed(std::size_t size) noexcept {' in pages
+assert 'EDEN_GUEST_MEMORY sparse refused bytes=%zu step=%s' in pages
 print('Performance settings: the block list, shaders, GPU, CPU and DMA accuracy, flushing and invalidation '
       'reach the session PASS')
