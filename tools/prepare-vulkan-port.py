@@ -232,6 +232,13 @@ void RasterizerVulkan::PrepareDraw(bool is_indexed, Func&& draw_func) {'''),
     ('    ComputePipeline* const pipeline{pipeline_cache.CurrentComputePipeline()};\n    if (!pipeline) {\n        return;\n    }',
      '    ComputePipeline* const pipeline{pipeline_cache.CurrentComputePipeline()};\n    if (!pipeline) {\n        return;\n    }\n'
      '    SCOPE_EXIT { SyncProbe(scheduler, "dispatch", pipeline); };'),
+    # Dynamic vertex input: a stream with instancing on and frequency 0 advances per vertex, as the
+    # pipeline's static vertex input (binding_divisors) and OpenGL's divisor 0 take it. Here it was
+    # an instance-rate binding with divisor 0, every vertex reading element 0: geometry collapsed
+    # (objects vanishing for a frame, a whole scene drawn as one flat colour).
+    ('        const bool is_instanced{regs.vertex_stream_instances.IsInstancingEnabled(binding)};\n',
+     '        const bool is_instanced{regs.vertex_stream_instances.IsInstancingEnabled(binding) &&\n'
+     '                                input_binding.frequency != 0};\n'),
 ])
 # Host conditional rendering (VK_EXT_conditional_rendering, dev_vulkan.h hcr_mode): count each
 # decision (EDEN_DEV_GUEST cond= slots 13-19); hcr=exact sends the conditions Eden would draw
@@ -1111,6 +1118,103 @@ shader_costs = [
      '                    unsigned(dynamic_features.has_extended_dynamic_state_3_enables),\n'
      '                    unsigned(dynamic_features.has_dynamic_vertex_input));\n'
      '}\n\nPipelineCache::~PipelineCache()'),
+    # Static vertex input (no attribute) for pipelines whose vertex shader reads no vertex attribute
+    # (dev_vulkan.h static_vertex_input): with VK_EXT_vertex_input_dynamic_state the console's
+    # driver drew them wrong (a full-screen triangle from the vertex index covering a game's
+    # cutscenes with a flat colour). Building a pipeline records whether its vertex shader reads
+    # attributes; the static key has no attribute, so the disk cache keeps loading it.
+    ('#include "video_core/engines/maxwell_3d.h"',
+     '#include "video_core/engines/maxwell_3d.h"\n#include "video_core/dirty_flags.h"\n'
+     '#include <atomic>\n#include <mutex>\n#include <unordered_set>\n'
+     '#include "video_core/renderer_vulkan/vk_state_tracker.h"'),
+    ('GraphicsPipeline* PipelineCache::CurrentGraphicsPipeline() {',
+     """namespace {
+std::mutex eden_attributeless_mutex;
+std::unordered_set<u64> eden_attributeless_vertex;
+std::atomic<u32> eden_attributeless_generation{0};
+bool eden_static_vertex_input_bound = false;
+
+void EdenRecordAttributeless(u64 vertex_hash, const Shader::Info& info) {
+    for (size_t index = 0; index < Shader::IR::NUM_GENERICS; ++index) {
+        if (info.loads.Generic(index)) {
+            return;
+        }
+    }
+    std::scoped_lock lock{eden_attributeless_mutex};
+    if (eden_attributeless_vertex.insert(vertex_hash).second) {
+        eden_attributeless_generation.fetch_add(1, std::memory_order_release);
+    }
+}
+
+// GPU thread: whether the vertex shader reads no attribute, as far as built pipelines tell.
+bool EdenAttributeless(u64 vertex_hash) {
+    static u64 last_hash = 0;
+    static u32 last_generation = ~0u;
+    static bool last_result = false;
+    const u32 generation = eden_attributeless_generation.load(std::memory_order_acquire);
+    if (vertex_hash != last_hash || generation != last_generation) {
+        std::scoped_lock lock{eden_attributeless_mutex};
+        last_hash = vertex_hash;
+        last_generation = generation;
+        last_result = eden_attributeless_vertex.contains(vertex_hash);
+    }
+    return last_result;
+}
+
+// A static key without attributes (what the loader takes back from the disk cache).
+bool EdenAttributelessStaticKey(const FixedPipelineState& state) {
+    return state.dynamic_vertex_input == 0 &&
+           std::ranges::none_of(state.attributes,
+                                [](const auto& attribute) { return attribute.raw != 0; });
+}
+} // Anonymous namespace
+
+GraphicsPipeline* PipelineCache::CurrentGraphicsPipeline() {"""),
+    ('    graphics_key.state.Refresh(*maxwell3d, dynamic_features);\n',
+     """    graphics_key.state.Refresh(*maxwell3d, dynamic_features);
+    const bool static_vertex_input = graphics_key.state.dynamic_vertex_input != 0 &&
+                                     ::Eden::DevVulkan::static_vertex_input &&
+                                     EdenAttributeless(graphics_key.unique_hashes[1]);
+    if (static_vertex_input) {
+        // Instance-rate streams as the registers set them (with every stream per vertex the
+        // driver drew these wrong too); no attribute, so the key does not depend on what the
+        // registers hold for attributes the shader does not read.
+        const auto& regs = maxwell3d->regs;
+        graphics_key.state.dynamic_vertex_input.Assign(0);
+        graphics_key.state.enabled_divisors = 0;
+        graphics_key.state.attributes = {};
+        graphics_key.state.binding_divisors = {};
+        for (size_t index = 0; index < Maxwell::NumVertexArrays; ++index) {
+            const bool is_enabled = regs.vertex_stream_instances.IsInstancingEnabled(index);
+            graphics_key.state.binding_divisors[index] =
+                is_enabled ? regs.vertex_streams[index].frequency : 0;
+            graphics_key.state.enabled_divisors |= (is_enabled ? u64{1} : 0) << index;
+        }
+        // The union's attribute_types now holds divisors: the next dynamic draw recomputes them
+        // and sets its vertex input again (a static pipeline replaced it).
+        maxwell3d->dirty.flags[Dirty::VertexInput] = true;
+    }
+    if (static_vertex_input && !eden_static_vertex_input_bound) {
+        // Rebind the vertex buffers with their strides, dynamic state of the static pipeline.
+        auto& flags = maxwell3d->dirty.flags;
+        flags[VideoCommon::Dirty::VertexBuffers] = true;
+        for (size_t index = 0; index < Maxwell::NumVertexArrays; ++index) {
+            flags[VideoCommon::Dirty::VertexBuffer0 + index] = true;
+        }
+    }
+    eden_static_vertex_input_bound = static_vertex_input;
+"""),
+    ('            (key.state.dynamic_vertex_input != 0) !=\n                dynamic_features.has_dynamic_vertex_input) {',
+     '            ((key.state.dynamic_vertex_input != 0) !=\n'
+     '                 dynamic_features.has_dynamic_vertex_input &&\n'
+     '             !(dynamic_features.has_dynamic_vertex_input &&\n'
+     '               ::Eden::DevVulkan::static_vertex_input &&\n'
+     '               EdenAttributelessStaticKey(key.state)))) {'),
+    ('    std::array<const Shader::Info*, Maxwell::MaxShaderStage> infos{};\n',
+     '    if (uses_vertex_b) {\n'
+     '        EdenRecordAttributeless(key.unique_hashes[1], programs[1].info);\n'
+     '    }\n'
+     '    std::array<const Shader::Info*, Maxwell::MaxShaderStage> infos{};\n'),
 ]
 # Time both graphics and compute preparation, without modifying the compiler or
 # reading guest state on another thread. These intervals overlap shader_prepare.
