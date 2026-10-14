@@ -5,8 +5,9 @@ default and recovery interface. A pack supplies Lua presentation code, images, f
 recordings and a loading-screen description. It does not replace the emulator or load
 native plugins.
 
-This implementation targets the source of ProsperoEden v1.002.000. It is an experimental
-upstream contribution, not a feature of an unmodified official release.
+This implementation incorporates upstream changes through commit `e9f30ae` after
+ProsperoEden v1.002.000, including menu keybindings. It is an experimental upstream
+contribution, not a feature of an unmodified official release.
 
 ## Installation and selection
 
@@ -67,6 +68,15 @@ by the frontend. `sounds` names a directory of WAV recordings. The example in
 `state`, `first_start`, `api_major` and `api_minor`. `update` receives `dt` and `time`;
 `draw` receives `time`. `input.key` is one of `cross`, `circle`, `square`, `triangle`,
 `options`, `l1`, `r1`, `up`, `down`, `left`, `right`.
+
+Input keys name physical buttons, preserving the `launcher-v1.0` contract. Packs may
+read `host.query("preferences").menu_bind` to follow the user's native menu bindings:
+the four array entries assign Select, Back, Secondary and Game settings respectively
+to face buttons 0 (Cross), 1 (Circle), 2 (Square) and 3 (Triangle). A pack that offers
+its own bindings should keep its hints consistent with its input handling. The native
+launcher picker follows the native menu bindings, including its Select and Back hints.
+`preferences.set` accepts a `menu_bind` array containing each of those four integers
+exactly once. Partial preference patches retain the current menu bindings.
 
 Three functions cross the host boundary:
 

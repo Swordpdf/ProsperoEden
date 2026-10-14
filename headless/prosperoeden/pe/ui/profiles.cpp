@@ -235,7 +235,7 @@ void Launcher::draw_profiles(Canvas &c, float open)
     else if (profile_rows_.selected >= count)
     {
         static constexpr Hint kHintsRow[] = {{Pad::cross, TR("Add")}, {Pad::circle, TR("Back")}};
-        draw_hints(c, kHintsRow, 2, 592.0f, kHints, th().copy, 736.0f);
+        draw_menu_hints(c, kHintsRow, 2, 592.0f, kHints, th().copy, 736.0f);
     }
     else
     {
@@ -243,7 +243,7 @@ void Launcher::draw_profiles(Canvas &c, float open)
                                              {Pad::leftright, TR("Rename")},
                                              {Pad::square, TR("Remove")},
                                              {Pad::circle, TR("Back")}};
-        draw_hints(c, kHintsRow, 4, 592.0f, kHints, th().copy, 736.0f);
+        draw_menu_hints(c, kHintsRow, 4, 592.0f, kHints, th().copy, 736.0f);
     }
     list.pop_transform();
     list.pop_opacity();

@@ -960,6 +960,10 @@ msgstr "Medio"
 msgid "Memory"
 msgstr "Memoria"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Menu keybinds"
+msgstr "Tasti del menu"
+
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
 msgstr "Effetti sonori del menu realizzati con ElevenLabs."
@@ -1564,6 +1568,10 @@ msgstr "Scansiona il codice con il telefono oppure apri l'indirizzo qui sotto."
 msgid "Scroll"
 msgstr "Scorri"
 
+#: pe/ui/game_options.cpp
+msgid "Secondary"
+msgstr "Secondario"
+
 #. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
 #: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Sections"
@@ -2035,6 +2043,10 @@ msgstr "Novità"
 #: pe/ui/update.cpp
 msgid "What's new in version {0}"
 msgstr "Novità della versione {0}"
+
+#: pe/ui/game_options.cpp
+msgid "Which face button does what in the menu."
+msgstr "Quale tasto azione fa cosa nel menu."
 
 #: pe/ui/settings.cpp
 msgid "Who is playing. Each profile keeps its own save data and settings."

@@ -372,12 +372,19 @@ struct RuntimeLauncher::Impl {
         }
         else if (name == "preferences.set") {
             const auto before=services.preferences(); Json values=before;
+            if(args.contains("menu_bind")) {
+                const auto& binding=args.at("menu_bind");
+                if(!binding.is_array() || binding.size()!=kMenuActions ||
+                   !std::all_of(binding.begin(),binding.end(),[](const Json& button){return button.is_number_integer();}))
+                    throw std::runtime_error("Invalid menu mapping");
+            }
             for (auto it=args.begin();it!=args.end();++it) { if (!values.contains(it.key()) || (values[it.key()].is_boolean()!=it.value().is_boolean()) || (values[it.key()].is_array()!=it.value().is_array())) throw std::runtime_error("Invalid preference field/type"); values[it.key()]=it.value(); }
             // Preserve native fields added after this API contract was defined.
             auto v=before;from_json(values,v);
             if (v.volume<0 || v.volume>100 || v.menu_volume<0 || v.menu_volume>100 || v.renderer<0 || v.renderer>1 || v.output<0 || v.output>2 || v.resolution<0 || v.resolution>=static_cast<int>(services.resolution_labels().size()) || v.filter<0 || v.filter>=static_cast<int>(services.filter_labels().size()) || v.astc<0 || v.astc>1 || v.language<0 || v.language>=static_cast<int>(services.language_labels().size()) || v.refresh<0 || v.refresh>1 || (v.vibration_strength!=25 && v.vibration_strength!=50 && v.vibration_strength!=75 && v.vibration_strength!=100) || v.hud_size<0 || v.hud_size>2 || v.hud_corner<0 || v.hud_corner>3 || v.frame_gen_target<0 || v.frame_gen_target>5 || v.frame_gen_multiplier<0 || v.frame_gen_multiplier>2) throw std::runtime_error("Preference is out of range");
             if(v.hud_fields<0 || v.hud_fields>511) throw std::runtime_error("Invalid overlay fields");
             std::set<int> mapped; for(int button:v.mapping) if(button<0 || button>=kPadButtons || !mapped.insert(button).second) throw std::runtime_error("Invalid controller mapping");
+            std::set<int> menu_buttons; for(int button:v.menu_bind) if(button<0 || button>=kMenuActions || !menu_buttons.insert(button).second) throw std::runtime_error("Invalid menu mapping");
             ok=services.set_preferences(v); if(ok) cached_preferences=v; if(ok && v.vibration_strength!=before.vibration_strength && v.vibration) services.vibration_pulse(v.vibration_strength);
         }
         else if (name == "game_settings.set") { const auto& g=game(args); auto settings=services.game_settings(g.title_id); Json values=settings; for(auto it=args.at("patch").begin();it!=args.at("patch").end();++it) { if(!values.contains(it.key())) throw std::runtime_error("Unknown game setting"); values[it.key()]=it.value(); } from_json(values,settings);ok=services.set_game_settings(g.title_id,settings); }
@@ -505,7 +512,10 @@ struct RuntimeLauncher::Impl {
             for(int i=0;i<total;++i) { const Rect r{260,220+float(i-picker_row/7*7)*90,1400,80}; if(r.y<220 || r.y>850) continue;
                 list.bordered_rect(r,12,i==picker_row?t.row_focus:t.row,i==picker_row?2:0,t.accent);
                 list.text(*fonts.font,fonts.texture,i==0?"Built-in launcher":installed[i-1].value("name",""),300,r.y+52,{28,t.text}); }
-            list.text(*fonts.font,fonts.texture,"Cross: select     Circle: back",260,1000,{24,t.meta});
+            constexpr const char* faces[]{"Cross", "Circle", "Square", "Triangle"};
+            const auto binding=services.preferences().menu_bind;
+            const auto hints=std::string(faces[binding[0]])+": select     "+faces[binding[1]]+": back";
+            list.text(*fonts.font,fonts.texture,hints,260,1000,{24,t.meta});
             const auto& error = last_error.empty() ? discovery_error : last_error;
             if(!error.empty()) list.text(*fonts.font,fonts.texture,fonts.font->fit(error,24,1400),260,935,{24,t.warning});
         }
@@ -522,7 +532,7 @@ RuntimeLauncher::RuntimeLauncher(Services& s, Textures& t, const Fonts& f, gfx::
 RuntimeLauncher::~RuntimeLauncher()=default;
 void RuntimeLauncher::press(Key key) {
     auto& h=*impl_;
-    if(h.picker) { if(key==Key::circle) h.picker=false; else if(key==Key::up || key==Key::down) h.picker_row=std::clamp(h.picker_row+(key==Key::down?1:-1),0,static_cast<int>(h.installed.size())); else if(key==Key::cross) h.select(h.picker_row==0?"builtin":h.installed[h.picker_row-1].at("id").get<std::string>()); return; }
+    if(h.picker) { key=menu_key_for(key,h.services.preferences().menu_bind); if(key==Key::circle) h.picker=false; else if(key==Key::up || key==Key::down) h.picker_row=std::clamp(h.picker_row+(key==Key::down?1:-1),0,static_cast<int>(h.installed.size())); else if(key==Key::cross) h.select(h.picker_row==0?"builtin":h.installed[h.picker_row-1].at("id").get<std::string>()); return; }
     if(h.pack) { if(!h.call(*h.pack,"input",{{"key",key_name(key)}})) h.fallback(); }
     else if(h.builtin) { h.builtin->press(key); if(h.builtin->take_launcher_picker()) open_picker(); }
 }

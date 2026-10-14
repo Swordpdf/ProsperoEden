@@ -277,7 +277,7 @@ void Launcher::draw_save_sync(Canvas &c, float open)
         if (sync_launch_)
         {
             static constexpr Hint kWaiting[] = {{Pad::circle, TR("Back")}};
-            draw_hints(c, kWaiting, 1, kPanel.x + 52.0f, kPanel.y + kPanel.h - 54.0f, th().copy, kPanel.w - 104.0f);
+            draw_menu_hints(c, kWaiting, 1, kPanel.x + 52.0f, kPanel.y + kPanel.h - 54.0f, th().copy, kPanel.w - 104.0f);
         }
         list.pop_transform();
         list.pop_opacity();
@@ -362,9 +362,9 @@ void Launcher::draw_save_sync(Canvas &c, float open)
         {Pad::updown, TR("Select")}, {Pad::cross, TR("Choose")}, {Pad::circle, TR("Change nothing")}};
     static constexpr Hint kConfirm[] = {{Pad::cross, TR("Understood")}};
     if (offered.size() == 1)
-        draw_hints(c, kConfirm, 1, 592.0f, kHints, th().copy, 736.0f);
+        draw_menu_hints(c, kConfirm, 1, 592.0f, kHints, th().copy, 736.0f);
     else
-        draw_hints(c, conflict ? kConflict : kAnswers, 3, 592.0f, kHints, th().copy, 736.0f);
+        draw_menu_hints(c, conflict ? kConflict : kAnswers, 3, 592.0f, kHints, th().copy, 736.0f);
     list.pop_transform();
     list.pop_opacity();
 }
