@@ -875,6 +875,17 @@ list(REMOVE_ITEM core_sources "core_timing.cpp")
 list(APPEND core_sources "${PORT_BUILD_DIR}/core_timing.cpp")
 list(REMOVE_ITEM core_sources "hle/kernel/physical_core.cpp")
 list(APPEND core_sources "${PORT_BUILD_DIR}/physical_core.cpp")
+# Guest kernel spin locks spin before blocking (performance.h kernel_spin_iterations).
+file(READ "${PROJECT_SOURCE_DIR}/src/core/hle/kernel/k_spin_lock.cpp" spin_source)
+set(spin_old "void KSpinLock::Lock() {\n    m_lock.lock();\n}")
+string(FIND "${spin_source}" "${spin_old}" spin_at)
+if(spin_at LESS 0)
+    message(FATAL_ERROR "Pinned KSpinLock::Lock changed")
+endif()
+string(REPLACE "${spin_old}" "void KSpinLock::Lock() {\n    ::Eden::Performance::SpinAcquire(m_lock);\n}" spin_source "${spin_source}")
+write_derived("${PORT_BUILD_DIR}/k_spin_lock.cpp" "#include \"${EDEN_PORT_DIR}/performance.h\"\n${spin_source}")
+list(REMOVE_ITEM core_sources "hle/kernel/k_spin_lock.cpp")
+list(APPEND core_sources "${PORT_BUILD_DIR}/k_spin_lock.cpp")
 if(EDEN_DEV_PROFILE)
     # Guest-visible waits: syncpoint event registration to signal (GPU-pipeline latency
     # the game waits on) and buffer-queue dequeue waits (presentation back-pressure).
