@@ -210,6 +210,13 @@ bool topology_allowed_valid = false;
 std::atomic<bool> placement_secondary{false};
 std::atomic<unsigned> secondary_reports{};
 void CheckWorkerTopology() {
+    // Probe once per process. Later games start from a launcher thread that the first game's
+    // placement left on the secondary CPUs, where the probe finds too few cores.
+    if (worker_topology_ready) {
+        std::printf("EDEN_WORKER_TOPOLOGY ready=1 cached=1 cpus=%u,%u,%u,%u,%u\n",
+            worker_cpus[0], worker_cpus[1], worker_cpus[2], worker_cpus[3], worker_cpus[4]);
+        return;
+    }
     cpuset_t original{};
     if (__get_cpuid_max(0, nullptr) < 0xb ||
         cpuset_getaffinity(CPU_LEVEL_WHICH, CPU_WHICH_TID, -1, 8, &original)) return;
