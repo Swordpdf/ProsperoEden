@@ -71,6 +71,8 @@ Theme slate()
     t.game_backdrop = false;
     t.minimal_home = true;
     t.top_nav = true;
+    t.scrim_opacity = 0.92f;
+    t.game_page_offset = 60.0f;
 
     t.backdrop = "slate-backdrop.tga";
     t.backdrop_blur = "slate-backdrop-blur.tga";
