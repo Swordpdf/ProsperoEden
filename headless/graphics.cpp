@@ -74,7 +74,7 @@ std::atomic<bool> hud_enabled{true};
 std::atomic<int> hud_size{0};
 std::atomic<int> hud_corner{0};
 std::atomic<bool> hud_colors{false};
-std::atomic<int> hud_fields{0xff};
+std::atomic<int> hud_fields{0x1ff};
 // What the session's settings say the overlay should look like, for all of them at once.
 void LoadHudPreferences() {
     const auto prefs = PreferencesFor(session_title.load());

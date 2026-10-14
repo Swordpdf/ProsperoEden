@@ -331,7 +331,7 @@ struct Preferences
     bool hud_colors = false; // the line in its inks rather than one
     // What the overlay's line may say, bit by bit (hud.h's kHudField*): the pieces the user has
     // chosen to show. All of them by default.
-    int hud_fields = 0xff;
+    int hud_fields = 0x1ff;
 };
 
 // What one game does differently from Settings (Library > Game settings). Each value is -1 while
