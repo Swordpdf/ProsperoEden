@@ -601,28 +601,19 @@ void GuestCoreLoads(unsigned loads[4]) {
 }
 
 unsigned GpuBusyPercent() {
-    // The GPU worker thread's time not spent waiting for something: a command to arrive, a fence to
-    // drain, a frame to be freed. That is what the GPU is being given to do rather than what the GPU
-    // itself does: there are no timestamp queries on that path, and putting them there would cost
-    // the frames this overlay is there to show. Those three scopes all run on that one thread, so
-    // they cannot overlap and their sum cannot exceed the wall clock the share is taken against. A
-    // submitter blocked by a full queue (gpu_queue_full) is the same thread being busy read from
-    // the other side; adding it here would let the sum pass the wall clock and turn 1 - share
-    // negative, a GPU that reports 0. And until one of the three has run at all these waits were
-    // never measured - 1 - 0 would then claim a GPU that never waits.
+    // The GPU's own time against the wall clock: the Vulkan scheduler stamps the start and the end
+    // of every command buffer on the GPU, and what lies between them is time the GPU spent on the
+    // game's pictures. Gaps inside one command buffer count as busy, so the share can read a
+    // little high, never low. Without timestamps (the OpenGL renderer, a driver that refuses
+    // them, or before the first results) there is nothing to show: "--".
     static thread_local Rate state;
-    const auto waited = [](const Totals& totals) {
-        return static_cast<long long>(totals.nanoseconds.load(std::memory_order_relaxed));
-    };
-    const auto runs = [](const Totals& totals) {
-        return totals.calls.load(std::memory_order_relaxed);
-    };
-    if (runs(gpu_queue_wait) + runs(gpu_fence_drain) + runs(gpu_present_wait) == 0) return ~0u;
-    const long long idle = waited(gpu_queue_wait) + waited(gpu_fence_drain) +
-                           waited(gpu_present_wait);
-    const double share = SampleRate(state, idle, MonotonicNs());
+    if (gpu_time_failed.load(std::memory_order_relaxed) ||
+        gpu_time_results.load(std::memory_order_relaxed) == 0)
+        return ~0u;
+    const double share = SampleRate(
+        state, static_cast<long long>(gpu_time_busy_ns.load(std::memory_order_relaxed)), MonotonicNs());
     if (share < 0.0) return ~0u;
-    return Percent(1.0 - share);
+    return Percent(share);
 }
 
 void MemoryPool(unsigned long long* free_bytes, unsigned long long* total_bytes) {

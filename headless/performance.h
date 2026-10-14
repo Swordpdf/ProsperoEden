@@ -30,6 +30,13 @@ void SampleGpuFrame(unsigned frame);
 // those as "--".
 unsigned HostCpuPercent();
 unsigned GpuBusyPercent();
+// The GPU's own time, by timestamps the Vulkan scheduler writes at the start and the end of
+// each command buffer while the overlay asks for them (tools/prepare-vulkan-port.py): the
+// nanoseconds the GPU has spent between them, how many command buffers that is, and whether
+// the driver gave up on them.
+inline std::atomic<bool> gpu_time_wanted{false};
+inline std::atomic<unsigned long long> gpu_time_busy_ns{0}, gpu_time_results{0};
+inline std::atomic<bool> gpu_time_failed{false};
 void MemoryPool(unsigned long long* free_bytes, unsigned long long* total_bytes);
 #ifdef EDEN_DEV_PROFILE
 void BeginPcSampling();

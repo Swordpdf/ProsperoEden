@@ -79,6 +79,8 @@ std::atomic<int> hud_fields{0xff};
 void LoadHudPreferences() {
     const auto prefs = PreferencesFor(session_title.load());
     hud_enabled.store(prefs.hud, std::memory_order_relaxed);
+    // The GPU is only timed while the overlay shows its share.
+    Performance::gpu_time_wanted.store(prefs.hud && (prefs.hud_fields & kHudFieldGpu) != 0, std::memory_order_relaxed);
     hud_size.store(prefs.hud_size, std::memory_order_relaxed);
     hud_corner.store(prefs.hud_corner, std::memory_order_relaxed);
     hud_colors.store(prefs.hud_colors, std::memory_order_relaxed);
@@ -583,6 +585,9 @@ private:
 void ToggleHud() {
     const bool enabled = !hud_enabled.load(std::memory_order_relaxed);
     hud_enabled.store(enabled, std::memory_order_relaxed);
+    Performance::gpu_time_wanted.store(
+        enabled && (hud_fields.load(std::memory_order_relaxed) & static_cast<int>(kHudFieldGpu)) != 0,
+        std::memory_order_relaxed);
     // A game with its own FPS overlay setting keeps the change for itself.
     const uint64_t title = session_title.load();
     if (auto game = LoadGameSettings(title); title && game.hud >= 0) {
