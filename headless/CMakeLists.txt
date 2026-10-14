@@ -703,6 +703,23 @@ foreach(bits 32 64)
           string(REPLACE "std::uint32_t(16_MiB)" "std::uint32_t(${jit_cache_sizes})" wrapper "${wrapper}")
       endif()
     set(derived "${PORT_BUILD_DIR}/arm_dynarmic_${bits}.cpp")
+    # The overlay's four core loads (performance.h, SampleCoreCpu): each core reads its own CPU
+    # time after a run when the overlay has asked, which on the console only the thread itself
+    # can. The development build reads more at the same place (SampleCpu, below).
+    if(NOT EDEN_DEV_PROFILE)
+        string(PREPEND wrapper "#include \"${EDEN_PORT_DIR}/performance.h\"
+")
+        set(core_run_site "    return TranslateHaltReason(m_jit->Run());")
+        string(FIND "${wrapper}" "${core_run_site}" core_run_at)
+        if(core_run_at LESS 0)
+            message(FATAL_ERROR "Pinned RunThread dispatch changed; the overlay's core loads read there")
+        endif()
+        string(REPLACE "${core_run_site}"
+            "    const auto halt = m_jit->Run();
+    ::Eden::Performance::SampleCoreCpu(m_core_index);
+    return TranslateHaltReason(halt);"
+            wrapper "${wrapper}")
+    endif()
     if(EDEN_DEV_PROFILE)
         string(PREPEND wrapper "#include \"${EDEN_PORT_DIR}/performance.h\"\n")
         if(bits EQUAL 64)

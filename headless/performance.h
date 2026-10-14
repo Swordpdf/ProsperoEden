@@ -21,6 +21,10 @@ void Snapshot();
 // its own, so the busiest of them says whether the CPU is what holds a game back; a share of
 // every CPU of the console (HostCpuPercent) stays low even then.
 void GuestCoreLoads(unsigned loads[4]);
+// Called by a core's own thread each time it leaves the guest's code: when GuestCoreLoads has
+// asked since its last reading, it writes that thread's CPU time; otherwise it only compares a
+// number. GuestCoreLoads asks while the overlay is on, so with it off nothing is read.
+void SampleCoreCpu(unsigned core);
 // GPU worker only: firmware rejects cross-thread CPU-time sampling.
 void SampleGpuFrame(unsigned frame);
 // What the overlay's line says about the machine (hud.h, HudMachine). The two percentages are

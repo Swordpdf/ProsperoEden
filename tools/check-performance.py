@@ -33,6 +33,9 @@ for bits in (32, 64):
     if development:
         assert f'EDEN_DEV_JIT bits={bits}' in wrapper
         assert 'Eden::Performance::SampleCpu' in wrapper
+    else:
+        # The overlay's core loads: one reading per core after a run, only when asked.
+        assert wrapper.count('Eden::Performance::SampleCoreCpu(m_core_index);') == 1
 
 cmake = (root / 'headless/CMakeLists.txt').read_text()
 assert 'Timer read_timer' not in cmake

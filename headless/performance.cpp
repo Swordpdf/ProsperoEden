@@ -1012,6 +1012,19 @@ void RegisterWorker(const char* name) {
 #endif
 }
 
+void SampleCoreCpu(unsigned core) {
+    if (core >= cpu_samples.size()) return;
+    const auto epoch = sample_epoch.load(std::memory_order_relaxed);
+    if (sampled_epoch[core] == epoch) return;
+    sampled_epoch[core] = epoch;
+    CpuSample sample;
+    sample.epoch = epoch;
+    sample.mono_ns = ClockNs(CLOCK_MONOTONIC);
+    sample.cpu_ns = owner_cpu_clock_valid ? ClockNs(CLOCK_THREAD_CPUTIME_ID) : -ENOTSUP;
+    std::lock_guard lock(workers_mutex);
+    cpu_samples[core] = sample;
+}
+
 void SampleCpu(unsigned core, unsigned long long thread, unsigned long long pc, unsigned svc, unsigned fpcr) {
     const auto epoch = sample_epoch.load(std::memory_order_relaxed);
     if (sampled_epoch.at(core) == epoch) return;
