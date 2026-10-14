@@ -2093,8 +2093,11 @@ if(EDEN_PS5_OPENGL)
         list(APPEND video_sources "${MACRO_OUTPUT}")
     endif()
     file(READ "${PROJECT_SOURCE_DIR}/src/video_core/gpu_thread.h" gpu_thread_header)
+    # 256 entries (upstream: 4096). With 8, a heavy scene (a 3D platformer, ~37 submissions a
+    # frame) filled the queue mid-frame: the guest's render thread waited 0.6-0.8 s of every 5 s
+    # while the GPU worker sat idle 44% of the time, and the game dropped to 40-45 FPS.
     string(REPLACE "using CommandQueue = Common::SPSCQueue<CommandDataContainer>;"
-        "using CommandQueue = Common::SPSCQueue<CommandDataContainer, 8>;"
+        "using CommandQueue = Common::SPSCQueue<CommandDataContainer, 256>;"
         gpu_thread_header "${gpu_thread_header}")
     string(REPLACE "    ~ThreadManager();" "    ~ThreadManager();\n    void Stop() { thread.request_stop(); if (thread.joinable()) thread.join(); }" gpu_thread_header "${gpu_thread_header}")
     if(PS5_NATIVE)
