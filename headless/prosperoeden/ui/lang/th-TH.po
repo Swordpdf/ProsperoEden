@@ -960,6 +960,10 @@ msgstr "กลาง"
 msgid "Memory"
 msgstr "หน่วยความจำ"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Menu keybinds"
+msgstr "ปุ่มเมนู"
+
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
 msgstr "เสียง​เอฟเฟกต์​ของ​เมนู​สร้าง​ด้วย ElevenLabs"
@@ -1564,6 +1568,10 @@ msgstr "สแกน​รหัส​ด้วย​โทรศัพท์ �
 msgid "Scroll"
 msgstr "เลื่อน"
 
+#: pe/ui/game_options.cpp
+msgid "Secondary"
+msgstr "รอง"
+
 #. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
 #: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Sections"
@@ -2035,6 +2043,10 @@ msgstr "มีอะไรใหม่"
 #: pe/ui/update.cpp
 msgid "What's new in version {0}"
 msgstr "มีอะไรใหม่ในเวอร์ชัน {0}"
+
+#: pe/ui/game_options.cpp
+msgid "Which face button does what in the menu."
+msgstr "ปุ่มแอ็กชันใดทำอะไรในเมนู"
 
 #: pe/ui/settings.cpp
 msgid "Who is playing. Each profile keeps its own save data and settings."

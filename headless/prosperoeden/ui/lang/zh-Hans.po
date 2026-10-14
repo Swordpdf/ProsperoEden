@@ -960,6 +960,10 @@ msgstr "中"
 msgid "Memory"
 msgstr "内存"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Menu keybinds"
+msgstr "菜单按键"
+
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
 msgstr "菜单音效使用 ElevenLabs 制作。"
@@ -1564,6 +1568,10 @@ msgstr "用手机扫描此码，或打开下方的地址。"
 msgid "Scroll"
 msgstr "滚动"
 
+#: pe/ui/game_options.cpp
+msgid "Secondary"
+msgstr "次要操作"
+
 #. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
 #: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Sections"
@@ -2035,6 +2043,10 @@ msgstr "新功能"
 #: pe/ui/update.cpp
 msgid "What's new in version {0}"
 msgstr "版本 {0} 的新功能"
+
+#: pe/ui/game_options.cpp
+msgid "Which face button does what in the menu."
+msgstr "菜单中各个动作按键的功能。"
 
 #: pe/ui/settings.cpp
 msgid "Who is playing. Each profile keeps its own save data and settings."
