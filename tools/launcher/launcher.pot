@@ -136,6 +136,10 @@ msgstr ""
 msgid "Back"
 msgstr ""
 
+#: pe/ui/settings.cpp
+msgid "Backend"
+msgstr ""
+
 #: pe/ui/save_sync.cpp
 msgid "Backing up save data"
 msgstr ""
@@ -148,6 +152,14 @@ msgstr ""
 #. An upscaling filter.
 #: settings_store.h
 msgid "Bilinear"
+msgstr ""
+
+#: pe/ui/game_options.cpp
+msgid "Bottom left"
+msgstr ""
+
+#: pe/ui/game_options.cpp
+msgid "Bottom right"
 msgstr ""
 
 #. Button hint: move through the list.
@@ -311,6 +323,10 @@ msgstr ""
 msgid "Controls"
 msgstr ""
 
+#: pe/ui/settings.cpp
+msgid "Corner"
+msgstr ""
+
 #: pe/ui/remote.cpp
 msgid "Could not cancel the download."
 msgstr ""
@@ -345,6 +361,14 @@ msgstr ""
 
 #: pe/ui/multiplayer.cpp
 msgid "Could not start the connection or save its settings."
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "CPU"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "CPU by core"
 msgstr ""
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
@@ -512,6 +536,10 @@ msgid "Edit"
 msgstr ""
 
 #: pe/ui/settings.cpp
+msgid "Enable colors"
+msgstr ""
+
+#: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
 msgstr ""
 
@@ -607,6 +635,10 @@ msgstr ""
 msgid "For every controller. A game can have its own."
 msgstr ""
 
+#: pe/ui/settings.cpp
+msgid "FPS"
+msgstr ""
+
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
 msgstr ""
@@ -625,6 +657,10 @@ msgstr ""
 
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "Frame time"
 msgstr ""
 
 #: settings_store.h
@@ -704,6 +740,10 @@ msgstr ""
 
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "GPU"
 msgstr ""
 
 #: pe/ui/settings.cpp
@@ -841,6 +881,10 @@ msgstr ""
 msgid "LANGUAGES"
 msgstr ""
 
+#: pe/ui/game_options.cpp
+msgid "Large"
+msgstr ""
+
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
 msgid "Larger text"
@@ -906,6 +950,14 @@ msgstr ""
 
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
+msgstr ""
+
+#: pe/ui/game_options.cpp
+msgid "Medium"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "Memory"
 msgstr ""
 
 #: pe/ui/browse.cpp
@@ -1111,6 +1163,18 @@ msgstr ""
 msgid "Output resolution"
 msgstr ""
 
+#: pe/ui/game_options.cpp
+msgid "Overlay corner"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "Overlay options"
+msgstr ""
+
+#: pe/ui/game_options.cpp
+msgid "Overlay size"
+msgstr ""
+
 #. Button hint: jump a page of the list (L1 / R1).
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp, pe/ui/update.cpp
 msgid "Page"
@@ -1156,6 +1220,10 @@ msgstr ""
 #. A settings category: options that make games run faster, at some cost in accuracy.
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "Ping"
 msgstr ""
 
 #. Button and button hint: start the game shown. Keep it to one short word.
@@ -1346,6 +1414,10 @@ msgstr ""
 
 #: pe/ui/browse.cpp
 msgid "REGION"
+msgstr ""
+
+#: pe/ui/game_options.cpp
+msgid "Regular"
 msgstr ""
 
 #: pe/ui/profiles.cpp
@@ -1556,6 +1628,10 @@ msgstr ""
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr ""
 
+#: pe/ui/settings.cpp
+msgid "Size"
+msgstr ""
+
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1580,6 +1656,10 @@ msgstr ""
 
 #: settings_store.h
 msgid "Spanish (Latin America)"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "Speed"
 msgstr ""
 
 #. A DualSense button.
@@ -1777,6 +1857,14 @@ msgstr ""
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
 msgstr ""
 
+#: pe/ui/game_options.cpp
+msgid "Top left"
+msgstr ""
+
+#: pe/ui/game_options.cpp
+msgid "Top right"
+msgstr ""
+
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
 #: pe/ui/game_options.cpp
 msgid "Touchpad"
@@ -1932,6 +2020,10 @@ msgstr ""
 
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "What the FPS overlay's line says, and how the chip is drawn."
 msgstr ""
 
 #. Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.

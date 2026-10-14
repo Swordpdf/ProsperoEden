@@ -87,7 +87,7 @@ enum HudRow : int
     hud_gpu_row,
     hud_mem_row,
     hud_ping_row,
-    hud_cores_row, // the CPU piece as each of the four cores, or only the busiest
+    hud_cores_row, // the CPU piece as each of the four cores (its bit clear), or only the busiest
     kHudRows,
 };
 constexpr int kFrameGenTargets = 6;     // Auto, 60, 90, 120, 144, 240 Hz (settings_store.h)
@@ -1090,7 +1090,8 @@ void Launcher::draw_hud(Canvas &c, float open)
         else
         {
             // One of the line's pieces, on or off.
-            const bool on = (prefs_.hud_fields & (1 << (row - hud_backend_row))) != 0;
+            // "CPU by core" is on while its bit is clear: on in every setting saved before it.
+            const bool on = ((prefs_.hud_fields & (1 << (row - hud_backend_row))) != 0) != (row == hud_cores_row);
             label(row, tr(kNames[row]), kToggle);
             toggle(c, 1292.0f, row_centre(row), on ? 1.0f : 0.0f);
         }

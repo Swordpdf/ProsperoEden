@@ -136,6 +136,10 @@ msgstr "Otomatis"
 msgid "Back"
 msgstr "Kembali"
 
+#: pe/ui/settings.cpp
+msgid "Backend"
+msgstr "Renderer"
+
 #: pe/ui/save_sync.cpp
 msgid "Backing up save data"
 msgstr "Mencadangkan data simpanan"
@@ -149,6 +153,14 @@ msgstr "Bikubik"
 #: settings_store.h
 msgid "Bilinear"
 msgstr "Bilinear"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom left"
+msgstr "Kiri bawah"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom right"
+msgstr "Kanan bawah"
 
 #. Button hint: move through the list.
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp
@@ -311,6 +323,10 @@ msgstr "CONTROLLER"
 msgid "Controls"
 msgstr "Kontrol"
 
+#: pe/ui/settings.cpp
+msgid "Corner"
+msgstr "Sudut"
+
 #: pe/ui/remote.cpp
 msgid "Could not cancel the download."
 msgstr "Tidak dapat membatalkan unduhan."
@@ -346,6 +362,14 @@ msgstr "Gagal menyimpan. Silakan coba lagi."
 #: pe/ui/multiplayer.cpp
 msgid "Could not start the connection or save its settings."
 msgstr "Tidak dapat memulai koneksi atau menyimpan pengaturannya."
+
+#: pe/ui/settings.cpp
+msgid "CPU"
+msgstr "CPU"
+
+#: pe/ui/settings.cpp
+msgid "CPU by core"
+msgstr "CPU per inti"
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -512,6 +536,10 @@ msgid "Edit"
 msgstr "Ketik"
 
 #: pe/ui/settings.cpp
+msgid "Enable colors"
+msgstr "Aktifkan warna"
+
+#: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
 msgstr "Tutup game dan kembali ke menu ini"
 
@@ -607,6 +635,10 @@ msgstr "Mengikuti Pengaturan"
 msgid "For every controller. A game can have its own."
 msgstr "Untuk semua kontroler. Game bisa punya sendiri."
 
+#: pe/ui/settings.cpp
+msgid "FPS"
+msgstr "FPS"
+
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
 msgstr "Penghitung FPS"
@@ -626,6 +658,10 @@ msgstr "Pembuatan bingkai"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."
 msgstr "Pembuatan frame memerlukan Lossless.dll dari Lossless Scaling di folder lossless."
+
+#: pe/ui/settings.cpp
+msgid "Frame time"
+msgstr "Waktu frame"
 
 #: settings_store.h
 msgid "French"
@@ -705,6 +741,10 @@ msgstr "PERSIAPAN AWAL"
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"
 msgstr "Beralih ke offline"
+
+#: pe/ui/settings.cpp
+msgid "GPU"
+msgstr "GPU"
 
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
@@ -841,6 +881,10 @@ msgstr "Bahasa"
 msgid "LANGUAGES"
 msgstr "BAHASA"
 
+#: pe/ui/game_options.cpp
+msgid "Large"
+msgstr "Besar"
+
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
 msgid "Larger text"
@@ -907,6 +951,14 @@ msgstr "Akurasi GPU terendah: lebih cepat di game berat, tetapi grafis bisa sala
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "Buat menu lebih mudah dilihat dan diikuti."
+
+#: pe/ui/game_options.cpp
+msgid "Medium"
+msgstr "Sedang"
+
+#: pe/ui/settings.cpp
+msgid "Memory"
+msgstr "Memori"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1111,6 +1163,18 @@ msgstr "Options"
 msgid "Output resolution"
 msgstr "Resolusi keluaran"
 
+#: pe/ui/game_options.cpp
+msgid "Overlay corner"
+msgstr "Sudut penghitung"
+
+#: pe/ui/settings.cpp
+msgid "Overlay options"
+msgstr "Opsi penghitung"
+
+#: pe/ui/game_options.cpp
+msgid "Overlay size"
+msgstr "Ukuran penghitung"
+
 #. Button hint: jump a page of the list (L1 / R1).
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp, pe/ui/update.cpp
 msgid "Page"
@@ -1157,6 +1221,10 @@ msgstr "Patch"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "Performa"
+
+#: pe/ui/settings.cpp
+msgid "Ping"
+msgstr "Ping"
 
 #. Button and button hint: start the game shown. Keep it to one short word.
 #: pe/ui/home.cpp, pe/ui/library.cpp
@@ -1347,6 +1415,10 @@ msgstr "Laju penyegaran"
 #: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "WILAYAH"
+
+#: pe/ui/game_options.cpp
+msgid "Regular"
+msgstr "Biasa"
 
 #: pe/ui/profiles.cpp
 msgid "Remove"
@@ -1556,6 +1628,10 @@ msgstr "Menampilkan daftar sebelumnya."
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "Masuk ke {0} sebagai pengguna pemilik data simpanan profil ini."
 
+#: pe/ui/settings.cpp
+msgid "Size"
+msgstr "Ukuran"
+
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1581,6 +1657,10 @@ msgstr "Spanyol"
 #: settings_store.h
 msgid "Spanish (Latin America)"
 msgstr "Spanyol (Amerika Latin)"
+
+#: pe/ui/settings.cpp
+msgid "Speed"
+msgstr "Kecepatan"
 
 #. A DualSense button.
 #: pe/ui/game_options.cpp
@@ -1777,6 +1857,14 @@ msgstr "Ruang ini memakai versi protokol yang berbeda."
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
 msgstr "Untuk mengimpor, salin folder Ryujinx ke ryujinx/ atau data tersimpan ke save-import/{0}/, di samping roms/."
 
+#: pe/ui/game_options.cpp
+msgid "Top left"
+msgstr "Kiri atas"
+
+#: pe/ui/game_options.cpp
+msgid "Top right"
+msgstr "Kanan atas"
+
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
 #: pe/ui/game_options.cpp
 msgid "Touchpad"
@@ -1933,6 +2021,10 @@ msgstr "Menunggu {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "Menunggu untuk diunduh"
+
+#: pe/ui/settings.cpp
+msgid "What the FPS overlay's line says, and how the chip is drawn."
+msgstr "Apa yang ditampilkan baris penghitung FPS dan bagaimana tampilannya."
 
 #. Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.
 #: pe/ui/update.cpp

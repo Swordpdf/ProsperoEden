@@ -136,6 +136,10 @@ msgstr "Automatikus"
 msgid "Back"
 msgstr "Vissza"
 
+#: pe/ui/settings.cpp
+msgid "Backend"
+msgstr "Renderelő"
+
 #: pe/ui/save_sync.cpp
 msgid "Backing up save data"
 msgstr "Biztonsági másolat készül a mentésekről"
@@ -149,6 +153,14 @@ msgstr "Bikubikus"
 #: settings_store.h
 msgid "Bilinear"
 msgstr "Bilineáris"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom left"
+msgstr "Bal alsó"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom right"
+msgstr "Jobb alsó"
 
 #. Button hint: move through the list.
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp
@@ -311,6 +323,10 @@ msgstr "VEZÉRLŐK"
 msgid "Controls"
 msgstr "Irányítás"
 
+#: pe/ui/settings.cpp
+msgid "Corner"
+msgstr "Sarok"
+
 #: pe/ui/remote.cpp
 msgid "Could not cancel the download."
 msgstr "Nem sikerült megszakítani a letöltést."
@@ -346,6 +362,14 @@ msgstr "Nem sikerült menteni. Próbáld újra."
 #: pe/ui/multiplayer.cpp
 msgid "Could not start the connection or save its settings."
 msgstr "Nem sikerült elindítani a kapcsolatot vagy menteni a beállításait."
+
+#: pe/ui/settings.cpp
+msgid "CPU"
+msgstr "CPU"
+
+#: pe/ui/settings.cpp
+msgid "CPU by core"
+msgstr "CPU magonként"
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -512,6 +536,10 @@ msgid "Edit"
 msgstr "Szerkesztés"
 
 #: pe/ui/settings.cpp
+msgid "Enable colors"
+msgstr "Színek bekapcsolása"
+
+#: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
 msgstr "Játék bezárása és visszatérés ebbe a menübe"
 
@@ -607,6 +635,10 @@ msgstr "A Beállítások szerint"
 msgid "For every controller. A game can have its own."
 msgstr "Minden kontrollerhez. Egy játéknak lehet sajátja."
 
+#: pe/ui/settings.cpp
+msgid "FPS"
+msgstr "FPS"
+
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
 msgstr "FPS-kijelző"
@@ -626,6 +658,10 @@ msgstr "Képkockagenerálás"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."
 msgstr "A képkockagenerálásnak a Lossless Scaling Lossless.dll fájlja kell a lossless mappában."
+
+#: pe/ui/settings.cpp
+msgid "Frame time"
+msgstr "Képkockaidő"
 
 #: settings_store.h
 msgid "French"
@@ -705,6 +741,10 @@ msgstr "ELSŐ LÉPÉSEK"
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"
 msgstr "Váltás offline módra"
+
+#: pe/ui/settings.cpp
+msgid "GPU"
+msgstr "GPU"
 
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
@@ -841,6 +881,10 @@ msgstr "Nyelv"
 msgid "LANGUAGES"
 msgstr "NYELVEK"
 
+#: pe/ui/game_options.cpp
+msgid "Large"
+msgstr "Nagy"
+
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
 msgid "Larger text"
@@ -907,6 +951,14 @@ msgstr "Legalacsonyabb GPU-pontosság: gyorsabb az igényes játékokban, de a g
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "Legyen a menü könnyebben látható és követhető."
+
+#: pe/ui/game_options.cpp
+msgid "Medium"
+msgstr "Közepes"
+
+#: pe/ui/settings.cpp
+msgid "Memory"
+msgstr "Memória"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1111,6 +1163,18 @@ msgstr "Options"
 msgid "Output resolution"
 msgstr "Kimeneti felbontás"
 
+#: pe/ui/game_options.cpp
+msgid "Overlay corner"
+msgstr "A kijelző sarka"
+
+#: pe/ui/settings.cpp
+msgid "Overlay options"
+msgstr "A kijelző beállításai"
+
+#: pe/ui/game_options.cpp
+msgid "Overlay size"
+msgstr "A kijelző mérete"
+
 #. Button hint: jump a page of the list (L1 / R1).
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp, pe/ui/update.cpp
 msgid "Page"
@@ -1157,6 +1221,10 @@ msgstr "Patch"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "Teljesítmény"
+
+#: pe/ui/settings.cpp
+msgid "Ping"
+msgstr "Ping"
 
 #. Button and button hint: start the game shown. Keep it to one short word.
 #: pe/ui/home.cpp, pe/ui/library.cpp
@@ -1347,6 +1415,10 @@ msgstr "Képfrissítés"
 #: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "RÉGIÓ"
+
+#: pe/ui/game_options.cpp
+msgid "Regular"
+msgstr "Normál"
 
 #: pe/ui/profiles.cpp
 msgid "Remove"
@@ -1556,6 +1628,10 @@ msgstr "Az előző lista látható."
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "Jelentkezz be ide: {0}, azzal a felhasználóval, akié a profil mentései."
 
+#: pe/ui/settings.cpp
+msgid "Size"
+msgstr "Méret"
+
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1581,6 +1657,10 @@ msgstr "Spanyol"
 #: settings_store.h
 msgid "Spanish (Latin America)"
 msgstr "Spanyol (Latin-Amerika)"
+
+#: pe/ui/settings.cpp
+msgid "Speed"
+msgstr "Sebesség"
 
 #. A DualSense button.
 #: pe/ui/game_options.cpp
@@ -1777,6 +1857,14 @@ msgstr "Ez a szoba más protokollverziót használ."
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
 msgstr "Az importáláshoz másolj egy Ryujinx-mappát a ryujinx/ vagy egy mentést a save-import/{0}/ mappába, a roms/ mellé."
 
+#: pe/ui/game_options.cpp
+msgid "Top left"
+msgstr "Bal felső"
+
+#: pe/ui/game_options.cpp
+msgid "Top right"
+msgstr "Jobb felső"
+
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
 #: pe/ui/game_options.cpp
 msgid "Touchpad"
@@ -1933,6 +2021,10 @@ msgstr "Várakozás: {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "Letöltésre vár"
+
+#: pe/ui/settings.cpp
+msgid "What the FPS overlay's line says, and how the chip is drawn."
+msgstr "Mit mutat az FPS-kijelző sora, és hogyan jelenik meg."
 
 #. Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.
 #: pe/ui/update.cpp

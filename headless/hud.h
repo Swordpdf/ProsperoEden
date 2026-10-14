@@ -116,10 +116,11 @@ inline constexpr uint32_t kHudFieldCpu = 1u << 4;
 inline constexpr uint32_t kHudFieldGpu = 1u << 5;
 inline constexpr uint32_t kHudFieldMem = 1u << 6;
 inline constexpr uint32_t kHudFieldPing = 1u << 7;
-// Not a piece of its own but how the CPU piece reads: each of the four emulated cores, or only
-// the busiest of them (the one that holds a game back).
-inline constexpr uint32_t kHudFieldCores = 1u << 8;
-inline constexpr uint32_t kHudFieldAll = 0x1ffu;
+// Not a piece of its own but how the CPU piece reads: set, only the busiest of the four emulated
+// cores (the one that holds a game back); clear, as in every setting saved before there was a
+// choice, each of the four.
+inline constexpr uint32_t kHudFieldOneCore = 1u << 8;
+inline constexpr uint32_t kHudFieldAll = 0xffu;
 // True while the snapshot is the loading screen rather than the overlay's line.
 inline bool HudLoading(const HudSnapshot& hud) {
     return hud.loading != 0 && (hud.loading & kHudOverlayFlag) == 0;
@@ -288,7 +289,7 @@ inline std::array<char, kHudTextMax + 1> FormatHudText(const HudClock& clock, co
     if (fields & kHudFieldCpu) {
         const bool by_core = machine.cores[0] != ~0u || machine.cores[1] != ~0u || machine.cores[2] != ~0u ||
                              machine.cores[3] != ~0u;
-        if (by_core && (fields & kHudFieldCores) == 0) {
+        if (by_core && (fields & kHudFieldOneCore) != 0) {
             // Only the busiest core.
             unsigned busiest = 0;
             for (const unsigned load : machine.cores)

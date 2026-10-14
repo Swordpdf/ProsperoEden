@@ -136,6 +136,10 @@ msgstr "Automaattinen"
 msgid "Back"
 msgstr "Takaisin"
 
+#: pe/ui/settings.cpp
+msgid "Backend"
+msgstr "Renderöijä"
+
 #: pe/ui/save_sync.cpp
 msgid "Backing up save data"
 msgstr "Varmuuskopioidaan tallennuksia"
@@ -149,6 +153,14 @@ msgstr "Bikuubinen"
 #: settings_store.h
 msgid "Bilinear"
 msgstr "Bilineaarinen"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom left"
+msgstr "Vasen alakulma"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom right"
+msgstr "Oikea alakulma"
 
 #. Button hint: move through the list.
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp
@@ -311,6 +323,10 @@ msgstr "OHJAIMET"
 msgid "Controls"
 msgstr "Ohjaus"
 
+#: pe/ui/settings.cpp
+msgid "Corner"
+msgstr "Kulma"
+
 #: pe/ui/remote.cpp
 msgid "Could not cancel the download."
 msgstr "Latausta ei voitu peruuttaa."
@@ -346,6 +362,14 @@ msgstr "Tallennus epäonnistui. Yritä uudelleen."
 #: pe/ui/multiplayer.cpp
 msgid "Could not start the connection or save its settings."
 msgstr "Yhteyttä ei voitu aloittaa tai sen asetuksia tallentaa."
+
+#: pe/ui/settings.cpp
+msgid "CPU"
+msgstr "CPU"
+
+#: pe/ui/settings.cpp
+msgid "CPU by core"
+msgstr "CPU ytimittäin"
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -512,6 +536,10 @@ msgid "Edit"
 msgstr "Muokkaa"
 
 #: pe/ui/settings.cpp
+msgid "Enable colors"
+msgstr "Ota värit käyttöön"
+
+#: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
 msgstr "Lopeta peli ja palaa tähän valikkoon"
 
@@ -607,6 +635,10 @@ msgstr "Kuten Asetuksissa"
 msgid "For every controller. A game can have its own."
 msgstr "Kaikille ohjaimille. Pelillä voi olla oma."
 
+#: pe/ui/settings.cpp
+msgid "FPS"
+msgstr "FPS"
+
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
 msgstr "FPS-laskuri"
@@ -626,6 +658,10 @@ msgstr "Kehysten luonti"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."
 msgstr "Kuvien generointi tarvitsee Lossless Scalingin Lossless.dll-tiedoston kansioon lossless."
+
+#: pe/ui/settings.cpp
+msgid "Frame time"
+msgstr "Kuva-aika"
 
 #: settings_store.h
 msgid "French"
@@ -705,6 +741,10 @@ msgstr "NÄIN ALOITAT"
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"
 msgstr "Siirry offline-tilaan"
+
+#: pe/ui/settings.cpp
+msgid "GPU"
+msgstr "GPU"
 
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
@@ -841,6 +881,10 @@ msgstr "Kieli"
 msgid "LANGUAGES"
 msgstr "KIELET"
 
+#: pe/ui/game_options.cpp
+msgid "Large"
+msgstr "Suuri"
+
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
 msgid "Larger text"
@@ -907,6 +951,14 @@ msgstr "Alin GPU-tarkkuus: nopeampi vaativissa peleissä, mutta grafiikka voi n�
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "Tee valikosta helpompi nähdä ja seurata."
+
+#: pe/ui/game_options.cpp
+msgid "Medium"
+msgstr "Keskikoko"
+
+#: pe/ui/settings.cpp
+msgid "Memory"
+msgstr "Muisti"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1111,6 +1163,18 @@ msgstr "Options"
 msgid "Output resolution"
 msgstr "Lähtöresoluutio"
 
+#: pe/ui/game_options.cpp
+msgid "Overlay corner"
+msgstr "Laskurin kulma"
+
+#: pe/ui/settings.cpp
+msgid "Overlay options"
+msgstr "Laskurin asetukset"
+
+#: pe/ui/game_options.cpp
+msgid "Overlay size"
+msgstr "Laskurin koko"
+
 #. Button hint: jump a page of the list (L1 / R1).
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp, pe/ui/update.cpp
 msgid "Page"
@@ -1157,6 +1221,10 @@ msgstr "Paikkaus"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "Suorituskyky"
+
+#: pe/ui/settings.cpp
+msgid "Ping"
+msgstr "Ping"
 
 #. Button and button hint: start the game shown. Keep it to one short word.
 #: pe/ui/home.cpp, pe/ui/library.cpp
@@ -1347,6 +1415,10 @@ msgstr "Virkistystaajuus"
 #: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "ALUE"
+
+#: pe/ui/game_options.cpp
+msgid "Regular"
+msgstr "Tavallinen"
 
 #: pe/ui/profiles.cpp
 msgid "Remove"
@@ -1556,6 +1628,10 @@ msgstr "Näytetään edellinen luettelo."
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "Kirjaudu palveluun {0} käyttäjänä, jolle tämän profiilin tallennukset kuuluvat."
 
+#: pe/ui/settings.cpp
+msgid "Size"
+msgstr "Koko"
+
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1581,6 +1657,10 @@ msgstr "Espanja"
 #: settings_store.h
 msgid "Spanish (Latin America)"
 msgstr "Espanja (Latinalainen Amerikka)"
+
+#: pe/ui/settings.cpp
+msgid "Speed"
+msgstr "Nopeus"
 
 #. A DualSense button.
 #: pe/ui/game_options.cpp
@@ -1777,6 +1857,14 @@ msgstr "Tämä huone käyttää eri protokollaversiota."
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
 msgstr "Tuontia varten kopioi Ryujinx-kansio kansioon ryujinx/ tai tallennus kansioon save-import/{0}/, kansion roms/ viereen."
 
+#: pe/ui/game_options.cpp
+msgid "Top left"
+msgstr "Vasen yläkulma"
+
+#: pe/ui/game_options.cpp
+msgid "Top right"
+msgstr "Oikea yläkulma"
+
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
 #: pe/ui/game_options.cpp
 msgid "Touchpad"
@@ -1933,6 +2021,10 @@ msgstr "Odottaa: {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "Odottaa latausta"
+
+#: pe/ui/settings.cpp
+msgid "What the FPS overlay's line says, and how the chip is drawn."
+msgstr "Mitä FPS-laskurin rivi näyttää ja miten se piirretään."
 
 #. Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.
 #: pe/ui/update.cpp

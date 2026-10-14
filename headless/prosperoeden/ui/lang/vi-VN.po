@@ -136,6 +136,10 @@ msgstr "Tự động"
 msgid "Back"
 msgstr "Quay lại"
 
+#: pe/ui/settings.cpp
+msgid "Backend"
+msgstr "Trình kết xuất"
+
 #: pe/ui/save_sync.cpp
 msgid "Backing up save data"
 msgstr "Đang sao lưu dữ liệu lưu"
@@ -149,6 +153,14 @@ msgstr "Bicubic"
 #: settings_store.h
 msgid "Bilinear"
 msgstr "Bilinear"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom left"
+msgstr "Dưới trái"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom right"
+msgstr "Dưới phải"
 
 #. Button hint: move through the list.
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp
@@ -311,6 +323,10 @@ msgstr "BỘ ĐIỀU KHIỂN"
 msgid "Controls"
 msgstr "Điều khiển"
 
+#: pe/ui/settings.cpp
+msgid "Corner"
+msgstr "Góc"
+
 #: pe/ui/remote.cpp
 msgid "Could not cancel the download."
 msgstr "Không thể hủy tải xuống."
@@ -346,6 +362,14 @@ msgstr "Không thể lưu. Vui lòng thử lại."
 #: pe/ui/multiplayer.cpp
 msgid "Could not start the connection or save its settings."
 msgstr "Không thể bắt đầu kết nối hoặc lưu thiết lập."
+
+#: pe/ui/settings.cpp
+msgid "CPU"
+msgstr "CPU"
+
+#: pe/ui/settings.cpp
+msgid "CPU by core"
+msgstr "CPU theo từng nhân"
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -512,6 +536,10 @@ msgid "Edit"
 msgstr "Sửa"
 
 #: pe/ui/settings.cpp
+msgid "Enable colors"
+msgstr "Bật màu"
+
+#: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
 msgstr "Đóng trò chơi và quay lại menu này"
 
@@ -607,6 +635,10 @@ msgstr "Theo Cài đặt"
 msgid "For every controller. A game can have its own."
 msgstr "Cho mọi tay cầm. Mỗi trò chơi có thể có cách gán riêng."
 
+#: pe/ui/settings.cpp
+msgid "FPS"
+msgstr "FPS"
+
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
 msgstr "Bộ đếm FPS"
@@ -626,6 +658,10 @@ msgstr "Tạo khung hình"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."
 msgstr "Tạo khung hình cần Lossless.dll của Lossless Scaling trong thư mục lossless."
+
+#: pe/ui/settings.cpp
+msgid "Frame time"
+msgstr "Thời gian khung hình"
 
 #: settings_store.h
 msgid "French"
@@ -705,6 +741,10 @@ msgstr "BẮT ĐẦU"
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"
 msgstr "Ngoại tuyến"
+
+#: pe/ui/settings.cpp
+msgid "GPU"
+msgstr "GPU"
 
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
@@ -841,6 +881,10 @@ msgstr "Ngôn ngữ"
 msgid "LANGUAGES"
 msgstr "NGÔN NGỮ"
 
+#: pe/ui/game_options.cpp
+msgid "Large"
+msgstr "Lớn"
+
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
 msgid "Larger text"
@@ -907,6 +951,14 @@ msgstr "Độ chính xác GPU thấp nhất: nhanh hơn trong trò chơi nặng,
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "Giúp menu dễ nhìn và dễ theo dõi hơn."
+
+#: pe/ui/game_options.cpp
+msgid "Medium"
+msgstr "Vừa"
+
+#: pe/ui/settings.cpp
+msgid "Memory"
+msgstr "Bộ nhớ"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1111,6 +1163,18 @@ msgstr "Options"
 msgid "Output resolution"
 msgstr "Độ phân giải đầu ra"
 
+#: pe/ui/game_options.cpp
+msgid "Overlay corner"
+msgstr "Góc bộ đếm"
+
+#: pe/ui/settings.cpp
+msgid "Overlay options"
+msgstr "Tùy chọn bộ đếm"
+
+#: pe/ui/game_options.cpp
+msgid "Overlay size"
+msgstr "Kích thước bộ đếm"
+
 #. Button hint: jump a page of the list (L1 / R1).
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp, pe/ui/update.cpp
 msgid "Page"
@@ -1157,6 +1221,10 @@ msgstr "Bản vá"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "Hiệu năng"
+
+#: pe/ui/settings.cpp
+msgid "Ping"
+msgstr "Ping"
 
 #. Button and button hint: start the game shown. Keep it to one short word.
 #: pe/ui/home.cpp, pe/ui/library.cpp
@@ -1347,6 +1415,10 @@ msgstr "Tần số quét"
 #: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "KHU VỰC"
+
+#: pe/ui/game_options.cpp
+msgid "Regular"
+msgstr "Thường"
 
 #: pe/ui/profiles.cpp
 msgid "Remove"
@@ -1556,6 +1628,10 @@ msgstr "Đang hiển thị danh sách trước đó."
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "Đăng nhập vào {0} bằng người dùng sở hữu dữ liệu lưu của hồ sơ này."
 
+#: pe/ui/settings.cpp
+msgid "Size"
+msgstr "Kích thước"
+
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1581,6 +1657,10 @@ msgstr "Tiếng Tây Ban Nha"
 #: settings_store.h
 msgid "Spanish (Latin America)"
 msgstr "Tiếng Tây Ban Nha (Mỹ Latinh)"
+
+#: pe/ui/settings.cpp
+msgid "Speed"
+msgstr "Tốc độ"
 
 #. A DualSense button.
 #: pe/ui/game_options.cpp
@@ -1777,6 +1857,14 @@ msgstr "Phòng này dùng phiên bản giao thức khác."
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
 msgstr "Để nhập, hãy sao chép thư mục Ryujinx vào ryujinx/ hoặc bản lưu vào save-import/{0}/, cạnh roms/."
 
+#: pe/ui/game_options.cpp
+msgid "Top left"
+msgstr "Trên trái"
+
+#: pe/ui/game_options.cpp
+msgid "Top right"
+msgstr "Trên phải"
+
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
 #: pe/ui/game_options.cpp
 msgid "Touchpad"
@@ -1933,6 +2021,10 @@ msgstr "Đang chờ {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "Đang chờ tải xuống"
+
+#: pe/ui/settings.cpp
+msgid "What the FPS overlay's line says, and how the chip is drawn."
+msgstr "Dòng của bộ đếm FPS hiển thị gì và được vẽ ra sao."
 
 #. Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.
 #: pe/ui/update.cpp

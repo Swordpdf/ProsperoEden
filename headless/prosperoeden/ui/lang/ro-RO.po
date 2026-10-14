@@ -136,6 +136,10 @@ msgstr "Automat"
 msgid "Back"
 msgstr "Înapoi"
 
+#: pe/ui/settings.cpp
+msgid "Backend"
+msgstr "Randare"
+
 #: pe/ui/save_sync.cpp
 msgid "Backing up save data"
 msgstr "Se face copia de rezervă a salvărilor"
@@ -149,6 +153,14 @@ msgstr "Bicubic"
 #: settings_store.h
 msgid "Bilinear"
 msgstr "Biliniar"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom left"
+msgstr "Stânga jos"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom right"
+msgstr "Dreapta jos"
 
 #. Button hint: move through the list.
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp
@@ -311,6 +323,10 @@ msgstr "CONTROLERE"
 msgid "Controls"
 msgstr "Comenzi"
 
+#: pe/ui/settings.cpp
+msgid "Corner"
+msgstr "Colț"
+
 #: pe/ui/remote.cpp
 msgid "Could not cancel the download."
 msgstr "Descărcarea nu a putut fi anulată."
@@ -346,6 +362,14 @@ msgstr "Nu s-a putut salva. Încearcă din nou."
 #: pe/ui/multiplayer.cpp
 msgid "Could not start the connection or save its settings."
 msgstr "Conexiunea nu a putut fi pornită sau setările ei nu au putut fi salvate."
+
+#: pe/ui/settings.cpp
+msgid "CPU"
+msgstr "CPU"
+
+#: pe/ui/settings.cpp
+msgid "CPU by core"
+msgstr "CPU pe nucleu"
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -512,6 +536,10 @@ msgid "Edit"
 msgstr "Editare"
 
 #: pe/ui/settings.cpp
+msgid "Enable colors"
+msgstr "Activează culorile"
+
+#: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
 msgstr "Închide jocul și revine la acest meniu"
 
@@ -607,6 +635,10 @@ msgstr "Ca în Setări"
 msgid "For every controller. A game can have its own."
 msgstr "Pentru toate controlerele. Un joc poate avea una proprie."
 
+#: pe/ui/settings.cpp
+msgid "FPS"
+msgstr "FPS"
+
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
 msgstr "Contor FPS"
@@ -626,6 +658,10 @@ msgstr "Generare de cadre"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."
 msgstr "Generarea de cadre are nevoie de Lossless.dll, din Lossless Scaling, în dosarul lossless."
+
+#: pe/ui/settings.cpp
+msgid "Frame time"
+msgstr "Timp cadru"
 
 #: settings_store.h
 msgid "French"
@@ -705,6 +741,10 @@ msgstr "PRIMII PAȘI"
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"
 msgstr "Treci offline"
+
+#: pe/ui/settings.cpp
+msgid "GPU"
+msgstr "GPU"
 
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
@@ -841,6 +881,10 @@ msgstr "Limbă"
 msgid "LANGUAGES"
 msgstr "LIMBI"
 
+#: pe/ui/game_options.cpp
+msgid "Large"
+msgstr "Mare"
+
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
 msgid "Larger text"
@@ -907,6 +951,14 @@ msgstr "Cea mai mică precizie GPU: mai rapidă în jocurile solicitante, dar gr
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "Fă meniul mai ușor de văzut și de urmărit."
+
+#: pe/ui/game_options.cpp
+msgid "Medium"
+msgstr "Mediu"
+
+#: pe/ui/settings.cpp
+msgid "Memory"
+msgstr "Memorie"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1111,6 +1163,18 @@ msgstr "Options"
 msgid "Output resolution"
 msgstr "Rezoluție de ieșire"
 
+#: pe/ui/game_options.cpp
+msgid "Overlay corner"
+msgstr "Colțul contorului"
+
+#: pe/ui/settings.cpp
+msgid "Overlay options"
+msgstr "Opțiuni contor"
+
+#: pe/ui/game_options.cpp
+msgid "Overlay size"
+msgstr "Mărimea contorului"
+
 #. Button hint: jump a page of the list (L1 / R1).
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp, pe/ui/update.cpp
 msgid "Page"
@@ -1157,6 +1221,10 @@ msgstr "Patch"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "Performanță"
+
+#: pe/ui/settings.cpp
+msgid "Ping"
+msgstr "Ping"
 
 #. Button and button hint: start the game shown. Keep it to one short word.
 #: pe/ui/home.cpp, pe/ui/library.cpp
@@ -1347,6 +1415,10 @@ msgstr "Rată de reîmprospătare"
 #: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "REGIUNE"
+
+#: pe/ui/game_options.cpp
+msgid "Regular"
+msgstr "Normal"
 
 #: pe/ui/profiles.cpp
 msgid "Remove"
@@ -1556,6 +1628,10 @@ msgstr "Se afișează lista anterioară."
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "Autentifică-te pe {0} ca utilizatorul căruia îi aparțin salvările acestui profil."
 
+#: pe/ui/settings.cpp
+msgid "Size"
+msgstr "Mărime"
+
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1581,6 +1657,10 @@ msgstr "Spaniolă"
 #: settings_store.h
 msgid "Spanish (Latin America)"
 msgstr "Spaniolă (America Latină)"
+
+#: pe/ui/settings.cpp
+msgid "Speed"
+msgstr "Viteză"
 
 #. A DualSense button.
 #: pe/ui/game_options.cpp
@@ -1777,6 +1857,14 @@ msgstr "Această cameră folosește o altă versiune de protocol."
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
 msgstr "Pentru import, copiază un folder Ryujinx în ryujinx/ sau o salvare în save-import/{0}/, lângă roms/."
 
+#: pe/ui/game_options.cpp
+msgid "Top left"
+msgstr "Stânga sus"
+
+#: pe/ui/game_options.cpp
+msgid "Top right"
+msgstr "Dreapta sus"
+
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
 #: pe/ui/game_options.cpp
 msgid "Touchpad"
@@ -1933,6 +2021,10 @@ msgstr "Se așteaptă {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "Așteaptă descărcarea"
+
+#: pe/ui/settings.cpp
+msgid "What the FPS overlay's line says, and how the chip is drawn."
+msgstr "Ce arată linia contorului FPS și cum este desenată."
 
 #. Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.
 #: pe/ui/update.cpp

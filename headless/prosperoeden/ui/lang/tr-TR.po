@@ -136,6 +136,10 @@ msgstr "Otomatik"
 msgid "Back"
 msgstr "Geri"
 
+#: pe/ui/settings.cpp
+msgid "Backend"
+msgstr "İşleyici"
+
 #: pe/ui/save_sync.cpp
 msgid "Backing up save data"
 msgstr "Kaydedilen veriler yedekleniyor"
@@ -149,6 +153,14 @@ msgstr "Bikübik"
 #: settings_store.h
 msgid "Bilinear"
 msgstr "Bilineer"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom left"
+msgstr "Sol alt"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom right"
+msgstr "Sağ alt"
 
 #. Button hint: move through the list.
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp
@@ -311,6 +323,10 @@ msgstr "KONTROL CİHAZLARI"
 msgid "Controls"
 msgstr "Kontroller"
 
+#: pe/ui/settings.cpp
+msgid "Corner"
+msgstr "Köşe"
+
 #: pe/ui/remote.cpp
 msgid "Could not cancel the download."
 msgstr "İndirme iptal edilemedi."
@@ -346,6 +362,14 @@ msgstr "Kaydedilemedi. Lütfen tekrar deneyin."
 #: pe/ui/multiplayer.cpp
 msgid "Could not start the connection or save its settings."
 msgstr "Bağlantı başlatılamadı veya ayarları kaydedilemedi."
+
+#: pe/ui/settings.cpp
+msgid "CPU"
+msgstr "CPU"
+
+#: pe/ui/settings.cpp
+msgid "CPU by core"
+msgstr "Çekirdek başına CPU"
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -512,6 +536,10 @@ msgid "Edit"
 msgstr "Düzenle"
 
 #: pe/ui/settings.cpp
+msgid "Enable colors"
+msgstr "Renkleri etkinleştir"
+
+#: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
 msgstr "Oyunu kapatıp bu menüye döner"
 
@@ -607,6 +635,10 @@ msgstr "Ayarlara uyar"
 msgid "For every controller. A game can have its own."
 msgstr "Tüm kontrolcüler için. Bir oyunun kendine ait olabilir."
 
+#: pe/ui/settings.cpp
+msgid "FPS"
+msgstr "FPS"
+
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
 msgstr "FPS sayacı"
@@ -626,6 +658,10 @@ msgstr "Kare oluşturma"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."
 msgstr "Kare üretimi için lossless klasöründe Lossless Scaling'in Lossless.dll dosyası gerekir."
+
+#: pe/ui/settings.cpp
+msgid "Frame time"
+msgstr "Kare süresi"
 
 #: settings_store.h
 msgid "French"
@@ -705,6 +741,10 @@ msgstr "BAŞLARKEN"
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"
 msgstr "Çevrimdışı ol"
+
+#: pe/ui/settings.cpp
+msgid "GPU"
+msgstr "GPU"
 
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
@@ -841,6 +881,10 @@ msgstr "Dil"
 msgid "LANGUAGES"
 msgstr "DİLLER"
 
+#: pe/ui/game_options.cpp
+msgid "Large"
+msgstr "Büyük"
+
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
 msgid "Larger text"
@@ -907,6 +951,14 @@ msgstr "En düşük GPU doğruluğu: zorlu oyunlarda daha hızlıdır, ancak gra
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "Menüyü görmeyi ve takip etmeyi kolaylaştırın."
+
+#: pe/ui/game_options.cpp
+msgid "Medium"
+msgstr "Orta"
+
+#: pe/ui/settings.cpp
+msgid "Memory"
+msgstr "Bellek"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1111,6 +1163,18 @@ msgstr "Options"
 msgid "Output resolution"
 msgstr "Çıkış çözünürlüğü"
 
+#: pe/ui/game_options.cpp
+msgid "Overlay corner"
+msgstr "Sayaç köşesi"
+
+#: pe/ui/settings.cpp
+msgid "Overlay options"
+msgstr "Sayaç seçenekleri"
+
+#: pe/ui/game_options.cpp
+msgid "Overlay size"
+msgstr "Sayaç boyutu"
+
 #. Button hint: jump a page of the list (L1 / R1).
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp, pe/ui/update.cpp
 msgid "Page"
@@ -1157,6 +1221,10 @@ msgstr "Yama"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "Performans"
+
+#: pe/ui/settings.cpp
+msgid "Ping"
+msgstr "Ping"
 
 #. Button and button hint: start the game shown. Keep it to one short word.
 #: pe/ui/home.cpp, pe/ui/library.cpp
@@ -1347,6 +1415,10 @@ msgstr "Yenileme hızı"
 #: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "BÖLGE"
+
+#: pe/ui/game_options.cpp
+msgid "Regular"
+msgstr "Normal"
 
 #: pe/ui/profiles.cpp
 msgid "Remove"
@@ -1556,6 +1628,10 @@ msgstr "Önceki liste gösteriliyor."
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "{0} üzerinde, bu profilin kaydedilen verilerinin ait olduğu kullanıcı olarak oturum açın."
 
+#: pe/ui/settings.cpp
+msgid "Size"
+msgstr "Boyut"
+
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1581,6 +1657,10 @@ msgstr "İspanyolca"
 #: settings_store.h
 msgid "Spanish (Latin America)"
 msgstr "İspanyolca (Latin Amerika)"
+
+#: pe/ui/settings.cpp
+msgid "Speed"
+msgstr "Hız"
 
 #. A DualSense button.
 #: pe/ui/game_options.cpp
@@ -1777,6 +1857,14 @@ msgstr "Bu oda farklı bir protokol sürümü kullanıyor."
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
 msgstr "İçe aktarmak için roms/ yanındaki ryujinx/ içine bir Ryujinx klasörü veya save-import/{0}/ içine bir kayıt kopyalayın."
 
+#: pe/ui/game_options.cpp
+msgid "Top left"
+msgstr "Sol üst"
+
+#: pe/ui/game_options.cpp
+msgid "Top right"
+msgstr "Sağ üst"
+
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
 #: pe/ui/game_options.cpp
 msgid "Touchpad"
@@ -1933,6 +2021,10 @@ msgstr "{0} bekleniyor"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "İndirilmeyi bekliyor"
+
+#: pe/ui/settings.cpp
+msgid "What the FPS overlay's line says, and how the chip is drawn."
+msgstr "FPS sayacı satırının ne gösterdiği ve nasıl çizildiği."
 
 #. Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.
 #: pe/ui/update.cpp

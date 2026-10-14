@@ -136,6 +136,10 @@ msgstr "Automaticky"
 msgid "Back"
 msgstr "Zpět"
 
+#: pe/ui/settings.cpp
+msgid "Backend"
+msgstr "Renderer"
+
 #: pe/ui/save_sync.cpp
 msgid "Backing up save data"
 msgstr "Zálohují se uložená data"
@@ -149,6 +153,14 @@ msgstr "Bikubický"
 #: settings_store.h
 msgid "Bilinear"
 msgstr "Bilineární"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom left"
+msgstr "Vlevo dole"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom right"
+msgstr "Vpravo dole"
 
 #. Button hint: move through the list.
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp
@@ -311,6 +323,10 @@ msgstr "OVLADAČE"
 msgid "Controls"
 msgstr "Ovládání"
 
+#: pe/ui/settings.cpp
+msgid "Corner"
+msgstr "Roh"
+
 #: pe/ui/remote.cpp
 msgid "Could not cancel the download."
 msgstr "Stahování se nepodařilo zrušit."
@@ -346,6 +362,14 @@ msgstr "Uložení se nezdařilo. Zkus to znovu."
 #: pe/ui/multiplayer.cpp
 msgid "Could not start the connection or save its settings."
 msgstr "Připojení se nepodařilo zahájit nebo uložit jeho nastavení."
+
+#: pe/ui/settings.cpp
+msgid "CPU"
+msgstr "CPU"
+
+#: pe/ui/settings.cpp
+msgid "CPU by core"
+msgstr "CPU po jádrech"
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -512,6 +536,10 @@ msgid "Edit"
 msgstr "Upravit"
 
 #: pe/ui/settings.cpp
+msgid "Enable colors"
+msgstr "Zapnout barvy"
+
+#: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
 msgstr "Ukončit hru a vrátit se do této nabídky"
 
@@ -607,6 +635,10 @@ msgstr "Podle Nastavení"
 msgid "For every controller. A game can have its own."
 msgstr "Pro všechny ovladače. Hra může mít vlastní."
 
+#: pe/ui/settings.cpp
+msgid "FPS"
+msgstr "FPS"
+
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
 msgstr "Počítadlo FPS"
@@ -626,6 +658,10 @@ msgstr "Generování snímků"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."
 msgstr "Generování snímků potřebuje Lossless.dll z Lossless Scaling ve složce lossless."
+
+#: pe/ui/settings.cpp
+msgid "Frame time"
+msgstr "Čas snímku"
 
 #: settings_store.h
 msgid "French"
@@ -705,6 +741,10 @@ msgstr "ZAČÍNÁME"
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"
 msgstr "Přejít offline"
+
+#: pe/ui/settings.cpp
+msgid "GPU"
+msgstr "GPU"
 
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
@@ -841,6 +881,10 @@ msgstr "Jazyk"
 msgid "LANGUAGES"
 msgstr "JAZYKY"
 
+#: pe/ui/game_options.cpp
+msgid "Large"
+msgstr "Velké"
+
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
 msgid "Larger text"
@@ -907,6 +951,14 @@ msgstr "Nejnižší přesnost GPU: rychlejší v náročných hrách, grafika al
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "Udělej si nabídku čitelnější a přehlednější."
+
+#: pe/ui/game_options.cpp
+msgid "Medium"
+msgstr "Střední"
+
+#: pe/ui/settings.cpp
+msgid "Memory"
+msgstr "Paměť"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1111,6 +1163,18 @@ msgstr "Options"
 msgid "Output resolution"
 msgstr "Výstupní rozlišení"
 
+#: pe/ui/game_options.cpp
+msgid "Overlay corner"
+msgstr "Roh počítadla"
+
+#: pe/ui/settings.cpp
+msgid "Overlay options"
+msgstr "Možnosti počítadla"
+
+#: pe/ui/game_options.cpp
+msgid "Overlay size"
+msgstr "Velikost počítadla"
+
 #. Button hint: jump a page of the list (L1 / R1).
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp, pe/ui/update.cpp
 msgid "Page"
@@ -1157,6 +1221,10 @@ msgstr "Patch"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "Výkon"
+
+#: pe/ui/settings.cpp
+msgid "Ping"
+msgstr "Ping"
 
 #. Button and button hint: start the game shown. Keep it to one short word.
 #: pe/ui/home.cpp, pe/ui/library.cpp
@@ -1347,6 +1415,10 @@ msgstr "Obnovovací frekvence"
 #: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "REGION"
+
+#: pe/ui/game_options.cpp
+msgid "Regular"
+msgstr "Běžné"
 
 #: pe/ui/profiles.cpp
 msgid "Remove"
@@ -1556,6 +1628,10 @@ msgstr "Zobrazuje se předchozí seznam."
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "Přihlas se k {0} jako uživatel, kterému patří uložená data tohoto profilu."
 
+#: pe/ui/settings.cpp
+msgid "Size"
+msgstr "Velikost"
+
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1581,6 +1657,10 @@ msgstr "Španělština"
 #: settings_store.h
 msgid "Spanish (Latin America)"
 msgstr "Španělština (Latinská Amerika)"
+
+#: pe/ui/settings.cpp
+msgid "Speed"
+msgstr "Rychlost"
 
 #. A DualSense button.
 #: pe/ui/game_options.cpp
@@ -1777,6 +1857,14 @@ msgstr "Tato místnost používá jinou verzi protokolu."
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
 msgstr "Pro import zkopíruj složku Ryujinx do ryujinx/ nebo uložená data do save-import/{0}/, vedle roms/."
 
+#: pe/ui/game_options.cpp
+msgid "Top left"
+msgstr "Vlevo nahoře"
+
+#: pe/ui/game_options.cpp
+msgid "Top right"
+msgstr "Vpravo nahoře"
+
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
 #: pe/ui/game_options.cpp
 msgid "Touchpad"
@@ -1933,6 +2021,10 @@ msgstr "Čeká na {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "Čeká na stažení"
+
+#: pe/ui/settings.cpp
+msgid "What the FPS overlay's line says, and how the chip is drawn."
+msgstr "Co řádek počítadla FPS ukazuje a jak se kreslí."
 
 #. Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.
 #: pe/ui/update.cpp

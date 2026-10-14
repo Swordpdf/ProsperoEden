@@ -136,6 +136,10 @@ msgstr "อัตโนมัติ"
 msgid "Back"
 msgstr "กลับ"
 
+#: pe/ui/settings.cpp
+msgid "Backend"
+msgstr "ตัวเรนเดอร์"
+
 #: pe/ui/save_sync.cpp
 msgid "Backing up save data"
 msgstr "กำลังสำรองข้อมูลเซฟ"
@@ -149,6 +153,14 @@ msgstr "ไบคิวบิก"
 #: settings_store.h
 msgid "Bilinear"
 msgstr "ไบลิเนียร์"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom left"
+msgstr "ล่างซ้าย"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom right"
+msgstr "ล่างขวา"
 
 #. Button hint: move through the list.
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp
@@ -311,6 +323,10 @@ msgstr "คอนโทรลเลอร์"
 msgid "Controls"
 msgstr "การควบคุม"
 
+#: pe/ui/settings.cpp
+msgid "Corner"
+msgstr "มุม"
+
 #: pe/ui/remote.cpp
 msgid "Could not cancel the download."
 msgstr "ไม่​สามารถ​ยกเลิก​การ​ดาวน์โหลด​ได้"
@@ -346,6 +362,14 @@ msgstr "บันทึก​ไม่ได้ โปรด​ลอง​อ�
 #: pe/ui/multiplayer.cpp
 msgid "Could not start the connection or save its settings."
 msgstr "ไม่​สามารถ​เริ่ม​การเชื่อมต่อ​หรือ​บันทึก​การตั้งค่า​ได้"
+
+#: pe/ui/settings.cpp
+msgid "CPU"
+msgstr "CPU"
+
+#: pe/ui/settings.cpp
+msgid "CPU by core"
+msgstr "CPU แยกตามคอร์"
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -512,6 +536,10 @@ msgid "Edit"
 msgstr "แก้ไข"
 
 #: pe/ui/settings.cpp
+msgid "Enable colors"
+msgstr "เปิดใช้สี"
+
+#: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
 msgstr "จบเกม​แล้ว​กลับมา​ที่​เมนู​นี้"
 
@@ -607,6 +635,10 @@ msgstr "ตามการตั้งค่า"
 msgid "For every controller. A game can have its own."
 msgstr "สำหรับคอนโทรลเลอร์ทุกตัว แต่ละเกมมีของตัวเองได้"
 
+#: pe/ui/settings.cpp
+msgid "FPS"
+msgstr "FPS"
+
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
 msgstr "ตัวแสดง FPS"
@@ -626,6 +658,10 @@ msgstr "การสร้างเฟรม"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."
 msgstr "การสร้างเฟรมต้องใช้ Lossless.dll จาก Lossless Scaling ในโฟลเดอร์ lossless"
+
+#: pe/ui/settings.cpp
+msgid "Frame time"
+msgstr "เวลาต่อเฟรม"
 
 #: settings_store.h
 msgid "French"
@@ -705,6 +741,10 @@ msgstr "เริ่มต้นใช้งาน"
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"
 msgstr "ออฟไลน์"
+
+#: pe/ui/settings.cpp
+msgid "GPU"
+msgstr "GPU"
 
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
@@ -841,6 +881,10 @@ msgstr "ภาษา"
 msgid "LANGUAGES"
 msgstr "ภาษา"
 
+#: pe/ui/game_options.cpp
+msgid "Large"
+msgstr "ใหญ่"
+
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
 msgid "Larger text"
@@ -907,6 +951,14 @@ msgstr "ความแม่นยำ GPU ต่ำสุด: เร็วข�
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "ทำให้​เมนู​มองเห็น​และ​ติดตาม​ได้​ง่ายขึ้น"
+
+#: pe/ui/game_options.cpp
+msgid "Medium"
+msgstr "กลาง"
+
+#: pe/ui/settings.cpp
+msgid "Memory"
+msgstr "หน่วยความจำ"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1111,6 +1163,18 @@ msgstr "OPTIONS"
 msgid "Output resolution"
 msgstr "ความละเอียด​เอาต์พุต"
 
+#: pe/ui/game_options.cpp
+msgid "Overlay corner"
+msgstr "มุมของตัวแสดง"
+
+#: pe/ui/settings.cpp
+msgid "Overlay options"
+msgstr "ตัวเลือกตัวแสดง"
+
+#: pe/ui/game_options.cpp
+msgid "Overlay size"
+msgstr "ขนาดตัวแสดง"
+
 #. Button hint: jump a page of the list (L1 / R1).
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp, pe/ui/update.cpp
 msgid "Page"
@@ -1157,6 +1221,10 @@ msgstr "แพตช์"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "ประสิทธิภาพ"
+
+#: pe/ui/settings.cpp
+msgid "Ping"
+msgstr "Ping"
 
 #. Button and button hint: start the game shown. Keep it to one short word.
 #: pe/ui/home.cpp, pe/ui/library.cpp
@@ -1347,6 +1415,10 @@ msgstr "อัตรา​รีเฟรช"
 #: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "ภูมิภาค"
+
+#: pe/ui/game_options.cpp
+msgid "Regular"
+msgstr "ปกติ"
 
 #: pe/ui/profiles.cpp
 msgid "Remove"
@@ -1556,6 +1628,10 @@ msgstr "กำลัง​แสดง​รายการ​ก่อนหน
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "ลงชื่อ​เข้าใช้ {0} ด้วย​ผู้ใช้​ที่​เป็น​เจ้าของ​ข้อมูล​เซฟ​ของ​โปรไฟล์​นี้"
 
+#: pe/ui/settings.cpp
+msgid "Size"
+msgstr "ขนาด"
+
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1581,6 +1657,10 @@ msgstr "สเปน"
 #: settings_store.h
 msgid "Spanish (Latin America)"
 msgstr "สเปน (ลาตินอเมริกา)"
+
+#: pe/ui/settings.cpp
+msgid "Speed"
+msgstr "ความเร็ว"
 
 #. A DualSense button.
 #: pe/ui/game_options.cpp
@@ -1777,6 +1857,14 @@ msgstr "ห้อง​นี้​ใช้​โปรโตคอล​คน
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
 msgstr "หาก​ต้องการ​นำเข้า ให้​คัดลอก​โฟลเดอร์ Ryujinx ​ไปที่ ryujinx/ ​หรือ​คัดลอก​เซฟ​ไปที่ save-import/{0}/ ​ข้าง roms/"
 
+#: pe/ui/game_options.cpp
+msgid "Top left"
+msgstr "บนซ้าย"
+
+#: pe/ui/game_options.cpp
+msgid "Top right"
+msgstr "บนขวา"
+
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
 #: pe/ui/game_options.cpp
 msgid "Touchpad"
@@ -1933,6 +2021,10 @@ msgstr "กำลังรอ {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "กำลังรอดาวน์โหลด"
+
+#: pe/ui/settings.cpp
+msgid "What the FPS overlay's line says, and how the chip is drawn."
+msgstr "สิ่งที่บรรทัดของตัวแสดง FPS แสดง และลักษณะการแสดงผล"
 
 #. Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.
 #: pe/ui/update.cpp

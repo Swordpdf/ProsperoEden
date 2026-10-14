@@ -156,7 +156,7 @@ struct Preferences {
     bool hud_colors = false; // the line in its inks rather than one (bake-loading-text.py)
     // What the overlay's line may say, bit by bit (hud.h's kHudField*): the pieces the user has
     // chosen to show. All of them by default.
-    int hud_fields = 0x1ff;
+    int hud_fields = 0xff;
 };
 
 inline int KeyIndex(const std::string& value, const char* const* keys, int count, int fallback) {

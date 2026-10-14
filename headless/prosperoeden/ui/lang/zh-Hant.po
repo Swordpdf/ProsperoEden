@@ -136,6 +136,10 @@ msgstr "自動"
 msgid "Back"
 msgstr "返回"
 
+#: pe/ui/settings.cpp
+msgid "Backend"
+msgstr "繪圖器"
+
 #: pe/ui/save_sync.cpp
 msgid "Backing up save data"
 msgstr "正在備份存檔資料"
@@ -149,6 +153,14 @@ msgstr "雙立方"
 #: settings_store.h
 msgid "Bilinear"
 msgstr "雙線性"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom left"
+msgstr "左下"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom right"
+msgstr "右下"
 
 #. Button hint: move through the list.
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp
@@ -311,6 +323,10 @@ msgstr "控制器"
 msgid "Controls"
 msgstr "操作"
 
+#: pe/ui/settings.cpp
+msgid "Corner"
+msgstr "角落"
+
 #: pe/ui/remote.cpp
 msgid "Could not cancel the download."
 msgstr "無法取消下載。"
@@ -346,6 +362,14 @@ msgstr "無法儲存。請再試一次。"
 #: pe/ui/multiplayer.cpp
 msgid "Could not start the connection or save its settings."
 msgstr "無法開始連線或儲存其設定。"
+
+#: pe/ui/settings.cpp
+msgid "CPU"
+msgstr "CPU"
+
+#: pe/ui/settings.cpp
+msgid "CPU by core"
+msgstr "依核心顯示 CPU"
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -512,6 +536,10 @@ msgid "Edit"
 msgstr "編輯"
 
 #: pe/ui/settings.cpp
+msgid "Enable colors"
+msgstr "啟用顏色"
+
+#: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
 msgstr "結束遊戲並返回此選單"
 
@@ -607,6 +635,10 @@ msgstr "依照設定"
 msgid "For every controller. A game can have its own."
 msgstr "適用於所有控制器。每個遊戲也可有自己的配置。"
 
+#: pe/ui/settings.cpp
+msgid "FPS"
+msgstr "FPS"
+
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
 msgstr "FPS 顯示"
@@ -626,6 +658,10 @@ msgstr "幀生成"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."
 msgstr "畫格生成需要將 Lossless Scaling 的 Lossless.dll 放在 lossless 資料夾中。"
+
+#: pe/ui/settings.cpp
+msgid "Frame time"
+msgstr "影格時間"
 
 #: settings_store.h
 msgid "French"
@@ -705,6 +741,10 @@ msgstr "開始使用"
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"
 msgstr "切換為離線"
+
+#: pe/ui/settings.cpp
+msgid "GPU"
+msgstr "GPU"
 
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
@@ -841,6 +881,10 @@ msgstr "語言"
 msgid "LANGUAGES"
 msgstr "語言"
 
+#: pe/ui/game_options.cpp
+msgid "Large"
+msgstr "大"
+
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
 msgid "Larger text"
@@ -907,6 +951,14 @@ msgstr "最低 GPU 精確度：在要求高的遊戲中更快，但畫面可能�
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "讓選單更容易看清楚、更容易操作。"
+
+#: pe/ui/game_options.cpp
+msgid "Medium"
+msgstr "中"
+
+#: pe/ui/settings.cpp
+msgid "Memory"
+msgstr "記憶體"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1111,6 +1163,18 @@ msgstr "OPTIONS"
 msgid "Output resolution"
 msgstr "輸出解析度"
 
+#: pe/ui/game_options.cpp
+msgid "Overlay corner"
+msgstr "顯示位置"
+
+#: pe/ui/settings.cpp
+msgid "Overlay options"
+msgstr "顯示選項"
+
+#: pe/ui/game_options.cpp
+msgid "Overlay size"
+msgstr "顯示大小"
+
 #. Button hint: jump a page of the list (L1 / R1).
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp, pe/ui/update.cpp
 msgid "Page"
@@ -1157,6 +1221,10 @@ msgstr "修補檔"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "效能"
+
+#: pe/ui/settings.cpp
+msgid "Ping"
+msgstr "延遲"
 
 #. Button and button hint: start the game shown. Keep it to one short word.
 #: pe/ui/home.cpp, pe/ui/library.cpp
@@ -1347,6 +1415,10 @@ msgstr "更新率"
 #: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "地區"
+
+#: pe/ui/game_options.cpp
+msgid "Regular"
+msgstr "一般"
 
 #: pe/ui/profiles.cpp
 msgid "Remove"
@@ -1556,6 +1628,10 @@ msgstr "正在顯示先前的清單。"
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "以擁有此玩家檔案存檔資料的使用者身分登入 {0}。"
 
+#: pe/ui/settings.cpp
+msgid "Size"
+msgstr "大小"
+
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1581,6 +1657,10 @@ msgstr "西班牙文"
 #: settings_store.h
 msgid "Spanish (Latin America)"
 msgstr "西班牙文（拉丁美洲）"
+
+#: pe/ui/settings.cpp
+msgid "Speed"
+msgstr "速度"
 
 #. A DualSense button.
 #: pe/ui/game_options.cpp
@@ -1777,6 +1857,14 @@ msgstr "此房間使用不同的通訊協定版本。"
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
 msgstr "若要匯入，請將 Ryujinx 資料夾複製到 ryujinx/，或將存檔複製到 save-import/{0}/（與 roms/ 同層）。"
 
+#: pe/ui/game_options.cpp
+msgid "Top left"
+msgstr "左上"
+
+#: pe/ui/game_options.cpp
+msgid "Top right"
+msgstr "右上"
+
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
 #: pe/ui/game_options.cpp
 msgid "Touchpad"
@@ -1933,6 +2021,10 @@ msgstr "正在等待 {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "等待下載"
+
+#: pe/ui/settings.cpp
+msgid "What the FPS overlay's line says, and how the chip is drawn."
+msgstr "FPS 顯示一行的內容與外觀。"
 
 #. Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.
 #: pe/ui/update.cpp

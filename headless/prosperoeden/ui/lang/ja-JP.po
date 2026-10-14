@@ -136,6 +136,10 @@ msgstr "自動"
 msgid "Back"
 msgstr "戻る"
 
+#: pe/ui/settings.cpp
+msgid "Backend"
+msgstr "レンダラー"
+
 #: pe/ui/save_sync.cpp
 msgid "Backing up save data"
 msgstr "セーブデータをバックアップ中"
@@ -149,6 +153,14 @@ msgstr "バイキュービック"
 #: settings_store.h
 msgid "Bilinear"
 msgstr "バイリニア"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom left"
+msgstr "左下"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom right"
+msgstr "右下"
 
 #. Button hint: move through the list.
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp
@@ -311,6 +323,10 @@ msgstr "コントローラー"
 msgid "Controls"
 msgstr "操作"
 
+#: pe/ui/settings.cpp
+msgid "Corner"
+msgstr "表示位置"
+
 #: pe/ui/remote.cpp
 msgid "Could not cancel the download."
 msgstr "ダウンロードをキャンセルできませんでした。"
@@ -346,6 +362,14 @@ msgstr "保存できませんでした。もう一度お試しください。"
 #: pe/ui/multiplayer.cpp
 msgid "Could not start the connection or save its settings."
 msgstr "接続を開始できないか、設定を保存できませんでした。"
+
+#: pe/ui/settings.cpp
+msgid "CPU"
+msgstr "CPU"
+
+#: pe/ui/settings.cpp
+msgid "CPU by core"
+msgstr "コアごとのCPU"
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -512,6 +536,10 @@ msgid "Edit"
 msgstr "編集"
 
 #: pe/ui/settings.cpp
+msgid "Enable colors"
+msgstr "色を付ける"
+
+#: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
 msgstr "ゲームを終了してこのメニューに戻る"
 
@@ -607,6 +635,10 @@ msgstr "設定に従う"
 msgid "For every controller. A game can have its own."
 msgstr "すべてのコントローラーに適用。ゲームごとにも設定できます。"
 
+#: pe/ui/settings.cpp
+msgid "FPS"
+msgstr "FPS"
+
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
 msgstr "FPS表示"
@@ -626,6 +658,10 @@ msgstr "フレーム生成"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."
 msgstr "フレーム生成には、lossless フォルダーに Lossless Scaling の Lossless.dll が必要です。"
+
+#: pe/ui/settings.cpp
+msgid "Frame time"
+msgstr "フレーム時間"
 
 #: settings_store.h
 msgid "French"
@@ -705,6 +741,10 @@ msgstr "はじめに"
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"
 msgstr "オフラインにする"
+
+#: pe/ui/settings.cpp
+msgid "GPU"
+msgstr "GPU"
 
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
@@ -841,6 +881,10 @@ msgstr "言語"
 msgid "LANGUAGES"
 msgstr "言語"
 
+#: pe/ui/game_options.cpp
+msgid "Large"
+msgstr "大"
+
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
 msgid "Larger text"
@@ -907,6 +951,14 @@ msgstr "GPU精度を最低にします。重いゲームで速くなりますが
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "メニューを見やすく、わかりやすくします。"
+
+#: pe/ui/game_options.cpp
+msgid "Medium"
+msgstr "中"
+
+#: pe/ui/settings.cpp
+msgid "Memory"
+msgstr "メモリ"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1111,6 +1163,18 @@ msgstr "OPTIONS"
 msgid "Output resolution"
 msgstr "出力解像度"
 
+#: pe/ui/game_options.cpp
+msgid "Overlay corner"
+msgstr "表示の位置"
+
+#: pe/ui/settings.cpp
+msgid "Overlay options"
+msgstr "表示のオプション"
+
+#: pe/ui/game_options.cpp
+msgid "Overlay size"
+msgstr "表示のサイズ"
+
 #. Button hint: jump a page of the list (L1 / R1).
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp, pe/ui/update.cpp
 msgid "Page"
@@ -1157,6 +1221,10 @@ msgstr "パッチ"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "パフォーマンス"
+
+#: pe/ui/settings.cpp
+msgid "Ping"
+msgstr "Ping"
 
 #. Button and button hint: start the game shown. Keep it to one short word.
 #: pe/ui/home.cpp, pe/ui/library.cpp
@@ -1347,6 +1415,10 @@ msgstr "リフレッシュレート"
 #: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "地域"
+
+#: pe/ui/game_options.cpp
+msgid "Regular"
+msgstr "標準"
 
 #: pe/ui/profiles.cpp
 msgid "Remove"
@@ -1556,6 +1628,10 @@ msgstr "前回のリストを表示しています。"
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "このプロフィールのセーブデータを持つユーザーとして{0}にサインインしてください。"
 
+#: pe/ui/settings.cpp
+msgid "Size"
+msgstr "サイズ"
+
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1581,6 +1657,10 @@ msgstr "スペイン語"
 #: settings_store.h
 msgid "Spanish (Latin America)"
 msgstr "スペイン語（ラテンアメリカ）"
+
+#: pe/ui/settings.cpp
+msgid "Speed"
+msgstr "速度"
 
 #. A DualSense button.
 #: pe/ui/game_options.cpp
@@ -1777,6 +1857,14 @@ msgstr "このルームは異なるプロトコルバージョンを使用して
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
 msgstr "インポートするには、Ryujinxのフォルダーを ryujinx/ に、またはセーブデータを save-import/{0}/ にコピーしてください（roms/ と同じ場所）。"
 
+#: pe/ui/game_options.cpp
+msgid "Top left"
+msgstr "左上"
+
+#: pe/ui/game_options.cpp
+msgid "Top right"
+msgstr "右上"
+
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
 #: pe/ui/game_options.cpp
 msgid "Touchpad"
@@ -1933,6 +2021,10 @@ msgstr "{0}を待機中"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "ダウンロード待機中"
+
+#: pe/ui/settings.cpp
+msgid "What the FPS overlay's line says, and how the chip is drawn."
+msgstr "FPS表示の行に出す内容と見た目を設定します。"
 
 #. Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.
 #: pe/ui/update.cpp

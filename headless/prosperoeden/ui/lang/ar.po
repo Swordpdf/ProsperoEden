@@ -136,6 +136,10 @@ msgstr "تلقائي"
 msgid "Back"
 msgstr "رجوع"
 
+#: pe/ui/settings.cpp
+msgid "Backend"
+msgstr "محرّك العرض"
+
 #: pe/ui/save_sync.cpp
 msgid "Backing up save data"
 msgstr "جارٍ النسخ الاحتياطي لبيانات الحفظ"
@@ -149,6 +153,14 @@ msgstr "مكعّب ثنائي"
 #: settings_store.h
 msgid "Bilinear"
 msgstr "خطي ثنائي"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom left"
+msgstr "أسفل اليسار"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom right"
+msgstr "أسفل اليمين"
 
 #. Button hint: move through the list.
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp
@@ -311,6 +323,10 @@ msgstr "أيدي التحكم"
 msgid "Controls"
 msgstr "التحكم"
 
+#: pe/ui/settings.cpp
+msgid "Corner"
+msgstr "الزاوية"
+
 #: pe/ui/remote.cpp
 msgid "Could not cancel the download."
 msgstr "تعذّر إلغاء التنزيل."
@@ -346,6 +362,14 @@ msgstr "تعذّر الحفظ. حاول مرة أخرى."
 #: pe/ui/multiplayer.cpp
 msgid "Could not start the connection or save its settings."
 msgstr "تعذّر بدء الاتصال أو حفظ إعداداته."
+
+#: pe/ui/settings.cpp
+msgid "CPU"
+msgstr "CPU"
+
+#: pe/ui/settings.cpp
+msgid "CPU by core"
+msgstr "CPU لكل نواة"
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -512,6 +536,10 @@ msgid "Edit"
 msgstr "تعديل"
 
 #: pe/ui/settings.cpp
+msgid "Enable colors"
+msgstr "تفعيل الألوان"
+
+#: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
 msgstr "إنهاء اللعبة والعودة إلى هذه القائمة"
 
@@ -607,6 +635,10 @@ msgstr "حسب الإعدادات"
 msgid "For every controller. A game can have its own."
 msgstr "لكل وحدات التحكم. يمكن أن يكون للعبة تعيينها الخاص."
 
+#: pe/ui/settings.cpp
+msgid "FPS"
+msgstr "FPS"
+
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
 msgstr "عدّاد FPS"
@@ -626,6 +658,10 @@ msgstr "توليد الإطارات"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."
 msgstr "يحتاج توليد الإطارات إلى Lossless.dll من Lossless Scaling في مجلد lossless."
+
+#: pe/ui/settings.cpp
+msgid "Frame time"
+msgstr "زمن الإطار"
 
 #: settings_store.h
 msgid "French"
@@ -705,6 +741,10 @@ msgstr "البدء"
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"
 msgstr "قطع الاتصال"
+
+#: pe/ui/settings.cpp
+msgid "GPU"
+msgstr "GPU"
 
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
@@ -841,6 +881,10 @@ msgstr "اللغة"
 msgid "LANGUAGES"
 msgstr "اللغات"
 
+#: pe/ui/game_options.cpp
+msgid "Large"
+msgstr "كبير"
+
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
 msgid "Larger text"
@@ -907,6 +951,14 @@ msgstr "أدنى دقة لـ GPU: أسرع في الألعاب المتطلبة�
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "اجعل القائمة أسهل في الرؤية والمتابعة."
+
+#: pe/ui/game_options.cpp
+msgid "Medium"
+msgstr "متوسط"
+
+#: pe/ui/settings.cpp
+msgid "Memory"
+msgstr "الذاكرة"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1111,6 +1163,18 @@ msgstr "Options"
 msgid "Output resolution"
 msgstr "دقة الإخراج"
 
+#: pe/ui/game_options.cpp
+msgid "Overlay corner"
+msgstr "زاوية العدّاد"
+
+#: pe/ui/settings.cpp
+msgid "Overlay options"
+msgstr "خيارات العدّاد"
+
+#: pe/ui/game_options.cpp
+msgid "Overlay size"
+msgstr "حجم العدّاد"
+
 #. Button hint: jump a page of the list (L1 / R1).
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp, pe/ui/update.cpp
 msgid "Page"
@@ -1157,6 +1221,10 @@ msgstr "رقعة"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "الأداء"
+
+#: pe/ui/settings.cpp
+msgid "Ping"
+msgstr "Ping"
 
 #. Button and button hint: start the game shown. Keep it to one short word.
 #: pe/ui/home.cpp, pe/ui/library.cpp
@@ -1347,6 +1415,10 @@ msgstr "معدل التحديث"
 #: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "المنطقة"
+
+#: pe/ui/game_options.cpp
+msgid "Regular"
+msgstr "عادي"
 
 #: pe/ui/profiles.cpp
 msgid "Remove"
@@ -1556,6 +1628,10 @@ msgstr "تُعرض القائمة السابقة."
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "سجّل الدخول إلى {0} بالمستخدم الذي تعود إليه بيانات حفظ هذا الملف الشخصي."
 
+#: pe/ui/settings.cpp
+msgid "Size"
+msgstr "الحجم"
+
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1581,6 +1657,10 @@ msgstr "الإسبانية"
 #: settings_store.h
 msgid "Spanish (Latin America)"
 msgstr "الإسبانية (أمريكا اللاتينية)"
+
+#: pe/ui/settings.cpp
+msgid "Speed"
+msgstr "السرعة"
 
 #. A DualSense button.
 #: pe/ui/game_options.cpp
@@ -1777,6 +1857,14 @@ msgstr "تستخدم هذه الغرفة إصدار بروتوكول مختلف�
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
 msgstr "للاستيراد، انسخ مجلد Ryujinx إلى ryujinx/‎ أو بيانات حفظ إلى save-import/{0}/‎ بجوار roms/‎."
 
+#: pe/ui/game_options.cpp
+msgid "Top left"
+msgstr "أعلى اليسار"
+
+#: pe/ui/game_options.cpp
+msgid "Top right"
+msgstr "أعلى اليمين"
+
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
 #: pe/ui/game_options.cpp
 msgid "Touchpad"
@@ -1933,6 +2021,10 @@ msgstr "في انتظار {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "في انتظار التنزيل"
+
+#: pe/ui/settings.cpp
+msgid "What the FPS overlay's line says, and how the chip is drawn."
+msgstr "ما يعرضه سطر عدّاد FPS وكيف يُرسم."
 
 #. Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.
 #: pe/ui/update.cpp

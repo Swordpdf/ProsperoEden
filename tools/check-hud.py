@@ -133,7 +133,7 @@ int main() {
                == "VLK 60FPS 17.0MS CPU 92% 45% 38% 3% GPU 43% MEM 4.1/8.0G");
         // With that switch off, only the busiest of them.
         assert(std::string_view(Eden::FormatHudText(clock, 100, "VLK", by_core, -1,
-                                                    Eden::kHudFieldAll & ~Eden::kHudFieldCores).data())
+                                                    Eden::kHudFieldAll | Eden::kHudFieldOneCore).data())
                == "VLK 60FPS 17.0MS CPU 92% GPU 43% MEM 4.1/8.0G");
         by_core.cores[3] = ~0u;
         assert(std::string_view(Eden::FormatHudText(clock, 100, "VLK", by_core).data())

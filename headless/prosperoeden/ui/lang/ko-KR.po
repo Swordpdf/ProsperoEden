@@ -136,6 +136,10 @@ msgstr "자동"
 msgid "Back"
 msgstr "뒤로"
 
+#: pe/ui/settings.cpp
+msgid "Backend"
+msgstr "렌더러"
+
 #: pe/ui/save_sync.cpp
 msgid "Backing up save data"
 msgstr "세이브 데이터 백업 중"
@@ -149,6 +153,14 @@ msgstr "바이큐빅"
 #: settings_store.h
 msgid "Bilinear"
 msgstr "바이리니어"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom left"
+msgstr "왼쪽 아래"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom right"
+msgstr "오른쪽 아래"
 
 #. Button hint: move through the list.
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp
@@ -311,6 +323,10 @@ msgstr "컨트롤러"
 msgid "Controls"
 msgstr "조작"
 
+#: pe/ui/settings.cpp
+msgid "Corner"
+msgstr "위치"
+
 #: pe/ui/remote.cpp
 msgid "Could not cancel the download."
 msgstr "다운로드를 취소할 수 없습니다."
@@ -346,6 +362,14 @@ msgstr "저장하지 못했습니다. 다시 시도해 주세요."
 #: pe/ui/multiplayer.cpp
 msgid "Could not start the connection or save its settings."
 msgstr "연결을 시작하거나 설정을 저장할 수 없습니다."
+
+#: pe/ui/settings.cpp
+msgid "CPU"
+msgstr "CPU"
+
+#: pe/ui/settings.cpp
+msgid "CPU by core"
+msgstr "코어별 CPU"
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
 #: pe/ui/game_options.cpp
@@ -512,6 +536,10 @@ msgid "Edit"
 msgstr "편집"
 
 #: pe/ui/settings.cpp
+msgid "Enable colors"
+msgstr "색 사용"
+
+#: pe/ui/settings.cpp
 msgid "End the game and return to this menu"
 msgstr "게임을 종료하고 이 메뉴로 돌아가기"
 
@@ -607,6 +635,10 @@ msgstr "설정을 따름"
 msgid "For every controller. A game can have its own."
 msgstr "모든 컨트롤러에 적용됩니다. 게임마다 따로 정할 수 있습니다."
 
+#: pe/ui/settings.cpp
+msgid "FPS"
+msgstr "FPS"
+
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "FPS overlay"
 msgstr "FPS 표시"
@@ -626,6 +658,10 @@ msgstr "프레임 생성"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."
 msgstr "프레임 생성에는 lossless 폴더에 Lossless Scaling의 Lossless.dll이 필요합니다."
+
+#: pe/ui/settings.cpp
+msgid "Frame time"
+msgstr "프레임 시간"
 
 #: settings_store.h
 msgid "French"
@@ -705,6 +741,10 @@ msgstr "시작하기"
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"
 msgstr "오프라인으로 전환"
+
+#: pe/ui/settings.cpp
+msgid "GPU"
+msgstr "GPU"
 
 #: pe/ui/settings.cpp
 msgid "Graphics backend and how games are scaled to your TV."
@@ -841,6 +881,10 @@ msgstr "언어"
 msgid "LANGUAGES"
 msgstr "언어"
 
+#: pe/ui/game_options.cpp
+msgid "Large"
+msgstr "크게"
+
 #. A switch: the menu's small text is drawn larger.
 #: pe/ui/settings.cpp
 msgid "Larger text"
@@ -907,6 +951,14 @@ msgstr "가장 낮은 GPU 정확도: 무거운 게임에서 더 빠르지만 그
 #: pe/ui/settings.cpp
 msgid "Make the menu easier to see and follow."
 msgstr "메뉴를 더 보기 쉽고 따라가기 쉽게 만듭니다."
+
+#: pe/ui/game_options.cpp
+msgid "Medium"
+msgstr "중간"
+
+#: pe/ui/settings.cpp
+msgid "Memory"
+msgstr "메모리"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1111,6 +1163,18 @@ msgstr "OPTIONS"
 msgid "Output resolution"
 msgstr "출력 해상도"
 
+#: pe/ui/game_options.cpp
+msgid "Overlay corner"
+msgstr "표시 위치"
+
+#: pe/ui/settings.cpp
+msgid "Overlay options"
+msgstr "표시 옵션"
+
+#: pe/ui/game_options.cpp
+msgid "Overlay size"
+msgstr "표시 크기"
+
 #. Button hint: jump a page of the list (L1 / R1).
 #: pe/ui/browse.cpp, pe/ui/multiplayer.cpp, pe/ui/update.cpp
 msgid "Page"
@@ -1157,6 +1221,10 @@ msgstr "패치"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "성능"
+
+#: pe/ui/settings.cpp
+msgid "Ping"
+msgstr "핑"
 
 #. Button and button hint: start the game shown. Keep it to one short word.
 #: pe/ui/home.cpp, pe/ui/library.cpp
@@ -1347,6 +1415,10 @@ msgstr "주사율"
 #: pe/ui/browse.cpp
 msgid "REGION"
 msgstr "지역"
+
+#: pe/ui/game_options.cpp
+msgid "Regular"
+msgstr "보통"
 
 #: pe/ui/profiles.cpp
 msgid "Remove"
@@ -1556,6 +1628,10 @@ msgstr "이전 목록을 표시합니다."
 msgid "Sign in to {0} as the user this profile's save data belongs to."
 msgstr "이 프로필의 세이브 데이터가 속한 사용자로 {0}에 로그인하세요."
 
+#: pe/ui/settings.cpp
+msgid "Size"
+msgstr "크기"
+
 #. Button and hint: not now (the dialog shows again the next time the app opens).
 #: pe/ui/update.cpp
 msgid "Skip"
@@ -1581,6 +1657,10 @@ msgstr "스페인어"
 #: settings_store.h
 msgid "Spanish (Latin America)"
 msgstr "스페인어(중남미)"
+
+#: pe/ui/settings.cpp
+msgid "Speed"
+msgstr "속도"
 
 #. A DualSense button.
 #: pe/ui/game_options.cpp
@@ -1777,6 +1857,14 @@ msgstr "이 방은 다른 프로토콜 버전을 사용합니다."
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
 msgstr "가져오려면 Ryujinx 폴더를 ryujinx/에, 또는 세이브 데이터를 save-import/{0}/에 복사하세요(roms/ 옆)."
 
+#: pe/ui/game_options.cpp
+msgid "Top left"
+msgstr "왼쪽 위"
+
+#: pe/ui/game_options.cpp
+msgid "Top right"
+msgstr "오른쪽 위"
+
 #. The DualSense controller's touch pad, pressed as a button. Use the name players know.
 #: pe/ui/game_options.cpp
 msgid "Touchpad"
@@ -1933,6 +2021,10 @@ msgstr "{0} 대기 중"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "다운로드 대기 중"
+
+#: pe/ui/settings.cpp
+msgid "What the FPS overlay's line says, and how the chip is drawn."
+msgstr "FPS 표시 줄에 보일 내용과 모양을 정합니다."
 
 #. Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.
 #: pe/ui/update.cpp
