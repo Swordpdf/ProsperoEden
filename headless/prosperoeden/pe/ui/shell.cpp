@@ -127,6 +127,8 @@ float Launcher::arrive(int index, float step) const
 
 void Launcher::focus_rail()
 {
+    if (th().top_nav)
+        return;
     rail_focus_ = true;
     rail_index_ = section();
     message_.clear();
@@ -184,14 +186,21 @@ void Launcher::draw_scrims(Canvas &c)
     const float home = 1.0f - away;
     if (home > 0.01f)
     {
-        list.hgradient_rect({0.0f, 0.0f, 653.0f, 1080.0f}, 0.0f, shade.with_alpha(0.94f * home),
-                            shade.with_alpha(0.78f * home));
-        list.hgradient_rect({653.0f, 0.0f, 538.0f, 1080.0f}, 0.0f, shade.with_alpha(0.78f * home),
-                            shade.with_alpha(0.16f * home));
-        list.hgradient_rect({1191.0f, 0.0f, 729.0f, 1080.0f}, 0.0f, shade.with_alpha(0.16f * home),
-                            shade.with_alpha(0.30f * home));
-        list.gradient_rect({0.0f, 640.0f, 1920.0f, 440.0f}, 0.0f, shade.with_alpha(0.0f),
-                           shade.with_alpha(0.90f * home));
+        if (th().top_nav)
+        {
+            list.rounded_rect({0.0f, 0.0f, 1920.0f, 1080.0f}, 0.0f, shade.with_alpha(0.92f * home));
+        }
+        else
+        {
+            list.hgradient_rect({0.0f, 0.0f, 653.0f, 1080.0f}, 0.0f, shade.with_alpha(0.94f * home),
+                                shade.with_alpha(0.78f * home));
+            list.hgradient_rect({653.0f, 0.0f, 538.0f, 1080.0f}, 0.0f, shade.with_alpha(0.78f * home),
+                                shade.with_alpha(0.16f * home));
+            list.hgradient_rect({1191.0f, 0.0f, 729.0f, 1080.0f}, 0.0f, shade.with_alpha(0.16f * home),
+                                shade.with_alpha(0.30f * home));
+            list.gradient_rect({0.0f, 640.0f, 1920.0f, 440.0f}, 0.0f, shade.with_alpha(0.0f),
+                               shade.with_alpha(0.90f * home));
+        }
     }
     if (away > 0.01f)
         list.hgradient_rect(kScreen, 0.0f, shade.with_alpha(0.92f * away), shade.with_alpha(0.76f * away));
@@ -201,6 +210,33 @@ void Launcher::draw_rail(Canvas &c)
 {
     gfx::DrawList &list = c.list;
     const Theme &t = th();
+
+    if (t.top_nav)
+    {
+        // Horizontal tabs: Home, Multiplayer, Settings, About (Library is on the home screen).
+        constexpr float kTabY = 44.0f;
+        constexpr float kTabHeight = 44.0f;
+        constexpr float kTabGap = 8.0f;
+        constexpr int kTabs[] = {0, 2, 3, 4};
+        float x = layout::kLeft;
+        for (int tab_index : kTabs)
+        {
+            const std::size_t index = static_cast<std::size_t>(tab_index);
+            const float active = tween::clamp01(rail_active_[index].value);
+            const char *name = tr(kSectionList[tab_index].name);
+            const float width = text_width(c, name, t.size_small, 2.0f) + 32.0f;
+            const Rect tab{x, kTabY, width, kTabHeight};
+            const Color ink = gfx::mix(t.muted, t.title, active);
+            text(c, name, tab.x + tab.w * 0.5f, baseline(tab.y, kTabHeight, t.size_small),
+                 t.size_small, ink, Align::center, 2.0f);
+            if (active > 0.01f)
+                list.rounded_rect({tab.x + 4.0f, tab.y + kTabHeight - 3.0f, tab.w - 8.0f, 3.0f},
+                                  1.5f, t.accent.with_alpha(active));
+            x += width + kTabGap;
+        }
+        return;
+    }
+
     const float open = tween::clamp01(rail_open_.value);
     const float width = layout::kRail + (kRailWide - layout::kRail) * open;
 
@@ -238,7 +274,6 @@ void Launcher::draw_rail(Canvas &c)
         const Rect tile{kTileLeft, tile_top(i), kTile + (width - layout::kRail), kTile};
         const float dip = 1.0f - 0.04f * press_ * focus * motion();
         list.push_transform(dip, tile.x + kTile * 0.5f, tile.y + kTile * 0.5f, 0.0f, 0.0f);
-        // The section shown keeps a quiet plate of the accent; the highlight is the ring.
         if (active > 0.01f && !look().high_contrast)
             list.bordered_rect(tile, 20.0f, t.accent.with_alpha(0.16f * active), 1.0f,
                                t.accent.with_alpha(0.55f * active));
@@ -298,6 +333,8 @@ void Launcher::draw_clock(Canvas &c)
 
 void Launcher::draw_frame(Canvas &c, const char *title, const char *copy)
 {
+    if (th().top_nav)
+        return;
     const Theme &t = th();
     const float line = baseline(layout::kTop, 64.0f, t.size_display);
     const float clock = text_width(c, clock_, t.size_heading) + 48.0f;

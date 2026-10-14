@@ -174,20 +174,24 @@ void Launcher::press_settings(Key key)
         go_section(0);
         return;
     case Key::up:
-        if (at >= kTileColumns)
+        if (th().list_settings)
+            settings_.move(-1);
+        else if (at >= kTileColumns)
             at -= kTileColumns;
         break;
     case Key::down:
-        if (at < kTileColumns * (kTileRows - 1))
+        if (th().list_settings)
+            settings_.move(1);
+        else if (at < kTileColumns * (kTileRows - 1))
             at += kTileColumns;
         break;
     case Key::left:
-        if (at % kTileColumns == 0)
+        if (th().list_settings || at % kTileColumns == 0)
             return focus_rail();
         at -= 1;
         break;
     case Key::right:
-        if (at % kTileColumns != kTileColumns - 1)
+        if (!th().list_settings && at % kTileColumns != kTileColumns - 1)
             at += 1;
         break;
     case Key::cross:
@@ -250,7 +254,6 @@ void Launcher::press_settings(Key key)
     }
     if (at != before)
     {
-        // What the tile is about comes in again under the tiles.
         section_.value = 0.0f;
         section_.velocity = 0.0f;
         message_.clear();
@@ -290,91 +293,147 @@ void Launcher::draw_settings(Canvas &c)
         pick(services_.language_labels(), prefs_.language),
         t.name,
     };
-    for (int i = 0; i < kCategoryCount; ++i)
+    if (t.list_settings)
     {
-        const Rect r = tile_rect(i);
-        const float f = tween::clamp01(settings_springs_[static_cast<std::size_t>(i)].value);
-        const float scale = 1.0f + (0.03f * f - 0.035f * press_ * f) * motion();
-        const float here = arrive(i);
-        list.push_opacity(here);
-        list.push_transform(scale, r.x + r.w * 0.5f, r.y + r.h * 0.5f, 0.0f,
-                            -3.0f * f * motion() + (1.0f - here) * 18.0f);
-        plate(c, tile_plate(), r, f);
-        icon(c, kIcons[i], r.x + 50.0f, r.y + 52.0f, 44.0f, gfx::mix(t.accent, t.accent_pale, f));
+        constexpr float kListRowHeight = 78.0f;
+        const float kListLeft = t.top_nav ? 960.0f : layout::kLeft;
+        const float kListWidth = t.top_nav ? 864.0f : layout::kWidth;
+        const float kListTop = t.top_nav ? 110.0f : 152.0f;
+        const float kListWindowHeight = t.top_nav ? 870.0f : 840.0f;
+        if (t.top_nav)
+            kicker(c, tr("SETTINGS"), kListLeft, baseline(80.0f, 30.0f, t.size_small), t.accent_pale, kListWidth);
+        const auto list_row_rect = [&](int row) -> Rect
         {
-            // A name of two long words takes two lines: the icon over it leaves the room.
-            const Heavy heavy(c);
-            const char *name = tr(kCategories[i]);
-            const float width = r.w - 56.0f;
-            const float line = baseline(r.y + r.h - 98.0f, 38.0f, 30.0f);
-            // (Two words: one long word is drawn smaller rather than broken.)
-            if (text_width(c, name, 30.0f) > width && std::string_view{name}.find(' ') != std::string_view::npos &&
-                fonts_.font->wrap(name, text_size(30.0f), width).size() == 2)
-                text_block(c, name, r.x + 28.0f, line - 36.0f, 30.0f, 36.0f, t.title, width, 2, kShrink);
-            else
-                text_shrink(c, name, r.x + 28.0f, line, 30.0f, t.title, width);
+            return {kListLeft, kListTop + static_cast<float>(row) * settings_.pitch - settings_.scroll(),
+                    kListWidth, kListRowHeight};
+        };
+        list.push_clip({kListLeft - 24.0f, kListTop - 6.0f, kListWidth + 48.0f, kListWindowHeight + 12.0f});
+        for (int row = settings_.first_row(); row <= settings_.last_row(); ++row)
+        {
+            list.push_opacity(settings_.row_alpha(row, kListRowHeight));
+            plate_rest(c, row_plate(), list_row_rect(row));
+            list.pop_opacity();
         }
-        text_shrink(c, summaries[i], r.x + 28.0f, baseline(r.y + r.h - 56.0f, 28.0f, t.size_small), t.size_small,
-                    gfx::mix(t.meta, t.body, f), r.w - 56.0f);
+        plate_focus(c, row_plate(),
+                    {kListLeft, kListTop + settings_.cursor() - settings_.scroll(), kListWidth, kListRowHeight},
+                    1.0f);
+        for (int row = settings_.first_row(); row <= settings_.last_row(); ++row)
+        {
+            const Rect r = list_row_rect(row);
+            list.push_opacity(settings_.row_alpha(row, kListRowHeight));
+            icon(c, kIcons[row], r.x + 48.0f, r.y + r.h * 0.5f, 36.0f,
+                 gfx::mix(t.accent, t.accent_pale,
+                           tween::clamp01(settings_springs_[static_cast<std::size_t>(row)].value)));
+            {
+                const Heavy heavy(c);
+                text_shrink(c, tr(kCategories[row]), r.x + 88.0f,
+                            baseline(r.y, r.h, t.size_text), t.size_text, t.title, 420.0f);
+            }
+            text_shrink(c, summaries[row], r.x + r.w - 28.0f,
+                        baseline(r.y, r.h, t.size_small), t.size_small,
+                        gfx::mix(t.meta, t.body,
+                                  tween::clamp01(settings_springs_[static_cast<std::size_t>(row)].value)),
+                        r.w - 560.0f, Align::right);
+            list.pop_opacity();
+        }
+        list.pop_clip();
+        if (settings_.count > settings_.visible)
+            scrollbar(c, settings_, kListLeft + kListWidth + 16.0f, kListTop, kListWindowHeight);
+    }
+    else
+    {
+        for (int i = 0; i < kCategoryCount; ++i)
+        {
+            const Rect r = tile_rect(i);
+            const float f = tween::clamp01(settings_springs_[static_cast<std::size_t>(i)].value);
+            const float scale = 1.0f + (0.03f * f - 0.035f * press_ * f) * motion();
+            const float here = arrive(i);
+            list.push_opacity(here);
+            list.push_transform(scale, r.x + r.w * 0.5f, r.y + r.h * 0.5f, 0.0f,
+                                -3.0f * f * motion() + (1.0f - here) * 18.0f);
+            plate(c, tile_plate(), r, f);
+            icon(c, kIcons[i], r.x + 50.0f, r.y + 52.0f, 44.0f, gfx::mix(t.accent, t.accent_pale, f));
+            {
+                const Heavy heavy(c);
+                const char *name = tr(kCategories[i]);
+                const float width = r.w - 56.0f;
+                const float line = baseline(r.y + r.h - 98.0f, 38.0f, 30.0f);
+                if (text_width(c, name, 30.0f) > width && std::string_view{name}.find(' ') != std::string_view::npos &&
+                    fonts_.font->wrap(name, text_size(30.0f), width).size() == 2)
+                    text_block(c, name, r.x + 28.0f, line - 36.0f, 30.0f, 36.0f, t.title, width, 2, kShrink);
+                else
+                    text_shrink(c, name, r.x + 28.0f, line, 30.0f, t.title, width);
+            }
+            text_shrink(c, summaries[i], r.x + 28.0f, baseline(r.y + r.h - 56.0f, 28.0f, t.size_small), t.size_small,
+                        gfx::mix(t.meta, t.body, f), r.w - 56.0f);
+            list.pop_transform();
+            list.pop_opacity();
+        }
+        if (!t.top_nav)
+        {
+        glass(c, kStrip, t.radius_row + 2.0f, t.panel.with_alpha(0.80f), t.panel_edge.with_alpha(0.34f), 0.5f);
+        const char *about = "";
+        switch (settings_.selected)
+        {
+        case kProfiles:
+            about = tr("Who is playing. Each profile keeps its own save data and settings.");
+            break;
+        case kVideo:
+            about = tr("Graphics backend and how games are scaled to your TV.");
+            break;
+        case kPerformance:
+            about = tr("Faster games, at some cost in accuracy.");
+            break;
+        case kAudio:
+            about = tr("Game volume, and the sounds of this menu.");
+            break;
+        case kControls:
+            about = tr("Vibration, button mapping and the shortcuts during a game.");
+            break;
+        case kAccessibility:
+            about = tr("Make the menu easier to see and follow.");
+            break;
+        case kDiagnostics:
+            about = tr("Setup status and detailed logs.");
+            break;
+        case kFiles:
+            about = tr("The folder that holds your keys, firmware and games.");
+            break;
+        case kDownloads:
+            about = tr("Games on your network, downloaded when you play them.");
+            break;
+        case kSaveSync:
+            about = tr("Each profile's save data on a server of its own, synced before and after a game.");
+            break;
+        case kLanguage:
+            about = tr("The language games use when they offer it.");
+            break;
+        case kTheme:
+            about = tr(t.summary);
+            break;
+        default:
+            break;
+        }
+        const float version = text(c, version_, kStrip.x + kStrip.w - 28.0f, baseline(kStrip.y, kStrip.h, t.size_small),
+                                   t.size_small, t.faint, Align::right);
+        const float shown = tween::clamp01(section_.value);
+        list.push_opacity(shown);
+        list.push_transform(1.0f, 0.0f, 0.0f, 0.0f, (1.0f - shown) * 8.0f * motion());
+        list.circle(kStrip.x + 34.0f, kStrip.y + kStrip.h * 0.5f, 5.0f, t.accent);
+        text_shrink(c, about, kStrip.x + 56.0f, baseline(kStrip.y, kStrip.h, 22.0f), 22.0f, t.copy,
+                    kStrip.w - 28.0f - version - 40.0f - 56.0f);
         list.pop_transform();
         list.pop_opacity();
+        }
     }
 
-    // ---- under the tiles: what the focused one is about ----
-    glass(c, kStrip, t.radius_row + 2.0f, t.panel.with_alpha(0.80f), t.panel_edge.with_alpha(0.34f), 0.5f);
-    const char *about = "";
-    switch (settings_.selected)
+    if (t.top_nav)
     {
-    case kProfiles:
-        about = tr("Who is playing. Each profile keeps its own save data and settings.");
-        break;
-    case kVideo:
-        about = tr("Graphics backend and how games are scaled to your TV.");
-        break;
-    case kPerformance:
-        about = tr("Faster games, at some cost in accuracy.");
-        break;
-    case kAudio:
-        about = tr("Game volume, and the sounds of this menu.");
-        break;
-    case kControls:
-        about = tr("Vibration, button mapping and the shortcuts during a game.");
-        break;
-    case kAccessibility:
-        about = tr("Make the menu easier to see and follow.");
-        break;
-    case kDiagnostics:
-        about = tr("Setup status and detailed logs.");
-        break;
-    case kFiles:
-        about = tr("The folder that holds your keys, firmware and games.");
-        break;
-    case kDownloads:
-        about = tr("Games on your network, downloaded when you play them.");
-        break;
-    case kSaveSync:
-        about = tr("Each profile's save data on a server of its own, synced before and after a game.");
-        break;
-    case kLanguage:
-        about = tr("The language games use when they offer it.");
-        break;
-    case kTheme:
-        about = tr(t.summary);
-        break;
-    default:
-        break;
+        static constexpr Hint kHints[] = {
+            {Pad::cross, TR("Select")}, {Pad::circle, TR("Home")}, {Pad::l1, TR("Sections"), Pad::r1}};
+        draw_footer(c, kHints, 3);
+        return;
     }
-    const float version = text(c, version_, kStrip.x + kStrip.w - 28.0f, baseline(kStrip.y, kStrip.h, t.size_small),
-                               t.size_small, t.faint, Align::right);
-    const float shown = tween::clamp01(section_.value);
-    list.push_opacity(shown);
-    list.push_transform(1.0f, 0.0f, 0.0f, 0.0f, (1.0f - shown) * 8.0f * motion());
-    list.circle(kStrip.x + 34.0f, kStrip.y + kStrip.h * 0.5f, 5.0f, t.accent);
-    text_shrink(c, about, kStrip.x + 56.0f, baseline(kStrip.y, kStrip.h, 22.0f), 22.0f, t.copy,
-                kStrip.w - 28.0f - version - 40.0f - 56.0f);
-    list.pop_transform();
-    list.pop_opacity();
-
     static constexpr Hint kHints[] = {
         {Pad::cross, TR("Select")}, {Pad::circle, TR("Back")}, {Pad::l1, TR("Sections"), Pad::r1}};
     draw_footer(c, kHints, 3, home_.system_status);
@@ -497,7 +556,12 @@ void Launcher::press_dialog(Key key)
         prefs_.theme = chosen.id;
         const bool saved = save_preferences(true);
         if (saved)
+        {
             use_theme(chosen.id);
+            settings_.visible = th().list_settings ? 10 : 12;
+            settings_.pitch = th().list_settings ? 84.0f : 88.0f;
+            settings_.reset(kCategoryCount, settings_.selected);
+        }
         else
             prefs_.theme = had;
         cue(saved ? Cue::saved : Cue::error);
