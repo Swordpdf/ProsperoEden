@@ -68,6 +68,8 @@ inline constexpr int kHudCornerCount = 4;
 // memory pool that could not be read as a size of 0.
 struct HudMachine {
     unsigned cpu = ~0u;
+    // The four emulated cores, each as a share of one CPU: shown instead of `cpu` when known.
+    unsigned cores[4] = {~0u, ~0u, ~0u, ~0u};
     unsigned gpu = ~0u;
     unsigned long long memory_free = 0;
     unsigned long long memory_total = 0;
@@ -281,8 +283,20 @@ inline std::array<char, kHudTextMax + 1> FormatHudText(const HudClock& clock, co
     if (machine.cpu != ~0u) std::snprintf(cpu, sizeof(cpu), "%u", machine.cpu);
     if (machine.gpu != ~0u) std::snprintf(gpu, sizeof(gpu), "%u", machine.gpu);
     if (fields & kHudFieldCpu) {
-        std::snprintf(piece, sizeof(piece), " CPU %s%%", cpu);
-        put(piece);
+        const bool by_core = machine.cores[0] != ~0u || machine.cores[1] != ~0u || machine.cores[2] != ~0u ||
+                             machine.cores[3] != ~0u;
+        if (by_core) {
+            // Each core with its own sign, so each is coloured by its own load.
+            put(" CPU");
+            for (const unsigned load : machine.cores) {
+                if (load != ~0u) std::snprintf(piece, sizeof(piece), " %u%%", load);
+                else std::snprintf(piece, sizeof(piece), " --%%");
+                put(piece);
+            }
+        } else {
+            std::snprintf(piece, sizeof(piece), " CPU %s%%", cpu);
+            put(piece);
+        }
     }
     if (fields & kHudFieldGpu) {
         std::snprintf(piece, sizeof(piece), " GPU %s%%", gpu);

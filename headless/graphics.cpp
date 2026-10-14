@@ -58,7 +58,10 @@ double LoadingCalm() {
 // a picture, which is what the counters inside them are built for (performance.cpp).
 HudMachine MachineNow() {
     HudMachine machine;
-    machine.cpu = Performance::HostCpuPercent();
+    // The four emulated cores when they can be read, else the app's share of every CPU.
+    Performance::GuestCoreLoads(machine.cores);
+    if (machine.cores[0] == ~0u && machine.cores[1] == ~0u && machine.cores[2] == ~0u && machine.cores[3] == ~0u)
+        machine.cpu = Performance::HostCpuPercent();
     machine.gpu = Performance::GpuBusyPercent();
     Performance::MemoryPool(&machine.memory_free, &machine.memory_total);
     if (const auto held = Performance::graphics_memory_held.load(std::memory_order_relaxed)) machine.graphics = held();

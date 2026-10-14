@@ -558,6 +558,48 @@ unsigned HostCpuPercent() {
     return Percent(share / static_cast<double>(cores));
 }
 
+void GuestCoreLoads(unsigned loads[4]) {
+    // A thread's CPU time can only be read by the thread itself on the console, so each core
+    // writes its own when it next leaves the guest's code after being asked (SampleCpu); here
+    // the last two readings of a core are set against the time between them. A core that wrote
+    // nothing since the last look was asleep, which is no load; when it wakes, its next reading
+    // covers the whole stretch.
+    struct Core {
+        long long mono = 0, cpu = 0;
+        unsigned shown = ~0u;
+    };
+    static thread_local Core cores[4];
+    static thread_local long long asked = 0;
+    const long long now = MonotonicNs();
+    if (now != 0 && (asked == 0 || now - asked >= 250'000'000)) {
+        asked = now;
+        std::array<CpuSample, 4> samples;
+        {
+            std::lock_guard lock(workers_mutex);
+            samples = cpu_samples;
+        }
+        for (unsigned i = 0; i < 4; ++i) {
+            const CpuSample& sample = samples[i];
+            Core& core = cores[i];
+            if (sample.epoch == ~0u || sample.cpu_ns < 0) {
+                core = {};
+            } else if (core.mono == 0) {
+                core.mono = sample.mono_ns;
+                core.cpu = sample.cpu_ns;
+            } else if (sample.mono_ns > core.mono) {
+                core.shown = Percent(static_cast<double>(sample.cpu_ns - core.cpu) /
+                                     static_cast<double>(sample.mono_ns - core.mono));
+                core.mono = sample.mono_ns;
+                core.cpu = sample.cpu_ns;
+            } else if (core.shown != ~0u) {
+                core.shown = 0;
+            }
+        }
+        sample_epoch.fetch_add(1, std::memory_order_relaxed);  // the next readings, please
+    }
+    for (unsigned i = 0; i < 4; ++i) loads[i] = cores[i].shown;
+}
+
 unsigned GpuBusyPercent() {
     // The GPU worker thread's time not spent waiting for something: a command to arrive, a fence to
     // drain, a frame to be freed. That is what the GPU is being given to do rather than what the GPU

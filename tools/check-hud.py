@@ -125,6 +125,16 @@ int main() {
     known.gpu = 43;
     known.memory_free = 4187593114ULL;   // 4.1 GiB of the 8.0 are taken
     known.memory_total = 8589934592ULL;
+    // The four emulated cores take the place of the one share when they are known.
+    {
+        Eden::HudMachine by_core = known;
+        by_core.cores[0] = 92; by_core.cores[1] = 45; by_core.cores[2] = 38; by_core.cores[3] = 3;
+        assert(std::string_view(Eden::FormatHudText(clock, 100, "VLK", by_core).data())
+               == "VLK 60FPS 17.0MS CPU 92% 45% 38% 3% GPU 43% MEM 4.1/8.0G");
+        by_core.cores[3] = ~0u;
+        assert(std::string_view(Eden::FormatHudText(clock, 100, "VLK", by_core).data())
+               == "VLK 60FPS 17.0MS CPU 92% 45% 38% --% GPU 43% MEM 4.1/8.0G");
+    }
     // The graphics' part follows the pool when it is known.
     {
         Eden::HudMachine with_graphics = known;

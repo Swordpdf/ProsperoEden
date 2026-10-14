@@ -16,6 +16,11 @@ void SetSecondaryPlacement(bool enabled);
 void PlatformChecks();
 // Main thread only, between GPU readiness and guest shutdown.
 void Snapshot();
+// How busy each of the four emulated cores' threads was over the last quarter of a second, as a
+// percentage of one CPU (~0u: not known). A game is limited by these four, each on a CPU of
+// its own, so the busiest of them says whether the CPU is what holds a game back; a share of
+// every CPU of the console (HostCpuPercent) stays low even then.
+void GuestCoreLoads(unsigned loads[4]);
 // GPU worker only: firmware rejects cross-thread CPU-time sampling.
 void SampleGpuFrame(unsigned frame);
 // What the overlay's line says about the machine (hud.h, HudMachine). The two percentages are
