@@ -1,0 +1,37 @@
+--- a/src/core/memory.cpp
++++ b/src/core/memory.cpp
+@@ -292,7 +292,7 @@
+         },
+         [&](const Common::ProcessAddress current_vaddr, const std::size_t offset, const std::size_t copy_amount, const u8* const ptr) {
+             if (!unsafe) {
+-                HandleRasterizerDownload(GetInteger(current_vaddr), copy_amount);
++                HandleRasterizerReadDownload(GetInteger(current_vaddr), copy_amount);
+             }
+             std::memcpy(reinterpret_cast<u8*>(buffer) + offset, ptr, copy_amount);
+         });
+@@ -625,7 +625,7 @@
+         if (auto const ptr = GetPointerImpl(addr, [addr]() {
+             LOG_ERROR(HW_Memory, "Unmapped Read{} @ {:#016x}", sizeof(T) * 8, addr);
+         }, [&]() {
+-            HandleRasterizerDownload(addr, sizeof(T));
++            HandleRasterizerReadDownload(addr, sizeof(T));
+         }); ptr) [[likely]] {
+             // It may be tempting to rewrite this particular section to use "reinterpret_cast";
+             // afterall, it's trivially copyable so surely it can be copied ov- Alignment.
+@@ -678,6 +678,16 @@
+         return true;
+     }
+ 
++    // Plain CPU reads of GPU-cached pages. Without reactive flushing they do not download
++    // GPU-written data, as with fastmem (where such reads never trap); without fastmem every
++    // read otherwise takes the rasterizer caches' locks, one 4 KiB page at a time.
++    void HandleRasterizerReadDownload(VAddr v_address, size_t size) {
++        if (!Settings::values.use_reactive_flushing.GetValue()) {
++            return;
++        }
++        HandleRasterizerDownload(v_address, size);
++    }
++
+     void HandleRasterizerDownload(VAddr v_address, size_t size) {
+         const auto* p = GetPointerImpl(
+             v_address, []() {}, []() {});
