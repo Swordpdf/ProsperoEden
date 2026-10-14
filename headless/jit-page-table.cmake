@@ -39,11 +39,11 @@ eden_page_table_replace("    /// Specifies sign bit for page table entries.\n" [
 ]=])
 
 eden_page_table_replace([=[        /// Write page info atomically
-        constexpr void Store(bool marked, PageType type, u16 block, uintptr_t pointer) noexcept {
+        inline void Store(bool marked, PageType type, u16 block, uintptr_t pointer) noexcept {
             data_raw.store(std::bit_cast<u64>(Data{marked, type, block, pointer}));
         }
 
-        constexpr void MarkRasterizerCached() noexcept {
+        inline void MarkRasterizerCached() noexcept {
             data_raw.fetch_or(0b111);
         }
 ]=] [=[        /// Write page info atomically, and the JIT's direct value: before the entry when the page

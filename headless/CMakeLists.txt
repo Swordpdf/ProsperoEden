@@ -138,8 +138,8 @@ eden_sparse_replace("void FreeMemoryPages(void* base, std::size_t size) noexcept
 # A vector can carry a mirror mirror_index entries further on (the JIT's direct page table,
 # headless/jit-page-table.cmake): committing a page of the first part commits its mirror first,
 # so a write of an entry may always write its mirror.
-eden_sparse_replace("    constexpr void CommitPage(std::size_t index) noexcept {\n"
-    "    constexpr void CommitPage(std::size_t index) noexcept {\n        if (mirror_index != 0 && index < mirror_index && !IsCommittedPage(index + mirror_index))\n            CommitPage(index + mirror_index);\n" 1)
+eden_sparse_replace("    constexpr bool CommitPage(std::size_t index) noexcept {\n"
+    "    constexpr bool CommitPage(std::size_t index) noexcept {\n        if (mirror_index != 0 && index < mirror_index && !IsCommittedPage(index + mirror_index))\n            CommitPage(index + mirror_index);\n" 1)
 eden_sparse_replace("    std::size_t alloc_size{};\n"
     "public:\n    std::size_t mirror_index{};\n\nprivate:\n    std::size_t alloc_size{};\n" 1)
 write_derived("${PORT_BUILD_DIR}/sparse/common/sparse_large_vector.h" "${sparse_header}")
@@ -675,7 +675,7 @@ foreach(bits 32 64)
     file(READ "${PROJECT_SOURCE_DIR}/src/core/${relative}" wrapper)
     string(REPLACE "Common::PageTable::SIGN_BIT" "std::countl_zero(Common::PageTable::ATTRIBUTE_MASK)" wrapper "${wrapper}")
     # The JIT's direct page table when the process has one (headless/jit-page-table.cmake).
-    set(direct_anchor "            config.page_table_sign_extension = std::countl_zero(Common::PageTable::ATTRIBUTE_MASK);\n        }\n")
+    set(direct_anchor "            config.page_table_sign_extension = std::uint8_t(std::countl_zero(Common::PageTable::ATTRIBUTE_MASK));\n        }\n")
     string(FIND "${wrapper}" "${direct_anchor}" direct_at)
     if(direct_at LESS 0)
         message(FATAL_ERROR "Pinned page-table JIT configuration changed (${bits})")

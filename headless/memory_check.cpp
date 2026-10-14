@@ -1496,15 +1496,25 @@ struct ReuseMemory : A64::UserCallbacks {
         require(pc >= 0x400000 && pc < 0x400000 + sizeof program && pc % 4 == 0);
         return program[(pc - 0x400000) / 4];
     }
-    uint8_t MemoryRead8(uint64_t a) { return Read<uint8_t>(a); }
-    uint16_t MemoryRead16(uint64_t a) { return Read<uint16_t>(a); }
-    uint32_t MemoryRead32(uint64_t a) { return Read<uint32_t>(a); }
-    uint64_t MemoryRead64(uint64_t a) { return Read<uint64_t>(a); }
+    uint64_t MemoryRead(uint64_t a, std::size_t size) override {
+        switch (size) {
+        case 1: return Read<uint8_t>(a);
+        case 2: return Read<uint16_t>(a);
+        case 4: return Read<uint32_t>(a);
+        case 8: return Read<uint64_t>(a);
+        }
+        std::abort();
+    }
     A64::Vector MemoryRead128(uint64_t a) { return Read<A64::Vector>(a); }
-    void MemoryWrite8(uint64_t a, uint8_t v) { Write(a, v); }
-    void MemoryWrite16(uint64_t a, uint16_t v) { Write(a, v); }
-    void MemoryWrite32(uint64_t a, uint32_t v) { Write(a, v); }
-    void MemoryWrite64(uint64_t a, uint64_t v) { Write(a, v); }
+    void MemoryWrite(uint64_t a, uint64_t v, std::size_t size) override {
+        switch (size) {
+        case 1: return Write(a, static_cast<uint8_t>(v));
+        case 2: return Write(a, static_cast<uint16_t>(v));
+        case 4: return Write(a, static_cast<uint32_t>(v));
+        case 8: return Write(a, v);
+        }
+        std::abort();
+    }
     void MemoryWrite128(uint64_t a, A64::Vector v) { Write(a, v); }
     bool MemoryWriteExclusive8(uint64_t, uint8_t, uint8_t) { std::abort(); }
     bool MemoryWriteExclusive16(uint64_t, uint16_t, uint16_t) { std::abort(); }
