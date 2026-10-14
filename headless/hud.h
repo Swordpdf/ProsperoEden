@@ -290,9 +290,12 @@ inline std::array<char, kHudTextMax + 1> FormatHudText(const HudClock& clock, co
     if (fields & kHudFieldMem) {
         char memory[40] = "--/--";
         if (machine.memory_total != 0)
+            // What is taken of the pool, then the pool: the order a player expects ("4.1 of
+            // 8.0"), in the binary gigabytes the rest of the app counts the pool in.
             std::snprintf(memory, sizeof(memory), "%.1f/%.1fG",
-                          static_cast<double>(machine.memory_free) / 1e9,
-                          static_cast<double>(machine.memory_total) / 1e9);
+                          static_cast<double>(machine.memory_total - std::min(machine.memory_free, machine.memory_total)) /
+                              1073741824.0,
+                          static_cast<double>(machine.memory_total) / 1073741824.0);
         std::snprintf(piece, sizeof(piece), " MEM %s", memory);
         put(piece);
     }

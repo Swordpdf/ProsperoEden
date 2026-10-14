@@ -123,8 +123,8 @@ int main() {
     Eden::HudMachine known;
     known.cpu = 55;
     known.gpu = 43;
-    known.memory_free = 4100000000ULL;
-    known.memory_total = 8000000000ULL;
+    known.memory_free = 4187593114ULL;   // 4.1 GiB of the 8.0 are taken
+    known.memory_total = 8589934592ULL;
     // A full 100% speed is not worth saying; anything else is.
     assert(std::string_view(Eden::FormatHudText(clock, 98, "VLK", known).data())
            == "VLK 60FPS 17.0MS 98% CPU 55% GPU 43% MEM 4.1/8.0G");
