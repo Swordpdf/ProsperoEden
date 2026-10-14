@@ -63,21 +63,46 @@ enum VideoRow : int
     video_filter,
     video_astc,
     video_refresh,
-    video_overlay,
+    video_overlay,         // the FPS overlay's own switch
+    video_overlay_options, // opens the overlay's options (Modal::hud)
     // Frame generation: not shown in a build without it (Services::frame_gen_state).
     video_frame_gen,
     video_frame_gen_target,
     video_frame_gen_multiplier,
     kVideoRows,
 };
+// The overlay's options (Modal::hud): what its line says, and how the chip is drawn. Opened from
+// Settings > Video > Overlay options; the colour and size switches live here, and the field
+// switches are the pieces of the line the user may turn off (hud.h's kHudField*).
+enum HudRow : int
+{
+    hud_colors_row,  // Enable colors
+    hud_size_row,    // Size
+    hud_corner_row,  // Corner
+    hud_backend_row, // from here, one switch per piece of the line
+    hud_fps_row,
+    hud_ms_row,
+    hud_speed_row,
+    hud_cpu_row,
+    hud_gpu_row,
+    hud_mem_row,
+    hud_ping_row,
+    kHudRows,
+};
 constexpr int kFrameGenTargets = 6;     // Auto, 60, 90, 120, 144, 240 Hz (settings_store.h)
 constexpr int kFrameGenMultipliers = 3; // 2x, 3x, 4x
+constexpr int kHudSizes = 3;            // Regular, Medium, Large (settings_store.h, kHudSizeKeys)
+constexpr int kHudCorners = 4;          // kHudCornerNames, services.hpp
+constexpr int kHudRowsShown = 5;
 constexpr float kVideoRowsTop = 334.0f;
 constexpr float kVideoRowPitch = 96.0f;
 constexpr float kVideoRowHeight = 94.0f;
 constexpr int kVideoRowsShown = 5;
 constexpr Rect kVideoWindow{592.0f, kVideoRowsTop, 736.0f,
                             kVideoRowPitch * (kVideoRowsShown - 1) + kVideoRowHeight};
+// The overlay's options (Modal::hud) show five of their rows and scroll, as Video's do.
+constexpr Rect kHudWindow{592.0f, kVideoRowsTop, 736.0f,
+                          kVideoRowPitch * (kHudRowsShown - 1) + kVideoRowHeight};
 // The Performance dialog's switches, and the window that shows four of them over what the
 // highlighted one does.
 enum PerformanceRow : int
@@ -361,6 +386,8 @@ int Launcher::dialog_rows(Modal modal) const
     {
     case Modal::video:
         return services_.frame_gen_state() == 0 ? static_cast<int>(video_frame_gen) : static_cast<int>(kVideoRows);
+    case Modal::hud:
+        return kHudRows;
     case Modal::performance:
         return kPerformanceRows;
     case Modal::audio:
@@ -482,6 +509,13 @@ void Launcher::press_dialog(Key key)
             prefs_.astc = prefs_.astc != 0 ? 0 : 1;
         else if (option_ == video_refresh)
             prefs_.refresh = prefs_.refresh != 0 ? 0 : 1;
+        else if (option_ == video_overlay_options)
+        {
+            // The overlay's options have their own list (settings.cpp, Modal::hud).
+            if (activate)
+                open_hud();
+            return;
+        }
         else if (option_ >= video_frame_gen && services_.frame_gen_state() != 2)
         {
             say(tr("Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."), true);
@@ -497,7 +531,7 @@ void Launcher::press_dialog(Key key)
             prefs_.frame_gen_multiplier = (std::clamp(prefs_.frame_gen_multiplier, 0, kFrameGenMultipliers - 1) + step +
                                            kFrameGenMultipliers) % kFrameGenMultipliers;
         else
-            prefs_.hud = !prefs_.hud;
+            prefs_.hud = !prefs_.hud; // the FPS overlay's own switch
         break;
     case Modal::audio:
         if (option_ == 0)
@@ -672,6 +706,7 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
             pick(services_.astc_labels(), prefs_.astc),
             hertz(prefs_.refresh),
             std::string{}, // FPS overlay: a switch
+            std::string{}, // Overlay options: an opener
             on_off(prefs_.frame_gen),
             prefs_.frame_gen_target <= 0 ? std::string{tr("Auto")} :
                 fill(tr("{0} Hz"), {kFrameGenTargetNames[std::clamp(prefs_.frame_gen_target, 1, kFrameGenTargets - 1)]}),
@@ -681,8 +716,8 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         static constexpr const char *kNames[kVideoRows] = {
             TR("Renderer"),         TR("Output resolution"), TR("Resolution"),
             TR("Upscaling filter"), TR("ASTC textures"),     TR("Refresh rate"),
-            TR("FPS overlay"),      TR("Frame generation"),  TR("Frame gen target"),
-            TR("Frame gen multiplier")};
+            TR("FPS overlay"),      TR("Overlay options"),
+            TR("Frame generation"), TR("Frame gen target"),  TR("Frame gen multiplier")};
         for (int row = first; row <= last; ++row)
         {
             list.push_opacity(video_rows_.row_alpha(row, kVideoRowHeight));
@@ -690,6 +725,14 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
             {
                 label(row, tr(kNames[row]), kToggle);
                 toggle(c, 1292.0f, row_centre(row), knob);
+            }
+            else if (row == video_overlay_options)
+            {
+                // Opens the overlay's options (Modal::hud): a hint that more is inside.
+                const float shown = text_shrink(c, ">", 1292.0f,
+                                                baseline(dialog_row_top(modal, row), 94.0f, th().size_small),
+                                                th().size_small, th().meta, 320.0f, Align::right);
+                label(row, tr(kNames[row]), shown);
             }
             else if (row >= video_frame_gen && frame_gen_locked)
             {
@@ -883,6 +926,12 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
             {Pad::updown, TR("Select")}, {Pad::cross, TR("Open")}, {Pad::circle, TR("Back")}};
         draw_hints(c, kOpen, 3, 592.0f, foot, th().copy, 736.0f);
     }
+    else if (modal == Modal::video && option_ == video_overlay_options)
+    {
+        static constexpr Hint kOpen[] = {
+            {Pad::updown, TR("Select")}, {Pad::cross, TR("Open")}, {Pad::circle, TR("Back")}};
+        draw_hints(c, kOpen, 3, 592.0f, foot, th().copy, 736.0f);
+    }
     else if (rows > 1)
     {
         static constexpr Hint kHints[] = {
@@ -893,6 +942,145 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
     {
         static constexpr Hint kHints[] = {{Pad::cross, TR("Change")}, {Pad::circle, TR("Back")}};
         draw_hints(c, kHints, 2, 592.0f, foot, th().copy, 736.0f);
+    }
+    list.pop_transform();
+    list.pop_opacity();
+}
+
+void Launcher::open_hud()
+{
+    hud_rows_.visible = kHudRowsShown;
+    hud_rows_.pitch = kVideoRowPitch;
+    hud_rows_.reset(kHudRows, 0);
+    modal_ = modal_shown_ = Modal::hud;
+    message_.clear();
+    cue(Cue::open);
+}
+
+void Launcher::press_hud(Key key)
+{
+    const bool adjust = key == Key::left || key == Key::right;
+    const bool activate = key == Key::cross;
+    const int step = key == Key::left ? -1 : 1;
+    if (key == Key::circle)
+    {
+        // Back to Video, on the row that opened these options (video_rows_ never left it).
+        modal_ = modal_shown_ = Modal::video;
+        option_ = video_overlay_options;
+        option_cursor_.snap(dialog_row_top(Modal::video, option_));
+        message_.clear();
+        cue(Cue::back);
+        return;
+    }
+    if (key == Key::up || key == Key::down)
+    {
+        if (hud_rows_.move(key == Key::down ? 1 : -1))
+        {
+            option_ = hud_rows_.selected;
+            message_.clear();
+            cue(Cue::focus);
+        }
+        return;
+    }
+    if (!adjust && !activate)
+        return;
+    const int row = std::clamp(hud_rows_.selected, 0, kHudRows - 1);
+    const Preferences before = prefs_;
+    if (row == hud_colors_row)
+        prefs_.hud_colors = !prefs_.hud_colors;
+    else if (row == hud_size_row)
+        prefs_.hud_size = (std::clamp(prefs_.hud_size, 0, kHudSizes - 1) + step + kHudSizes) % kHudSizes;
+    else if (row == hud_corner_row)
+        prefs_.hud_corner = (std::clamp(prefs_.hud_corner, 0, kHudCorners - 1) + step + kHudCorners) % kHudCorners;
+    else
+    {
+        // One of the line's pieces, turned on or off (hud.h's kHudField*).
+        prefs_.hud_fields ^= 1 << (row - hud_backend_row);
+    }
+    const bool saved = save_preferences();
+    if (!saved)
+        prefs_ = before;
+    cue(saved ? Cue::toggle : Cue::error);
+}
+
+void Launcher::draw_hud(Canvas &c, float open)
+{
+    gfx::DrawList &list = c.list;
+    list.push_opacity(open);
+    list.push_transform(1.0f - 0.03f * (1.0f - open) * motion(), 960.0f, 540.0f, 0.0f,
+                        (1.0f - open) * 26.0f * motion());
+    glass(c, kDialog, th().radius_panel, th().panel.with_alpha(0.97f), th().panel_edge.with_alpha(0.66f),
+          1.6f);
+    text_shrink(c, tr("Overlay options"), 592.0f, baseline(218.0f, 62.0f, th().size_display),
+                th().size_display, th().title, 736.0f);
+    text_fit(c, tr("What the FPS overlay's line says, and how the chip is drawn."), 592.0f,
+             baseline(291.0f, 32.0f, th().size_small), th().size_small, th().copy, 736.0f);
+
+    list.push_clip({kHudWindow.x - 24.0f, kHudWindow.y - 6.0f, kHudWindow.w + 48.0f, kHudWindow.h + 12.0f});
+    const auto row_top = [&](int row)
+    { return kVideoRowsTop + kVideoRowPitch * static_cast<float>(row) - hud_rows_.scroll(); };
+    for (int row = hud_rows_.first_row(); row <= hud_rows_.last_row(); ++row)
+    {
+        list.push_opacity(hud_rows_.row_alpha(row, kVideoRowHeight));
+        plate_rest(c, row_plate(), {592.0f, row_top(row), 736.0f, kVideoRowHeight});
+        list.pop_opacity();
+    }
+    plate_focus(c, row_plate(),
+                {592.0f, kVideoRowsTop + hud_rows_.cursor() - hud_rows_.scroll(), 736.0f, kVideoRowHeight},
+                1.0f);
+
+    // A row's name takes what its control (`taken` wide, at the right) leaves of the row.
+    const auto label = [&](int row, const char *value, float taken)
+    {
+        text_shrink(c, value, 628.0f, baseline(row_top(row), kVideoRowHeight, th().size_text),
+                    th().size_text, th().value, 664.0f - taken - 28.0f);
+    };
+    const auto choice = [&](int row, const std::string &value)
+    {
+        return chooser(c, value, 1296.0f, baseline(row_top(row), kVideoRowHeight, th().size_text),
+                       row == hud_rows_.selected ? 1.0f : 0.0f, th().accent_pale);
+    };
+    constexpr float kToggle = 64.0f;
+    const auto row_centre = [&](int row) { return row_top(row) + kVideoRowHeight * 0.5f; };
+
+    static constexpr const char *kNames[kHudRows] = {
+        TR("Enable colors"), TR("Size"), TR("Corner"), TR("Backend"), TR("FPS"),
+        TR("Frame time"), TR("Speed"), TR("CPU"), TR("GPU"), TR("Memory"), TR("Ping")};
+    for (int row = hud_rows_.first_row(); row <= hud_rows_.last_row(); ++row)
+    {
+        list.push_opacity(hud_rows_.row_alpha(row, kVideoRowHeight));
+        if (row == hud_colors_row)
+        {
+            label(row, tr(kNames[row]), kToggle);
+            toggle(c, 1292.0f, row_centre(row), prefs_.hud_colors ? 1.0f : 0.0f);
+        }
+        else if (row == hud_size_row)
+            label(row, tr(kNames[row]),
+                  choice(row, tr(kHudSizeNames[std::clamp(prefs_.hud_size, 0, kHudSizes - 1)])));
+        else if (row == hud_corner_row)
+            label(row, tr(kNames[row]),
+                  choice(row, tr(kHudCornerNames[std::clamp(prefs_.hud_corner, 0, kHudCorners - 1)])));
+        else
+        {
+            // One of the line's pieces, on or off.
+            const bool on = (prefs_.hud_fields & (1 << (row - hud_backend_row))) != 0;
+            label(row, tr(kNames[row]), kToggle);
+            toggle(c, 1292.0f, row_centre(row), on ? 1.0f : 0.0f);
+        }
+        list.pop_opacity();
+    }
+    list.pop_clip();
+    scrollbar(c, hud_rows_, 1340.0f, kHudWindow.y, kHudWindow.h);
+
+    const float foot = 848.0f;
+    if (!message_.empty())
+        notice_block(c, message_, 592.0f, foot - 6.0f, th().size_small, 26.0f,
+                     message_warning_ ? th().warning : th().accent_pale, 736.0f, 2, message_warning_);
+    else
+    {
+        static constexpr Hint kHints[] = {
+            {Pad::updown, TR("Select")}, {Pad::leftright, TR("Change")}, {Pad::circle, TR("Back")}};
+        draw_hints(c, kHints, 3, 592.0f, foot, th().copy, 736.0f);
     }
     list.pop_transform();
     list.pop_opacity();

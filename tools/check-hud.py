@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""FPS interval math, bounded bitmap text and startup-only queue polling."""
+"""FPS interval math, bounded overlay text and startup-only queue polling."""
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 root = Path(__file__).resolve().parents[1]
@@ -14,12 +15,56 @@ assert (present_loading.index('DrawLoading(') < present_loading.index('DrawHud(t
         < present_loading.index('eglSwapBuffers'))
 draw_loading = graphics.split('    bool DrawLoading(', 1)[1].split('    void DrawHud(', 1)[0]
 assert 'eglSwapBuffers' not in draw_loading and 'loading_failed = true' in draw_loading
-assert 'vec4(0.025,0.04,0.075,0.5)' in graphics
-assert 'glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)' in graphics
-# As wide as its text, laid out for a picture 1080 rows high and scaled to the surface's.
-assert 'const int text_width = int(std::strlen(text)) * 16;' in draw_hud
-assert 'units(text_width + 24)' in draw_hud
+# The line is picked out of the panel behind it, in the one ink the overlay draws with.
+assert 'hud_pick(pick, glyphs, gl_FragCoord.xy, at, cap)' in draw_hud
+assert 'hud_panel(' in draw_hud and 'kHudInk' in draw_hud
+assert 'vec3(0.0196,0.0392,0.0039)' in draw_hud  # loading stays a full screen of its own ink
+assert 'glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)' in draw_hud
+# The box covers only the line: its place at one top corner, as wide as the text, laid out for a
+# picture 1080 rows high and scaled to the surface's. A large chip takes every number twice.
+assert 'glViewport(box_x, height - box_y - box_h, box_w, box_h)' in draw_hud
+assert 'HudTextWidth(text, kHudCapUnits * hud_scale) + 2 * kHudPadUnits * hud_scale' in draw_hud
+assert 'units(kHudBoxUnits * hud_scale)' in draw_hud and 'units(kHudBaselineUnits * hud_scale)' in draw_hud
 assert 'static_cast<float>(height) / 1080.0f' in draw_hud
+assert all(name in draw_hud for name in ('kHudBoxX', 'kHudBoxY', 'kHudBoxUnits', 'kHudBaselineUnits'))
+# The chip stands against whichever of the four corners was named, the same distance in from
+# each of its two edges (Preferences::hud_corner, hud.h).
+assert 'width - box_w - units(kHudBoxX)' in draw_hud
+assert 'height - box_h - units(kHudBoxY)' in draw_hud
+assert 'hud_size.load' in draw_hud and 'hud_corner.load' in draw_hud
+assert 'hud_colors.load' in draw_hud and 'hud_fields.load' in graphics
+# The line in its inks when colours are on, in the one ink when they are off.
+assert 'colors ? hud_ink(pick.ink) : kHudInk' in draw_hud
+# The Vulkan overlay draws that same line with that same font (vulkan_hud.frag, which the build
+# compiles to SPIR-V, so a mistake there is a build failure).
+frag = (root/'headless/vulkan_hud.frag').read_text()
+assert 'hud_pick(pick, glyphs, pixel, at,' in frag and 'pick_cover(pick)' in frag
+assert 'hud_panel(' in frag and 'kHudInk' in frag
+# The chip's width is walked out here rather than pushed: Vulkan's push constants are all used up
+# by the line itself, so the box has to agree with the C++ one by construction.
+assert 'hud_line_width(glyphs,' in frag
+assert all(name in frag for name in ('kHudCapUnits', 'kHudPadUnits', 'kHudBaselineUnits'))
+assert 'float(text.width) - gl_FragCoord.y' in frag  # Vulkan counts rows from the top
+assert 'float((text.loading >> 28) & 7u) * 0.5' in frag  # the chip's scale, from the size field
+# The overlay's snapshot marks itself in the field the loading screen owns, and the two are told
+# apart by a bit the loading path never sets. The shader and the draw path carry the literals,
+# so they have to be the ones hud.h defines.
+hud_h = (root/'headless/hud.h').read_text()
+draw = (root/'headless/vulkan_hud_draw.inc').read_text()
+assert 'kHudOverlayFlag = 0x80000000u' in hud_h and '0x80000000u' in frag
+# The chip's size is the scale times two in three bits (2 = 1x, 3 = 1.5x, 4 = 2x), and the
+# colour bit says the line is drawn in its inks; both ride in the field the loading screen owns.
+assert 'kHudSizeShift = 28' in hud_h and 'kHudSizeMask = 0x70000000u' in hud_h
+assert 'kHudColorsFlag = 0x08000000u' in hud_h and '0x08000000u' in frag
+assert 'kHudSizeMask' in draw and 'kHudSizeShift' in draw  # the box's height from that field
+assert 'Eden::HudLoading(hud)' in draw
+# C++ and GLSL size the box from the same generated numbers, so the box never drifts apart. The
+# digit advance is among them: the C++ width and the shader's own walk over the line have to land
+# on the same edge, or the last figure would stand outside the chip.
+header = (root/'headless/hud_text_advances.h').read_text()
+for name in ('kHudCapUnits', 'kHudPadUnits', 'kHudBoxUnits', 'kHudBaselineUnits', 'kHudDigitAdvance'):
+    value = re.search(rf'const float {name} = ([0-9.]+);', (root/'headless/loading_text.glsl').read_text()).group(1)
+    assert re.search(rf'inline constexpr float {name} = {value}f;', header), name
 
 with tempfile.TemporaryDirectory() as directory:
     source = Path(directory) / 'hud.cpp'
@@ -27,6 +72,7 @@ with tempfile.TemporaryDirectory() as directory:
     source.write_text(r'''#include "hud.h"
 #include <cassert>
 #include <cmath>
+#include <string>
 int main() {
     Eden::HudClock clock;
     clock.Present(80.0); // Long startup must not count as a slow game frame.
@@ -50,50 +96,122 @@ int main() {
     Eden::StartupGate slow;
     for (int i = 0; i < 5; ++i) assert(!slow.Ready(i));
     assert(slow.Ready(5)); // Slow rendering must not remain hidden forever.
-    assert(Eden::HudGlyph(' ') == 0 && Eden::HudGlyph('F') != 0 && Eden::HudGlyph('W') != 0);
-    auto text = Eden::HudText("FPS 12.3");
-    assert(text[0] == Eden::HudGlyph('F') && text[8] == 0);
-    assert(Eden::HudText("01234567890123456789")[15] == Eden::HudGlyph('5'));
-    assert(std::string_view(Eden::FormatHudText(clock, 100, "OGL").data()) == "OGL F60 S100 W17");
-    assert(Eden::HudGlyph('V') != 0 && Eden::HudGlyph('K') != 0);
-    auto snapshot = Eden::MakeHudSnapshot(clock, 100);
-    assert(snapshot.glyphs == Eden::HudText("VLK F60 S100 W17"));
-    assert(snapshot.width == std::string_view("VLK F60 S100 W17").size() * 16 + 24);
-    // With frame generation the display is given more frames than the guest makes: both rates
-    // are shown then, and the output's never above its refresh rate.
+
+    // The line is the font's own characters: four to a word, and a zero after it.
+    Eden::HudSnapshot packed{};
+    Eden::PutHudText(packed, "VLK 60FPS");
+    assert(std::string_view(reinterpret_cast<const char*>(packed.glyphs.data())) == "VLK 60FPS");
+    Eden::PutHudText(packed, "");
+    assert(std::string_view(reinterpret_cast<const char*>(packed.glyphs.data())).empty());
+    Eden::HudSnapshot full{};
+    Eden::PutHudText(full, std::string(Eden::kHudTextMax + 40, 'A'));
+    assert(std::string_view(reinterpret_cast<const char*>(full.glyphs.data())).size() ==
+           Eden::kHudTextMax);
+    static_assert(sizeof(Eden::HudSnapshot) == 128); // Vulkan's guaranteed push-constant bytes.
+
+    // The box the line sits in, and the text's baseline in it, come from one set of numbers.
+    assert(Eden::kHudBaselineUnits == Eden::kHudPadUnits + Eden::kHudCapUnits);
+    assert(Eden::kHudBoxUnits == Eden::kHudCapUnits + 2 * Eden::kHudPadUnits);
+
+    // What the machine could not say is shown as "--", until it can say it.
+    Eden::HudMachine unknown;
+    assert(unknown.cpu == ~0u && unknown.gpu == ~0u && unknown.memory_total == 0);
+    clock.fps = 60;
+    clock.worst_ms = 17;
+    assert(std::string_view(Eden::FormatHudText(clock, 100, "OGL", unknown).data())
+           == "OGL 60FPS 17.0MS CPU --% GPU --% MEM --/--");
+    Eden::HudMachine known;
+    known.cpu = 55;
+    known.gpu = 43;
+    known.memory_free = 4100000000ULL;
+    known.memory_total = 8000000000ULL;
+    // A full 100% speed is not worth saying; anything else is.
+    assert(std::string_view(Eden::FormatHudText(clock, 98, "VLK", known).data())
+           == "VLK 60FPS 17.0MS 98% CPU 55% GPU 43% MEM 4.1/8.0G");
+    assert(std::string_view(Eden::FormatHudText(clock, 100, "VLK", known).data())
+           == "VLK 60FPS 17.0MS CPU 55% GPU 43% MEM 4.1/8.0G");
+    clock.fps = -1;
+    assert(std::string_view(Eden::FormatHudText(clock, 100, "OGL", known).data())
+           == "OGL --FPS --MS CPU 55% GPU 43% MEM 4.1/8.0G");
+    clock.fps = 60;
+    assert(std::string_view(Eden::FormatHudText(clock, 100, "OGL", known, 42).data())
+           == "OGL 60FPS 17.0MS CPU 55% GPU 43% MEM 4.1/8.0G P42");
+    assert(std::string_view(Eden::FormatHudText(clock, 100, "OGL", known, -1).data())
+           == "OGL 60FPS 17.0MS CPU 55% GPU 43% MEM 4.1/8.0G");
+
+    // With frame generation the display is given frames the guest never made: both rates are
+    // shown then, and the display's is never above its own refresh rate.
     Eden::HudClock guest = clock, shown = clock;
     guest.fps = 30;
     guest.worst_ms = 33;
     shown.fps = 60;
-    assert(std::string_view(Eden::FormatHudText(guest, shown, 100, "VLK", 59.94).data()) == "VLK N30 F60 S100 W33");
+    assert(std::string_view(Eden::FormatHudText(guest, shown, 100, "VLK", unknown, 59.94).data())
+           == "VLK 30/60FPS 33.0MS CPU --% GPU --% MEM --/--");
     shown.fps = 120;
-    assert(std::string_view(Eden::FormatHudText(guest, shown, 100, "VLK", 59.94).data()) == "VLK N30 F60 S100 W33");
-    assert(std::string_view(Eden::FormatHudText(guest, shown, 100, "VLK", 119.88).data()) == "VLK N30 F120 S100 W33");
+    assert(std::string_view(Eden::FormatHudText(guest, shown, 100, "VLK", unknown, 59.94).data())
+           == "VLK 30/60FPS 33.0MS CPU --% GPU --% MEM --/--");
+    assert(std::string_view(Eden::FormatHudText(guest, shown, 100, "VLK", unknown, 119.88).data())
+           == "VLK 30/120FPS 33.0MS CPU --% GPU --% MEM --/--");
     guest.fps = 60;
     guest.worst_ms = 17;
-    assert(std::string_view(Eden::FormatHudText(guest, shown, 100, "VLK", 59.94).data()) == "VLK F60 S100 W17");
-    assert(Eden::MakeHudSnapshot(guest, shown, 100, 119.88).glyphs == Eden::HudText("VLK N60 F120 S100 W17"));
-    clock.fps = -1;
-    assert(Eden::MakeHudSnapshot(clock, 0).glyphs == Eden::HudText("VLK F-- S-- W--"));
+    assert(std::string_view(Eden::FormatHudText(guest, shown, 100, "VLK", unknown, 59.94).data())
+           == "VLK 60FPS 17.0MS CPU --% GPU --% MEM --/--");
+
+    // The box is as wide as that line needs, with a margin either side, at the corner it sits in.
+    auto snapshot = Eden::MakeHudSnapshot(guest, shown, 100, known, 119.88, 9999);
+    const std::string_view line{reinterpret_cast<const char*>(snapshot.glyphs.data())};
+    assert(line == "VLK 60/120FPS 17.0MS CPU 55% GPU 43% MEM 4.1/8.0G P9999");
+    assert(snapshot.x == Eden::kHudBoxX && snapshot.y == Eden::kHudBoxY);
+    assert(snapshot.width == static_cast<uint32_t>(std::lround(
+               Eden::HudTextWidth(line, Eden::kHudCapUnits) + 2 * Eden::kHudPadUnits)));
+    assert(snapshot.width < 1920); // One line, in a picture 1080 rows high.
+    // The chip's size: regular 1x, medium 1.5x, large 2x, stored as the scale times two in bits
+    // 28-30 (hud.h, HudSizeField). A large chip is twice every one of the box's numbers.
+    const auto regular = Eden::MakeHudSnapshot(guest, shown, 100, known, 119.88, 9999, 0, 0);
+    const auto medium = Eden::MakeHudSnapshot(guest, shown, 100, known, 119.88, 9999, 1, 0);
+    const auto large = Eden::MakeHudSnapshot(guest, shown, 100, known, 119.88, 9999, 2, 0);
+    assert(((regular.loading & Eden::kHudSizeMask) >> Eden::kHudSizeShift) == 2);
+    assert(((medium.loading & Eden::kHudSizeMask) >> Eden::kHudSizeShift) == 3);
+    assert(((large.loading & Eden::kHudSizeMask) >> Eden::kHudSizeShift) == 4);
+    assert(Eden::HudSizeScale(regular.loading) == 1.0f);
+    assert(Eden::HudSizeScale(medium.loading) == 1.5f);
+    assert(Eden::HudSizeScale(large.loading) == 2.0f);
+    assert(large.width == static_cast<uint32_t>(std::lround(
+               Eden::HudTextWidth(line, Eden::kHudCapUnits * 2.0f) + 2 * Eden::kHudPadUnits * 2.0f)));
+    assert(large.x == Eden::kHudBoxX && large.y == Eden::kHudBoxY);
+    assert((large.loading & Eden::kHudOverlayFlag) != 0);
+    assert(!Eden::HudLoading(large)); // the overlay is never mistaken for the loading screen
+    // The colour bit, and the pieces of the line the user may turn off.
+    const auto coloured = Eden::MakeHudSnapshot(guest, shown, 100, known, 119.88, 9999, 0, 0, true);
+    assert((coloured.loading & Eden::kHudColorsFlag) != 0);
+    assert((snapshot.loading & Eden::kHudColorsFlag) == 0); // off by default
+    // Only the pieces the mask names reach the line; the rest are dropped, and their separators
+    // with them, so a kept piece never opens with a stray space.
+    assert(std::string_view(Eden::FormatHudText(clock, 100, "VLK", known, -1,
+                                                Eden::kHudFieldBackend | Eden::kHudFieldFps |
+                                                    Eden::kHudFieldMem).data())
+           == "VLK 60FPS MEM 4.1/8.0G");
+    assert(std::string_view(Eden::FormatHudText(clock, 100, "VLK", known, -1, 0).data()).empty());
+    // All four corners: each the same distance in from the two edges it stands against.
+    for (int corner = 0; corner < Eden::kHudCornerCount; ++corner)
+    {
+        const auto placed = Eden::MakeHudSnapshot(guest, shown, 100, known, 119.88, 9999, 0, corner);
+        const uint32_t box = static_cast<uint32_t>(std::lround(Eden::kHudBoxUnits));
+        const bool right = corner == 1 || corner == 3, bottom = corner == 2 || corner == 3;
+        assert(placed.x == (right ? Eden::kHudPictureWidth - placed.width - Eden::kHudBoxX
+                                  : Eden::kHudBoxX));
+        assert(placed.y == (bottom ? Eden::kHudPictureHeight - box - Eden::kHudBoxY : Eden::kHudBoxY));
+        assert(((placed.loading & Eden::kHudSizeMask) >> Eden::kHudSizeShift) == 2 && !Eden::HudLoading(placed));
+    }
+    assert(Eden::HudLoading(Eden::MakeLoadingSnapshot(0)));
+    // Nothing it can say reaches past what the words of a snapshot hold.
     clock.fps = 1000000;
     clock.worst_ms = 1000000;
-    assert(Eden::MakeHudSnapshot(clock, 1000000).width <= 28 * 16 + 24);
-    static_assert(sizeof(Eden::HudSnapshot) == 128);
-    clock.fps = 60;
-    clock.worst_ms = 17;
-    for (const char* backend : {"OGL", "VLK"}) {
-        const auto online = Eden::FormatHudText(clock, 100, backend, 42);
-        assert(std::string_view(online.data()).ends_with(" W17 P42"));
-        assert(std::string_view(Eden::FormatHudText(clock, 100, backend, 0).data()).ends_with(" P0"));
-        assert(std::string_view(Eden::FormatHudText(clock, 100, backend, -1).data()).ends_with(" W17"));
-    }
-    const auto online = Eden::MakeHudSnapshot(guest, shown, 100, 119.88, 9999);
-    assert(online.glyphs == Eden::HudText("VLK N60 F120 S100 W17 P9999"));
-    assert(online.width == std::string_view("VLK N60 F120 S100 W17 P9999").size() * 16 + 24);
-    clock.fps = clock.worst_ms = 1000000;
-    const auto bounded = Eden::FormatHudText(clock, 1000000, "VLK", 1000000);
-    assert(std::string_view(bounded.data()).size() <= 28);
-    assert(std::string_view(bounded.data()).ends_with(" P9999"));
+    const auto bounded = Eden::MakeHudSnapshot(clock, clock, 1000000, known, 0, 1000000);
+    assert(std::string_view(reinterpret_cast<const char*>(bounded.glyphs.data())).size()
+           <= Eden::kHudTextMax);
+    assert(bounded.width < 1920);
+
     // The loading scene is drawn from the time alone: milliseconds since it began, plus one.
     assert(Eden::MakeLoadingSnapshot(0).loading == 1 && Eden::MakeLoadingSnapshot(0).width != 0);
     assert(Eden::MakeLoadingSnapshot(2.5).loading == 2501);
@@ -109,4 +227,4 @@ int main() {
 ''')
     subprocess.run(['c++', '-std=c++20', '-I'+str(root/'headless'), str(source), '-o', str(binary)], check=True)
     subprocess.run([str(binary)], check=True)
-print('HUD interval math, startup exclusion and bounded glyph text PASS')
+print('HUD interval math, startup exclusion and bounded overlay line PASS')

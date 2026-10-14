@@ -18,6 +18,14 @@ void PlatformChecks();
 void Snapshot();
 // GPU worker only: firmware rejects cross-thread CPU-time sampling.
 void SampleGpuFrame(unsigned frame);
+// What the overlay's line says about the machine (hud.h, HudMachine). The two percentages are
+// read every frame and worked out every quarter of a second, so the clock reads cost nothing and
+// one slow frame does not swing them; the pool is looked at once a second. A percentage the
+// platform cannot give is ~0u, a memory pool it cannot give a total of 0, and the overlay shows
+// those as "--".
+unsigned HostCpuPercent();
+unsigned GpuBusyPercent();
+void MemoryPool(unsigned long long* free_bytes, unsigned long long* total_bytes);
 #ifdef EDEN_DEV_PROFILE
 void BeginPcSampling();
 void PollGpuPc();
@@ -418,11 +426,14 @@ inline std::atomic<unsigned> capture_passes{};
 // in a cost run. Only development reports read the totals, and timers sit on hot paths: one a
 // draw on the GPU thread, one for every guest read of memory the GPU caches follow (several
 // thousand of each a frame in a large game). Elsewhere a Timer is one look at this flag.
+// `always` is for the four producer-side GPU waits the overlay reads from every build: they sit
+// on waits that already block, and turning the whole flag on would put a clock read a draw too.
 inline std::atomic<bool> timers_on{false};
 class Timer {
 public:
-    explicit Timer(Totals& target, unsigned long long bytes = 0)
-        : totals(target), requested_bytes(bytes), on(timers_on.load(std::memory_order_relaxed)),
+    explicit Timer(Totals& target, unsigned long long bytes = 0, bool always = false)
+        : totals(target), requested_bytes(bytes),
+          on(always || timers_on.load(std::memory_order_relaxed)),
           start(on ? Common::g_wall_clock.GetTimeNS() : std::chrono::nanoseconds{}) {}
     Timer(const Timer&) = delete;
     Timer& operator=(const Timer&) = delete;

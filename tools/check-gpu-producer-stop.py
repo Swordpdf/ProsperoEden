@@ -42,7 +42,7 @@ struct Totals { std::atomic<unsigned long long> calls{}, nanoseconds{}, requeste
 inline Totals gpu_queue_full;
 class Timer {
 public:
-    explicit Timer(Totals&, unsigned long long = 0) {}
+    explicit Timer(Totals&, unsigned long long = 0, bool = 0) {}
 };
 } // namespace Eden::Performance
 '''+body+r'''

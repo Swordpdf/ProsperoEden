@@ -63,8 +63,8 @@ constexpr const char *kKindNames[] = {TR("Console mode"), TR("Video"),    TR("Pe
 int changes_of(const GameSettings &game)
 {
     return (game.renderer >= 0) + (game.resolution >= 0) + (game.filter >= 0) + (game.astc >= 0) +
-           (game.refresh >= 0) + (game.hud >= 0) + (game.frame_gen >= 0) + (game.frame_gen_target >= 0) +
-           (game.frame_gen_multiplier >= 0) +
+           (game.refresh >= 0) + (game.hud >= 0) + (game.hud_size >= 0) + (game.hud_corner >= 0) +
+           (game.frame_gen >= 0) + (game.frame_gen_target >= 0) + (game.frame_gen_multiplier >= 0) +
            static_cast<int>(std::count_if(game.performance.begin(), game.performance.end(),
                                           [](int value) { return value >= 0; })) +
            (game.volume >= 0) + (game.mute >= 0) + (game.vibration >= 0) + (game.own_mapping ? 1 : 0) +

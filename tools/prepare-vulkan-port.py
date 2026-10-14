@@ -174,7 +174,7 @@ void RasterizerVulkan::DispatchCompute() {"""),
     # every older fence. Time only that producer-side drain.
     ('    fence_manager.WaitPendingFences(force);',
      '''    if (force) {
-        ::Eden::Performance::Timer drain_timer(::Eden::Performance::gpu_fence_drain);
+        ::Eden::Performance::Timer drain_timer(::Eden::Performance::gpu_fence_drain, 0, true);
         fence_manager.WaitPendingFences(force);
     } else {
         fence_manager.WaitPendingFences(force);
@@ -402,7 +402,7 @@ adapt('src/video_core/renderer_vulkan/vk_present_manager.cpp', 'vulkan_present_m
     # GetRenderFrame runs on the GPU thread: time its free-frame and
     # present-completion waits (FIFO back-pressure on the producer).
     ('    // Wait for free presentation frames\n    std::unique_lock lock{free_mutex};',
-     '    // Wait for free presentation frames\n    ::Eden::Performance::Timer present_wait_timer(::Eden::Performance::gpu_present_wait);\n    std::unique_lock lock{free_mutex};'),
+     '    // Wait for free presentation frames\n    ::Eden::Performance::Timer present_wait_timer(::Eden::Performance::gpu_present_wait, 0, true);\n    std::unique_lock lock{free_mutex};'),
     ('PresentThread(token);', '''try {
             PresentThread(token);
         } catch (...) {

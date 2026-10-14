@@ -83,6 +83,7 @@ class Launcher
         mods,         // a game's mods, opened from its settings
         game_options, // one category of a game's own settings, opened from its settings
         mapping,      // the button mapping: Settings > Controls', or a game's own
+        hud,          // the overlay's options: Settings > Video > Overlay options
         profiles,     // who is playing: Settings > Profiles
         update,       // a newer release of the app: install it or not (update.cpp)
         download,     // a game from a download source, started once it is downloaded (remote.cpp)
@@ -246,6 +247,10 @@ class Launcher
     void draw_dialog(Canvas &c, Modal modal, float open);
     int dialog_rows(Modal modal) const;
     float dialog_row_top(Modal modal, int row) const;
+    // The overlay's options, opened from Settings > Video > Overlay options (settings.cpp).
+    void open_hud();
+    void press_hud(Key key);
+    void draw_hud(Canvas &c, float open);
 
     // ---- a newer release of the app (update.cpp) ----
     // Takes the update check's answer when it comes, and opens the dialog once the menu is free.
@@ -475,6 +480,7 @@ class Launcher
     tween::Spring option_cursor_; // highlight position in pixels
     std::array<tween::Spring, 7> switches_{};
     ListView video_rows_; // the Video dialog's rows (more than it shows)
+    ListView hud_rows_;   // the overlay's options (Modal::hud, more than it shows)
     ListView performance_rows_; // the Performance dialog's rows (more than it shows)
     GameSettings game_settings_;
     bool game_docked_ = true;

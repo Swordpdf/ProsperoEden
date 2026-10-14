@@ -899,6 +899,8 @@ pe::ui::GameSettings EdenServices::game_settings(std::uint64_t title_id) {
     result.astc = saved.astc_textures;
     result.refresh = saved.refresh;
     result.hud = saved.hud;
+    result.hud_size = saved.hud_size;
+    result.hud_corner = saved.hud_corner;
     result.frame_gen = saved.frame_gen;
     result.frame_gen_target = saved.frame_gen_target;
     result.frame_gen_multiplier = saved.frame_gen_multiplier;
@@ -922,6 +924,8 @@ bool EdenServices::set_game_settings(std::uint64_t title_id, const pe::ui::GameS
     value.astc_textures = settings.astc;
     value.refresh = settings.refresh;
     value.hud = settings.hud;
+    value.hud_size = settings.hud_size;
+    value.hud_corner = settings.hud_corner;
     value.frame_gen = settings.frame_gen;
     value.frame_gen_target = settings.frame_gen_target;
     value.frame_gen_multiplier = settings.frame_gen_multiplier;
@@ -943,6 +947,10 @@ pe::ui::Preferences EdenServices::preferences() {
     const Eden::Preferences saved = Eden::LoadPreferences();
     pe::ui::Preferences result;
     result.hud = saved.hud;
+    result.hud_size = saved.hud_size;
+    result.hud_corner = saved.hud_corner;
+    result.hud_colors = saved.hud_colors;
+    result.hud_fields = saved.hud_fields;
     result.volume = saved.volume;
     result.mute = saved.mute;
     result.detailed_logging = saved.detailed_logging;
@@ -979,6 +987,10 @@ pe::ui::Preferences EdenServices::preferences() {
 bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     Eden::Preferences value;
     value.hud = preferences.hud;
+    value.hud_size = preferences.hud_size;
+    value.hud_corner = preferences.hud_corner;
+    value.hud_colors = preferences.hud_colors;
+    value.hud_fields = preferences.hud_fields;
     value.volume = preferences.volume;
     value.mute = preferences.mute;
     value.detailed_logging = preferences.detailed_logging;

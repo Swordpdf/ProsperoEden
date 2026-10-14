@@ -215,6 +215,8 @@ void Launcher::press(Key key)
         return press_game_options(key);
     if (modal_ == Modal::mapping)
         return press_mapping(key);
+    if (modal_ == Modal::hud)
+        return press_hud(key);
     if (modal_ == Modal::profiles)
         return press_profiles(key);
     if (modal_ == Modal::update)
@@ -339,6 +341,7 @@ void Launcher::update(float dt)
     mod_rows_.update(dt);
     option_rows_.update(dt);
     mapping_rows_.update(dt);
+    hud_rows_.update(dt);
     profile_rows_.update(dt);
     source_rows_.update(dt);
     choice_rows_.update(dt);
@@ -655,6 +658,8 @@ void Launcher::draw(gfx::DrawList &list)
         list.rounded_rect(kScreen, 0.0f, th().scrim.with_alpha(0.72f * opened));
         if (modal_shown_ == Modal::mapping)
             draw_mapping(c, opened);
+        else if (modal_shown_ == Modal::hud)
+            draw_hud(c, opened);
         else if (modal_shown_ == Modal::profiles)
             draw_profiles(c, opened);
         else if (modal_shown_ == Modal::update)

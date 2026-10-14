@@ -16,6 +16,8 @@ let
 
   python = pkgs.python3.withPackages (ps: [
     ps.mako ps.pyyaml ps.ply ps.packaging
+    # tools/launcher/bake-loading-text.py (the loading screen's and the overlay's baked font).
+    ps.numpy ps.pillow
   ]);
 
   # Merged LLVM 21 libdir (libLLVM-21.so, libclang.so, libclang-cpp.so in one dir)

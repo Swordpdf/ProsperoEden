@@ -2085,25 +2085,30 @@ if(EDEN_PS5_OPENGL)
         string(PREPEND gpu_worker "namespace VideoCore { class RendererBase; }\nnamespace Eden { bool LoadingTick(VideoCore::RendererBase&, bool idle); }\n")
         string(REPLACE "${hud_wait}"
             "            if (Eden::LoadingTick(renderer, false)) {\n                if (!state.queue.TryPop(next)) {\n                    Eden::LoadingTick(renderer, true);\n                    std::this_thread::sleep_for(std::chrono::milliseconds(1));\n                    continue;\n                }\n            } else {\n${hud_wait}\n            }" gpu_worker "${gpu_worker}")
+        # The overlay's GPU share reads the producer-side waits from every build, so these two
+        # scopes are not development-only and pass `always` to Performance::Timer, which is
+        # otherwise off outside a development build because its timers sit on hot paths. Each
+        # wraps a wait that already blocks, so a clock read either side costs nothing.
+        string(PREPEND gpu_worker "#include \"${EDEN_PORT_DIR}/performance.h\"\n")
+        string(REPLACE "${hud_wait}"
+            "            { ::Eden::Performance::Timer idle_timer(::Eden::Performance::gpu_queue_wait, 0, true);\n${hud_wait}\n            }"
+            gpu_worker "${gpu_worker}")
+        # Time guest-side back-pressure: pushes that found the 8-entry queue full. The pattern
+        # has to be exactly what the EmplaceWait rewrite above left behind.
+        set(full_wait "    while (!stop_source.stop_requested() &&\n           !state.queue.TryEmplace(std::move(command_data), fence, block))\n        std::this_thread::sleep_for(std::chrono::microseconds(100));")
+        string(FIND "${gpu_worker}" "${full_wait}" full_wait_offset)
+        if(full_wait_offset LESS 0)
+            message(FATAL_ERROR "Pinned GPU queue push changed")
+        endif()
+        string(REPLACE "${full_wait}"
+            "    if (stop_source.stop_requested() ||\n        !state.queue.TryEmplace(std::move(command_data), fence, block)) {\n        ::Eden::Performance::Timer full_timer(::Eden::Performance::gpu_queue_full, 0, true);\n${full_wait}\n    }"
+            gpu_worker "${gpu_worker}")
         if(EDEN_DEV_PROFILE)
-            string(PREPEND gpu_worker "#include \"${EDEN_PORT_DIR}/performance.h\"\n")
-            string(REPLACE "${hud_wait}"
-                "            { ::Eden::Performance::Timer idle_timer(::Eden::Performance::gpu_queue_wait);\n${hud_wait}\n            }"
-                gpu_worker "${gpu_worker}")
             string(REPLACE "${dispatch_call}"
                 "                { ::Eden::Performance::Timer dispatch_timer(::Eden::Performance::gpu_dispatch);\n${dispatch_call}\n                }"
                 gpu_worker "${gpu_worker}")
             string(REPLACE "if (count <= 3) LOG_INFO(Render_OpenGL, \"EDEN_GPU_DISPATCH_"
                 "if (count <= 3 || ::Eden::Performance::BootTrace()) LOG_INFO(Render_OpenGL, \"EDEN_GPU_DISPATCH_"
-                gpu_worker "${gpu_worker}")
-            # Time guest-side back-pressure: pushes that found the 8-entry queue full.
-            set(full_wait "    while (!stop_source.stop_requested() &&\n           !state.queue.TryEmplace(std::move(command_data), fence, block))\n        std::this_thread::sleep_for(std::chrono::microseconds(100));")
-            string(FIND "${gpu_worker}" "${full_wait}" full_wait_offset)
-            if(full_wait_offset LESS 0)
-                message(FATAL_ERROR "Pinned GPU queue push changed")
-            endif()
-            string(REPLACE "${full_wait}"
-                "    if (stop_source.stop_requested() ||\n        !state.queue.TryEmplace(std::move(command_data), fence, block)) {\n        ::Eden::Performance::Timer full_timer(::Eden::Performance::gpu_queue_full);\n${full_wait}\n    }"
                 gpu_worker "${gpu_worker}")
         endif()
         write_derived("${PORT_BUILD_DIR}/gpu_thread.cpp" "${gpu_worker}")
@@ -2620,6 +2625,10 @@ if(EDEN_PS5_OPENGL)
         "${EDEN_PORT_DIR}/loading_text.glsl" "${EDEN_PORT_DIR}/loading_scene.glsl")
     write_derived("${PORT_BUILD_DIR}/include/loading_scene_glsl.h"
         "// Generated from loading_text.glsl and loading_scene.glsl.\n#pragma once\ninline constexpr const char* kLoadingSceneGlsl = R\"glsl(\n${loading_wordmark}${loading_scene})glsl\";\n")
+    # The baked font alone, for the overlay (the loading screen's shader carries the whole scene
+    # and its picture sampler, which the overlay has no use for).
+    write_derived("${PORT_BUILD_DIR}/include/loading_text_glsl.h"
+        "// Generated from loading_text.glsl.\n#pragma once\ninline constexpr const char* kLoadingTextGlsl = R\"glsl(\n${loading_wordmark})glsl\";\n")
     target_compile_definitions(eden-headless PRIVATE EDEN_PS5_OPENGL=1)
     target_link_libraries(eden-headless PRIVATE PS5OpenGL::OpenGL glad)
 endif()

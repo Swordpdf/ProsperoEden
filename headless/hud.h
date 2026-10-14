@@ -7,7 +7,12 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
 #include <string_view>
+
+// The overlay's baked font: how far each character moves the pen, and how large its box is.
+// Outside the namespace below, which opens its own.
+#include "hud_text_advances.h"
 
 namespace Eden {
 // Counts contiguous presentation intervals; loading gaps are never reported as FPS.
@@ -48,51 +53,78 @@ struct StartupGate {
         return smooth_frames >= 8 || now - first >= 5.0;
     }
 };
-inline uint32_t HudGlyph(char c) {
-    switch (c) {
-    case '0': return 0x7b6f;
-    case '1': return 0x2c97;
-    case '2': return 0x73e7;
-    case '3': return 0x73cf;
-    case '4': return 0x5bc9;
-    case '5': return 0x79cf;
-    case '6': return 0x79ef;
-    case '7': return 0x7292;
-    case '8': return 0x7bef;
-    case '9': return 0x7bcf;
-    case 'F': return 0x79a4;
-    case 'P': return 0x6ba4;
-    case 'S': return 0x79cf;
-    case 'L': return 0x4927;
-    case 'O': return 0x7b6f;
-    case 'A': return 0x2bed;
-    case 'D': return 0x6b6e;
-    case 'I': return 0x7497;
-    case 'N': return 0x5ffd;
-    case 'G': return 0x796f;
-    case 'V': return 0x5b6a;
-    case 'K': return 0x5bad;
-    case 'W': return 0x5fed;
-    case '.': return 0x0002;
-    case '-': return 0x01c0;
-    default: return 0;
-    }
-}
-inline std::array<uint32_t, 28> HudText(std::string_view text) {
-    std::array<uint32_t, 28> glyphs{};
-    for (size_t i = 0; i < text.size() && i < glyphs.size(); ++i)
-        glyphs[i] = HudGlyph(text[i]);
-    return glyphs;
-}
-// The overlay's width and where its text starts, in a picture 1080 rows high. Where it is drawn
-// they are scaled to the picture, and `width` then carries the picture's height to the shader
-// (vulkan_hud_draw.inc).
+// How many characters of the overlay's line fit in a HudSnapshot's words: four go to a word, and
+// the line is NUL-terminated, so the shader stops at the first byte that is 0.
+inline constexpr size_t kHudTextMax = 111;
+// Where the overlay's box stands in that picture: against a corner, so it never gets in the way
+// of the middle of the screen. Any corner is that many units in from its two edges, so all four
+// read the same way once the picture is scaled.
+inline constexpr uint32_t kHudBoxX = 6, kHudBoxY = 4;
+inline constexpr uint32_t kHudPictureWidth = 1920, kHudPictureHeight = 1080;
+// The corners the caller can name, top left through bottom right (kHudCornerKeys, the launchers'
+// own order in settings_store.h).
+inline constexpr int kHudCornerCount = 4;
+// What the line says about the machine: a percentage that could not be read shows as "--", and a
+// memory pool that could not be read as a size of 0.
+struct HudMachine {
+    unsigned cpu = ~0u;
+    unsigned gpu = ~0u;
+    unsigned long long memory_free = 0;
+    unsigned long long memory_total = 0;
+};
+// The overlay's line and where its box goes, in a picture 1080 rows high. Where it is drawn they
+// are scaled to the picture, and `width` then carries the picture's height to the shader instead
+// (vulkan_hud_draw.inc): the box's height and the baseline in it come from kHudBoxUnits and
+// kHudBaselineUnits, which hud_text_advances.h and loading_text.glsl are both generated with.
+// `glyphs` is the line itself, four characters to a word.
 struct HudSnapshot {
     std::array<uint32_t, 28> glyphs{};
     uint32_t width{};
-    uint32_t x{28}, y{30}, loading{};
+    uint32_t x{kHudBoxX}, y{kHudBoxY}, loading{};
 };
 static_assert(sizeof(HudSnapshot) == 128); // Vulkan guarantees at least 128 push-constant bytes.
+// The overlay's snapshot carries how and where its chip is drawn in `loading`, which the loading
+// screen leaves to the milliseconds since it began: bit 31 marks the overlay, so the shader can
+// tell the two apart, and the bits below it say the rest. The loading path never sets bit 31, so
+// a snapshot from it still reads as the loading screen (vulkan_hud_draw.inc, vulkan_hud.frag).
+inline constexpr uint32_t kHudOverlayFlag = 0x80000000u;
+// The overlay's chip carries its size and whether it is coloured in `loading`, beside the bit
+// that marks it. The size is the chip's scale times two, in three bits (2 = 1x, 3 = 1.5x,
+// 4 = 2x, so a large chip keeps the pattern the old kHudLargeFlag had); the colour bit says the
+// line is drawn in its inks rather than one (bake-loading-text.py, vulkan_hud.frag).
+inline constexpr uint32_t kHudSizeShift = 28, kHudSizeMask = 0x70000000u;
+inline constexpr uint32_t kHudColorsFlag = 0x08000000u;
+// The chip's size, as the field carries it: the launcher's size index 0, 1, 2 is a scale of
+// 1x, 1.5x, 2x, stored as that scale times two (2, 3, 4).
+inline uint32_t HudSizeField(int size) {
+    return (2u + (static_cast<uint32_t>(size) & 3u)) << kHudSizeShift;
+}
+// The scale the field names, for the box and the line alike (vulkan_hud_draw.inc, DrawHud).
+inline float HudSizeScale(uint32_t field) {
+    return static_cast<float>((field >> kHudSizeShift) & 7u) * 0.5f;
+}
+// What the overlay's line may say, bit by bit: the pieces the user can turn off (the launcher's
+// hud_fields, settings_store.h). All on by default.
+inline constexpr uint32_t kHudFieldBackend = 1u << 0;
+inline constexpr uint32_t kHudFieldFps = 1u << 1;
+inline constexpr uint32_t kHudFieldMs = 1u << 2;
+inline constexpr uint32_t kHudFieldSpeed = 1u << 3;
+inline constexpr uint32_t kHudFieldCpu = 1u << 4;
+inline constexpr uint32_t kHudFieldGpu = 1u << 5;
+inline constexpr uint32_t kHudFieldMem = 1u << 6;
+inline constexpr uint32_t kHudFieldPing = 1u << 7;
+inline constexpr uint32_t kHudFieldAll = 0xffu;
+// True while the snapshot is the loading screen rather than the overlay's line.
+inline bool HudLoading(const HudSnapshot& hud) {
+    return hud.loading != 0 && (hud.loading & kHudOverlayFlag) == 0;
+}
+// The line in a snapshot's words, four characters to a word, and a zero after it.
+inline void PutHudText(HudSnapshot& hud, std::string_view text) {
+    auto* bytes = reinterpret_cast<char*>(hud.glyphs.data());
+    const size_t length = std::min(text.size(), kHudTextMax);
+    std::memcpy(bytes, text.data(), length);
+    std::memset(bytes + length, 0, sizeof(hud.glyphs) - length);
+}
 // What a game's start is doing, for the loading screen (loading_scene.glsl draws it: the game's
 // cover with a line of light going round it, and the step under it). main.cpp says which step the
 // start is at; each step's share of the line is an estimate, except while shaders are built, where
@@ -192,50 +224,118 @@ struct LoadingPace {
         return true;
     }
 };
-// N is the rate the guest itself produces; F is the rate the display shows. They are the same
-// until frame generation is on, and the overlay then keeps its usual text (F alone). With frame
-// generation F is counted from every frame handed to the present manager (CountPresentedFrame():
-// the frames it adds do not go through OnFrameDisplayed(), which runs once per guest frame), and
-// never reads above `refresh`, the output's own rate: a display shows no more than that, however
-// many frames it is handed. refresh 0: not known, no limit.
-inline std::array<char, 29> FormatHudText(const HudClock& clock, const HudClock& output,
-                                          double speed, const char* backend, double refresh = 0,
-                                          int ping_ms = -1) {
-    std::array<char, 29> text{};
-    const size_t limit = ping_ms < 0 ? text.size() : text.size() - 6;
+// The line the overlay shows: "VLK 27FPS 37.0MS CPU 55% GPU 43% MEM 4.1/8.0G". The rate the
+// guest itself produces, and the rate the display shows when they differ (with frame generation
+// the display is handed frames the guest never made, and never more than `refresh`, its own
+// rate; refresh 0: not known, no limit); then the worst frame of the last second, how far behind
+// 100% the emulation is when it is behind at all, and the machine's own load. Where a number
+// cannot be read it shows as "--".
+inline std::array<char, kHudTextMax + 1> FormatHudText(const HudClock& clock, const HudClock& output,
+                                                       double speed, const char* backend,
+                                                       const HudMachine& machine, double refresh = 0,
+                                                       int ping_ms = -1,
+                                                       uint32_t fields = kHudFieldAll) {
+    std::array<char, kHudTextMax + 1> text{};
+    char line[192]{};
+    char piece[64]{};
+    size_t used = 0;
+    // Every piece goes in as it is written, up to what the line can hold. A piece opens with a
+    // space, which is dropped where the line is still empty.
+    const auto put = [&](const char* value) {
+        const char* v = used == 0 && *value == ' ' ? value + 1 : value;
+        const size_t take = std::min(std::strlen(v), text.size() - 1 - used);
+        std::memcpy(line + used, v, take);
+        used += take;
+        line[used] = '\0';
+    };
+    if (fields & kHudFieldBackend) {
+        std::snprintf(piece, sizeof(piece), "%s", backend);
+        put(piece);
+    }
     if (clock.fps < 0) {
-        std::snprintf(text.data(), limit, "%s F-- S-- W--", backend);
+        if (fields & kHudFieldFps) put(" --FPS");
+        if (fields & kHudFieldMs) put(" --MS");
     } else {
-        const double shown = output.fps < 0 ? clock.fps : refresh > 0 ? std::min(output.fps, refresh) : output.fps;
-        if (shown < clock.fps + 1.5)
-            std::snprintf(text.data(), limit, "%s F%.0f S%.0f W%.0f", backend, clock.fps, speed, clock.worst_ms);
-        else
-            std::snprintf(text.data(), limit, "%s N%.0f F%.0f S%.0f W%.0f", backend, clock.fps, shown, speed,
-                          clock.worst_ms);
+        const double shown = output.fps < 0 ? clock.fps
+                                            : refresh > 0 ? std::min(output.fps, refresh) : output.fps;
+        if (fields & kHudFieldFps) {
+            if (shown < clock.fps + 1.5)
+                std::snprintf(piece, sizeof(piece), " %.0fFPS", clock.fps);
+            else
+                std::snprintf(piece, sizeof(piece), " %.0f/%.0fFPS", clock.fps, shown);
+            put(piece);
+        }
+        if (fields & kHudFieldMs) {
+            std::snprintf(piece, sizeof(piece), " %.1fMS", clock.worst_ms);
+            put(piece);
+        }
     }
-    if (ping_ms >= 0) {
-        const auto length = std::string_view{text.data()}.size();
-        std::snprintf(text.data() + length, text.size() - length, " P%d", std::min(ping_ms, 9999));
+    // Speed only when it is not a full 100: the rates on the line already say the rest.
+    if ((fields & kHudFieldSpeed) && std::fabs(speed - 100.0) > 0.5) {
+        std::snprintf(piece, sizeof(piece), " %.0f%%", speed);
+        put(piece);
     }
+    char cpu[8] = "--";
+    char gpu[8] = "--";
+    if (machine.cpu != ~0u) std::snprintf(cpu, sizeof(cpu), "%u", machine.cpu);
+    if (machine.gpu != ~0u) std::snprintf(gpu, sizeof(gpu), "%u", machine.gpu);
+    if (fields & kHudFieldCpu) {
+        std::snprintf(piece, sizeof(piece), " CPU %s%%", cpu);
+        put(piece);
+    }
+    if (fields & kHudFieldGpu) {
+        std::snprintf(piece, sizeof(piece), " GPU %s%%", gpu);
+        put(piece);
+    }
+    if (fields & kHudFieldMem) {
+        char memory[40] = "--/--";
+        if (machine.memory_total != 0)
+            std::snprintf(memory, sizeof(memory), "%.1f/%.1fG",
+                          static_cast<double>(machine.memory_free) / 1e9,
+                          static_cast<double>(machine.memory_total) / 1e9);
+        std::snprintf(piece, sizeof(piece), " MEM %s", memory);
+        put(piece);
+    }
+    if ((fields & kHudFieldPing) && ping_ms >= 0) {
+        std::snprintf(piece, sizeof(piece), " P%d", std::min(ping_ms, 9999));
+        put(piece);
+    }
+    std::memcpy(text.data(), line, used);
     return text;
 }
 inline HudSnapshot MakeHudSnapshot(const HudClock& clock, const HudClock& output, double speed,
-                                   double refresh = 0, int ping_ms = -1) {
-    const auto text = FormatHudText(clock, output, speed, "VLK", refresh, ping_ms);
-    const std::string_view value{text.data()};
-    return {HudText(value), static_cast<uint32_t>(value.size() * 16 + 24)};
+                                   const HudMachine& machine, double refresh = 0, int ping_ms = -1,
+                                   int size = 0, int corner = 0, bool colors = false,
+                                   uint32_t fields = kHudFieldAll) {
+    const auto text = FormatHudText(clock, output, speed, "VLK", machine, refresh, ping_ms, fields);
+    const std::string_view line{text.data()};
+    // The chip's scale, from the size the launcher named: 1x, 1.5x or 2x. Every one of the
+    // box's numbers is taken that many times over (vulkan_hud_draw.inc and DrawHud scale alike).
+    const float scale = HudSizeScale(HudSizeField(size));
+    HudSnapshot hud{};
+    PutHudText(hud, line);
+    // The box holds the line and a margin of kHudPadUnits either side of it.
+    hud.width = static_cast<uint32_t>(
+        std::lround(HudTextWidth(line, kHudCapUnits * scale) + 2 * kHudPadUnits * scale));
+    const uint32_t box_h = static_cast<uint32_t>(std::lround(kHudBoxUnits * scale));
+    // Against whichever corner was named, at the same distance in from each of its two edges; the
+    // two coordinates say which, so nothing else has to (vulkan_hud_draw.inc, DrawHud).
+    const bool right = corner == 1 || corner == 3, bottom = corner == 2 || corner == 3;
+    hud.x = right ? kHudPictureWidth - hud.width - kHudBoxX : kHudBoxX;
+    hud.y = bottom ? kHudPictureHeight - box_h - kHudBoxY : kHudBoxY;
+    hud.loading = kHudOverlayFlag | HudSizeField(size) | (colors ? kHudColorsFlag : 0u);
+    return hud;
 }
 // The OpenGL renderer has no frame generation: what it presents is the guest's own rate, so both
-// numbers come from one clock. Callers that cannot have an output clock use these.
-inline std::array<char, 29> FormatHudText(const HudClock& clock, double speed, const char* backend,
-                                        int ping_ms = -1) {
-    return FormatHudText(clock, clock, speed, backend, 0, ping_ms);
-}
-inline HudSnapshot MakeHudSnapshot(const HudClock& clock, double speed) {
-    return MakeHudSnapshot(clock, clock, speed);
+// numbers come from one clock. Callers that cannot have an output clock use this.
+inline std::array<char, kHudTextMax + 1> FormatHudText(const HudClock& clock, double speed,
+                                                       const char* backend, const HudMachine& machine,
+                                                       int ping_ms = -1,
+                                                       uint32_t fields = kHudFieldAll) {
+    return FormatHudText(clock, clock, speed, backend, machine, 0, ping_ms, fields);
 }
 // Every frame handed to the present manager, the guest's own and each one frame generation adds,
-// so the HUD's F measures the output and not just the guest (graphics.cpp).
+// so the HUD's rate measures the output and not just the guest (graphics.cpp).
 void CountPresentedFrame();
 // Read on the renderer thread; the scheduler captures the returned value per frame.
 HudSnapshot GetVulkanHud();

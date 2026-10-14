@@ -19,6 +19,7 @@
 #include "loading_art.h"
 #include "network/network.h"
 #include "loading_scene_glsl.h"
+#include "loading_text_glsl.h"
 #include "preferences.h"
 #include "diagnostics.h"
 #include "display_refresh.h"
@@ -52,7 +53,33 @@ double LoadingCalm() {
     static const double calm = LoadPreferences().reduce_motion ? 1000.0 : 0.0;
     return calm;
 }
+// What the overlay's line says about the machine (hud.h, HudMachine): how loaded the host's
+// cores are, how busy the GPU thread is, and how much of the memory pool is still free. Read once
+// a picture, which is what the counters inside them are built for (performance.cpp).
+HudMachine MachineNow() {
+    HudMachine machine;
+    machine.cpu = Performance::HostCpuPercent();
+    machine.gpu = Performance::GpuBusyPercent();
+    Performance::MemoryPool(&machine.memory_free, &machine.memory_total);
+    return machine;
+}
 std::atomic<bool> hud_enabled{true};
+// The overlay's chip: how large it is drawn, which of the picture's four corners it stands in,
+// whether it is drawn in its inks rather than one, and what the line may say (hud.h). Read by the
+// renderer thread, so they are set with the session's preferences the same way hud_enabled is.
+std::atomic<int> hud_size{0};
+std::atomic<int> hud_corner{0};
+std::atomic<bool> hud_colors{false};
+std::atomic<int> hud_fields{0xff};
+// What the session's settings say the overlay should look like, for all of them at once.
+void LoadHudPreferences() {
+    const auto prefs = PreferencesFor(session_title.load());
+    hud_enabled.store(prefs.hud, std::memory_order_relaxed);
+    hud_size.store(prefs.hud_size, std::memory_order_relaxed);
+    hud_corner.store(prefs.hud_corner, std::memory_order_relaxed);
+    hud_colors.store(prefs.hud_colors, std::memory_order_relaxed);
+    hud_fields.store(prefs.hud_fields, std::memory_order_relaxed);
+}
 HudClock vulkan_hud_clock;
 // What the display is actually given: the guest's frames plus the ones frame generation
 // adds (CountPresentedFrame(), hud.h).
@@ -316,7 +343,8 @@ public:
             speed_percent = stats.emulation_speed * 100.0;
             last_stats = now;
         }
-        const auto text = FormatHudText(clock, speed_percent, "OGL", RoomPingMilliseconds());
+        const auto text = FormatHudText(clock, speed_percent, "OGL", MachineNow(),
+                                        RoomPingMilliseconds());
         if (hud_enabled.load(std::memory_order_relaxed)) DrawHud(text.data(), false);
         Check(eglSwapBuffers(display, surface), "eglSwapBuffers");
     }
@@ -427,17 +455,32 @@ private:
         Check(eglMakeCurrent(display, surface, surface, hud_context), "HUD current");
         SCOPE_EXIT { Cleanup(eglMakeCurrent(display, surface, surface, context), "HUD restore"); };
         if (!hud_program) {
-            hud_program = glCreateProgram();
+            // The overlay's font and the walk over it (loading_text.glsl, the same table the
+            // loading screen's shader reads), then what this picture does with it.
+            // The line's own ink is picked by hud_pick, which reads the characters around each
+            // one; this picture only asks the palette for its colour and lays the chip out.
+            const std::string fragment =
+                std::string("#version 330 core\nuniform uint glyphs[28]; uniform vec2 at;"
+                            " uniform vec2 box; uniform vec2 box_at;"
+                            " uniform float cap; uniform int startup; uniform bool colors;"
+                            " out vec4 color;\n") +
+                kLoadingTextGlsl +
+                "void main(){\n"
+                "Pick pick = Pick(-1, 0, vec2(0.0), 1.0);\n"
+                "hud_pick(pick, glyphs, gl_FragCoord.xy, at, cap);\n"
+                "float cover = pick_cover(pick);\n"
+                "if (startup != 0) {"
+                " color = vec4(mix(vec3(0.0196,0.0392,0.0039), vec3(0.7216,0.9490,0.0471), cover), 1.0);"
+                " return; }\n"
+                "vec4 panel = hud_panel(vec2(gl_FragCoord.x - box_at.x,"
+                " box_at.y + box.y - gl_FragCoord.y), box, colors);\n"
+                "vec3 ink = colors ? hud_ink(pick.ink) : kHudInk;\n"
+                "color = vec4(mix(panel.rgb, ink, cover), mix(panel.a, 1.0, cover));\n}\n";
             const char* sources[]{
                 "#version 330 core\nvoid main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);"
                 "gl_Position=vec4(p*2.0-1.0,0.0,1.0);}",
-                "#version 330 core\nuniform uint glyphs[28]; uniform ivec2 origin; uniform int startup;"
-                "uniform float cell; out vec4 color;"
-                "void main(){ivec2 p=ivec2(gl_FragCoord.xy)-origin; bool ink=false;"
-                "if(p.x>=0&&p.y>=0){ivec2 c=ivec2(vec2(p)/cell);int i=c.x/4;int x=c.x%4;"
-                "if(i<28&&x<3&&c.y<5) ink=((glyphs[i]>>uint(c.y*3+2-x))&1u)!=0u;}"
-                "color=startup!=0?(ink?vec4(0.7216,0.9490,0.0471,1.0):vec4(0.0196,0.0392,0.0039,1.0))"
-                ":(ink?vec4(0.9,0.95,1.0,1.0):vec4(0.025,0.04,0.075,0.5));}"};
+                fragment.c_str()};
+            hud_program = glCreateProgram();
             for (unsigned i = 0; i < 2; ++i) {
                 GLuint shader = glCreateShader(i ? GL_FRAGMENT_SHADER : GL_VERTEX_SHADER);
                 glShaderSource(shader, 1, &sources[i], nullptr);
@@ -460,21 +503,50 @@ private:
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glUseProgram(hud_program);
         glBindVertexArray(hud_vao);
-        // Laid out for a picture 1080 rows high (a glyph's cell is 4 pixels there) and scaled to
-        // the surface's.
+        // The overlay's box, laid out for a picture 1080 rows high and scaled to the surface's.
+        // It covers only what it holds, so the picture underneath shows around it.
         const float scale = static_cast<float>(height) / 1080.0f;
-        const auto units = [scale](int value) { return static_cast<int>(std::lround(value * scale)); };
-        const int text_width = int(std::strlen(text)) * 16;
-        glViewport(startup ? 0 : units(16), startup ? 0 : height - units(64),
-                   startup ? width : units(text_width + 24), startup ? height : units(48));
-        const auto glyphs = HudText(text);
-        glUniform1uiv(glGetUniformLocation(hud_program, "glyphs[0]"), glyphs.size(), glyphs.data());
-        glUniform2i(glGetUniformLocation(hud_program, "origin"),
-                    startup ? (width - units(text_width)) / 2 : units(28),
-                    startup ? (height - units(20)) / 2 : height - units(50));
-        glUniform1i(glGetUniformLocation(hud_program, "startup"), startup);
-        glUniform1f(glGetUniformLocation(hud_program, "cell"), 4.0f * scale);
-        if (!startup) {
+        const auto units = [scale](float value) { return static_cast<int>(std::lround(value * scale)); };
+        // The chip's scale, from the size the session named: 1x, 1.5x or 2x (hud.h).
+        const float hud_scale = 1.0f + 0.5f * static_cast<float>(hud_size.load(std::memory_order_relaxed));
+        const int box_w = startup ? width :
+            units(HudTextWidth(text, kHudCapUnits * hud_scale) + 2 * kHudPadUnits * hud_scale);
+        const int box_h = startup ? height : units(kHudBoxUnits * hud_scale);
+        // Against whichever corner was named, at the same distance in from each of its two edges.
+        const int corner = hud_corner.load(std::memory_order_relaxed);
+        const int box_x = startup ? 0 :
+            (corner == 1 || corner == 3 ? width - box_w - units(kHudBoxX) : units(kHudBoxX));
+        const int box_y = startup ? 0 :
+            (corner >= 2 ? height - box_h - units(kHudBoxY) : units(kHudBoxY));
+        if (box_w <= 0 || box_h <= 0 || box_x < 0 || box_x + box_w > width || box_y + box_h > height) return;
+        glViewport(box_x, height - box_y - box_h, box_w, box_h);
+        // The line's left end and its baseline, counted from the surface's bottom left the way
+        // OpenGL counts rows: centred when the loading screen's own shader would not build, or
+        // where the box puts them.
+        const float cap_units = startup ? kHudCapUnits * 3.0f : kHudCapUnits * hud_scale;
+        const int cap = units(cap_units);
+        const int text_width = units(HudTextWidth(text, cap_units));
+        glUniform2f(glGetUniformLocation(hud_program, "at"),
+                    startup ? (width - text_width) * 0.5f : box_x + units(kHudPadUnits * hud_scale),
+                    startup ? (height - cap) * 0.5f :
+                        height - box_y - units(kHudBaselineUnits * hud_scale));
+        glUniform1f(glGetUniformLocation(hud_program, "cap"), static_cast<float>(cap));
+        // The chip the line stands in, in the surface's own rows: its size, and its bottom left
+        // corner the way OpenGL counts them.
+        glUniform2f(glGetUniformLocation(hud_program, "box"), static_cast<float>(box_w),
+                    static_cast<float>(box_h));
+        glUniform2f(glGetUniformLocation(hud_program, "box_at"), static_cast<float>(box_x),
+                    static_cast<float>(height - box_y - box_h));
+        HudSnapshot snapshot{};
+        PutHudText(snapshot, text);
+        glUniform1uiv(glGetUniformLocation(hud_program, "glyphs[0]"), snapshot.glyphs.size(),
+                      snapshot.glyphs.data());
+        glUniform1i(glGetUniformLocation(hud_program, "startup"), startup ? 1 : 0);
+        glUniform1i(glGetUniformLocation(hud_program, "colors"),
+                    !startup && hud_colors.load(std::memory_order_relaxed) ? 1 : 0);
+        if (startup)
+            glDisable(GL_BLEND);
+        else {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
@@ -545,7 +617,7 @@ GraphicsWindow::GraphicsWindow(bool use_vulkan) : vulkan(use_vulkan) {
     vulkan_loading_start = -1;
     vulkan_loading_frames = 0;
     vulkan_loading_pace = {};
-    hud_enabled.store(PreferencesFor(session_title.load()).hud, std::memory_order_relaxed);
+    LoadHudPreferences();
 #ifdef EDEN_PS5_VULKAN
     if (vulkan) {
         vulkan_hud_clock = {};
@@ -664,8 +736,12 @@ void GraphicsWindow::OnFrameDisplayed() {
         }
         vulkan_hud =
             MakeHudSnapshot(vulkan_hud_clock, vulkan_hud_output_clock, vulkan_hud_speed,
+                            MachineNow(),
                             Eden::Display::output_millihertz.load(std::memory_order_relaxed) / 1000.0,
-                            RoomPingMilliseconds());
+                            RoomPingMilliseconds(), hud_size.load(std::memory_order_relaxed),
+                            hud_corner.load(std::memory_order_relaxed),
+                            hud_colors.load(std::memory_order_relaxed),
+                            static_cast<uint32_t>(hud_fields.load(std::memory_order_relaxed)));
 #endif
         ++frame_total;
         // What a recorded controller session counts frames by (gameplay_test.h): the input

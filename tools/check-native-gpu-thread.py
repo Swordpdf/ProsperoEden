@@ -13,14 +13,28 @@ worker = generated.read_text()
 body = source.split('thread = std::jthread([&](std::stop_token stop_token) {', 1)[1].split('\n    });', 1)[0]
 dispatch_call = '                scheduler.Push(system.GPU(), submit_list->channel, std::move(submit_list->entries));'
 development = 'EDEN_DEV_PROFILE:BOOL=ON' in (cache / 'native-local/CMakeCache.txt').read_text()
-for call, timer, indent in (
-    (dispatch_call, 'dispatch_timer(::Eden::Performance::gpu_dispatch)', '                '),
+# The producer-side waits are timed in every build (Timer's `always`), the per-dispatch scope only
+# in a development one, so each wrap is asserted at the count its build must produce, then undone.
+for call, timer, indent, always in (
+    (dispatch_call, 'dispatch_timer(::Eden::Performance::gpu_dispatch)', '                ', False),
     ('            state.queue.PopWait(next, stop_token);',
-     'idle_timer(::Eden::Performance::gpu_queue_wait)', '            '),
+     'idle_timer(::Eden::Performance::gpu_queue_wait, 0, true)', '            ', True),
 ):
     wrapped = indent + '{ ::Eden::Performance::Timer ' + timer + ';\n' + call + '\n' + indent + '}'
-    assert worker.count(wrapped) == int(development)
+    assert worker.count(wrapped) == int(development or always)
     worker = worker.replace(wrapped, call)
+
+# Likewise the wrap around the push that found the queue full; its body is the plain spin the
+# upstream rewrite left behind.
+queue_push = ('    while (!stop_source.stop_requested() &&\n'
+              '           !state.queue.TryEmplace(std::move(command_data), fence, block))\n'
+              '        std::this_thread::sleep_for(std::chrono::microseconds(100));')
+full_wrap = ('    if (stop_source.stop_requested() ||\n'
+             '        !state.queue.TryEmplace(std::move(command_data), fence, block)) {\n'
+             '        ::Eden::Performance::Timer full_timer(::Eden::Performance::gpu_queue_full, 0, true);\n'
+             + queue_push + '\n    }')
+assert worker.count(full_wrap) == 1
+worker = worker.replace(full_wrap, queue_push)
 
 trace_when = 'count <= 3 || ::Eden::Performance::BootTrace()' if development else 'count <= 3'
 dispatch_trace = ('                const auto count = ++dispatches;\n'

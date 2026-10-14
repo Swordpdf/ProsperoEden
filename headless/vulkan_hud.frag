@@ -18,7 +18,9 @@ void main() {
         text.glyphs[16], text.glyphs[17], text.glyphs[18], text.glyphs[19],
         text.glyphs[20], text.glyphs[21], text.glyphs[22], text.glyphs[23],
         text.glyphs[24], text.glyphs[25], text.glyphs[26], text.glyphs[27]);
-    if (text.loading != 0u) {
+    // The loading screen owns the small numbers; the overlay marks its snapshot with a bit the
+    // loading path never sets, so the two are told apart here (hud.h, kHudOverlayFlag).
+    if (text.loading != 0u && (text.loading & 0x80000000u) == 0u) {
         // The loading screen: x and y carry the picture's size, loading the milliseconds since
         // it began (plus one), the glyphs' words what the start is doing (hud.h). Vulkan counts
         // rows from the top.
@@ -29,17 +31,28 @@ void main() {
                                    float(text.loading - 1u) * 0.001, state), 1.0);
         return;
     }
-    // The overlay: x and y are where its text starts, width the picture's height. The text is
-    // laid out for a picture 1080 rows high (a glyph's cell is 4 pixels there).
-    ivec2 p = ivec2(gl_FragCoord.xy) - ivec2(text.x, text.y);
-    float cell_size = 4.0 * float(text.width) / 1080.0;
-    bool ink = false;
-    if (p.x >= 0 && p.y >= 0) {
-        ivec2 cell = ivec2(vec2(p) / cell_size);
-        int i = cell.x / 4;
-        int x = cell.x % 4;
-        if (i < 28 && x < 3 && cell.y < 5)
-            ink = ((glyphs[i] >> uint((4 - cell.y) * 3 + 2 - x)) & 1u) != 0u;
-    }
-    color = ink ? vec4(0.9, 0.95, 1.0, 1.0) : vec4(0.025, 0.04, 0.075, 0.5);
+    // The overlay: x and y are its box's top left corner in this picture, width the picture's
+    // height (vulkan_hud_draw.inc sets all three). Everything is laid out for a picture 1080
+    // rows high; unit is how far one of those rows reaches here. The chip's scale comes from the
+    // size field in `loading` (2, 3 or 4 for 1x, 1.5x or 2x; hud.h, HudSizeField), so every size
+    // below is taken that many times over. The colour bit says the line is drawn in its inks.
+    const float unit = float(text.width) / 1080.0;
+    const float scale = float((text.loading >> 28) & 7u) * 0.5;
+    const bool colors = (text.loading & 0x08000000u) != 0u;
+    // Vulkan counts rows from the top, hud_pick (like loading_scene) from the bottom left.
+    const vec2 pixel = vec2(gl_FragCoord.x, float(text.width) - gl_FragCoord.y);
+    const vec2 at = vec2(float(text.x) + kHudPadUnits * unit * scale,
+                         float(text.width) - (float(text.y) + kHudBaselineUnits * unit * scale));
+    Pick pick = Pick(-1, 0, vec2(0.0), 1.0);
+    hud_pick(pick, glyphs, pixel, at, kHudCapUnits * unit * scale);
+    const float cover = pick_cover(pick);
+    // The chip the line stands in, walked out here because Vulkan's push constants have no room
+    // left to carry it: this pixel's place in the box, and the box's own size in this picture.
+    const vec2 box = vec2(hud_line_width(glyphs, kHudCapUnits * unit * scale) +
+                              2.0 * kHudPadUnits * unit * scale,
+                          kHudBoxUnits * unit * scale);
+    const vec4 panel = hud_panel(gl_FragCoord.xy - vec2(float(text.x), float(text.y)), box, colors);
+    // The line in its inks when colours are on, in the one ink when they are off.
+    const vec3 ink = colors ? hud_ink(pick.ink) : kHudInk;
+    color = vec4(mix(panel.rgb, ink, cover), mix(panel.a, 1.0, cover));
 }

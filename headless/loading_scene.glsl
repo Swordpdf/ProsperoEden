@@ -40,45 +40,6 @@ float hash21(vec2 p)
     return fract(p.x * p.y);
 }
 
-float glyph_texel(int glyph, int x, int y)
-{
-    x = clamp(x, 0, kGlyphWidth - 1);
-    y = clamp(y, 0, kGlyphHeight - 1);
-    int at = y * kGlyphWidth + x;
-    return float((glyph_word(glyph, at >> 3) >> uint((at & 7) * 4)) & 0xfu) / 15.0;
-}
-
-// The lettering is read in one place only, at the end of loading_scene: the console's shader
-// compiler copes badly with the glyph table being read from many. So the text is laid out first,
-// which only decides which glyph, if any, this pixel falls in (a Pick), and what ink it gets.
-struct Pick
-{
-    int glyph;   // -1: no text here
-    int ink;
-    vec2 st;     // where in the glyph's field, in texels
-    float texel; // pixels per texel
-};
-
-float pen_step(int glyph, float cap, float tracking)
-{
-    return (glyph < 0 ? 0.30 * kGlyphCap / 0.70 : kAdvance[glyph]) * cap / kGlyphCap + tracking * cap;
-}
-
-// Takes the pixel for this glyph when it lies between the glyph's pen and the next one.
-// at is where the pen stands (left end of the baseline), cap the height of a capital in pixels.
-void pick_glyph(inout Pick pick, int glyph, int ink, vec2 pixel, vec2 at, float cap, float tracking)
-{
-    float texel = cap / kGlyphCap;
-    float step = pen_step(glyph, cap, tracking);
-    if (pixel.x < at.x - 0.5 * tracking * cap || pixel.x >= at.x + step - 0.5 * tracking * cap)
-        return;
-    pick.glyph = glyph;
-    pick.ink = ink;
-    pick.st = vec2((pixel.x - at.x) / texel + kGlyphLeft,
-                   float(kGlyphHeight) - ((pixel.y - at.y) / texel + kGlyphBase)) - 0.5;
-    pick.texel = texel;
-}
-
 float line_width(int line, float cap, float tracking)
 {
     float width = 0.0;
@@ -407,15 +368,9 @@ vec3 loading_scene(vec2 pixel, vec2 size, float seconds, uint state[24])
                   brand, 0.42);
 
     // ---- the lettering: the one place the glyph table is read ----
-    if (pick.glyph >= 0 && pick.st.x > -1.0 && pick.st.y > -1.0 && pick.st.x < float(kGlyphWidth) &&
-        pick.st.y < float(kGlyphHeight))
+    float cover = pick_cover(pick);
+    if (cover > 0.0)
     {
-        ivec2 i = ivec2(floor(pick.st));
-        vec2 f = pick.st - vec2(i);
-        float value = mix(mix(glyph_texel(pick.glyph, i.x, i.y), glyph_texel(pick.glyph, i.x + 1, i.y), f.x),
-                          mix(glyph_texel(pick.glyph, i.x, i.y + 1), glyph_texel(pick.glyph, i.x + 1, i.y + 1), f.x),
-                          f.y);
-        float cover = clamp((value - 0.5) * 2.0 * kGlyphSpread * pick.texel + 0.5, 0.0, 1.0);
         vec3 ink = pick.ink >= kInkAccent ? accent : pick.ink == kInkBrand ? vec3(1.0) : kTitle;
         float strength = pick.ink == kInkBrand ? 0.30 : pick.ink == kInkNow ? 0.96 * settled :
                          pick.ink == kInkWord ? 0.66 : pick.ink == kInkFigure ? 0.94 : pick.ink == kInkAccent ? 0.92 :

@@ -41,6 +41,12 @@ enum Category : int
 // The Video category's rows that say something of their own once chosen.
 constexpr int kAstcRow = 3;
 constexpr int kRefreshRow = 4;
+constexpr int kHudRow = 5;
+constexpr int kHudSizeRow = 6;
+constexpr int kHudCornerRow = 7;
+// Frame generation follows the overlay's three rows wherever it is shown (with_option): the last
+// of them needs no row constant, because the chain there falls through to frame_gen_multiplier.
+constexpr int kFrameGenRow = 8, kFrameGenTargetRow = 9;
 // The Controls category's rows.
 constexpr int kVibrationRow = 0;
 constexpr int kMappingRow = 1;
@@ -118,9 +124,16 @@ std::vector<Option> options(int category, const GameSettings &game, Preferences 
                         pick(services.astc_labels(), prefs.astc)});
         rows.push_back({tr("Refresh rate"), rates, game.refresh, pick(rates, prefs.refresh)});
         rows.push_back({tr("FPS overlay"), off_on, game.hud, on_off(prefs.hud)});
-        // Appended last on purpose: the rows above keep the indexes with_option() and the
-        // saved game settings use. Vulkan only -- the OpenGL renderer has no frame generation.
-        // Not shown in a build without it; greyed out while the user's Lossless.dll is missing.
+        // The overlay's chip: how large it is drawn, and which corner of the picture it stands in.
+        rows.push_back({tr("Overlay size"), {tr("Regular"), tr("Medium"), tr("Large")}, game.hud_size,
+                        tr(kHudSizeNames[std::clamp(prefs.hud_size, 0, 2)])});
+        rows.push_back({tr("Overlay corner"), {tr("Top left"), tr("Top right"), tr("Bottom left"),
+                                               tr("Bottom right")},
+                        game.hud_corner, tr(kHudCornerNames[std::clamp(prefs.hud_corner, 0, 3)])});
+        // Frame generation comes last on purpose: the rows above keep the indexes with_option()
+        // and the saved game settings use. Vulkan only -- the OpenGL renderer has no frame
+        // generation. Not shown in a build without it; greyed out while the user's Lossless.dll
+        // is missing.
         const int frame_gen = services.frame_gen_state();
         if (frame_gen == 0)
             break;
@@ -196,8 +209,10 @@ GameSettings with_option(GameSettings game, int category, int row, int value, co
     {
     case category_video:
         (row == 0 ? game.renderer : row == 1 ? game.resolution : row == 2 ? game.filter :
-         row == kAstcRow ? game.astc : row == kRefreshRow ? game.refresh : row == 5 ? game.hud :
-         row == 6 ? game.frame_gen : row == 7 ? game.frame_gen_target : game.frame_gen_multiplier) = value;
+         row == kAstcRow ? game.astc : row == kRefreshRow ? game.refresh : row == kHudRow ? game.hud :
+         row == kHudSizeRow ? game.hud_size : row == kHudCornerRow ? game.hud_corner :
+         row == kFrameGenRow ? game.frame_gen : row == kFrameGenTargetRow ? game.frame_gen_target :
+         game.frame_gen_multiplier) = value;
         break;
     case category_performance:
         game.performance[static_cast<std::size_t>(std::clamp(row, 0, 6))] = value;
@@ -240,8 +255,8 @@ int Launcher::game_overrides(int category) const
     {
     case category_video:
         return (game.renderer >= 0) + (game.resolution >= 0) + (game.filter >= 0) + (game.astc >= 0) +
-               (game.refresh >= 0) + (game.hud >= 0) + (game.frame_gen >= 0) + (game.frame_gen_target >= 0) +
-               (game.frame_gen_multiplier >= 0);
+               (game.refresh >= 0) + (game.hud >= 0) + (game.hud_size >= 0) + (game.hud_corner >= 0) +
+               (game.frame_gen >= 0) + (game.frame_gen_target >= 0) + (game.frame_gen_multiplier >= 0);
     case category_performance:
         return static_cast<int>(
             std::count_if(game.performance.begin(), game.performance.end(), [](int v) { return v >= 0; }));
