@@ -32,20 +32,23 @@ enum Category
     kSaveSync,
     kLanguage,
     kTheme,
+    kColour,
     kCategoryCount,
 };
 constexpr const char *kCategories[kCategoryCount] = {
     TR("Profiles"), TR("Video"), TR("Performance"), TR("Audio"), TR("Controls"), TR("Accessibility"),
-    TR("Diagnostics"), TR("Game files"), TR("Downloads"), TR("Save sync"), TR("Language"), TR("Theme")};
+    TR("Diagnostics"), TR("Game files"), TR("Downloads"), TR("Save sync"), TR("Language"), TR("Theme"),
+    TR("Colour")};
 constexpr Icon kIcons[kCategoryCount] = {
     Icon::profile, Icon::video, Icon::performance, Icon::audio, Icon::controls, Icon::accessibility,
-    Icon::diagnostics, Icon::files, Icon::downloads, Icon::sync, Icon::language, Icon::theme};
+    Icon::diagnostics, Icon::files, Icon::downloads, Icon::sync, Icon::language, Icon::theme,
+    Icon::theme};
 constexpr int kTileColumns = 4;
-constexpr int kTileRows = 3;
-constexpr float kTileGap = 24.0f;
+constexpr int kTileRows = 4;
+constexpr float kTileGap = 20.0f;
 constexpr float kTileWidth = (layout::kWidth - kTileGap * (kTileColumns - 1)) / kTileColumns;
-constexpr float kTileHeight = 224.0f;
-constexpr float kTilesTop = 152.0f;
+constexpr float kTileHeight = 182.0f;
+constexpr float kTilesTop = 140.0f;
 constexpr Rect kStrip{layout::kLeft, kTilesTop + (kTileHeight + kTileGap) * kTileRows, layout::kWidth, 68.0f};
 Rect tile_rect(int index)
 {
@@ -244,6 +247,11 @@ void Launcher::press_settings(Key key)
             option_ = theme_index();
             option_cursor_.snap(dialog_row_top(Modal::theme, option_));
             break;
+        case kColour:
+            open_modal(Modal::accent);
+            option_ = accent_index() + 1;
+            option_cursor_.snap(dialog_row_top(Modal::accent, option_));
+            break;
         default:
             open_modal(Modal::diagnostics);
             break;
@@ -292,6 +300,8 @@ void Launcher::draw_settings(Canvas &c)
         }(),
         pick(services_.language_labels(), prefs_.language),
         t.name,
+        accent_index() < 0 ? std::string{tr("Default")} :
+            std::string{accent_presets()[static_cast<std::size_t>(accent_index())].name},
     };
     if (t.list_settings)
     {
@@ -472,6 +482,8 @@ int Launcher::dialog_rows(Modal modal) const
         return 3;
     case Modal::theme:
         return static_cast<int>(themes().size());
+    case Modal::accent:
+        return static_cast<int>(accent_presets().size()) + 1;
     case Modal::game:
         // Console mode, video, performance, audio, controls, system, language, mods; save data in
         // builds that move saves.
@@ -497,6 +509,8 @@ float Launcher::dialog_row_top(Modal modal, int row) const
     case Modal::accessibility:
     case Modal::theme:
         return 370.0f + 102.0f * static_cast<float>(row);
+    case Modal::accent:
+        return 274.0f + 80.0f * static_cast<float>(row);
     case Modal::performance: // four of its rows show; the list scrolls to the others
         return kVideoRowsTop + kVideoRowPitch * static_cast<float>(row) - performance_rows_.scroll();
     case Modal::video: // five of its rows show; the list scrolls to the others
@@ -558,12 +572,32 @@ void Launcher::press_dialog(Key key)
         if (saved)
         {
             use_theme(chosen.id);
-            settings_.visible = th().list_settings ? 10 : 12;
+            settings_.visible = th().list_settings ? 10 : kCategoryCount;
             settings_.pitch = th().list_settings ? 84.0f : 88.0f;
             settings_.reset(kCategoryCount, settings_.selected);
+            prefs_.accent.clear();
+            use_accent("");
         }
         else
             prefs_.theme = had;
+        cue(saved ? Cue::saved : Cue::error);
+        return;
+    }
+    if (modal_ == Modal::accent)
+    {
+        if (!activate)
+            return;
+        const auto presets = accent_presets();
+        const int chosen = std::clamp(option_, 0, rows - 1);
+        const std::string had = prefs_.accent;
+        prefs_.accent = chosen == 0 ? "" : presets[static_cast<std::size_t>(chosen - 1)].id;
+        const bool saved = save_preferences(true);
+        if (saved)
+        {
+            use_accent(prefs_.accent);
+        }
+        else
+            prefs_.accent = had;
         cue(saved ? Cue::saved : Cue::error);
         return;
     }
@@ -751,6 +785,10 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         title = tr("Theme");
         copy = tr("The look of this menu.");
         break;
+    case Modal::accent:
+        title = tr("Colour");
+        copy = tr("The accent colour of the current theme.");
+        break;
     default:
         title = tr("Diagnostics");
         copy = tr("Detailed logs apply to the next game launch.");
@@ -777,33 +815,34 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
     const int last = scrolls ? rows_view.last_row() : rows - 1;
     if (scrolls)
         list.push_clip({window.x - 24.0f, window.y - 6.0f, window.w + 48.0f, window.h + 12.0f});
+    const float row_h = modal == Modal::accent ? 72.0f : 94.0f;
     for (int row = first; row <= last; ++row)
     {
         list.push_opacity(scrolls ? rows_view.row_alpha(row, kVideoRowHeight) : 1.0f);
-        plate_rest(c, row_plate(), {592.0f, dialog_row_top(modal, row), 736.0f, 94.0f});
+        plate_rest(c, row_plate(), {592.0f, dialog_row_top(modal, row), 736.0f, row_h});
         list.pop_opacity();
     }
     plate_focus(c, row_plate(),
                 {592.0f,
                  scrolls ? rows_top + rows_view.cursor() - rows_view.scroll() :
                            option_cursor_.value,
-                 736.0f, 94.0f},
+                 736.0f, row_h},
                 1.0f);
 
     // A row's name takes what its control (`taken` wide, at the right) leaves of the row.
     const auto label = [&](int row, const char *value, float taken)
     {
-        text_shrink(c, value, 628.0f, baseline(dialog_row_top(modal, row), 94.0f, th().size_text),
+        text_shrink(c, value, 628.0f, baseline(dialog_row_top(modal, row), row_h, th().size_text),
                     th().size_text, th().value, 664.0f - taken - 28.0f);
     };
     const auto choice = [&](int row, const std::string &value)
     {
         return chooser(c, value, 1296.0f,
-                       baseline(dialog_row_top(modal, row), 94.0f, th().size_text),
+                       baseline(dialog_row_top(modal, row), row_h, th().size_text),
                        row == option_ ? 1.0f : 0.0f, th().accent_pale);
     };
     constexpr float kToggle = 64.0f;
-    const auto row_centre = [&](int row) { return dialog_row_top(modal, row) + 47.0f; };
+    const auto row_centre = [&](int row) { return dialog_row_top(modal, row) + row_h * 0.5f; };
     const float knob = tween::clamp01(switches_[0].value);
 
     switch (modal)
@@ -1005,6 +1044,25 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         text_block(c, tr(all[static_cast<std::size_t>(std::clamp(option_, 0, rows - 1))].summary), 592.0f,
                    baseline(700.0f, 30.0f, th().size_small), th().size_small, 30.0f, th().meta, 736.0f, 2,
                    kShrink);
+        break;
+    }
+    case Modal::accent:
+    {
+        const auto presets = accent_presets();
+        const int active = accent_index();
+        for (int row = 0; row < rows; ++row)
+        {
+            const char *name = row == 0 ? tr("Default") : presets[static_cast<std::size_t>(row - 1)].name;
+            label(row, name, 64.0f);
+            const bool current = (row == 0 && active < 0) || (row > 0 && row - 1 == active);
+            if (!current)
+                continue;
+            list.circle(1268.0f, row_centre(row), 17.0f, th().accent);
+            const bool contrast = look().high_contrast;
+            look().high_contrast = false;
+            icon(c, Icon::check, 1268.0f, row_centre(row), 22.0f, th().on_accent);
+            look().high_contrast = contrast;
+        }
         break;
     }
     default:

@@ -35,6 +35,7 @@ Launcher::Launcher(Services &services, Textures &textures, const Fonts &fonts, b
     prefs_ = services_.preferences();
     // The look the player chose; a theme this build does not have leaves the first in use.
     use_theme(prefs_.theme);
+    use_accent(prefs_.accent);
     sources_ = services_.sources();
     sources_generation_ = sources_.generation; // the list read below has the sources' games
     downloads_ = services_.downloads();
@@ -46,9 +47,9 @@ Launcher::Launcher(Services &services, Textures &textures, const Fonts &fonts, b
     home_springs_[0].snap(1.0f);
     rail_active_[0].snap(1.0f);
     settings_.wrap = false;
-    settings_.visible = th().list_settings ? 10 : 12;
+    settings_.visible = th().list_settings ? 10 : 13;
     settings_.pitch = th().list_settings ? 84.0f : 88.0f;
-    settings_.reset(12, 0);
+    settings_.reset(13, 0);
     section_.snap(1.0f);
     detail_.snap(1.0f);
     cue(home_.launch_failed ? Cue::notify : first_start ? Cue::welcome : Cue::resume);
