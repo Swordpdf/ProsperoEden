@@ -338,7 +338,7 @@ struct Preferences
     int frame_gen_target = 0;      // index into kFrameGenTargetKeys: 0 auto, then 60/90/120/144/240
     int frame_gen_multiplier = 0;  // index into kFrameGenMultiplierKeys: 2x, 3x, 4x
     bool vibration = true;
-    int vibration_strength = 100; // percent of DualSense motor output: 5 to 100, in steps of 5
+    int vibration_strength = 100; // percent of DualSense motor output: 1 to 100
     int language = 0;
     int menu_volume = 70; // launcher sounds, 0-100
     std::string theme = "canopy"; // the launcher's look (theme.hpp); one this build lacks reads as the first

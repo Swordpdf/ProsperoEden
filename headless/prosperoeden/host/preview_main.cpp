@@ -578,20 +578,32 @@ void pictures(Stage &s)
     s.press({Key::down, Key::left});
     s.wait(0.4f);
     s.shoot("17-controls-strength");
-    if (s.services.preferences().vibration_strength != 95 || s.services.last_pulse != 95 || s.services.pulses != 1)
+    if (s.services.preferences().vibration_strength != 99 || s.services.last_pulse != 99 || s.services.pulses != 1)
     {
         std::fprintf(stderr, "error: the vibration strength did not reach the settings or the controller\n");
         s.ok = false;
     }
-    for (int i = 0; i < 17; ++i)
+    for (int i = 0; i < 89; ++i)
         s.press({Key::left});
     if (s.services.preferences().vibration_strength != 10 || s.services.last_pulse != 10)
     {
         std::fprintf(stderr, "error: the vibration strength did not reach 10%%\n");
         s.ok = false;
     }
-    for (int i = 0; i < 18; ++i)
+    for (int i = 0; i < 10; ++i)
+        s.press({Key::left});
+    if (s.services.preferences().vibration_strength != 1 || s.services.last_pulse != 1)
+    {
+        std::fprintf(stderr, "error: the vibration strength did not stop at 1%%\n");
+        s.ok = false;
+    }
+    for (int i = 0; i < 100; ++i)
         s.press({Key::right});
+    if (s.services.preferences().vibration_strength != 100 || s.services.last_pulse != 100)
+    {
+        std::fprintf(stderr, "error: the vibration strength did not stop at 100%%\n");
+        s.ok = false;
+    }
     // The button mapping: B moved to Circle takes A's place (A gets Cross), then all back.
     s.press({Key::down});
     s.wait(0.4f);

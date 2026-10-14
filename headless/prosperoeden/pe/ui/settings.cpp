@@ -601,7 +601,7 @@ void Launcher::press_dialog(Key key)
         {
             if (!adjust)
                 return;
-            prefs_.vibration_strength = std::clamp(prefs_.vibration_strength + 5 * step, 5, 100);
+            prefs_.vibration_strength = std::clamp(prefs_.vibration_strength + step, 1, 100);
             sound = Cue::slider;
             // The controller answers at that strength, so the level is chosen by feel; with the
             // vibration switched off it stays still.

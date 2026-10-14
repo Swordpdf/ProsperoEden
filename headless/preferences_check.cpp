@@ -188,12 +188,12 @@ int main() {
     auto controls = Eden::LoadPreferences(file);
     assert(controls.vibration);
     assert(controls.vibration_strength == 100);
-    for (int strength : {5, 10, 25, 50, 75, 100}) {
+    for (int strength : {1, 2, 5, 9, 10, 14, 25, 50, 75, 100}) {
         controls.vibration_strength = strength;
         assert(Eden::SavePreferences(controls, file));
         assert(Eden::LoadPreferences(file).vibration_strength == strength);
     }
-    for (const auto& [strength, expected] : {std::pair{0, 5}, {9, 5}, {14, 10}, {105, 100}}) {
+    for (const auto& [strength, expected] : {std::pair{-10, 1}, {0, 1}, {105, 100}}) {
         controls.vibration_strength = strength;
         assert(Eden::SavePreferences(controls, file));
         assert(Eden::LoadPreferences(file).vibration_strength == expected);

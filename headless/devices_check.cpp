@@ -496,7 +496,7 @@ void CheckPad() {
             CHECK(state.vibrations[1].large_motor == 0); CHECK(state.vibrations[1].small_motor == 0);
             CHECK(handheld->SetVibration({.high_amplitude = 1.0f, .type = Type::Exponential}) == DriverResult::Success);
             CHECK(pad.Poll()); CHECK(state.vibrations.size() == 3); CHECK(state.vibrations[2].small_motor == 255);
-            for (const auto& [strength, expected] : {std::pair{5, 12}, {10, 25}, {25, 63},
+            for (const auto& [strength, expected] : {std::pair{1, 2}, {5, 12}, {10, 25}, {25, 63},
                                                    {100, 255}, {0, 0}, {-10, 0}, {110, 255}}) {
                 pad.SetVibrationStrength(strength);
                 CHECK(left->SetVibration({.low_amplitude = 1.0f, .high_amplitude = 1.0f,
@@ -515,7 +515,7 @@ void CheckPad() {
             CHECK(pad.Poll());
             CHECK(state.vibrations.back().large_motor == 12 && state.vibrations.back().small_motor == 12);
             pad.SetVibrationStrength(100);
-            std::puts("DualSense motor output: 5/10/25/100 percent, clamped limits and handheld scaling PASS");
+            std::puts("DualSense motor output: 1/5/10/25/100 percent, clamped limits and handheld scaling PASS");
         }
         const auto rumble_count = state.vibrations.size();
 
