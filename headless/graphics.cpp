@@ -61,6 +61,7 @@ HudMachine MachineNow() {
     machine.cpu = Performance::HostCpuPercent();
     machine.gpu = Performance::GpuBusyPercent();
     Performance::MemoryPool(&machine.memory_free, &machine.memory_total);
+    if (const auto held = Performance::graphics_memory_held.load(std::memory_order_relaxed)) machine.graphics = held();
     return machine;
 }
 std::atomic<bool> hud_enabled{true};

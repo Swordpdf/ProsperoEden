@@ -751,6 +751,34 @@ for call in ('vmaCreateImage(allocator, &ci, &alloc_ci, &handle, &allocation, &a
         .replace('VALUES', 'ci.extent.width, ci.extent.height, ci.extent.depth, ci.arrayLayers, ci.mipLevels, '
                  'unsigned(ci.samples), int(ci.format)' if 'Image' in call
                  else 'static_cast<unsigned long long>(ci.size), unsigned(ci.usage)'))
+# What the allocator holds in its blocks, for the FPS overlay (performance.h, graphics_memory_held):
+# asked while there is an allocator, a sum of counters it keeps.
+held_ctor = ('MemoryAllocator::MemoryAllocator(const Device &device_)\n', 'MemoryAllocator::~MemoryAllocator() = default;\n',
+             '                    device_.GetPhysical().GetProperties().limits.bufferImageGranularity} {\n')
+for anchor in held_ctor:
+    if allocator.count(anchor) != 1:
+        raise RuntimeError(f'Pinned Vulkan allocator changed: {anchor[:40]} is there {allocator.count(anchor)} times')
+allocator = allocator.replace(held_ctor[0], (
+    'namespace {\n'
+    'std::atomic<VmaAllocator> overlay_allocator{nullptr};\n'
+    'unsigned long long GraphicsMemoryHeld() {\n'
+    '    const VmaAllocator allocator = overlay_allocator.load(std::memory_order_acquire);\n'
+    '    if (allocator == nullptr) return 0;\n'
+    '    VmaBudget held[VK_MAX_MEMORY_HEAPS]{};\n'
+    '    vmaGetHeapBudgets(allocator, held);\n'
+    '    unsigned long long blocks = 0;\n'
+    '    for (const VmaBudget& heap : held) blocks += heap.statistics.blockBytes;\n'
+    '    return blocks;\n'
+    '}\n'
+    '} // namespace\n\n') + held_ctor[0])
+allocator = allocator.replace(held_ctor[2], held_ctor[2] + (
+    '    overlay_allocator.store(allocator, std::memory_order_release);\n'
+    '    ::Eden::Performance::graphics_memory_held.store(&GraphicsMemoryHeld, std::memory_order_release);\n'))
+allocator = allocator.replace(held_ctor[1], (
+    'MemoryAllocator::~MemoryAllocator() {\n'
+    '    ::Eden::Performance::graphics_memory_held.store(nullptr, std::memory_order_release);\n'
+    '    overlay_allocator.store(nullptr, std::memory_order_release);\n'
+    '}\n'))
 include = '#include "video_core/vulkan_common/vulkan_memory_allocator.h"\n'
 if allocator.count(include) != 1:
     raise RuntimeError('Pinned Vulkan allocator changed: its own include')

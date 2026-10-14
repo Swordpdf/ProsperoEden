@@ -352,6 +352,10 @@ inline std::atomic<bool (*)()> graphics_memory_probe{nullptr};
 // caches evict at half the use they were set to. dev-settings graphics_usage=driver restores
 // the driver's count.
 inline std::atomic<unsigned long long (*)()> graphics_memory_free{nullptr};
+// The memory the graphics allocator holds in its blocks now, installed by the Vulkan renderer
+// while it has an allocator (tools/prepare-vulkan-port.py): the part of the pool that grows as
+// scenery loads, and the one the FPS overlay shows beside the pool.
+inline std::atomic<unsigned long long (*)()> graphics_memory_held{nullptr};
 inline std::atomic<bool> graphics_usage_from_pool{true};
 // GPU thread only (the collector).
 inline bool KeepDirtyTextures() {

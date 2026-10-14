@@ -125,6 +125,13 @@ int main() {
     known.gpu = 43;
     known.memory_free = 4187593114ULL;   // 4.1 GiB of the 8.0 are taken
     known.memory_total = 8589934592ULL;
+    // The graphics' part follows the pool when it is known.
+    {
+        Eden::HudMachine with_graphics = known;
+        with_graphics.graphics = 2684354560ULL;  // 2.5 GiB
+        assert(std::string_view(Eden::FormatHudText(clock, 100, "VLK", with_graphics).data())
+               == "VLK 60FPS 17.0MS CPU 55% GPU 43% MEM 4.1/8.0G GFX 2.5G");
+    }
     // A full 100% speed is not worth saying; anything else is.
     assert(std::string_view(Eden::FormatHudText(clock, 98, "VLK", known).data())
            == "VLK 60FPS 17.0MS 98% CPU 55% GPU 43% MEM 4.1/8.0G");

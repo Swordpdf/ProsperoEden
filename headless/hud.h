@@ -71,6 +71,7 @@ struct HudMachine {
     unsigned gpu = ~0u;
     unsigned long long memory_free = 0;
     unsigned long long memory_total = 0;
+    unsigned long long graphics = 0;  // of what is taken, what the graphics hold; 0: not known
 };
 // The overlay's line and where its box goes, in a picture 1080 rows high. Where it is drawn they
 // are scaled to the picture, and `width` then carries the picture's height to the shader instead
@@ -224,7 +225,7 @@ struct LoadingPace {
         return true;
     }
 };
-// The line the overlay shows: "VLK 27FPS 37.0MS CPU 55% GPU 43% MEM 4.1/8.0G". The rate the
+// The line the overlay shows: "VLK 27FPS 37.0MS CPU 55% GPU 43% MEM 4.1/8.0G GFX 2.5G". The rate the
 // guest itself produces, and the rate the display shows when they differ (with frame generation
 // the display is handed frames the guest never made, and never more than `refresh`, its own
 // rate; refresh 0: not known, no limit); then the worst frame of the last second, how far behind
@@ -298,6 +299,11 @@ inline std::array<char, kHudTextMax + 1> FormatHudText(const HudClock& clock, co
                           static_cast<double>(machine.memory_total) / 1073741824.0);
         std::snprintf(piece, sizeof(piece), " MEM %s", memory);
         put(piece);
+        // The graphics' part of it: the one that grows as scenery loads.
+        if (machine.graphics != 0) {
+            std::snprintf(piece, sizeof(piece), " GFX %.1fG", static_cast<double>(machine.graphics) / 1073741824.0);
+            put(piece);
+        }
     }
     if ((fields & kHudFieldPing) && ping_ms >= 0) {
         std::snprintf(piece, sizeof(piece), " P%d", std::min(ping_ms, 9999));
