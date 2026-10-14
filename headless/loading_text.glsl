@@ -711,7 +711,12 @@ void hud_pick(inout Pick pick, uint words[28], vec2 pixel, vec2 at, float cap)
             }
         }
         if (glyph >= 0)
-            pick_glyph_step(pick, glyph, ink, pixel, vec2(pen, at.y), hud_step(glyph, cap), cap, 0.0);
+        {
+            // A digit stands in the middle of the width every digit takes: at its left edge a
+            // narrow one (the 1) left a gap after it that read as a space ("1 0%").
+            float inset = digit ? 0.5 * (hud_step(glyph, cap) - kAdvance[glyph] * cap / kGlyphCap) : 0.0;
+            pick_glyph_step(pick, glyph, ink, pixel, vec2(pen + inset, at.y), hud_step(glyph, cap), cap, 0.0);
+        }
         pen += hud_step(glyph, cap);
     }
 }
