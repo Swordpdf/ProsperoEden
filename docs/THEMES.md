@@ -16,7 +16,7 @@ Everything below is one structure, `pe::ui::Theme` in
 | --- | --- |
 | Identity | `id` (in the settings file), `name` (as Settings shows it), `summary` (one line about it), `kit` (the recipe it starts from), `contract` (the version of the structure it was made for) |
 | Colour: surfaces | `base`, `scrim`, `glass`, `panel`, `panel_edge`, `row`, `row_edge`, `row_focus` |
-| Colour: accent | `accent`, `accent_deep`, `accent_pale`, `on_accent` (text on an accent fill), `highlight` (light in the artwork) |
+| Colour: accent | `accent`, `accent_deep`, `accent_pale`, `on_accent` (text on an accent fill), `highlight` (light in the artwork). Each theme carries an array of accent presets (`AccentPreset`) the player picks from in **Settings > Colour**; the choice is saved as `"launcher": { "accent": "ice" }` |
 | Colour: text | `text`, `title`, `value`, `body`, `copy`, `meta`, `label`, `muted`, `faint`, `warning`, `rule` |
 | Type | the sizes of the hero title, a screen's title, rows, captions; how much heavier titles are drawn; the spacing of the small capital headings |
 | Shape | corner radii for rows, cards and panels; whether chips are pills; hairline and focus ring widths; how far the focus ring's light reaches; whether panels are glass |

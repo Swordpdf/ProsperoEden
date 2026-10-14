@@ -146,6 +146,7 @@ struct Preferences {
     bool high_contrast = false;
     bool reduce_motion = false;
     std::string theme = "canopy";        // Settings > Theme: the launcher's look, by its id
+    std::string accent;                   // Settings > Theme > Colour: accent preset id ("": theme's own)
     ButtonMapping mapping = kDefaultMapping;  // Settings > Controls > Button mapping
     int controller = -1;                 // a game's own Controller type (kControllerKeys); -1: automatic
     bool immediate_logs = false;         // Settings > Diagnostics: log lines written as they come
@@ -401,6 +402,10 @@ inline Preferences LoadPreferences(const std::string& file = SettingsFile()) {
     if (!theme.empty() && theme.size() <= 32 &&
         std::all_of(theme.begin(), theme.end(), [](char c) { return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-'; }))
         result.theme = theme;
+    const std::string accent = Settings::String(document, Json::json_pointer("/launcher/accent"));
+    if (accent.size() <= 32 &&
+        std::all_of(accent.begin(), accent.end(), [](char c) { return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-'; }))
+        result.accent = accent;
     result.detailed_logging = Settings::Bool(document, Json::json_pointer("/diagnostics/detailed_logging"),
                                              result.detailed_logging);
     result.immediate_logs = Settings::Bool(document, Json::json_pointer("/diagnostics/immediate_logs"),
@@ -484,6 +489,10 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
     document["accessibility"]["high_contrast"] = value.high_contrast;
     document["accessibility"]["reduce_motion"] = value.reduce_motion;
     document["launcher"]["theme"] = value.theme;
+    if (!value.accent.empty())
+        document["launcher"]["accent"] = value.accent;
+    else if (document["launcher"].contains("accent"))
+        document["launcher"].erase("accent");
     return Settings::Write(document, file);
 }
 

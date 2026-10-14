@@ -117,6 +117,18 @@ struct Theme
     const char *sounds = "";
 };
 
+// An accent colour preset: a named set of the five accent roles a theme can swap.
+struct AccentPreset
+{
+    const char *id;   // stored in the settings file
+    const char *name; // shown in Settings
+    Color accent;
+    Color accent_deep;
+    Color accent_pale;
+    Color on_accent;
+    Color highlight;
+};
+
 // The theme in use. Read where things are drawn, so a change of theme shows in the next frame.
 const Theme &th();
 // Every theme this build has, the first being the one a new install uses.
@@ -125,6 +137,12 @@ std::span<const Theme> themes();
 int theme_index();
 // Puts a theme in use by its id; false when this build has none of that name (the one in use stays).
 bool use_theme(std::string_view id);
+// The accent presets for the theme in use.
+std::span<const AccentPreset> accent_presets();
+// Which accent preset is active (-1: the theme's own colours).
+int accent_index();
+// Applies an accent preset by id on top of the active theme; "" restores the theme's own.
+void use_accent(std::string_view id);
 
 // A kit theme (ps5-homebrew-ui) as a launcher theme: every role filled from the kit's colours, its
 // corners, focus ring and motion. False when the kit has no theme of that id (theme_kit.cpp).

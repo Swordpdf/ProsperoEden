@@ -143,10 +143,35 @@ Theme canopy()
     return t;
 }
 
+// ---- accent presets: named colour sets a user can pick per theme ----
+
+constexpr AccentPreset kSlateAccents[] = {
+    {"silver",  "Silver",  Color::rgb(0xc0bbb6), Color::rgb(0x3a3836), Color::rgb(0xdedbd8), Color::rgb(0x101012), Color::rgb(0xe8e4e0)},
+    {"ice",     "Ice",     Color::rgb(0x7ec8e3), Color::rgb(0x1c4966), Color::rgb(0xb8e0f0), Color::rgb(0x0a1418), Color::rgb(0xd0ecf8)},
+    {"rose",    "Rose",    Color::rgb(0xe88ca0), Color::rgb(0x5c2232), Color::rgb(0xf2c0cc), Color::rgb(0x120a0c), Color::rgb(0xf5d4dc)},
+    {"amber",   "Amber",   Color::rgb(0xe0a848), Color::rgb(0x5a4018), Color::rgb(0xf0d090), Color::rgb(0x121008), Color::rgb(0xf5dca0)},
+    {"mint",    "Mint",    Color::rgb(0x6ecaa0), Color::rgb(0x1e4a38), Color::rgb(0xb0e8cc), Color::rgb(0x0a1410), Color::rgb(0xc8f0d8)},
+    {"lilac",   "Lilac",   Color::rgb(0xb098d8), Color::rgb(0x3c2868), Color::rgb(0xd4c4ec), Color::rgb(0x0e0a14), Color::rgb(0xe0d4f0)},
+    {"coral",   "Coral",   Color::rgb(0xe88070), Color::rgb(0x5c2820), Color::rgb(0xf0b8ac), Color::rgb(0x140c0a), Color::rgb(0xf5c8c0)},
+    {"sky",     "Sky",     Color::rgb(0x60a8e0), Color::rgb(0x1a3a5c), Color::rgb(0xa8d0f0), Color::rgb(0x0a1018), Color::rgb(0xc0dcf5)},
+};
+
+constexpr AccentPreset kCanopyAccents[] = {
+    {"lime",     "Lime",     Color::rgb(0xa9db63), Color::rgb(0x245d4a), Color::rgb(0xdfe8a6), Color::rgb(0x0b1713), Color::rgb(0xffd76a)},
+    {"gold",     "Gold",     Color::rgb(0xe0c050), Color::rgb(0x4a3a18), Color::rgb(0xf0dda0), Color::rgb(0x0b1410), Color::rgb(0xffeaa0)},
+    {"ember",    "Ember",    Color::rgb(0xe08850), Color::rgb(0x4a2818), Color::rgb(0xf0c4a0), Color::rgb(0x0e100a), Color::rgb(0xffd4a0)},
+    {"teal",     "Teal",     Color::rgb(0x50c8b0), Color::rgb(0x184a40), Color::rgb(0xa0e8d8), Color::rgb(0x0a1210), Color::rgb(0xb0f0e0)},
+    {"sakura",   "Sakura",   Color::rgb(0xe890a8), Color::rgb(0x4a2030), Color::rgb(0xf0c8d4), Color::rgb(0x100a0c), Color::rgb(0xf8d8e0)},
+    {"ocean",    "Ocean",    Color::rgb(0x58a8d8), Color::rgb(0x183a58), Color::rgb(0xa0d0f0), Color::rgb(0x0a1018), Color::rgb(0xb8e0f8)},
+    {"violet",   "Violet",   Color::rgb(0xa080d0), Color::rgb(0x342060), Color::rgb(0xccb8e8), Color::rgb(0x0c0a14), Color::rgb(0xdcc8f0)},
+    {"copper",   "Copper",   Color::rgb(0xd0905c), Color::rgb(0x4a2818), Color::rgb(0xe8c4a0), Color::rgb(0x100c08), Color::rgb(0xf0d0a8)},
+};
+
 struct Store
 {
     std::array<Theme, 2> all{canopy(), slate()};
     int index = 0;
+    int accent = -1;
     Theme active = all[0];
 };
 
@@ -182,10 +207,56 @@ bool use_theme(std::string_view id)
         {
             all.index = static_cast<int>(i);
             all.active = all.all[i];
+            all.accent = -1;
             return true;
         }
     }
     return false;
+}
+
+static std::span<const AccentPreset> presets_for(int theme_index)
+{
+    switch (theme_index)
+    {
+    case 0: return kCanopyAccents;
+    case 1: return kSlateAccents;
+    default: return {};
+    }
+}
+
+std::span<const AccentPreset> accent_presets()
+{
+    return presets_for(store().index);
+}
+
+int accent_index()
+{
+    return store().accent;
+}
+
+void use_accent(std::string_view id)
+{
+    Store &s = store();
+    if (id.empty())
+    {
+        s.accent = -1;
+        s.active = s.all[static_cast<std::size_t>(s.index)];
+        return;
+    }
+    const auto presets = presets_for(s.index);
+    for (std::size_t i = 0; i < presets.size(); ++i)
+    {
+        if (id == presets[i].id)
+        {
+            s.accent = static_cast<int>(i);
+            s.active.accent = presets[i].accent;
+            s.active.accent_deep = presets[i].accent_deep;
+            s.active.accent_pale = presets[i].accent_pale;
+            s.active.on_accent = presets[i].on_accent;
+            s.active.highlight = presets[i].highlight;
+            return;
+        }
+    }
 }
 
 } // namespace pe::ui
