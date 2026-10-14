@@ -110,6 +110,8 @@ struct Theme
     bool game_backdrop = false;  // the selected game's cover art fills the background
     bool minimal_home = false;   // home screen: clean layout, no controller display
     bool top_nav = false;        // horizontal section tabs at the top instead of the sidebar rail
+    float scrim_opacity = 0.0f;  // >0: flat scrim at this alpha; 0: directional gradient scrim
+    float game_page_offset = 0.0f; // px to push the game settings columns below their base position
 
     // ---- sound: a folder of ui/sounds with its own cues ("": the launcher's) ----
     const char *sounds = "";

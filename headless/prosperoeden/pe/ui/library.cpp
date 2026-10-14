@@ -987,7 +987,7 @@ void Launcher::draw_game_page(Canvas &c, float open)
     }
 
     // ---- its kinds of setting ----
-    const float shift = t.top_nav ? 60.0f : 0.0f;
+    const float shift = t.game_page_offset;
     const Rect kinds{kKinds.x, kKinds.y + shift, kKinds.w, kKinds.h - shift};
     const Rect middle{kMiddle.x, kMiddle.y + shift, kMiddle.w, kMiddle.h - shift};
     const Rect explain{kExplain.x, kExplain.y + shift, kExplain.w, kExplain.h - shift};

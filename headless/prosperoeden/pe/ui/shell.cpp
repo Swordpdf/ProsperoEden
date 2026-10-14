@@ -186,9 +186,9 @@ void Launcher::draw_scrims(Canvas &c)
     const float home = 1.0f - away;
     if (home > 0.01f)
     {
-        if (th().top_nav)
+        if (th().scrim_opacity > 0.0f)
         {
-            list.rounded_rect({0.0f, 0.0f, 1920.0f, 1080.0f}, 0.0f, shade.with_alpha(0.92f * home));
+            list.rounded_rect({0.0f, 0.0f, 1920.0f, 1080.0f}, 0.0f, shade.with_alpha(th().scrim_opacity * home));
         }
         else
         {
