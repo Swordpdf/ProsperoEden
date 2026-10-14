@@ -5,6 +5,7 @@
 #include <cassert>
 #include <fstream>
 #include <filesystem>
+#include <utility>
 #include <unistd.h>
 
 static std::string Read(const std::string& path) {
@@ -186,6 +187,18 @@ int main() {
     // Vibration (Settings > Controls): on unless turned off.
     auto controls = Eden::LoadPreferences(file);
     assert(controls.vibration);
+    assert(controls.vibration_strength == 100);
+    for (int strength : {5, 10, 25, 50, 75, 100}) {
+        controls.vibration_strength = strength;
+        assert(Eden::SavePreferences(controls, file));
+        assert(Eden::LoadPreferences(file).vibration_strength == strength);
+    }
+    for (const auto [strength, expected] : {std::pair{0, 5}, {9, 5}, {14, 10}, {105, 100}}) {
+        controls.vibration_strength = strength;
+        assert(Eden::SavePreferences(controls, file));
+        assert(Eden::LoadPreferences(file).vibration_strength == expected);
+    }
+    controls.vibration_strength = 100;
     controls.vibration = false;
     assert(Eden::SavePreferences(controls, file));
     assert(!Eden::LoadPreferences(file).vibration);
