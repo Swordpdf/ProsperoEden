@@ -379,6 +379,9 @@ inline bool KeepDirtyTextures() {
     const auto probe = graphics_memory_probe.load(std::memory_order_relaxed);
     return !probe || !probe();
 }
+// Signal the guest vsync first and compose 1.5 ms later, so a frame the game queues in response
+// to the vsync is latched at that same vsync (dev-settings compose_delay_us=N overrides it).
+inline std::atomic<int> compose_delay_us{1500};
 // Development boot trace (dev-settings boot_trace=START:END, milliseconds after the settings
 // are read): guest GPU submissions and GPU-thread dispatches inside it are logged one by one.
 inline std::atomic<long long> boot_trace_begin{0}, boot_trace_end{0};

@@ -789,6 +789,9 @@ int main(int argc, char** argv) {
                     const unsigned long draws = std::strtoul(entry.c_str() + 15, nullptr, 10);
                     if (draws >= 8 && draws <= 512 && (draws & (draws - 1)) == 0)
                         Eden::Performance::dispatch_mask = static_cast<unsigned>(draws - 1);
+                } else if (entry.starts_with("compose_delay_us=")) {
+                    // Guest vsync signalled first, composition N us later (VI conductor; 0 = upstream).
+                    Eden::Performance::compose_delay_us = std::stoi(entry.substr(17));
                 } else if (entry.starts_with("idle_spin_us=")) {
                     // Guest cores spin this long on their interrupt flag before sleeping (W1).
                     Eden::Performance::idle_spin_iterations = static_cast<unsigned>(std::stoul(entry.substr(13)) * 50);
