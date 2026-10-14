@@ -705,8 +705,9 @@ foreach(bits 32 64)
     set(derived "${PORT_BUILD_DIR}/arm_dynarmic_${bits}.cpp")
     # The overlay's four core loads (performance.h, SampleCoreCpu): each core reads its own CPU
     # time after a run when the overlay has asked, which on the console only the thread itself
-    # can. The development build reads more at the same place (SampleCpu, below).
-    if(NOT EDEN_DEV_PROFILE)
+    # can. The development build reads more at the same place (SampleCpu, below). Only the console
+    # links performance.cpp: the host checks keep the plain dispatch.
+    if(PS5_NATIVE AND NOT EDEN_DEV_PROFILE)
         string(PREPEND wrapper "#include \"${EDEN_PORT_DIR}/performance.h\"
 ")
         set(core_run_site "    return TranslateHaltReason(m_jit->Run());")
