@@ -196,9 +196,9 @@ void Launcher::check_games_present()
         {
             read_home();
             const int recents = static_cast<int>(home_.recents.size());
-            // (2 to 5 are the recent games, 6 is "view all", 1 the game's settings: home.cpp.)
-            if (home_focus_ >= 2 && home_focus_ < 6 && home_focus_ - 2 >= recents)
-                home_focus_ = recents > 0 ? 1 + recents : 6;
+            // (2..9 are recent games, 10 is "view all", 1 is game settings: home.cpp.)
+            if (home_focus_ >= 2 && home_focus_ < 10 && home_focus_ - 2 >= recents)
+                home_focus_ = recents > 0 ? 1 + recents : 10;
             if (home_focus_ == 1 && !home_.last_exists)
                 home_focus_ = 0;
         }
@@ -328,8 +328,9 @@ void Launcher::sync_grid(bool snap)
     const int count = static_cast<int>(games_.size());
     const int rows = (count + kColumns - 1) / kColumns;
     const int row = count > 0 ? library_.selected / kColumns : 0;
-    grid_rows_.visible = 2;
-    grid_rows_.pitch = kCellPitchY;
+    const bool panel = th().top_nav;
+    grid_rows_.visible = panel ? 3 : 2;
+    grid_rows_.pitch = panel ? 248.0f : kCellPitchY;
     grid_rows_.wrap = false;
     if (snap || grid_rows_.count != rows)
         grid_rows_.reset(rows, row);
@@ -481,6 +482,79 @@ void Launcher::draw_library(Canvas &c)
     gfx::DrawList &list = c.list;
     const Theme &t = th();
     const int count = static_cast<int>(games_.size());
+
+    if (t.top_nav)
+    {
+        constexpr float kPanelLeft = 960.0f;
+        constexpr float kPanelWidth = 864.0f;
+        constexpr float kPanelCover = 176.0f;
+        constexpr float kPanelCellX = (kPanelWidth - kPanelCover) / 3.0f;
+        constexpr float kPanelRowPitch = 248.0f;
+        constexpr float kPanelTop = 110.0f;
+        constexpr float kPanelBottom = 980.0f;
+        kicker(c, tr("LIBRARY"), kPanelLeft, baseline(80.0f, 30.0f, t.size_small), t.accent_pale, kPanelWidth);
+        if (count == 0)
+        {
+            text(c, games_loaded_ || !home_.setup_ready ? tr("No ROM files found.") : tr("Reading..."),
+                 kPanelLeft + kPanelWidth * 0.5f, baseline(400.0f, 38.0f, t.size_text), t.size_text,
+                 t.copy, Align::center);
+        }
+        else
+        {
+            list.push_clip({kPanelLeft - 16.0f, kPanelTop - 8.0f, kPanelWidth + 32.0f,
+                            kPanelBottom - kPanelTop + 8.0f});
+            const float scroll = grid_rows_.scroll();
+            const float scale_x = kPanelCellX / kCellPitchX;
+            const float scale_y = kPanelRowPitch / kCellPitchY;
+            const Rect ring{kPanelLeft + grid_x_.value * scale_x,
+                            kPanelTop + grid_y_.value * scale_y - scroll,
+                            kPanelCover, kPanelCover};
+            const int first = grid_rows_.first_row() * kColumns;
+            const int last = std::min(count - 1, (grid_rows_.last_row() + 1) * kColumns - 1);
+            for (int i = first; i <= last; ++i)
+            {
+                const Game &game = games_[static_cast<std::size_t>(i)];
+                const Rect r{kPanelLeft + static_cast<float>(i % kColumns) * kPanelCellX,
+                             kPanelTop + static_cast<float>(i / kColumns) * kPanelRowPitch - scroll,
+                             kPanelCover, kPanelCover};
+                const float near = tween::clamp01(
+                    1.0f - (std::fabs(r.x - ring.x) + std::fabs(r.y - ring.y)) / 150.0f);
+                const bool grid_active = screen_ == Screen::home ? home_on_grid_ : !rail_focus_;
+                const float f = grid_active ? near : 0.0f;
+                const float here = arrive(i - first, 0.018f);
+                list.push_opacity(here);
+                list.push_transform(1.0f, 0.0f, 0.0f, 0.0f, (1.0f - here) * 14.0f);
+                const float sc = 1.0f + (0.04f * f - 0.035f * press_ * f) * motion();
+                list.push_transform(sc, r.x + r.w * 0.5f, r.y + r.h, 0.0f, 0.0f);
+                focus_ring(c, r, t.radius_card, f);
+                if (game.remote)
+                    remote_cover(c, game.cover, r, t.radius_card, 0.3f + 0.5f * f);
+                else
+                    cover(c, game.cover, r, t.radius_card, 0.3f + 0.5f * f);
+                list.pop_transform();
+                text_shrink(c, game.name, r.x, baseline(r.y + kPanelCover + 6.0f, 24.0f, 18.0f),
+                            18.0f, gfx::mix(t.body, t.title, f), kPanelCover);
+                list.pop_transform();
+                list.pop_opacity();
+            }
+            list.pop_clip();
+            if (grid_rows_.count > grid_rows_.visible && !look().high_contrast)
+                list.gradient_rect({kPanelLeft - 16.0f, kPanelBottom - 100.0f, kPanelWidth + 32.0f, 100.0f},
+                                   0.0f, t.base.with_alpha(0.0f), t.base.with_alpha(0.72f));
+            scrollbar(c, grid_rows_, kPanelLeft + kPanelWidth + 12.0f, kPanelTop,
+                      kPanelBottom - kPanelTop - 80.0f);
+        }
+        if (screen_ != Screen::home)
+        {
+            static constexpr Hint kHints[] = {{Pad::cross, TR("Play")},
+                                              {Pad::triangle, TR("Game settings")},
+                                              {Pad::circle, TR("Home")},
+                                              {Pad::l1, TR("Sections"), Pad::r1}};
+            draw_footer(c, kHints, 4, count > 0 ? list_position(library_.selected + 1, count) : std::string{});
+        }
+        return;
+    }
+
     const float left = layout::kLeft;
     draw_frame(c, tr("Library"), count > 0 ? fill(tr("{0} games"), {std::to_string(count)}).c_str() : "");
 
@@ -898,20 +972,25 @@ void Launcher::draw_game_page(Canvas &c, float open)
     list.push_transform(1.0f, 0.0f, 0.0f, (1.0f - open) * 48.0f * motion(), 0.0f);
 
     // ---- which game, and how much it has of its own ----
-    cover(c, game.cover, {layout::kLeft, 36.0f, 84.0f, 84.0f}, 20.0f, 0.6f);
-    kicker(c, tr("Game settings"), layout::kLeft + 108.0f, baseline(38.0f, 28.0f, t.size_small), t.accent, 900.0f);
+    const float hdr = t.top_nav ? 96.0f : 36.0f;
+    cover(c, game.cover, {layout::kLeft, hdr, 84.0f, 84.0f}, 20.0f, 0.6f);
+    kicker(c, tr("Game settings"), layout::kLeft + 108.0f, baseline(hdr + 2.0f, 28.0f, t.size_small), t.accent, 900.0f);
     const float clock = text_width(c, clock_, t.size_heading) + 28.0f;
     const std::string changed = changes_text(game_changes());
     const Tone tone = game_changes() > 0 ? Tone::accent : Tone::plain;
     const float chip_w = chip_width(c, changed, tone, 420.0f);
-    chip(c, changed, layout::kRight - clock - chip_w, layout::kTop + 32.0f, tone, 420.0f);
+    chip(c, changed, layout::kRight - clock - chip_w, hdr + 32.0f, tone, 420.0f);
     {
         const Heavy heavy(c);
-        text_fit(c, game.name, layout::kLeft + 108.0f, baseline(66.0f, 54.0f, 44.0f), 44.0f, t.title,
+        text_fit(c, game.name, layout::kLeft + 108.0f, baseline(hdr + 30.0f, 54.0f, 44.0f), 44.0f, t.title,
                  layout::kRight - clock - chip_w - 32.0f - (layout::kLeft + 108.0f));
     }
 
     // ---- its kinds of setting ----
+    const float shift = t.top_nav ? 60.0f : 0.0f;
+    const Rect kinds{kKinds.x, kKinds.y + shift, kKinds.w, kKinds.h - shift};
+    const Rect middle{kMiddle.x, kMiddle.y + shift, kMiddle.w, kMiddle.h - shift};
+    const Rect explain{kExplain.x, kExplain.y + shift, kExplain.w, kExplain.h - shift};
     const int rows = game_rows_.count;
     const int chosen = std::clamp(game_rows_.selected, 0, std::max(0, rows - 1));
     const int kind = game_row(chosen);
@@ -947,34 +1026,32 @@ void Launcher::draw_game_page(Canvas &c, float open)
                which == row_delete ? false : game_overrides(which - row_video) > 0;
     };
     // The highlight: whole while the focus is on the kinds, quieter once it is on the rows.
-    const Rect lit{kKinds.x, kKinds.y + game_rows_.cursor(), kKinds.w, kKindHeight};
+    const Rect lit{kinds.x, kinds.y + game_rows_.cursor(), kinds.w, kKindHeight};
     plate_focus(c, row_plate(), lit, 1.0f - 0.62f * pane);
     if (!look().high_contrast)
         list.rounded_rect({lit.x + 14.0f, lit.y + 20.0f, 4.0f, kKindHeight - 40.0f}, 2.0f, t.accent);
     for (int row = 0; row < rows; ++row)
     {
         const int which = game_row(row);
-        const float top = kKinds.y + kKindPitch * static_cast<float>(row);
+        const float top = kinds.y + kKindPitch * static_cast<float>(row);
         const bool on = row == chosen;
-        // Its name, and under it what the game has there: each has the row's whole width, for the
-        // languages whose words are long.
-        text_shrink(c, tr(kKindNames[which]), kKinds.x + 34.0f, baseline(top + 8.0f, 32.0f, t.size_text), t.size_text,
-                    which == row_delete ? t.warning : on ? t.title : t.copy, kKinds.w - 58.0f);
-        text_shrink(c, state(which), kKinds.x + 34.0f, baseline(top + 40.0f, 24.0f, 18.0f), 18.0f,
-                    there(which) && which != row_mode ? t.accent : t.faint, kKinds.w - 58.0f);
+        text_shrink(c, tr(kKindNames[which]), kinds.x + 34.0f, baseline(top + 8.0f, 32.0f, t.size_text), t.size_text,
+                    which == row_delete ? t.warning : on ? t.title : t.copy, kinds.w - 58.0f);
+        text_shrink(c, state(which), kinds.x + 34.0f, baseline(top + 40.0f, 24.0f, 18.0f), 18.0f,
+                    there(which) && which != row_mode ? t.accent : t.faint, kinds.w - 58.0f);
     }
 
     // ---- the kind chosen ----
     const bool active = modal_shown_ != Modal::game;
     if (kind == row_mode)
-        draw_mode_pane(c, kMiddle);
+        draw_mode_pane(c, middle);
     else if (kind == row_mods)
-        draw_mods_pane(c, kMiddle, active);
+        draw_mods_pane(c, middle, active);
     else if (kind == row_save || kind == row_delete)
-        draw_save_pane(c, kMiddle, kind == row_delete);
+        draw_save_pane(c, middle, kind == row_delete);
     else
-        draw_option_pane(c, kMiddle, kind - row_video, active);
-    draw_explain_pane(c, kExplain, kind);
+        draw_option_pane(c, middle, kind - row_video, active);
+    draw_explain_pane(c, explain, kind);
 
     // ---- hints ----
     const float cy = layout::kFooter;

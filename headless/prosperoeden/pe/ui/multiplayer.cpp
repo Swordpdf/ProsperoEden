@@ -341,6 +341,86 @@ void Launcher::draw_multiplayer(Canvas& c) {
     draw_frame(c, tr(room_page_ == RoomPage::choice ? TR("Multiplayer") :
                      room_page_ == RoomPage::public_rooms ? TR("Public rooms") : TR("Private room")),
                tr(states[static_cast<int>(room_status_.phase)]));
+    if (t.top_nav)
+    {
+        constexpr float kPanelLeft = 960.0f;
+        constexpr float kPanelWidth = 864.0f;
+        constexpr float kPanelTop = 110.0f;
+        if (room_page_ == RoomPage::choice)
+        {
+            kicker(c, tr("MULTIPLAYER"), kPanelLeft, baseline(80.0f, 30.0f, t.size_small), t.accent_pale, kPanelWidth);
+            const Rect shifted_room{kPanelLeft, 400.0f, kPanelWidth, 580.0f};
+            draw_room_panel(c, shifted_room);
+            const char *labels[]{TR("Public rooms"), TR("Private room")};
+            const Icon icons[]{Icon::multiplayer, Icon::lock};
+            for (int i = 0; i < 2; ++i)
+            {
+                const Rect row{kPanelLeft, 120.0f + static_cast<float>(i) * 140.0f, kPanelWidth, 120.0f};
+                const float f = !rail_focus_ && room_row_ == i ? 1.0f : 0.0f;
+                plate(c, tile_plate(), row, f);
+                icon(c, icons[i], row.x + 56.0f, row.y + 60.0f, 48.0f, f > 0 ? t.accent_pale : t.accent);
+                {
+                    const Heavy heavy(c);
+                    text_shrink(c, tr(labels[i]), row.x + 120.0f, baseline(row.y, row.h, t.size_heading),
+                                t.size_heading, t.title, row.w - 160.0f);
+                }
+            }
+            static constexpr Hint kHints[]{{Pad::cross, TR("Select")}, {Pad::square, TR("Go offline")},
+                                           {Pad::circle, TR("Home")}, {Pad::l1, TR("Sections"), Pad::r1}};
+            draw_footer(c, kHints, 4);
+        }
+        else if (room_status_.phase == Phase::Connected)
+        {
+            draw_room_panel(c, {kPanelLeft, kPanelTop, kPanelWidth, 870.0f});
+            static constexpr Hint kHints[]{{Pad::updown, TR("Browse")}, {Pad::cross, TR("Leave room")},
+                                           {Pad::circle, TR("Back")}};
+            draw_footer(c, kHints, 3);
+        }
+        else if (room_page_ == RoomPage::public_rooms && room_status_.phase != Phase::Connecting &&
+                 room_status_.phase != Phase::Disconnecting)
+        {
+            kicker(c, tr("PUBLIC ROOMS"), kPanelLeft, baseline(80.0f, 30.0f, t.size_small), t.accent_pale, kPanelWidth);
+            draw_public_rooms(c, {kPanelLeft, kPanelTop, kPanelWidth, 870.0f});
+            static constexpr Hint kHints[]{{Pad::cross, TR("Select")}, {Pad::leftright, TR("Page")},
+                                           {Pad::triangle, TR("Refresh")}, {Pad::circle, TR("Back")}};
+            draw_footer(c, kHints, 4);
+        }
+        else
+        {
+            kicker(c, tr("PRIVATE ROOM"), kPanelLeft, baseline(80.0f, 30.0f, t.size_small), t.accent_pale, kPanelWidth);
+            const bool idle = room_status_.phase == Phase::Idle || room_status_.phase == Phase::Failed;
+            const char *form_labels[]{TR("Room address"), TR("UDP port"), TR("Nickname"), TR("Password"),
+                                      idle ? TR("Join room") : TR("Leave / cancel")};
+            const std::string form_values[]{room_connection_.host, std::to_string(room_connection_.port),
+                room_connection_.nickname, room_connection_.password.empty() ? "" : "********", ""};
+            for (int row = 0; row < 5; ++row)
+            {
+                const Rect rect{kPanelLeft, kPanelTop + 88.0f * static_cast<float>(row), kPanelWidth, 78.0f};
+                const float f = row == room_row_ ? 1.0f : 0.0f;
+                if (row == 4)
+                {
+                    if (idle)
+                        primary_button(c, {rect.x, rect.y + 8.0f, 420.0f, 68.0f}, tr(form_labels[row]),
+                                       translate_hint(Pad::cross), f, press_);
+                    else
+                        secondary_button(c, {rect.x, rect.y + 8.0f, 420.0f, 68.0f}, tr(form_labels[row]),
+                                         translate_hint(Pad::cross), f, press_);
+                    continue;
+                }
+                plate(c, row_plate(), rect, f);
+                const float shown = text_fit(c, form_values[row], rect.x + rect.w - 28.0f,
+                                             baseline(rect.y, 78.0f, t.size_text), t.size_text,
+                                             t.accent_pale, rect.w * 0.6f, Align::right);
+                text_shrink(c, tr(form_labels[row]), rect.x + 28.0f, baseline(rect.y, 78.0f, t.size_text),
+                            t.size_text, f > 0.0f ? t.title : t.value, rect.w - 56.0f - shown - 24.0f);
+            }
+            draw_room_panel(c, {kPanelLeft, 560.0f, kPanelWidth, 420.0f});
+            static constexpr Hint kHints[]{{Pad::cross, TR("Select")}, {Pad::square, TR("Go offline")},
+                                           {Pad::circle, TR("Back")}};
+            draw_footer(c, kHints, 3);
+        }
+        return;
+    }
     draw_room_panel(c, kRoom);
     const float x = kPane.x;
     const bool own = !rail_focus_;

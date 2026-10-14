@@ -88,7 +88,8 @@ int main() {
     assert(Eden::SaveRecentGame("Sample Quest.nsp", file));
     assert((Eden::LoadRecentGames(file) == std::vector<std::string>{"Sample Quest.nsp", "Demo Racer.xci"}));
     for (int i = 0; i < 5; ++i) assert(Eden::SaveRecentGame("Game" + std::to_string(i) + ".nsp", file));
-    assert((Eden::LoadRecentGames(file) == std::vector<std::string>{"Game4.nsp", "Game3.nsp", "Game2.nsp", "Game1.nsp"}));
+    assert((Eden::LoadRecentGames(file) == std::vector<std::string>{"Game4.nsp", "Game3.nsp", "Game2.nsp", "Game1.nsp",
+                                                                    "Game0.nsp", "Sample Quest.nsp", "Demo Racer.xci"}));
 
     // Console mode per title.
     constexpr uint64_t racer = 0x0100000000010000, quest = 0x0100000000030000;

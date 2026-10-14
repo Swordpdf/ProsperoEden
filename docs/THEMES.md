@@ -1,8 +1,9 @@
 # Themes
 
-The launcher's look is a theme. This build has one, **Canopy** (a tropical dusk, dark green
-glass and lime), and it is the one in use. **Settings > Theme** lists the themes a build has; the
-choice is kept in the settings file as `"launcher": { "theme": "canopy" }`.
+The launcher's look is a theme. This build has two: **Canopy** (a tropical dusk, dark green
+glass and lime) and **Slate** (neutral glass, clean and still). Canopy is the default for a
+new install. **Settings > Theme** lists the themes a build has; the choice is kept in the
+settings file as `"launcher": { "theme": "canopy" }`.
 
 A theme is data. It says what the screens are painted with, and nothing about where things are.
 
@@ -21,6 +22,7 @@ Everything below is one structure, `pe::ui::Theme` in
 | Shape | corner radii for rows, cards and panels; whether chips are pills; hairline and focus ring widths; how far the focus ring's light reaches; whether panels are glass |
 | Motion | the springs of the focus, the highlight and scrolling; how long a screen change and a game's start take; the delay between the parts of a screen as it arrives; the focus glow's pulse |
 | Artwork | the backdrop, its blurred copy (behind glass panels) and the app's mark, as files in `ui/art`; where the artwork's light is |
+| Layout variants | `list_settings` (settings as a vertical list instead of tiles), `game_backdrop` (the selected game's cover art fills the background), `minimal_home` (clean home layout: a detail card on the left with the Library grid on the right, no floating cover or controllers, no recently-played shelf), `top_nav` (horizontal section tabs — Home, Multiplayer, Settings, About — at the top instead of the sidebar rail; the Library grid lives on the home screen, and the other sections draw as right-side panels) |
 | Ambient light | how many motes of light rise over the artwork, and how far the artwork drifts |
 | Sound | a folder of `ui/sounds` with its own cues (none: the launcher's own) |
 
@@ -30,9 +32,10 @@ four of these colours with it: `accent`, `accent_pale`, `accent_deep` and `base`
 
 ## What a theme does not set
 
-- **Where things are.** The rail, the home screen's hero, the Library's covers and the Settings
-  tiles are the launcher's, the same in every theme. A theme that moved them would be code, and
-  would have to be tested as a launcher of its own.
+- **Where things are.** A theme can choose between predefined layout variants
+  (`list_settings`, `game_backdrop`, `top_nav`) but not invent new ones. `top_nav` is the
+  largest: a two-column dashboard where the detail card and Library grid share the home screen,
+  and the other sections draw as right-side panels.
 - **Text.** The words and their translations are the launcher's.
 - **Accessibility.** Larger text, High contrast and Reduce motion lie over whatever theme is in
   use (`pe::ui::Look`). A theme cannot turn them off.

@@ -440,7 +440,8 @@ class Launcher
     std::array<tween::Spring, 4> controller_lit_{};
     std::array<float, 4> controller_pop_{}; // 1 when a controller appears, then decays
     int home_focus_ = 0;
-    std::array<tween::Spring, 10> home_springs_{};
+    bool home_on_grid_ = false;
+    std::array<tween::Spring, 12> home_springs_{};
     float intro_ = 0.0f;
     bool first_start_ = true;
     // The opening, when the app has just been started and the launch picture is there: that

@@ -105,6 +105,12 @@ struct Theme
     int motes = 26;     // 0: none
     float drift = 1.0f; // how far the artwork wanders (0: it stands still)
 
+    // ---- layout variants ----
+    bool list_settings = false;  // settings shows a list instead of tiles
+    bool game_backdrop = false;  // the selected game's cover art fills the background
+    bool minimal_home = false;   // home screen: clean layout, no controller display
+    bool top_nav = false;        // horizontal section tabs at the top instead of the sidebar rail
+
     // ---- sound: a folder of ui/sounds with its own cues ("": the launcher's) ----
     const char *sounds = "";
 };

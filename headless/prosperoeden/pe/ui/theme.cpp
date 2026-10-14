@@ -20,6 +20,66 @@ Color rgb(std::uint32_t hex, float alpha = 1.0f)
     return Color::rgb(hex, alpha);
 }
 
+// Slate: neutral glass, clean and still.
+Theme slate()
+{
+    Theme t;
+    theme_from_kit("acrylic", &t);
+    t.id = "slate";
+    t.name = "Slate";
+    t.summary = TR("Neutral glass, clean and still.");
+
+    t.base = rgb(0x101012);
+    t.scrim = rgb(0x080809);
+    t.glass = rgb(0x1c1c20);
+    t.panel = rgb(0x141416);
+    t.panel_edge = rgb(0x3a3a3e);
+    t.row = rgb(0x1e1e22);
+    t.row_edge = rgb(0x34343a);
+    t.row_focus = rgb(0x2c2c32);
+
+    t.accent = rgb(0xc0bbb6);
+    t.accent_deep = rgb(0x3a3836);
+    t.accent_pale = rgb(0xdedbd8);
+    t.on_accent = rgb(0x101012);
+    t.highlight = rgb(0xe8e4e0);
+
+    t.text = rgb(0xeae8e6);
+    t.title = rgb(0xf2f0ee);
+    t.value = rgb(0xe6e4e2);
+    t.body = rgb(0xd0cecc);
+    t.copy = rgb(0xb0aeac);
+    t.meta = rgb(0x98969a);
+    t.label = rgb(0x88868a);
+    t.muted = rgb(0x78767a);
+    t.faint = rgb(0x585660);
+    t.warning = rgb(0xe0685e);
+    t.rule = rgb(0x34343a);
+
+    t.size_hero = 64.0f;
+    t.size_display = 38.0f;
+    t.size_heading = 28.0f;
+
+    t.focus_glow = 18.0f;
+    t.shadow_blur = 36.0f;
+    t.shadow_offset = 14.0f;
+    t.pill_chips = true;
+    t.motes = 0;
+    t.drift = 0.0f;
+
+    t.list_settings = true;
+    t.game_backdrop = false;
+    t.minimal_home = true;
+    t.top_nav = true;
+
+    t.backdrop = "slate-backdrop.tga";
+    t.backdrop_blur = "slate-backdrop-blur.tga";
+    t.brand = "brand.tga";
+    t.light_x = 0.5f;
+    t.light_y = 0.4f;
+    return t;
+}
+
 // Canopy: a tropical dusk, dark green glass and lime. ProsperoEden's own look, and the one a
 // part missing from any other theme falls back to.
 Theme canopy()
@@ -83,7 +143,7 @@ Theme canopy()
 
 struct Store
 {
-    std::array<Theme, 1> all{canopy()};
+    std::array<Theme, 2> all{canopy(), slate()};
     int index = 0;
     Theme active = all[0];
 };
