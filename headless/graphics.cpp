@@ -349,9 +349,12 @@ public:
             speed_percent = stats.emulation_speed * 100.0;
             last_stats = now;
         }
-        const auto text = FormatHudText(clock, speed_percent, "OGL", MachineNow(),
-                                        RoomPingMilliseconds());
-        if (hud_enabled.load(std::memory_order_relaxed)) DrawHud(text.data(), false);
+        // Nothing is measured or written while the overlay is off.
+        if (hud_enabled.load(std::memory_order_relaxed)) {
+            const auto text = FormatHudText(clock, speed_percent, "OGL", MachineNow(), RoomPingMilliseconds(),
+                                            static_cast<uint32_t>(hud_fields.load(std::memory_order_relaxed)));
+            DrawHud(text.data(), false);
+        }
         Check(eglSwapBuffers(display, surface), "eglSwapBuffers");
     }
     void PresentLoading() {
@@ -745,7 +748,8 @@ void GraphicsWindow::OnFrameDisplayed() {
         }
         vulkan_hud =
             MakeHudSnapshot(vulkan_hud_clock, vulkan_hud_output_clock, vulkan_hud_speed,
-                            MachineNow(),
+                            // Nothing is measured while the overlay is off.
+                            hud_enabled.load(std::memory_order_relaxed) ? MachineNow() : HudMachine{},
                             Eden::Display::output_millihertz.load(std::memory_order_relaxed) / 1000.0,
                             RoomPingMilliseconds(), hud_size.load(std::memory_order_relaxed),
                             hud_corner.load(std::memory_order_relaxed),

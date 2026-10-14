@@ -589,15 +589,17 @@ vec3 hud_ink(int ink)
 // build has no character literals, so they are named here.
 const int kAsciiZero = 48, kAsciiNine = 57;
 const int kAsciiDot = 46, kAsciiSlash = 47, kAsciiPercent = 37;
-const int kAsciiF = 70, kAsciiM = 77;
+const int kAsciiF = 70, kAsciiM = 77, kAsciiU = 85, kAsciiSpace = 32;
 // The ink a run of digits takes, by the sign that ends it and the number before it: the rate the
-// guest makes (F), the worst frame's length (M), and a load (%). A run with no sign after it —
-// memory, a ping — is simply a value. The thresholds are the ones the launcher settled on.
+// guest makes (F; of "30/60FPS" the first number), the worst frame's length (M), and a percentage.
+// A percentage is a load after CPU, GPU or another load, where less is better; anywhere else it
+// is the game's speed, where more is. A run with no sign after it — memory, a ping — is simply a
+// value. The thresholds are the ones the launcher settled on.
 int hud_number_ink(uint words[28], int at)
 {
     // Walk past the digits and any '.' or '/' among them, to the sign that ends the run.
     float value = 0.0, frac = 0.0, scale = 0.1;
-    bool point = false, have = false;
+    bool point = false, have = false, second = false;
     int end = at;
     while (end < kHudTextMax)
     {
@@ -605,11 +607,13 @@ int hud_number_ink(uint words[28], int at)
         int digit = code - kAsciiZero;
         if (digit >= 0 && digit <= 9)
         {
-            if (point) { frac += float(digit) * scale; scale *= 0.1; }
+            if (second) { }
+            else if (point) { frac += float(digit) * scale; scale *= 0.1; }
             else value = value * 10.0 + float(digit);
             have = true;
         }
         else if (code == kAsciiDot && have) point = true;
+        else if (code == kAsciiSlash && have) second = true; // the number after it is not the one judged
         else break;
         ++end;
     }
@@ -620,7 +624,12 @@ int hud_number_ink(uint words[28], int at)
     if (sign == kAsciiM)
         return value <= 18.5 ? kHudInkGood : value <= 33.5 ? kHudInkWarn : kHudInkBad;
     if (sign == kAsciiPercent)
+    {
+        int before = at >= 2 && hud_byte(words, at - 1) == kAsciiSpace ? hud_byte(words, at - 2) : 0;
+        if (before != kAsciiU && before != kAsciiPercent)
+            return value >= 95.0 ? kHudInkGood : value >= 80.0 ? kHudInkWarn : kHudInkBad; // the speed
         return value <= 50.0 ? kHudInkGood : value <= 80.0 ? kHudInkWarn : kHudInkBad;
+    }
     return kHudInkValue;
 }
 
