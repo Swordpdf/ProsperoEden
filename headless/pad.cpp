@@ -97,17 +97,35 @@ bool PadEngine::TakeRumble(std::size_t player, Rumble& out) {
     auto& sides = rumble[player];
     if (!sides.changed) return false;
     sides.changed = false;
-    // The console's HD rumble per side -> one DualSense: the low band drives the large motor and the
-    // high band the small one, with the amplitude curves of Eden's SDL driver.
-    const auto level = [](float amplitude, Common::Input::VibrationAmplificationType type) {
+    // Both routes share the perceptual amplitude curve of Eden's SDL driver, which lifts the
+    // middle of the range where human intensity perception compresses it, so falling back
+    // does not change the feel. Each band follows the side that asks for more of it after
+    // the curve (ties go to the left).
+    const auto curve = [](float amplitude, Common::Input::VibrationAmplificationType type) {
         const float factor = type == Common::Input::VibrationAmplificationType::Linear ? 0.5f : 0.35f;
         amplitude = std::clamp(amplitude, 0.0f, 1.0f);
-        return static_cast<u8>(std::lround((amplitude + std::pow(amplitude, factor)) * 0.5f * 255.0f));
+        return (amplitude + std::pow(amplitude, factor)) * 0.5f;
+    };
+    const auto level = [&](float amplitude, Common::Input::VibrationAmplificationType type) {
+        return static_cast<u8>(std::lround(curve(amplitude, type) * 255.0f));
     };
     out.large = std::max(level(sides.left.low_amplitude, sides.left.type),
                          level(sides.right.low_amplitude, sides.right.type));
     out.small = std::max(level(sides.left.high_amplitude, sides.left.type),
                          level(sides.right.high_amplitude, sides.right.type));
+    const auto pick = [&](const Common::Input::VibrationStatus& left,
+                          const Common::Input::VibrationStatus& right, float Common::Input::VibrationStatus::*amplitude,
+                          float Common::Input::VibrationStatus::*frequency, float& out_amplitude, float& out_hz) {
+        const float left_curved = curve(left.*amplitude, left.type);
+        const float right_curved = curve(right.*amplitude, right.type);
+        const auto& winner = right_curved > left_curved ? right : left;
+        out_amplitude = std::max(left_curved, right_curved);
+        out_hz = winner.*frequency;
+    };
+    pick(sides.left, sides.right, &Common::Input::VibrationStatus::low_amplitude,
+         &Common::Input::VibrationStatus::low_frequency, out.large_amplitude, out.large_hz);
+    pick(sides.left, sides.right, &Common::Input::VibrationStatus::high_amplitude,
+         &Common::Input::VibrationStatus::high_frequency, out.small_amplitude, out.small_hz);
     return true;
 }
 
@@ -153,9 +171,16 @@ void Pad::OpenSlot(std::size_t player, int user) {
                     static_cast<unsigned>(handle));
         return;
     }
-    slots[player] = {user, handle, 0, 0};
-    // Classic two-motor rumble, and motion reports (on by default; failures only lose the feature).
-    const int vibration_mode = scePadSetVibrationMode(handle, ps5::pad::kVibrationModeCompatible);
+    slots[player] = {user, handle};
+    slots[player].haptics = std::make_unique<HapticStream>();
+    const bool haptics = slots[player].haptics->Ensure(user, handle);
+    const auto haptic_stats = slots[player].haptics->GetStats();
+    slots[player].last_haptic_stats = haptic_stats;
+    LOG_INFO(Input, "EDEN_PAD_HAPTICS player={} route={} port={} format={}", player + 1,
+             haptics ? "pcm" : "motors", haptic_stats.port,
+             haptic_stats.float_format ? "f32" : "s16");
+    const int vibration_mode = haptic_stats.vibration_mode;
+    // Motion reports are on by default; failures only lose the feature.
     const int motion = scePadSetMotionSensorState(handle, true);
     if (vibration_mode < 0 || motion < 0)
         LOG_INFO(Input, "EDEN_PAD_FEEDBACK player={} vibration_mode={:#x} motion={:#x}", player + 1,
@@ -167,10 +192,10 @@ void Pad::OpenSlot(std::size_t player, int user) {
 void Pad::CloseSlot(std::size_t player) {
     auto& slot = slots[player];
     if (slot.handle < 0) return;
+    // Stop haptics first: it still uses the pad handle.
+    if (slot.haptics) slot.haptics->Stop();
     const auto neutral = ps5::pad::neutral_data();
     Consume(player, {&neutral, 1});
-    const ps5::pad::Vibration stop{};
-    (void)scePadSetVibration(slot.handle, &stop);
     const int closed = scePadClose(slot.handle);
     LOG_INFO(Input, "EDEN_PAD_CLOSE player={} user={} close={}", player + 1, slot.user, closed);
     slot = {};
@@ -202,16 +227,24 @@ void Pad::Rescan() {
 }
 void Pad::Close() {
     engine->ResetControllers();
+    u64 haptic_outputs = 0, haptic_errors = 0, haptic_fallbacks = 0;
+    for (std::size_t player = 0; player < kMaxPlayers; ++player) {
+        if (!slots[player].haptics) continue;
+        const auto stats = slots[player].haptics->GetStats();
+        haptic_outputs += stats.outputs;
+        haptic_errors += stats.output_errors;
+        haptic_fallbacks += stats.fallbacks;
+    }
     for (std::size_t player = 0; player < kMaxPlayers; ++player) {
         if (slots[player].handle < 0) continue;
-        const ps5::pad::Vibration stop{};
-        (void)scePadSetVibration(slots[player].handle, &stop);
+        if (slots[player].haptics) slots[player].haptics->Stop();
         const int closed = scePadClose(slots[player].handle);
         if (player == 0) {
             LOG_INFO(Input, "EDEN_PAD_CLOSED polls={} samples={} usable={} intercepted={} circle={} errors={} last={} close={} "
-                     "rumble={} rumble_errors={} rumble_last={:#x}",
+                     "rumble={} rumble_errors={} rumble_last={:#x} haptics={} haptic_errors={} haptic_fallbacks={}",
                      polls, samples_read, usable_samples, intercepted_samples, circle_samples, read_errors, last_result, closed,
-                     rumble_updates, rumble_errors, static_cast<unsigned>(rumble_last_error));
+                     rumble_updates, rumble_errors, static_cast<unsigned>(rumble_last_error),
+                     haptic_outputs, haptic_errors, haptic_fallbacks);
         }
         slots[player] = {};
     }
@@ -241,8 +274,13 @@ bool Pad::Poll() {
         if (handle < 0) continue;
         PadEngine::Rumble rumble;
         if (engine->TakeRumble(player, rumble)) {
-            const ps5::pad::Vibration vibration{.large_motor = rumble.large, .small_motor = rumble.small};
-            const int result = scePadSetVibration(handle, &vibration);
+            const HapticLevels levels{.large = rumble.large,
+                                      .small = rumble.small,
+                                      .large_amplitude = rumble.large_amplitude,
+                                      .small_amplitude = rumble.small_amplitude,
+                                      .large_hz = rumble.large_hz,
+                                      .small_hz = rumble.small_hz};
+            const int result = slots[player].haptics->Submit(levels);
             ++rumble_updates;
             if (result < 0) { ++rumble_errors; rumble_last_error = result; }
         }
@@ -261,6 +299,16 @@ bool Pad::Poll() {
             circle_samples += ps5::pad::is_usable(samples[i]) && (samples[i].buttons & ps5::pad::kButtonCircle);
         }
         Consume(player, {samples.data(), static_cast<std::size_t>(count)});
+        slots[player].haptics->RetryTick();
+        const auto haptic_stats = slots[player].haptics->GetStats();
+        auto& last_haptic_stats = slots[player].last_haptic_stats;
+        if (haptic_stats.fallbacks != last_haptic_stats.fallbacks)
+            LOG_INFO(Input, "EDEN_PAD_HAPTIC_FALLBACK player={} outputs={} errors={}", player + 1,
+                     haptic_stats.outputs, haptic_stats.output_errors);
+        if (haptic_stats.active && !last_haptic_stats.active)
+            LOG_INFO(Input, "EDEN_PAD_HAPTICS player={} route=pcm port={} format={}", player + 1,
+                     haptic_stats.port, haptic_stats.float_format ? "f32" : "s16");
+        last_haptic_stats = haptic_stats;
         primary |= player == 0;
     }
     return primary;
