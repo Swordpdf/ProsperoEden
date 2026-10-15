@@ -17,7 +17,7 @@
 //     "diagnostics": { "detailed_logging": false, "immediate_logs": false },
 //     "performance": { "block_list": false, "async_shaders": false, "fast_gpu": false,
 //                      "unsafe_cpu": false, "unsafe_dma": false, "reactive_flushing": true,
-//                      "skip_invalidation": false },
+//                      "skip_invalidation": false, "memory_layout": "4Gb" },
 //     "game_files": "/mnt/ext1/eden",
 //     "library": { "last_game": "Game [id].nsp", "recent": ["Game [id].nsp"] },
 //     "games": { "0100000000010000": { "console_mode": "handheld", "renderer": "opengl",
@@ -523,6 +523,18 @@ inline bool SaveGameDocked(uint64_t title_id, bool docked, const std::string& fi
 inline constexpr const char* kPerformanceKeys[] = {"block_list", "async_shaders", "fast_gpu", "unsafe_cpu",
                                                    "unsafe_dma", "reactive_flushing", "skip_invalidation"};
 inline constexpr int kPerformanceSwitches = int(std::size(kPerformanceKeys));
+// Settings > Performance > Memory: how much memory the guest's console is told it has. Eden calls
+// this the memory layout, and it is what a mod that keeps a heap of its own (an HD camera pack)
+// asks for: the standard layout is the Switch's 4 GiB, and a mod written against a larger one
+// reads the size from the kernel and reserves what it does not find, which stops the game before
+// its first picture rather than the mod. Above 4 GiB the guest's memory is a block backed where
+// the game's kernel uses it, so a 6 GiB layout holds only what a session touches; the pool the CPU
+// shares with the GPU still has to take that much, so a demanding game can run out of it instead
+// of running out of graphics memory. The menu shows the three as plain sizes (settings.cpp's
+// kMemoryLayouts); the line at launch in main.cpp says which one a session took.
+inline constexpr const char* kMemoryLayoutKeys[] = {"4Gb", "6Gb", "8Gb"};
+inline constexpr int kMemoryLayoutGib[] = {4, 6, 8};
+static_assert(std::size(kMemoryLayoutKeys) == std::size(kMemoryLayoutGib));
 
 // Library > Game settings: what one game does differently from Settings. Each value is -1 (absent
 // from the file) while the game follows Settings; switches are 0 off, 1 on.
@@ -711,6 +723,7 @@ struct PerformanceSettings {
     bool unsafe_dma = false;     // Eden's unsafe DMA accuracy
     bool reactive_flushing = true;   // Eden's reactive flushing: off is faster, some effects break
     bool skip_invalidation = false;  // Eden's skip_cpu_inner_invalidation: fewer cache invalidations
+    int memory_layout = 0;           // index into kMemoryLayoutKeys (0 is the Switch's own 4 GiB)
 };
 
 inline PerformanceSettings LoadPerformance(uint64_t title_id, const std::string& file = SettingsFile()) {
@@ -728,6 +741,10 @@ inline PerformanceSettings LoadPerformance(uint64_t title_id, const std::string&
         value("unsafe_dma", result.unsafe_dma);
         value("reactive_flushing", result.reactive_flushing);
         value("skip_invalidation", result.skip_invalidation);
+        // A name that is not one of the layouts leaves the value the general settings gave.
+        result.memory_layout = KeyIndex(Settings::String(document,
+                                                         Json::json_pointer(base + "/performance/memory_layout")),
+                                        kMemoryLayoutKeys, int(std::size(kMemoryLayoutKeys)), result.memory_layout);
     };
     read("");
     if (title_id) read("/games/" + Settings::TitleKey(title_id));
@@ -737,6 +754,7 @@ inline PerformanceSettings LoadPerformance(uint64_t title_id, const std::string&
 // Title 0 saves the general values.
 inline bool SavePerformance(uint64_t title_id, const PerformanceSettings& value,
                             const std::string& file = SettingsFile()) {
+    if (value.memory_layout < 0 || value.memory_layout >= int(std::size(kMemoryLayoutKeys))) return false;
     Settings::Json document = Settings::Load(file);
     document["version"] = 1;
     auto& owner = title_id ? document["games"][Settings::TitleKey(title_id)] : document;
@@ -744,7 +762,8 @@ inline bool SavePerformance(uint64_t title_id, const PerformanceSettings& value,
     owner["performance"] = {{"block_list", value.block_list}, {"async_shaders", value.async_shaders},
                             {"fast_gpu", value.fast_gpu}, {"unsafe_cpu", value.unsafe_cpu},
                             {"unsafe_dma", value.unsafe_dma}, {"reactive_flushing", value.reactive_flushing},
-                            {"skip_invalidation", value.skip_invalidation}};
+                            {"skip_invalidation", value.skip_invalidation},
+                            {"memory_layout", kMemoryLayoutKeys[value.memory_layout]}};
     return Settings::Write(document, file);
 }
 

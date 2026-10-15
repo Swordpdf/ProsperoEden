@@ -119,8 +119,10 @@ enum PerformanceRow : int
     speed_unsafe_dma,
     speed_reactive_flushing,
     speed_skip_invalidation,
+    speed_memory_layout, // the memory a game's console is told it has; last, so no row moves
     kPerformanceRows,
 };
+constexpr int kPerformanceSwitches = speed_memory_layout;
 constexpr int kPerformanceRowsShown = 4;
 constexpr Rect kPerformanceWindow{592.0f, kVideoRowsTop, 736.0f,
                                   kVideoRowPitch * (kPerformanceRowsShown - 1) + kVideoRowHeight};
@@ -140,6 +142,9 @@ enum ControlRow : int
 };
 // The sizes of Preferences::output, as every language writes them.
 constexpr const char *kOutputs[] = {"1080p", "1440p", "2160p"};
+// Settings > Performance > Memory: what the guest's kernel is told the console has
+// (settings_store.h's kMemoryLayoutKeys). A size and its unit, so nothing here to translate.
+constexpr const char *kMemoryLayouts[] = {"4 GiB", "6 GiB", "8 GiB"};
 
 constexpr const char *kFrameGenTargetNames[] = {"", "60", "90", "120", "144", "240"};
 constexpr const char *kFrameGenMultiplierNames[] = {"2x", "3x", "4x"};
@@ -284,7 +289,7 @@ void Launcher::draw_settings(Canvas &c)
         playing_,
         pick(services_.resolution_keys(), prefs_.resolution) + "  /  " + pick(services_.filter_labels(), prefs_.filter) +
             "  /  " + output_name(prefs_.output) + "  /  " + hertz(prefs_.refresh),
-        fill(tr("{0} of {1} on"), {std::to_string(switches), std::to_string(static_cast<int>(kPerformanceRows))}),
+        fill(tr("{0} of {1} on"), {std::to_string(switches), std::to_string(kPerformanceSwitches)}),
         prefs_.mute ? tr("Muted") : percent(prefs_.volume),
         prefs_.vibration ? tr("Vibration on") : tr("Vibration off"),
         prefs_.large_text || prefs_.high_contrast || prefs_.reduce_motion ? tr("On") : tr("Off"),
@@ -453,7 +458,7 @@ void Launcher::draw_settings(Canvas &c)
 
 const char *Launcher::performance_about(int row)
 {
-    static constexpr const char *kAbout[kPerformanceRows] = {
+    static constexpr const char *kAbout[kPerformanceSwitches] = {
         TR("Compiles the code a game used before as it starts, so new areas stutter less."),
         TR("Draws an effect once its shader is ready instead of pausing. Things can be missing "
            "for a moment."),
@@ -464,7 +469,11 @@ const char *Launcher::performance_about(int row)
            "break."),
         TR("Skips some checks when a game changes memory the GPU uses: faster, and textures "
            "can be stale.")};
-    return kAbout[std::clamp(row, 0, kPerformanceRows - 1)];
+    // The memory row has no line of its own: every language would need one, and its value says
+    // what it is (a size of memory) while the message after it changes says when it arrives.
+    if (row >= kPerformanceSwitches)
+        return "";
+    return kAbout[row];
 }
 
 // ---------------------------------------------------------------- dialogs
@@ -708,10 +717,17 @@ void Launcher::press_dialog(Key key)
         break;
     case Modal::performance:
     {
-        bool *const switches[kPerformanceRows] = {
+        if (option_ == speed_memory_layout)
+        {
+            const int count = static_cast<int>(std::size(kMemoryLayouts));
+            prefs_.memory_layout =
+                (std::clamp(prefs_.memory_layout, 0, count - 1) + step + count) % count;
+            break;
+        }
+        bool *const switches[kPerformanceSwitches] = {
             &prefs_.block_list, &prefs_.async_shaders,     &prefs_.fast_gpu, &prefs_.unsafe_cpu,
             &prefs_.unsafe_dma, &prefs_.reactive_flushing, &prefs_.skip_invalidation};
-        bool &value = *switches[std::clamp(option_, 0, kPerformanceRows - 1)];
+        bool &value = *switches[std::clamp(option_, 0, kPerformanceSwitches - 1)];
         value = !value;
         break;
     }
@@ -778,6 +794,11 @@ void Launcher::press_dialog(Key key)
         // Held decoded, these textures take four times the memory they take compressed.
         say(tr("Saved. Full quality uses four times the graphics memory for these textures and can run out "
                "above 1x."));
+    }
+    else if (modal_ == Modal::performance && option_ == speed_memory_layout)
+    {
+        // The guest's memory is taken as a game starts, so this says when the change arrives.
+        say(tr("Saved. Applies when a game starts."));
     }
     apply_look();
     cue(sound);
@@ -1029,10 +1050,20 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         static constexpr const char *kNames[kPerformanceRows] = {
             TR("Compile ahead"),        TR("Asynchronous shaders"), TR("Faster GPU emulation"),
             TR("Faster CPU emulation"), TR("Faster DMA"),           TR("Reactive flushing"),
-            TR("Skip CPU invalidation")};
+            TR("Skip CPU invalidation"), TR("Memory")};
         for (int row = first; row <= last; ++row)
         {
             list.push_opacity(rows_view.row_alpha(row, kVideoRowHeight));
+            if (row == speed_memory_layout)
+            {
+                // Not a switch: the memory the game's console is told it has. 4 GiB is what a
+                // Switch has; more is for a mod that keeps a heap of its own (docs/MODS.md).
+                label(row, tr(kNames[row]),
+                      choice(row, kMemoryLayouts[std::clamp(prefs_.memory_layout, 0,
+                                                            static_cast<int>(std::size(kMemoryLayouts)) - 1)]));
+                list.pop_opacity();
+                continue;
+            }
             // Asynchronous shaders act with Vulkan only: the OpenGL renderer compiles in its own
             // context here (graphics.cpp), and Eden then leaves them off.
             const std::string name =
@@ -1147,7 +1178,7 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         list.pop_clip();
         scrollbar(c, rows_view, 1340.0f, window.y, window.h);
     }
-    if (modal == Modal::performance)
+    if (modal == Modal::performance && option_ < kPerformanceSwitches)
     {
         // What the highlighted switch does, under the window.
         text_block(c, tr(performance_about(option_)), 592.0f,
