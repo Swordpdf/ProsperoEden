@@ -9,6 +9,15 @@ patch-radv-wsi.py; running it again changes nothing.
 """
 from pathlib import Path
 import sys
+import hashlib
+
+fingerprint = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+if sys.argv[1:2] == ['--digest']:
+    print(fingerprint)
+    raise SystemExit(0)
+if sys.argv[1:2] == ['--check']:
+    stamp = Path(sys.argv[2])
+    raise SystemExit(0 if stamp.is_file() and stamp.read_text().strip() == fingerprint else 1)
 
 root = Path(__file__).resolve().parents[1]
 src = Path(sys.argv[1]) if len(sys.argv) > 1 else root.parent / 'mihawk-vulkan-review/.deps/work/radv-src'
