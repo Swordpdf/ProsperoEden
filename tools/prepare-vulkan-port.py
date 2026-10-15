@@ -1068,7 +1068,7 @@ for name in ('vk_graphics_pipeline', 'vk_compute_pipeline'):
         anchors += configure_phases
     adapt(f'src/video_core/renderer_vulkan/{name}.cpp', name + '_cost.cpp', anchors)
 shader_costs = [
-    ('#include <algorithm>', '#include <algorithm>\n#include <cstdio>\n#include <unordered_set>\n'
+    ('#include <algorithm>', '#include <algorithm>\n#include <cstdio>\n#include <set>\n#include <unordered_set>\n'
      '#include "performance.h"\n#include "dev_vulkan.h"\n#include "diagnostics.h"'),
     # Development crash probes: report each pipeline's first use (stage hashes) to klog,
     # which survives a GPU fault that kills the title.
@@ -1125,16 +1125,17 @@ shader_costs = [
     # attributes; the static key has no attribute, so the disk cache keeps loading it.
     ('#include "video_core/engines/maxwell_3d.h"',
      '#include "video_core/engines/maxwell_3d.h"\n#include "video_core/dirty_flags.h"\n'
-     '#include <atomic>\n#include <mutex>\n#include <unordered_set>\n'
+     '#include <atomic>\n#include <mutex>\n#include <set>\n#include <unordered_set>\n'
      '#include "video_core/renderer_vulkan/vk_state_tracker.h"'),
     ('GraphicsPipeline* PipelineCache::CurrentGraphicsPipeline() {',
      """namespace {
 std::mutex eden_attributeless_mutex;
-std::unordered_set<u64> eden_attributeless_vertex;
+using EdenVertexIdentity = std::array<u64, 2>;
+std::set<EdenVertexIdentity> eden_attributeless_vertex;
 std::atomic<u32> eden_attributeless_generation{0};
 bool eden_static_vertex_input_bound = false;
 
-void EdenRecordAttributeless(u64 vertex_hash, const Shader::Info& info) {
+void EdenRecordAttributeless(EdenVertexIdentity vertex_hash, const Shader::Info& info) {
     for (size_t index = 0; index < Shader::IR::NUM_GENERICS; ++index) {
         if (info.loads.Generic(index)) {
             return;
@@ -1147,8 +1148,8 @@ void EdenRecordAttributeless(u64 vertex_hash, const Shader::Info& info) {
 }
 
 // GPU thread: whether the vertex shader reads no attribute, as far as built pipelines tell.
-bool EdenAttributeless(u64 vertex_hash) {
-    static u64 last_hash = 0;
+bool EdenAttributeless(EdenVertexIdentity vertex_hash) {
+    static EdenVertexIdentity last_hash{};
     static u32 last_generation = ~0u;
     static bool last_result = false;
     const u32 generation = eden_attributeless_generation.load(std::memory_order_acquire);
@@ -1174,7 +1175,7 @@ GraphicsPipeline* PipelineCache::CurrentGraphicsPipeline() {"""),
      """    graphics_key.state.Refresh(*maxwell3d, dynamic_features);
     const bool static_vertex_input = graphics_key.state.dynamic_vertex_input != 0 &&
                                      ::Eden::DevVulkan::static_vertex_input &&
-                                     EdenAttributeless(graphics_key.unique_hashes[1]);
+                                     EdenAttributeless({graphics_key.unique_hashes[0], graphics_key.unique_hashes[1]});
     if (static_vertex_input) {
         // Instance-rate streams as the registers set them (with every stream per vertex the
         // driver drew these wrong too); no attribute, so the key does not depend on what the
@@ -1212,7 +1213,7 @@ GraphicsPipeline* PipelineCache::CurrentGraphicsPipeline() {"""),
      '               EdenAttributelessStaticKey(key.state)))) {'),
     ('    std::array<const Shader::Info*, Maxwell::MaxShaderStage> infos{};\n',
      '    if (uses_vertex_b) {\n'
-     '        EdenRecordAttributeless(key.unique_hashes[1], programs[1].info);\n'
+     '        EdenRecordAttributeless({key.unique_hashes[0], key.unique_hashes[1]}, programs[1].info);\n'
      '    }\n'
      '    std::array<const Shader::Info*, Maxwell::MaxShaderStage> infos{};\n'),
 ]
