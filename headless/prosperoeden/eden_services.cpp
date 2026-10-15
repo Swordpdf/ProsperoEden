@@ -975,6 +975,7 @@ pe::ui::Preferences EdenServices::preferences() {
     result.high_contrast = saved.high_contrast;
     result.reduce_motion = saved.reduce_motion;
     result.theme = saved.theme;
+    result.accent = saved.accent;
     // Settings > Performance: the general values (settings_store.h).
     const Eden::PerformanceSettings speed = Eden::LoadPerformance(0);
     result.block_list = speed.block_list;
@@ -1017,6 +1018,7 @@ bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     value.high_contrast = preferences.high_contrast;
     value.reduce_motion = preferences.reduce_motion;
     value.theme = preferences.theme;
+    value.accent = preferences.accent;
     value.mapping = preferences.mapping;
     value.menu_bind = preferences.menu_bind;
     Eden::PerformanceSettings speed = Eden::LoadPerformance(0);

@@ -567,7 +567,9 @@ void Launcher::press_dialog(Key key)
             return;
         const Theme &chosen = themes()[static_cast<std::size_t>(std::clamp(option_, 0, rows - 1))];
         const std::string had = prefs_.theme;
+        const std::string had_accent = prefs_.accent;
         prefs_.theme = chosen.id;
+        prefs_.accent.clear(); // a preset belongs to one theme
         const bool saved = save_preferences(true);
         if (saved)
         {
@@ -575,11 +577,13 @@ void Launcher::press_dialog(Key key)
             settings_.visible = th().list_settings ? 10 : kCategoryCount;
             settings_.pitch = th().list_settings ? 84.0f : 88.0f;
             settings_.reset(kCategoryCount, settings_.selected);
-            prefs_.accent.clear();
             use_accent("");
         }
         else
+        {
             prefs_.theme = had;
+            prefs_.accent = had_accent;
+        }
         cue(saved ? Cue::saved : Cue::error);
         return;
     }

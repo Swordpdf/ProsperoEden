@@ -145,7 +145,7 @@ Theme canopy()
 
 // ---- accent presets: named colour sets a user can pick per theme ----
 
-constexpr AccentPreset kSlateAccents[] = {
+const AccentPreset kSlateAccents[] = {
     {"silver",  "Silver",  Color::rgb(0xc0bbb6), Color::rgb(0x3a3836), Color::rgb(0xdedbd8), Color::rgb(0x101012), Color::rgb(0xe8e4e0)},
     {"ice",     "Ice",     Color::rgb(0x7ec8e3), Color::rgb(0x1c4966), Color::rgb(0xb8e0f0), Color::rgb(0x0a1418), Color::rgb(0xd0ecf8)},
     {"rose",    "Rose",    Color::rgb(0xe88ca0), Color::rgb(0x5c2232), Color::rgb(0xf2c0cc), Color::rgb(0x120a0c), Color::rgb(0xf5d4dc)},
@@ -156,7 +156,7 @@ constexpr AccentPreset kSlateAccents[] = {
     {"sky",     "Sky",     Color::rgb(0x60a8e0), Color::rgb(0x1a3a5c), Color::rgb(0xa8d0f0), Color::rgb(0x0a1018), Color::rgb(0xc0dcf5)},
 };
 
-constexpr AccentPreset kCanopyAccents[] = {
+const AccentPreset kCanopyAccents[] = {
     {"lime",     "Lime",     Color::rgb(0xa9db63), Color::rgb(0x245d4a), Color::rgb(0xdfe8a6), Color::rgb(0x0b1713), Color::rgb(0xffd76a)},
     {"gold",     "Gold",     Color::rgb(0xe0c050), Color::rgb(0x4a3a18), Color::rgb(0xf0dda0), Color::rgb(0x0b1410), Color::rgb(0xffeaa0)},
     {"ember",    "Ember",    Color::rgb(0xe08850), Color::rgb(0x4a2818), Color::rgb(0xf0c4a0), Color::rgb(0x0e100a), Color::rgb(0xffd4a0)},
