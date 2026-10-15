@@ -11,7 +11,10 @@ cache = Path((root / '.local/headless-cache').read_text().strip())
 source = cache / 'source/src'
 original = (source / 'common/thread.cpp').read_text()
 derived = (cache / 'native-local/headless/thread.cpp').read_text()
-assert derived == '#include "' + str(root / 'headless/performance.h') + '"\n' + original.replace(
+# The include names the port folder as the build was configured (a symlinked checkout differs).
+include, derived = derived.split('\n', 1)
+assert include.startswith('#include "') and Path(include[10:-1]).resolve() == root / 'headless/performance.h', include
+assert derived == original.replace(
     'void SetCurrentThreadName(const char* name) {',
     'void SetCurrentThreadName(const char* name) {\n    ::Eden::Performance::RegisterWorker(name);')
 main = (root / 'headless/main.cpp').read_text()

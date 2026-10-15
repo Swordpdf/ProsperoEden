@@ -37,7 +37,7 @@ static int cpuset_setaffinity(int,int,int,size_t n,const cpuset_t* in){
 '''+body+r'''
 int main(){
  for(unsigned i=0;i<64;++i) apics[i]=i;
- CheckWorkerTopology();assert(worker_topology_ready && current==0x1fff);
+ worker_topology_ready=false;CheckWorkerTopology();assert(worker_topology_ready && current==0x1fff);
  assert((worker_cpus==std::array<unsigned,5>{0,2,4,6,8}));
  cpuset_t allowed=current;PinWorker(4,allowed);assert(current==256 && allowed==256);
  // The probe's process-wide CPU set decides, not a narrower mask the thread inherited.
@@ -46,27 +46,30 @@ int main(){
  PinWorker(5,allowed);assert(current==0x1fff);
  for(unsigned i=0;i<7;++i) apics[i]=i*2;
  for(unsigned i=7;i<13;++i) apics[i]=(i-7)*2+1;
- CheckWorkerTopology();assert((worker_cpus==std::array<unsigned,5>{0,1,2,3,4}) && current==0x1fff);
- current=3;CheckWorkerTopology();assert(!worker_topology_ready && current==3);
- current=0x1fff;fail_mask=4;CheckWorkerTopology();assert(!worker_topology_ready && current==0x1fff);
- fail_mask=0;level_type=0;CheckWorkerTopology();assert(!worker_topology_ready && current==0x1fff);
+ worker_topology_ready=false;CheckWorkerTopology();assert((worker_cpus==std::array<unsigned,5>{0,1,2,3,4}) && current==0x1fff);
+ current=3;worker_topology_ready=false;CheckWorkerTopology();assert(!worker_topology_ready && current==3);
+ current=0x1fff;fail_mask=4;worker_topology_ready=false;CheckWorkerTopology();assert(!worker_topology_ready && current==0x1fff);
+ fail_mask=0;level_type=0;worker_topology_ready=false;CheckWorkerTopology();assert(!worker_topology_ready && current==0x1fff);
  // CPUID that tells nothing: the timing decides, and gives the adjacent layout or none.
- timing_share=true;CheckWorkerTopology();assert(worker_topology_ready && current==0x1fff);
+ timing_share=true;worker_topology_ready=false;CheckWorkerTopology();assert(worker_topology_ready && current==0x1fff);
  assert((worker_cpus==std::array<unsigned,5>{0,2,4,6,8}));
  level_type=1;for(unsigned i=0;i<64;++i) apics[i]=5;
- CheckWorkerTopology();assert(worker_topology_ready && (worker_cpus==std::array<unsigned,5>{0,2,4,6,8}));
- timing_share=false;CheckWorkerTopology();assert(!worker_topology_ready && current==0x1fff);
+ worker_topology_ready=false;CheckWorkerTopology();assert(worker_topology_ready && (worker_cpus==std::array<unsigned,5>{0,2,4,6,8}));
+ timing_share=false;worker_topology_ready=false;CheckWorkerTopology();assert(!worker_topology_ready && current==0x1fff);
  // Too few CPUs for it, or a CPU the thread may not move to: no layout is assumed.
- timing_share=true;current=0xff;CheckWorkerTopology();assert(!worker_topology_ready && current==0xff);
- current=0x1fff;fail_mask=4;CheckWorkerTopology();assert(!worker_topology_ready);
+ timing_share=true;current=0xff;worker_topology_ready=false;CheckWorkerTopology();assert(!worker_topology_ready && current==0xff);
+ current=0x1fff;fail_mask=4;worker_topology_ready=false;CheckWorkerTopology();assert(!worker_topology_ready);
  fail_mask=0;timing_share=false;
  for(unsigned i=0;i<7;++i) apics[i]=i*2;
  for(unsigned i=7;i<13;++i) apics[i]=(i-7)*2+1;
- level_type=1;CheckWorkerTopology();assert(worker_topology_ready);
+ level_type=1;worker_topology_ready=false;CheckWorkerTopology();assert(worker_topology_ready);
  fail_mask=16;allowed=current;PinWorker(4,allowed);assert(allowed==0x1fff && current==0x1fff);
  fail_mask=0;fail_restore=true;bool threw=false;
- try{CheckWorkerTopology();}catch(const std::runtime_error&){threw=true;}
+ try{worker_topology_ready=false;CheckWorkerTopology();}catch(const std::runtime_error&){threw=true;}
  assert(threw);
+ // Probed once per process: a later game keeps the layout found by the first.
+ fail_restore=false;current=0x1fff;worker_topology_ready=false;CheckWorkerTopology();assert(worker_topology_ready);
+ current=3;CheckWorkerTopology();assert(worker_topology_ready && current==3);
  return 0;
 }
 '''
@@ -74,4 +77,4 @@ with tempfile.TemporaryDirectory() as tmp:
     exe=Path(tmp)/'affinity'
     subprocess.run(['c++','-std=c++20','-Wall','-Wextra','-Werror','-fsanitize=address,undefined','-x','c++','-','-o',str(exe)],input=code,text=True,check=True)
     subprocess.run([str(exe)],check=True)
-print('Worker topology: PASS physical sibling exclusion, OS/APIC permutations, allowed masks, the layout by timing, fallback and restoration failures')
+print('Worker topology: PASS physical sibling exclusion, OS/APIC permutations, allowed masks, the layout by timing, fallback and restoration failures, one probe per process')

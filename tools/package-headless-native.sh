@@ -13,7 +13,7 @@ app="${EDEN_PACKAGE_DIR:-$root/dist/headless/PPSA99008}"
 # A separate clean staging directory lets driver candidates omit private game
 # assets without deleting or copying the existing development installation.
 if [[ -n ${EDEN_PACKAGE_DIR:-} ]]; then
-    [[ $(realpath -m "$app") == "$root"/build/*/PPSA99008 ]] || exit 2
+    [[ $(realpath -m "$app") == "$(realpath -m "$root")"/build/*/PPSA99008 ]] || exit 2
     [[ ${1:-} != --game ]] || exit 2
 fi
 test -x "$builder"

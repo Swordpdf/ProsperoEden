@@ -1223,6 +1223,13 @@ int main(int argc, char **argv)
         preferences.reduce_motion = names.find("calm") != std::string_view::npos;
         services.set_preferences(preferences);
     }
+    // PE_THEME=slate: the tour in another of the build's themes.
+    if (const char *theme = std::getenv("PE_THEME"); theme != nullptr && theme[0] != 0)
+    {
+        pe::ui::Preferences preferences = services.preferences();
+        preferences.theme = theme;
+        services.set_preferences(preferences);
+    }
     pe::ui::Textures textures(batch, services);
     pe::ui::use_theme(services.preferences().theme);
     if (!textures.load_art(assets))

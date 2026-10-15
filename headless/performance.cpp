@@ -210,6 +210,13 @@ bool topology_allowed_valid = false;
 std::atomic<bool> placement_secondary{false};
 std::atomic<unsigned> secondary_reports{};
 void CheckWorkerTopology() {
+    // Probe once per process. Later games start from a launcher thread that the first game's
+    // placement left on the secondary CPUs, where the probe finds too few cores.
+    if (worker_topology_ready) {
+        std::printf("EDEN_WORKER_TOPOLOGY ready=1 cached=1 cpus=%u,%u,%u,%u,%u\n",
+            worker_cpus[0], worker_cpus[1], worker_cpus[2], worker_cpus[3], worker_cpus[4]);
+        return;
+    }
     cpuset_t original{};
     if (__get_cpuid_max(0, nullptr) < 0xb ||
         cpuset_getaffinity(CPU_LEVEL_WHICH, CPU_WHICH_TID, -1, 8, &original)) return;
@@ -760,12 +767,14 @@ void ReportGpuThread(unsigned frame) {
     // Cumulative totals; the analyzer takes deltas between consecutive reports.
     std::printf("EDEN_DEV_GPU frame=%u mono_ns=%lld cpu_ns=%lld idle_ns=%llu dispatch_calls=%llu "
                 "dispatch_ns=%llu drain_calls=%llu drain_ns=%llu present_calls=%llu present_ns=%llu "
-                "full_calls=%llu full_ns=%llu draws=%llu\n", frame, ClockNs(CLOCK_MONOTONIC),
+                "full_calls=%llu full_ns=%llu draws=%llu dma_runs=%llu dma_run_words=%llu dma_words=%llu\n", frame, ClockNs(CLOCK_MONOTONIC),
                 owner_cpu_clock_valid ? ClockNs(CLOCK_THREAD_CPUTIME_ID) : -static_cast<long long>(ENOTSUP),
                 load(gpu_queue_wait, false), load(gpu_dispatch, true), load(gpu_dispatch, false),
                 load(gpu_fence_drain, true), load(gpu_fence_drain, false),
                 load(gpu_present_wait, true), load(gpu_present_wait, false),
-                load(gpu_queue_full, true), load(gpu_queue_full, false), load(rasterizer_draw, true));
+                load(gpu_queue_full, true), load(gpu_queue_full, false), load(rasterizer_draw, true),
+                dma_batch_runs.load(std::memory_order_relaxed), dma_batch_words.load(std::memory_order_relaxed),
+                dma_single_words.load(std::memory_order_relaxed));
     // What the dispatch is made of: the draw path itself (RasterizerVulkan::PrepareDraw - both
     // cache locks, pipeline configure, dynamic state, the record) against the guest method
     // decoding that surrounds it, plus the dispatch's own three phases. A draw whose
@@ -859,6 +868,13 @@ void ReportGpuThread(unsigned frame) {
                 load(guest_sync_wait, true), load(guest_sync_wait, false),
                 load(guest_dequeue_wait, true), load(guest_dequeue_wait, false));
     std::printf(" ipc_calls=%llu ipc_ns=%llu", load(guest_ipc_wait, true), load(guest_ipc_wait, false));
+    std::printf(" write_deferred=%llu dirty_replays=%llu read_skipped=%llu",
+                cpu_write_deferred.load(std::memory_order_relaxed), gpu_dirty_replays.load(std::memory_order_relaxed),
+                cpu_read_skipped.load(std::memory_order_relaxed));
+    std::printf(" tex_partial=%llu tex_partial_bytes=%llu tex_partial_checks=%llu tex_partial_mismatches=%llu",
+                tex_partial_uploads.load(std::memory_order_relaxed), tex_partial_bytes.load(std::memory_order_relaxed),
+                tex_partial_checks.load(std::memory_order_relaxed),
+                tex_partial_mismatches.load(std::memory_order_relaxed));
     std::printf(" cache_lock_contended=%llu cache_lock_blocked=%llu",
                 cache_lock_contended.load(std::memory_order_relaxed), cache_lock_blocked.load(std::memory_order_relaxed));
     std::printf(" fs_file_calls=%llu fs_file_ns=%llu fs_file_bytes=%llu fs_storage_calls=%llu fs_storage_ns=%llu "
@@ -931,6 +947,28 @@ void ReportGpuThread(unsigned frame) {
                 ipc_hist[0].load(std::memory_order_relaxed), ipc_hist[1].load(std::memory_order_relaxed),
                 ipc_hist[2].load(std::memory_order_relaxed), ipc_hist[3].load(std::memory_order_relaxed),
                 load(ipc_thread_overflow, true), load(ipc_thread_overflow, false));
+    if (cpu_write_detail.load(std::memory_order_relaxed)) {
+        // Cumulative per guest core (3 = other threads); performance.h CpuWriteDetail.
+        std::printf("EDEN_DEV_CPUWRITE hold_calls=%llu hold_ns=%llu hold_max_ns=%llu hold_long=%llu",
+                    load(draw_cache_hold, true), load(draw_cache_hold, false),
+                    draw_cache_hold_max.exchange(0, std::memory_order_relaxed),
+                    draw_cache_hold_long.load(std::memory_order_relaxed));
+        for (unsigned core = 0; core < cpu_write_stats.size(); ++core) {
+            const auto& stats = cpu_write_stats[core];
+            const auto get = [](const std::atomic<unsigned long long>& value) {
+                return value.load(std::memory_order_relaxed);
+            };
+            std::printf(" c%u=%llu/%llu/%llu/%llu/%llu sizes%u=%llu/%llu/%llu/%llu out%u=%llu/%llu/%llu"
+                        " ns%u=%llu/%llu/%llu/%llu/%llu ahead%u=%llu/%llu",
+                        core, get(stats.tracked), get(stats.tracked_ns), get(stats.passed), get(stats.same_page),
+                        get(stats.still_tracked), core, get(stats.sizes[0]), get(stats.sizes[1]),
+                        get(stats.sizes[2]), get(stats.sizes[3]), core, get(stats.unregistered),
+                        get(stats.gpu_modified), get(stats.cpu_modified), core, get(stats.buffer_wait_ns),
+                        get(stats.buffer_ns), get(stats.texture_wait_ns), get(stats.texture_ns),
+                        get(stats.shader_ns), core, get(stats.next_page), get(stats.ahead_pages));
+        }
+        std::printf("\n");
+    }
     const auto window = Eden::Fastmem::WindowStats();
     std::printf("EDEN_FASTMEM window=%llx pages=%llu chunks=%llu direct_reads=%llu direct_writes=%llu "
                 "faults=%llu maps=%llu unmaps=%llu protects=%llu kernel_calls=%llu kernel_ns=%llu failures=%llu\n",

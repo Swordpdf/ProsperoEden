@@ -43,6 +43,10 @@ msgstr "Bir firmware NCA dosyası okunamıyor. Firmware dökümünü yeniden yü
 msgid "A pairing is running already."
 msgstr "Zaten bir eşleştirme sürüyor."
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "HAKKINDA"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "Daire"
 msgid "Close"
 msgstr "Kapat"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "Renk"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "Emeği geçenler ve kurulum"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "Çarpı"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "Varsayılan"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "Daha az hassas kayan nokta hesabı: daha hızlıdır, ancak birkaç oyun
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "GPU'ya daha az hassas bellek aktarımı: daha hızlıdır, ancak birkaç oyunda grafikler hatalı görünür."
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "KÜTÜPHANE"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "Kütüphane"
@@ -959,6 +975,10 @@ msgstr "Orta"
 #: pe/ui/settings.cpp
 msgid "Memory"
 msgstr "Bellek"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Menu keybinds"
+msgstr "Menü tuşları"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1011,6 +1031,10 @@ msgstr "En yakın"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "Dikkat gerekiyor"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "Nötr cam, sade ve sakin."
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1294,6 +1318,10 @@ msgstr "Bu oyunun kaydının üzerine yazmak için tekrar basın. Mevcut kayıt 
 msgid "Private room"
 msgstr "Özel oda"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "ÖZEL ODA"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1359,6 +1387,10 @@ msgstr "PS5 SÜRÜMÜ"
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
 msgstr "Herkese açık odalar"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
+msgstr "HERKESE AÇIK ODALAR"
 
 #: pe/ui/remote.cpp
 msgid "Queued"
@@ -1564,6 +1596,10 @@ msgstr "Kodu telefonunuzla tarayın veya aşağıdaki adresi açın."
 msgid "Scroll"
 msgstr "Kaydır"
 
+#: pe/ui/game_options.cpp
+msgid "Secondary"
+msgstr "İkincil"
+
 #. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
 #: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Sections"
@@ -1591,6 +1627,10 @@ msgstr "Sunucu, kayıt eşitleme için çok eski"
 #: pe/ui/home.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Settings"
 msgstr "Ayarlar"
+
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
+msgstr "AYARLAR"
 
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
@@ -1730,6 +1770,10 @@ msgstr "TEŞEKKÜRLER"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "Tüm PS5 homebrew topluluğuna ve sürücüleri, araçları ve kütüphaneleriyle ProsperoEden'i mümkün kılan her geliştiriciye teşekkürler."
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "Geçerli temanın vurgu rengi."
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"
@@ -2035,6 +2079,10 @@ msgstr "Yenilikler"
 #: pe/ui/update.cpp
 msgid "What's new in version {0}"
 msgstr "{0} sürümündeki yenilikler"
+
+#: pe/ui/game_options.cpp
+msgid "Which face button does what in the menu."
+msgstr "Menüde hangi eylem tuşunun ne yaptığı."
 
 #: pe/ui/settings.cpp
 msgid "Who is playing. Each profile keeps its own save data and settings."

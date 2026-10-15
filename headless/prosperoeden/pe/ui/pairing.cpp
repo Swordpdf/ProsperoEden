@@ -281,11 +281,11 @@ void Launcher::draw_sync_setup(Canvas &c, float open)
     static constexpr Hint kServerHints[] = {
         {Pad::updown, TR("Select")}, {Pad::cross, TR("Pair")}, {Pad::circle, TR("Back")}};
     if (choosing)
-        draw_hints(c, kServerHints, 3, 592.0f, kHints, th().copy, 736.0f);
+        draw_menu_hints(c, kServerHints, 3, 592.0f, kHints, th().copy, 736.0f);
     else if (linked)
-        draw_hints(c, kLinkedHints, 4, 592.0f, kHints, th().copy, 736.0f);
+        draw_menu_hints(c, kLinkedHints, 4, 592.0f, kHints, th().copy, 736.0f);
     else
-        draw_hints(c, kProfileHints, 3, 592.0f, kHints, th().copy, 736.0f);
+        draw_menu_hints(c, kProfileHints, 3, 592.0f, kHints, th().copy, 736.0f);
     list.pop_transform();
     list.pop_opacity();
 }
@@ -443,11 +443,11 @@ void Launcher::draw_pairing(Canvas &c, float open)
     static constexpr Hint kFailed[] = {{Pad::cross, TR("Try again")}, {Pad::circle, TR("Back")}};
     const float hints = kPairPanel.y + kPairPanel.h - 54.0f;
     if (pairing_.stage == PairingStage::done)
-        draw_hints(c, kDone, 1, x, hints, th().copy, width);
+        draw_menu_hints(c, kDone, 1, x, hints, th().copy, width);
     else if (pairing_.stage == PairingStage::failed)
-        draw_hints(c, kFailed, 2, x, hints, th().copy, width);
+        draw_menu_hints(c, kFailed, 2, x, hints, th().copy, width);
     else
-        draw_hints(c, kWaiting, 1, x, hints, th().copy, width);
+        draw_menu_hints(c, kWaiting, 1, x, hints, th().copy, width);
     list.pop_transform();
     list.pop_opacity();
 }
