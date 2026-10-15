@@ -439,6 +439,62 @@ void Launcher::draw_about(Canvas &c)
 {
     gfx::DrawList &list = c.list;
     draw_frame(c, tr("About ProsperoEden"), tr("Credits and setup"));
+
+    if (th().top_nav)
+    {
+        constexpr float kPanelLeft = 960.0f;
+        constexpr float kPanelWidth = 864.0f;
+        const Theme &t = th();
+        kicker(c, tr("ABOUT"), kPanelLeft, baseline(80.0f, 30.0f, t.size_small), t.accent_pale, kPanelWidth);
+        const Rect panel{kPanelLeft, 110.0f, kPanelWidth, 880.0f};
+        glass(c, panel, t.radius_panel, t.panel.with_alpha(0.72f), t.panel_edge.with_alpha(0.40f), 0.6f);
+        const float x = kPanelLeft + 32.0f;
+        const float w = kPanelWidth - 64.0f;
+        text(c, tr("PROJECT CREDITS"), x, baseline(130.0f, 28.0f, t.size_small), t.size_small,
+             t.accent_pale, Align::left, 3.0f);
+        text_shrink(c, tr("Powered by Eden"), x, baseline(170.0f, 48.0f, t.size_lead), t.size_lead,
+                    t.title, w);
+        text_block(c, tr("All credit for the Eden emulator goes to its developers and contributors."),
+                   x, baseline(220.0f, 32.0f, t.size_text), t.size_text, 32.0f, t.body, w, 2, kShrink);
+        text(c, "eden-emu.dev", x, baseline(288.0f, 30.0f, t.size_text), t.size_text, t.accent_pale);
+        list.rounded_rect({x, 324.0f, w, 1.0f}, 0.0f, t.rule);
+        text(c, tr("THANKS"), x, baseline(340.0f, 28.0f, t.size_small), t.size_small, t.accent_pale,
+             Align::left, 2.0f);
+        text_block(c,
+                   tr("Thanks to the whole PS5 homebrew community and to every developer whose drivers, "
+                   "tools and libraries make ProsperoEden possible."),
+                   x, baseline(374.0f, 30.0f, t.size_text), t.size_text, 30.0f, t.body, w, 3, kShrink);
+        list.rounded_rect({x, 472.0f, w, 1.0f}, 0.0f, t.rule);
+        text(c, tr("PS5 EDITION"), x, baseline(488.0f, 28.0f, t.size_small), t.size_small,
+             t.accent_pale, Align::left, 2.0f);
+        text_block(c, tr("ProsperoEden is an unofficial PS5 port brought to you by BlackBearReloaded."),
+                   x, baseline(520.0f, 30.0f, t.size_text), t.size_text, 30.0f, t.body, w, 2, kShrink);
+        list.rounded_rect({x, 592.0f, w, 1.0f}, 0.0f, t.rule);
+        text(c, tr("GETTING STARTED"), x, baseline(608.0f, 28.0f, t.size_small), t.size_small,
+             t.accent_pale, Align::left, 3.0f);
+        text_shrink(c, tr("Supply your own files"), x, baseline(644.0f, 40.0f, t.size_heading),
+                    t.size_heading, t.title, w);
+        const std::string folder = services_.files_folder();
+        const auto info_line = [&](float top, const char *label, const std::string &value)
+        {
+            text(c, label, x, baseline(top, 28.0f, t.size_small), t.size_small, t.meta);
+            text_shrink(c, value, x + 160.0f, baseline(top, 28.0f, t.size_small), t.size_small,
+                        t.value, w - 160.0f);
+        };
+        info_line(696.0f, tr("KEYS"), folder + "/keys/prod.keys");
+        info_line(730.0f, tr("FIRMWARE"), folder + "/firmware/*.nca");
+        info_line(764.0f, tr("GAMES"), folder + "/roms");
+        info_line(798.0f, tr("UPDATES, DLC"), folder + "/updates");
+        info_line(832.0f, tr("MODS"), folder + "/mods");
+        text_shrink(c, tr("Menu sound effects made with ElevenLabs."), x,
+                    baseline(880.0f, 26.0f, t.size_small), t.size_small, t.meta, w);
+        text(c, version_, kPanelLeft + kPanelWidth - 32.0f, baseline(920.0f, 26.0f, t.size_small),
+             t.size_small, t.accent_pale, Align::right);
+        static constexpr Hint kHints[] = {{Pad::circle, TR("Home")}, {Pad::l1, TR("Sections"), Pad::r1}};
+        draw_footer(c, kHints, 2);
+        return;
+    }
+
     c.list.push_transform(kFit, 0.0f, 0.0f, kFitX, kFitY);
 
     glass(c, kListPanel, th().radius_panel, th().panel.with_alpha(0.80f), th().panel_edge.with_alpha(0.55f));

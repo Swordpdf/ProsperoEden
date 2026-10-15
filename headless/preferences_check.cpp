@@ -88,7 +88,8 @@ int main() {
     assert(Eden::SaveRecentGame("Sample Quest.nsp", file));
     assert((Eden::LoadRecentGames(file) == std::vector<std::string>{"Sample Quest.nsp", "Demo Racer.xci"}));
     for (int i = 0; i < 5; ++i) assert(Eden::SaveRecentGame("Game" + std::to_string(i) + ".nsp", file));
-    assert((Eden::LoadRecentGames(file) == std::vector<std::string>{"Game4.nsp", "Game3.nsp", "Game2.nsp", "Game1.nsp"}));
+    assert((Eden::LoadRecentGames(file) == std::vector<std::string>{"Game4.nsp", "Game3.nsp", "Game2.nsp", "Game1.nsp",
+                                                                    "Game0.nsp", "Sample Quest.nsp", "Demo Racer.xci"}));
 
     // Console mode per title.
     constexpr uint64_t racer = 0x0100000000010000, quest = 0x0100000000030000;
@@ -348,6 +349,43 @@ int main() {
                read[Eden::game_minus] == Eden::pad_l2 && read[Eden::game_x] == Eden::pad_triangle);
         std::ofstream(by_hand) << R"({"controls": {"mapping": {"a": "share"}}})";
         assert(Eden::LoadPreferences(by_hand).mapping == Eden::kDefaultMapping);  // no such button
+    }
+
+    // Menu keybinds (button_mapping.h): the face button that presses each core menu action. A
+    // binding names each of the four face buttons once; one that names one twice, or a button that
+    // is not a face button, is refused or read as the default.
+    {
+        auto prefs = Eden::LoadPreferences(file);
+        assert(prefs.menu_bind == Eden::kDefaultMenuBinding);
+        // Swap Select and Back: Cross presses Back, Circle presses Select.
+        prefs.menu_bind[Eden::menu_select] = Eden::pad_circle;
+        prefs.menu_bind[Eden::menu_back] = Eden::pad_cross;
+        assert(Eden::ValidMenuBinding(prefs.menu_bind));
+        assert(Eden::SavePreferences(prefs, file));
+        const auto read = Eden::LoadPreferences(file).menu_bind;
+        assert(read == prefs.menu_bind && read[Eden::menu_select] == Eden::pad_circle &&
+               read[Eden::menu_back] == Eden::pad_cross && read[Eden::menu_secondary] == Eden::pad_square);
+        assert(Read(file).find("\"menu_mapping\": {") != std::string::npos &&
+               Read(file).find("\"select\": \"circle\"") != std::string::npos &&
+               Read(file).find("\"back\": \"cross\"") != std::string::npos &&
+               Read(file).find("\"secondary\":") == std::string::npos);  // only what differs is written
+        // Two actions on one face button is refused.
+        auto twice = prefs;
+        twice.menu_bind[Eden::menu_secondary] = twice.menu_bind[Eden::menu_select];
+        assert(!Eden::ValidMenuBinding(twice.menu_bind) && !Eden::SavePreferences(twice, file));
+        // Back to the default: nothing is written.
+        prefs.menu_bind = Eden::kDefaultMenuBinding;
+        assert(Eden::SavePreferences(prefs, file) && Read(file).find("\"menu_mapping\"") == std::string::npos);
+        // A file written by hand: a valid swap, a button that is not a face button, one named twice.
+        const std::string by_hand = std::string(directory) + "/menu-mapping.json";
+        std::ofstream(by_hand) << R"({"controls": {"menu_mapping": {"select": "circle", "back": "cross"}}})";
+        const auto ok = Eden::LoadPreferences(by_hand).menu_bind;
+        assert(ok[Eden::menu_select] == Eden::pad_circle && ok[Eden::menu_back] == Eden::pad_cross &&
+               ok[Eden::menu_secondary] == Eden::pad_square && ok[Eden::menu_settings] == Eden::pad_triangle);
+        std::ofstream(by_hand) << R"({"controls": {"menu_mapping": {"select": "l1"}}})";
+        assert(Eden::LoadPreferences(by_hand).menu_bind == Eden::kDefaultMenuBinding);  // not a face button
+        std::ofstream(by_hand) << R"({"controls": {"menu_mapping": {"select": "circle", "back": "circle"}}})";
+        assert(Eden::LoadPreferences(by_hand).menu_bind == Eden::kDefaultMenuBinding);  // Circle twice
     }
 
     // A game's own settings over Settings: video, audio, controls, language and Performance,

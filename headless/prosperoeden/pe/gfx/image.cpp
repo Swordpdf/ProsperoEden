@@ -4,6 +4,7 @@
 
 #include "pe/gfx/image.hpp"
 
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 
@@ -130,6 +131,52 @@ Image halve(const Image &image)
         }
     }
     return result;
+}
+
+// Horizontal box blur: for each pixel, average the clamped [x-radius, x+radius] window.
+static void blur_row(const std::uint8_t *in, std::uint8_t *out, int width, int radius)
+{
+    for (int x = 0; x < width; ++x)
+    {
+        const int lo = std::max(0, x - radius);
+        const int hi = std::min(width - 1, x + radius);
+        const int count = hi - lo + 1;
+        unsigned sum[3] = {0, 0, 0};
+        for (int k = lo; k <= hi; ++k)
+            for (int ch = 0; ch < 3; ++ch)
+                sum[ch] += in[k * 4 + ch];
+        for (int ch = 0; ch < 3; ++ch)
+            out[x * 4 + ch] = static_cast<std::uint8_t>(sum[ch] / static_cast<unsigned>(count));
+        out[x * 4 + 3] = in[x * 4 + 3];
+    }
+}
+
+void blur(Image &image, int radius)
+{
+    if (image.empty() || radius <= 0)
+        return;
+    radius = std::min(radius, std::min(image.width, image.height) / 2);
+    if (radius <= 0)
+        return;
+    const int w = image.width;
+    const int h = image.height;
+    std::vector<std::uint8_t> tmp(image.rgba.size());
+    std::vector<std::uint8_t> col(static_cast<std::size_t>(h) * 4);
+    std::vector<std::uint8_t> col_out(col.size());
+    auto row_ptr = [&](auto &buf, int y) { return buf.data() + static_cast<std::size_t>(y) * w * 4; };
+    for (int pass = 0; pass < 3; ++pass)
+    {
+        for (int y = 0; y < h; ++y)
+            blur_row(row_ptr(image.rgba, y), row_ptr(tmp, y), w, radius);
+        for (int x = 0; x < w; ++x)
+        {
+            for (int y = 0; y < h; ++y)
+                std::memcpy(col.data() + y * 4, row_ptr(tmp, y) + x * 4, 4);
+            blur_row(col.data(), col_out.data(), h, radius);
+            for (int y = 0; y < h; ++y)
+                std::memcpy(row_ptr(image.rgba, y) + x * 4, col_out.data() + y * 4, 4);
+        }
+    }
 }
 
 } // namespace pe::gfx

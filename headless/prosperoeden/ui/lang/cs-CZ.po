@@ -43,6 +43,10 @@ msgstr "Některý ze souborů NCA firmwaru nelze přečíst. Nainstaluj dump fir
 msgid "A pairing is running already."
 msgstr "Párování už probíhá."
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "O APLIKACI"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "Kolečko"
 msgid "Close"
 msgstr "Zavřít"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "Barva"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "Autoři a konfigurace"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "Křížek"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "Výchozí"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "Méně přesné výpočty s plovoucí čárkou: rychlejší, několik he
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "Méně přesné přenosy paměti do GPU: rychlejší, několik her ale zobrazuje chybnou grafiku."
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "KNIHOVNA"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "Knihovna"
@@ -959,6 +975,10 @@ msgstr "Střední"
 #: pe/ui/settings.cpp
 msgid "Memory"
 msgstr "Paměť"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Menu keybinds"
+msgstr "Tlačítka nabídky"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1011,6 +1031,10 @@ msgstr "Nejbližší soused"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "Vyžaduje pozornost"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "Neutrální sklo, čisté a klidné."
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1294,6 +1318,10 @@ msgstr "Dalším stisknutím nahradíš uložená data této hry. Stávající s
 msgid "Private room"
 msgstr "Soukromá místnost"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "SOUKROMÁ MÍSTNOST"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1359,6 +1387,10 @@ msgstr "EDICE PS5"
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
 msgstr "Veřejné místnosti"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
+msgstr "VEŘEJNÉ MÍSTNOSTI"
 
 #: pe/ui/remote.cpp
 msgid "Queued"
@@ -1564,6 +1596,10 @@ msgstr "Naskenuj kód telefonem, nebo otevři adresu níže."
 msgid "Scroll"
 msgstr "Posunout"
 
+#: pe/ui/game_options.cpp
+msgid "Secondary"
+msgstr "Vedlejší"
+
 #. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
 #: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Sections"
@@ -1591,6 +1627,10 @@ msgstr "Server je pro synchronizaci příliš starý"
 #: pe/ui/home.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Settings"
 msgstr "Nastavení"
+
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
+msgstr "NASTAVENÍ"
 
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
@@ -1730,6 +1770,10 @@ msgstr "PODĚKOVÁNÍ"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "Děkujeme celé homebrew komunitě PS5 a všem vývojářům, díky jejichž ovladačům, nástrojům a knihovnám mohl ProsperoEden vzniknout."
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "Barva zvýraznění aktuálního motivu."
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"
@@ -2035,6 +2079,10 @@ msgstr "Co je nového"
 #: pe/ui/update.cpp
 msgid "What's new in version {0}"
 msgstr "Co je nového ve verzi {0}"
+
+#: pe/ui/game_options.cpp
+msgid "Which face button does what in the menu."
+msgstr "Které tlačítko na čele ovladače dělá co v nabídce."
 
 #: pe/ui/settings.cpp
 msgid "Who is playing. Each profile keeps its own save data and settings."

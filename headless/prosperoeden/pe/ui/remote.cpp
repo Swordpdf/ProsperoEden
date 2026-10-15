@@ -349,7 +349,7 @@ void Launcher::draw_choice(Canvas &c, float open)
 
     static constexpr Hint kChoice[] = {
         {Pad::updown, TR("Select")}, {Pad::cross, TR("Download")}, {Pad::circle, TR("Back")}};
-    draw_hints(c, kChoice, 3, 592.0f, kHints, th().copy, 736.0f);
+    draw_menu_hints(c, kChoice, 3, 592.0f, kHints, th().copy, 736.0f);
     list.pop_transform();
     list.pop_opacity();
 }
@@ -478,13 +478,13 @@ void Launcher::draw_download(Canvas &c, float open)
     {
         static constexpr Hint kFailed[] = {
             {Pad::cross, TR("Try again")}, {Pad::square, TR("Cancel download")}, {Pad::circle, TR("Close")}};
-        draw_hints(c, kFailed, 3, kPanel.x + 52.0f, hints, th().copy, kPanel.w - 104.0f);
+        draw_menu_hints(c, kFailed, 3, kPanel.x + 52.0f, hints, th().copy, kPanel.w - 104.0f);
     }
     else
     {
         static constexpr Hint kRunning[] = {{Pad::circle, TR("Download in the background")},
                                             {Pad::square, TR("Cancel download")}};
-        draw_hints(c, kRunning, 2, kPanel.x + 52.0f, hints, th().copy, kPanel.w - 104.0f);
+        draw_menu_hints(c, kRunning, 2, kPanel.x + 52.0f, hints, th().copy, kPanel.w - 104.0f);
     }
     list.pop_transform();
     list.pop_opacity();
@@ -610,7 +610,7 @@ void Launcher::draw_sources(Canvas &c, float open)
             text(c, kExample[i], 620.0f, baseline(588.0f + 34.0f * static_cast<float>(i), 34.0f, th().size_small),
                  th().size_small, th().accent_pale);
         static constexpr Hint kBack[] = {{Pad::circle, TR("Back")}};
-        draw_hints(c, kBack, 1, 592.0f, kHints, th().copy, 736.0f);
+        draw_menu_hints(c, kBack, 1, 592.0f, kHints, th().copy, 736.0f);
         list.pop_transform();
         list.pop_opacity();
         return;
@@ -714,7 +714,7 @@ void Launcher::draw_sources(Canvas &c, float open)
     else if (source_rows_.selected < sources)
     {
         static constexpr Hint kList[] = {{Pad::cross, TR("Read the lists again")}, {Pad::circle, TR("Back")}};
-        draw_hints(c, kList, 2, 592.0f, kHints, th().copy, 736.0f);
+        draw_menu_hints(c, kList, 2, 592.0f, kHints, th().copy, 736.0f);
     }
     else
     {
@@ -725,9 +725,9 @@ void Launcher::draw_sources(Canvas &c, float open)
             {Pad::cross, TR("Try again")}, {Pad::square, TR("Cancel download")}, {Pad::circle, TR("Back")}};
         static constexpr Hint kQueued[] = {{Pad::square, TR("Cancel download")}, {Pad::circle, TR("Back")}};
         if (failed)
-            draw_hints(c, kFailed, 3, 592.0f, kHints, th().copy, 736.0f);
+            draw_menu_hints(c, kFailed, 3, 592.0f, kHints, th().copy, 736.0f);
         else
-            draw_hints(c, kQueued, 2, 592.0f, kHints, th().copy, 736.0f);
+            draw_menu_hints(c, kQueued, 2, 592.0f, kHints, th().copy, 736.0f);
     }
     list.pop_transform();
     list.pop_opacity();

@@ -705,8 +705,9 @@ foreach(bits 32 64)
     set(derived "${PORT_BUILD_DIR}/arm_dynarmic_${bits}.cpp")
     # The overlay's four core loads (performance.h, SampleCoreCpu): each core reads its own CPU
     # time after a run when the overlay has asked, which on the console only the thread itself
-    # can. The development build reads more at the same place (SampleCpu, below).
-    if(NOT EDEN_DEV_PROFILE)
+    # can. The development build reads more at the same place (SampleCpu, below). Only the
+    # console's app has the overlay and links performance.cpp; the PC checks link this core without it.
+    if(PS5_NATIVE AND NOT EDEN_DEV_PROFILE)
         string(PREPEND wrapper "#include \"${EDEN_PORT_DIR}/performance.h\"
 ")
         set(core_run_site "    return TranslateHaltReason(m_jit->Run());")
@@ -2015,6 +2016,17 @@ endif()
 string(REPLACE "${npad_update}"
     "        auto& controller = controller_data[aruid_index][controller_idx];\n        if (controller.device == nullptr) {\n            continue;  // ProsperoEden: this applet resource is not activated yet\n        }\n        const auto is_connected = controller.device->IsConnected();"
     npad_source "${npad_source}")
+# Since 67bada77 the NPad registers its controller callbacks in its constructor, before the HID
+# service hands it an applet resource: a motion sample from the pad thread in that window called
+# through the null resource (page fault in NPad::ControllerUpdate at boot, seen on the console).
+set(npad_entry "void NPad::ControllerUpdate(Kernel::KernelCore& kernel, Core::HID::ControllerTriggerType type, std::size_t controller_idx) {\n")
+string(FIND "${npad_source}" "${npad_entry}" npad_entry_at)
+if(npad_entry_at LESS 0)
+    message(FATAL_ERROR "Pinned NPad::ControllerUpdate changed")
+endif()
+string(REPLACE "${npad_entry}"
+    "${npad_entry}    if (applet_resource_holder.applet_resource == nullptr) {\n        return;  // ProsperoEden: the HID service has not set this NPad up yet\n    }\n"
+    npad_source "${npad_source}")
 write_derived("${PORT_BUILD_DIR}/npad.cpp" "${npad_source}")
 get_target_property(npad_sources hid_core SOURCES)
 list(FILTER npad_sources EXCLUDE REGEX "(^|/)npad\\.cpp$")
@@ -2279,6 +2291,53 @@ if(EDEN_PS5_OPENGL)
         memory_manager.FlushCaching();
     }
 ]=] command_source "${command_source}")
+            # Incrementing runs of store-only registers go to the engine's method sink in one pass
+            # (performance.h dma_batch); the first word that starts engine work, the puller's
+            # methods, increase-once writes and engines missing from the subchannel stay per word.
+            set(dma_word [=[        } else if (dma_state.method_count) {
+            auto const command_header = commands[index]; //can copy
+]=])
+            string(FIND "${command_source}" "${dma_word}" dma_word_at)
+            if(dma_word_at LESS 0)
+                message(FATAL_ERROR "Pinned DmaPusher::ProcessCommands changed")
+            endif()
+            if(EDEN_DEV_PROFILE)
+                set(dma_count_run [=[
+                    ::Eden::Performance::dma_batch_runs.store(::Eden::Performance::dma_batch_runs.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
+                    ::Eden::Performance::dma_batch_words.store(::Eden::Performance::dma_batch_words.load(std::memory_order_relaxed) + run, std::memory_order_relaxed);]=])
+                set(dma_count_word [=[
+            ::Eden::Performance::dma_single_words.store(::Eden::Performance::dma_single_words.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);]=])
+            else()
+                set(dma_count_run "")
+                set(dma_count_word "")
+            endif()
+            string(REPLACE "${dma_word}" "        } else if (dma_state.method_count) {
+            if (!dma_increment_once && dma_state.method >= non_puller_methods &&
+                ::Eden::Performance::dma_batch.load(std::memory_order_relaxed)) {
+                auto* const engine = subchannels[dma_state.subchannel];
+                if (engine) {
+                    const auto& mask = engine->execution_mask;
+                    const u32 available = u32(std::min<std::size_t>(dma_state.method_count, commands.size() - index));
+                    const u32 limit = dma_state.method < mask.size()
+                        ? u32(std::min<std::size_t>(available, mask.size() - dma_state.method)) : 0;
+                    u32 run = 0;
+                    while (run < limit && !mask[dma_state.method + run])
+                        ++run;
+                    if (run != 0) {
+                        auto& sink = engine->method_sink;
+                        for (u32 i = 0; i < run; ++i)
+                            sink.emplace_back(dma_state.method + i, commands[index + i].argument);
+                        dma_state.method += run;
+                        dma_state.method_count -= run;
+                        index += run;
+${dma_count_run}
+                        continue;
+                    }
+                }
+            }
+${dma_count_word}
+            auto const command_header = commands[index]; //can copy
+" command_source "${command_source}")
             string(PREPEND command_source "#include <atomic>\n#include \"${EDEN_PORT_DIR}/performance.h\"\n")
         endif()
         string(PREPEND command_source "#include <chrono>\n")

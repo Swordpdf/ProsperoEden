@@ -405,6 +405,13 @@ void RasterizerVulkan::PrepareDraw(bool is_indexed, Func&& draw_func) {'''),
         auto area = texture_cache.GetFlushArea(addr, size);'''),
     ('        if (hold_start != 0) ::Eden::Performance::AddSince(::Eden::Performance::draw_cache_hold, hold_start);\n',
      '        if (hold_start != 0) ::Eden::Performance::AddHold(hold_start);\n'),
+    # Dynamic vertex input: a stream with instancing on and frequency 0 advances per vertex, as the
+    # pipeline's static vertex input (binding_divisors) and OpenGL's divisor 0 take it. Here it was
+    # an instance-rate binding with divisor 0, every vertex reading element 0: geometry collapsed
+    # (objects vanishing for a frame, a whole scene drawn as one flat colour).
+    ('        const bool is_instanced{regs.vertex_stream_instances.IsInstancingEnabled(binding)};\n',
+     '        const bool is_instanced{regs.vertex_stream_instances.IsInstancingEnabled(binding) &&\n'
+     '                                input_binding.frequency != 0};\n'),
 ])
 # Host conditional rendering (VK_EXT_conditional_rendering, dev_vulkan.h hcr_mode): count each
 # decision (EDEN_DEV_GUEST cond= slots 13-19); hcr=exact sends the conditions Eden would draw
@@ -1097,9 +1104,63 @@ for signature, index in (
     }
 '''
     texture_costs.append((anchor, anchor + scope))
+# Large textures re-upload only the block rows guest writes changed (headless/texture_partial.h).
+VULKAN_CACHE = 'if constexpr (std::is_same_v<Runtime, Vulkan::TextureCacheRuntime>) {'
+texture_partial = [
+    # The page lists belong to this cache's images: a title started after another in the same
+    # process (return to menu) must not see the previous cache's ImageId indices.
+    ('    : runtime{runtime_}, device_memory{device_memory_} {\n',
+     '    : runtime{runtime_}, device_memory{device_memory_} {\n'
+     '    ' + VULKAN_CACHE + '\n'
+     '        Eden::TexturePartial::images.clear();\n'
+     '    }\n'),
+    ('    ForEachImageInRegion(cpu_addr, size, [this](ImageId image_id, Image& image) {\n'
+     '        if (True(image.flags & ImageFlagBits::CpuModified)) {\n'
+     '            return;\n'
+     '        }\n'
+     '        image.flags |= ImageFlagBits::CpuModified;',
+     '    ForEachImageInRegion(cpu_addr, size, [this, cpu_addr, size](ImageId image_id, Image& image) {\n'
+     '        ' + VULKAN_CACHE + '\n'
+     '            if (Eden::TexturePartial::Write(device_memory, image, image_id.index, cpu_addr, size)) {\n'
+     '                return;\n'
+     '            }\n'
+     '        }\n'
+     '        if (True(image.flags & ImageFlagBits::CpuModified)) {\n'
+     '            return;\n'
+     '        }\n'
+     '        image.flags |= ImageFlagBits::CpuModified;'),
+    ('    ASSERT(True(image.flags & ImageFlagBits::Tracked));\n'
+     '    image.flags &= ~ImageFlagBits::Tracked;',
+     '    ASSERT(True(image.flags & ImageFlagBits::Tracked));\n'
+     '    ' + VULKAN_CACHE + '\n'
+     '        Eden::TexturePartial::End(device_memory, image_id.index);\n'
+     '    }\n'
+     '    image.flags &= ~ImageFlagBits::Tracked;'),
+    ('    if (invalidate) {\n'
+     '        image.flags &= ~(ImageFlagBits::CpuModified | ImageFlagBits::GpuModified);',
+     '    if (invalidate) {\n'
+     '        ' + VULKAN_CACHE + '\n'
+     '            Eden::TexturePartial::End(device_memory, image_id.index);\n'
+     '        }\n'
+     '        image.flags &= ~(ImageFlagBits::CpuModified | ImageFlagBits::GpuModified);'),
+    ('    ASSERT_MSG(False(image.flags & ImageFlagBits::Tracked), "Image was not untracked");',
+     '    ASSERT_MSG(False(image.flags & ImageFlagBits::Tracked), "Image was not untracked");\n'
+     '    ' + VULKAN_CACHE + '\n'
+     '        Eden::TexturePartial::images.erase(image_id.index);\n'
+     '    }'),
+    ('    if (False(image.flags & ImageFlagBits::CpuModified)) {\n'
+     '        // Only upload modified images\n'
+     '        return;\n'
+     '    }\n',
+     '    if (False(image.flags & ImageFlagBits::CpuModified)) {\n'
+     '        // Only upload modified images\n'
+     '        return;\n'
+     '    }\n'
+     '    ' + VULKAN_CACHE + '\n' + (port / 'texture_partial_refresh.inc').read_text() + '    }\n'),
+]
 adapt('src/video_core/texture_cache/texture_cache.h',
       'vulkan-cache/video_core/texture_cache/texture_cache.h', [
-    ('namespace VideoCommon {', '#include "performance.h"\n#include "image_pages.h"\n#include "astc_policy.h"\n#include "common/scope_exit.h"\nnamespace Vulkan { class TextureCacheRuntime; }\n\nnamespace VideoCommon {'),
+    ('namespace VideoCommon {', '#include "performance.h"\n#include "texture_partial.h"\n#include "image_pages.h"\n#include "astc_policy.h"\n#include "common/scope_exit.h"\nnamespace Vulkan { class TextureCacheRuntime; }\n\nnamespace VideoCommon {'),
     # An ASTC texture kept as BC3 is converted in the background in a busy frame only, and in
     # place on a light screen (headless/astc_policy.h). The frame is counted where the texture
     # cache ends its own.
@@ -1122,7 +1183,12 @@ adapt('src/video_core/texture_cache/texture_cache.h',
     # critical threshold and minimum 1 GiB spacing. OpenGL remains unchanged.
     ('const s64 min_vacancy_expected = (6 * mem_threshold) / 10;',
      'const s64 min_vacancy_expected =\n            ((std::is_same_v<Runtime, Vulkan::TextureCacheRuntime> ? 4 : 6) * mem_threshold) / 10;'),
-] + texture_costs)
+] + texture_partial + texture_costs)
+
+adapt('src/video_core/texture_cache/util.cpp', 'texture_util.cpp', [
+    ('#include <vector>', '#include <cstring>\n#include <vector>\n#include "texture_partial.h"'),
+    ('} // namespace VideoCommon', (port / 'texture_rows.inc').read_text() + '\n} // namespace VideoCommon'),
+])
 
 # The four calls inside bind_geometry and the three inside bind_update. They sit in buffer_cache.h
 # rather than in Configure, and both spend their time in SynchronizeBuffer's page walk over the
@@ -1234,7 +1300,7 @@ for name in ('vk_graphics_pipeline', 'vk_compute_pipeline'):
         anchors += configure_phases
     adapt(f'src/video_core/renderer_vulkan/{name}.cpp', name + '_cost.cpp', anchors)
 shader_costs = [
-    ('#include <algorithm>', '#include <algorithm>\n#include <cstdio>\n#include <unordered_set>\n'
+    ('#include <algorithm>', '#include <algorithm>\n#include <cstdio>\n#include <set>\n#include <unordered_set>\n'
      '#include "performance.h"\n#include "dev_vulkan.h"\n#include "diagnostics.h"'),
     # Development crash probes: report each pipeline's first use (stage hashes) to klog,
     # which survives a GPU fault that kills the title.
@@ -1284,6 +1350,104 @@ shader_costs = [
      '                    unsigned(dynamic_features.has_extended_dynamic_state_3_enables),\n'
      '                    unsigned(dynamic_features.has_dynamic_vertex_input));\n'
      '}\n\nPipelineCache::~PipelineCache()'),
+    # Static vertex input (no attribute) for pipelines whose vertex shader reads no vertex attribute
+    # (dev_vulkan.h static_vertex_input): with VK_EXT_vertex_input_dynamic_state the console's
+    # driver drew them wrong (a full-screen triangle from the vertex index covering a game's
+    # cutscenes with a flat colour). Building a pipeline records whether its vertex shader reads
+    # attributes; the static key has no attribute, so the disk cache keeps loading it.
+    ('#include "video_core/engines/maxwell_3d.h"',
+     '#include "video_core/engines/maxwell_3d.h"\n#include "video_core/dirty_flags.h"\n'
+     '#include <atomic>\n#include <mutex>\n#include <set>\n#include <unordered_set>\n'
+     '#include "video_core/renderer_vulkan/vk_state_tracker.h"'),
+    ('GraphicsPipeline* PipelineCache::CurrentGraphicsPipeline() {',
+     """namespace {
+std::mutex eden_attributeless_mutex;
+using EdenVertexIdentity = std::array<u64, 2>;
+std::set<EdenVertexIdentity> eden_attributeless_vertex;
+std::atomic<u32> eden_attributeless_generation{0};
+bool eden_static_vertex_input_bound = false;
+
+void EdenRecordAttributeless(EdenVertexIdentity vertex_hash, const Shader::Info& info) {
+    for (size_t index = 0; index < Shader::IR::NUM_GENERICS; ++index) {
+        if (info.loads.Generic(index)) {
+            return;
+        }
+    }
+    std::scoped_lock lock{eden_attributeless_mutex};
+    if (eden_attributeless_vertex.insert(vertex_hash).second) {
+        eden_attributeless_generation.fetch_add(1, std::memory_order_release);
+    }
+}
+
+// GPU thread: whether the vertex shader reads no attribute, as far as built pipelines tell.
+bool EdenAttributeless(EdenVertexIdentity vertex_hash) {
+    static EdenVertexIdentity last_hash{};
+    static u32 last_generation = ~0u;
+    static bool last_result = false;
+    const u32 generation = eden_attributeless_generation.load(std::memory_order_acquire);
+    if (vertex_hash != last_hash || generation != last_generation) {
+        std::scoped_lock lock{eden_attributeless_mutex};
+        last_hash = vertex_hash;
+        last_generation = generation;
+        last_result = eden_attributeless_vertex.contains(vertex_hash);
+    }
+    return last_result;
+}
+
+// A static key without attributes (what the loader takes back from the disk cache).
+bool EdenAttributelessStaticKey(const FixedPipelineState& state) {
+    return state.dynamic_vertex_input == 0 &&
+           std::ranges::none_of(state.attributes,
+                                [](const auto& attribute) { return attribute.raw != 0; });
+}
+} // Anonymous namespace
+
+GraphicsPipeline* PipelineCache::CurrentGraphicsPipeline() {"""),
+    ('    graphics_key.state.Refresh(*maxwell3d, dynamic_features);\n',
+     """    graphics_key.state.Refresh(*maxwell3d, dynamic_features);
+    const bool static_vertex_input = graphics_key.state.dynamic_vertex_input != 0 &&
+                                     ::Eden::DevVulkan::static_vertex_input &&
+                                     EdenAttributeless({graphics_key.unique_hashes[0], graphics_key.unique_hashes[1]});
+    if (static_vertex_input) {
+        // Instance-rate streams as the registers set them (with every stream per vertex the
+        // driver drew these wrong too); no attribute, so the key does not depend on what the
+        // registers hold for attributes the shader does not read.
+        const auto& regs = maxwell3d->regs;
+        graphics_key.state.dynamic_vertex_input.Assign(0);
+        graphics_key.state.enabled_divisors = 0;
+        graphics_key.state.attributes = {};
+        graphics_key.state.binding_divisors = {};
+        for (size_t index = 0; index < Maxwell::NumVertexArrays; ++index) {
+            const bool is_enabled = regs.vertex_stream_instances.IsInstancingEnabled(index);
+            graphics_key.state.binding_divisors[index] =
+                is_enabled ? regs.vertex_streams[index].frequency : 0;
+            graphics_key.state.enabled_divisors |= (is_enabled ? u64{1} : 0) << index;
+        }
+        // The union's attribute_types now holds divisors: the next dynamic draw recomputes them
+        // and sets its vertex input again (a static pipeline replaced it).
+        maxwell3d->dirty.flags[Dirty::VertexInput] = true;
+    }
+    if (static_vertex_input && !eden_static_vertex_input_bound) {
+        // Rebind the vertex buffers with their strides, dynamic state of the static pipeline.
+        auto& flags = maxwell3d->dirty.flags;
+        flags[VideoCommon::Dirty::VertexBuffers] = true;
+        for (size_t index = 0; index < Maxwell::NumVertexArrays; ++index) {
+            flags[VideoCommon::Dirty::VertexBuffer0 + index] = true;
+        }
+    }
+    eden_static_vertex_input_bound = static_vertex_input;
+"""),
+    ('            (key.state.dynamic_vertex_input != 0) !=\n                dynamic_features.has_dynamic_vertex_input) {',
+     '            ((key.state.dynamic_vertex_input != 0) !=\n'
+     '                 dynamic_features.has_dynamic_vertex_input &&\n'
+     '             !(dynamic_features.has_dynamic_vertex_input &&\n'
+     '               ::Eden::DevVulkan::static_vertex_input &&\n'
+     '               EdenAttributelessStaticKey(key.state)))) {'),
+    ('    std::array<const Shader::Info*, Maxwell::MaxShaderStage> infos{};\n',
+     '    if (uses_vertex_b) {\n'
+     '        EdenRecordAttributeless({key.unique_hashes[0], key.unique_hashes[1]}, programs[1].info);\n'
+     '    }\n'
+     '    std::array<const Shader::Info*, Maxwell::MaxShaderStage> infos{};\n'),
 ]
 # Time both graphics and compute preparation, without modifying the compiler or
 # reading guest state on another thread. These intervals overlap shader_prepare.

@@ -82,7 +82,8 @@ if [[ -f $radv_release/lib/libvulkan_radeon.ps5.a ]]; then
         step "RADV: built from Mesa ${built:0:12}, pinned ${mesa_pin:0:12}"
         bash tools/build-radv-dependencies.sh
         rm -f build/radv-isolated/libvulkan_radeon.ps5.a
-    elif ! python3 -B tools/patch-radv-wsi.py --check "$radv_release/EDEN_WSI_SHA256"; then
+    elif ! python3 -B tools/patch-radv-wsi.py --check "$radv_release/EDEN_WSI_SHA256" ||
+         ! python3 -B tools/patch-radv-gs-compute.py --check "$radv_release/EDEN_GS_SHA256"; then
         step "RADV: this repository's adaptation of the driver changed"
         bash tools/build-radv-dependencies.sh
         rm -f build/radv-isolated/libvulkan_radeon.ps5.a

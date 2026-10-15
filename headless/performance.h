@@ -172,6 +172,14 @@ inline std::atomic<unsigned> cpu_write_ahead{64};
 inline thread_local unsigned cpu_write_core = 3;
 // The GPU thread's buffer and texture cache hold per draw preparation, with cpu_write_detail.
 inline Totals draw_cache_hold;
+// The GPU command interpreter (DmaPusher::ProcessCommands) calls out once per data word. An
+// incrementing write whose registers only store their value (no engine work until a later method
+// executes) is handed to the engine's pending-write list in one pass instead; registers that start
+// work keep the per-word path. dev-settings dma_batch=off restores one call per word (upstream).
+inline std::atomic<bool> dma_batch{true};
+// Development (EDEN_DEV_GPU): incrementing runs taken in one pass, their words, and the data words
+// that went through the per-word path. Written by the GPU thread only.
+inline std::atomic<unsigned long long> dma_batch_runs{}, dma_batch_words{}, dma_single_words{};
 template <typename Mutex>
 inline void GuestCacheLock(Mutex& mutex) {
     if (mutex.try_lock()) return;
@@ -619,6 +627,13 @@ inline void Mark(Totals& totals, long long& since) {
 // Opt-in API wall times: calls may overlap across threads, so do not sum them as frame time.
 inline std::atomic<bool> vulkan_cost_enabled{false};
 inline std::array<Totals, 24> vulkan_api;
+// Large textures upload only the block rows guest writes changed (texture_partial.h): dev-settings
+// tex_partial=off, tex_partial_kb=N (smallest image, default 1 MiB), tex_partial_check=on (compare
+// each partial upload with a whole unswizzle). Counted: partial uploads, their bytes, checks, mismatches.
+inline std::atomic<bool> tex_partial{true}, tex_partial_check{false};
+inline std::atomic<unsigned long long> tex_partial_min{1ULL << 20};
+inline std::atomic<unsigned long long> tex_partial_uploads{}, tex_partial_bytes{}, tex_partial_checks{},
+    tex_partial_mismatches{};
 inline std::optional<Timer> VulkanTimer(unsigned index) {
     if (vulkan_cost_enabled.load(std::memory_order_relaxed))
         return std::optional<Timer>{std::in_place, vulkan_api.at(index)};

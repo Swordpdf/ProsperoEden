@@ -35,6 +35,7 @@ Launcher::Launcher(Services &services, Textures &textures, const Fonts &fonts, b
     prefs_ = services_.preferences();
     // The look the player chose; a theme this build does not have leaves the first in use.
     use_theme(prefs_.theme);
+    use_accent(prefs_.accent);
     sources_ = services_.sources();
     sources_generation_ = sources_.generation; // the list read below has the sources' games
     downloads_ = services_.downloads();
@@ -46,8 +47,9 @@ Launcher::Launcher(Services &services, Textures &textures, const Fonts &fonts, b
     home_springs_[0].snap(1.0f);
     rail_active_[0].snap(1.0f);
     settings_.wrap = false;
-    settings_.visible = 12;
-    settings_.reset(12, 0);
+    settings_.visible = th().list_settings ? 10 : 13;
+    settings_.pitch = th().list_settings ? 84.0f : 88.0f;
+    settings_.reset(13, 0);
     section_.snap(1.0f);
     detail_.snap(1.0f);
     cue(home_.launch_failed ? Cue::notify : first_start ? Cue::welcome : Cue::resume);
@@ -207,6 +209,7 @@ void Launcher::press(Key key)
         opening_ = opening_reveal();
         return;
     }
+    key = menu_key_for(key, prefs_.menu_bind); // the core menu buttons the user has chosen
     if (modal_ == Modal::game)
         return press_game(key);
     if (modal_ == Modal::mods)
@@ -215,6 +218,8 @@ void Launcher::press(Key key)
         return press_game_options(key);
     if (modal_ == Modal::mapping)
         return press_mapping(key);
+    if (modal_ == Modal::menu_mapping)
+        return press_menu_mapping(key);
     if (modal_ == Modal::hud)
         return press_hud(key);
     if (modal_ == Modal::profiles)
@@ -240,7 +245,10 @@ void Launcher::press(Key key)
         return press_rail(key);
     if ((key == Key::l1 || key == Key::r1) && at_section())
     {
-        go_section((section() + (key == Key::r1 ? 1 : kSections - 1)) % kSections);
+        int next = (section() + (key == Key::r1 ? 1 : kSections - 1)) % kSections;
+        if (th().top_nav && next == 1)
+            next = key == Key::r1 ? 2 : 0;
+        go_section(next);
         return;
     }
     switch (screen_)
@@ -285,6 +293,15 @@ void Launcher::update(float dt)
     screen_time_ += dt;
     message_age_ += dt;
     backdrop_.update(dt);
+    if (th().game_backdrop)
+    {
+        if (screen_ == Screen::home && !home_.last_cover.empty())
+            textures_.load_game_backdrop(home_.last_cover);
+        else if (screen_ == Screen::library && !games_.empty())
+            textures_.load_game_backdrop(games_[static_cast<std::size_t>(library_.selected)].cover);
+        else
+            textures_.clear_game_backdrop();
+    }
     textures_.pump(dt);
     finish_scan(false);
     poll_sources(dt);
@@ -301,13 +318,15 @@ void Launcher::update(float dt)
     modal_open_.update(dt, 20.0f);
     if (modal_ == Modal::none && modal_open_.value < 0.01f)
         modal_shown_ = Modal::none;
-    dim_.target = screen_ == Screen::home ? 0.0f : 1.0f;
+    const bool home_dim = screen_ == Screen::home ||
+                         (th().top_nav && (screen_ == Screen::library || screen_ == Screen::settings));
+    dim_.target = home_dim ? 0.0f : 1.0f;
     dim_.update(dt, 8.0f);
 
     const Theme &t = th();
     for (std::size_t i = 0; i < home_springs_.size(); ++i)
     {
-        home_springs_[i].target = static_cast<int>(i) == home_focus_ && !rail_focus_ ? 1.0f : 0.0f;
+        home_springs_[i].target = static_cast<int>(i) == home_focus_ && !rail_focus_ && !home_on_grid_ ? 1.0f : 0.0f;
         home_springs_[i].update(dt, t.focus_spring);
     }
     for (std::size_t i = 0; i < settings_springs_.size(); ++i)
@@ -337,10 +356,12 @@ void Launcher::update(float dt)
     language_.update(dt);
     video_rows_.update(dt);
     performance_rows_.update(dt);
+    controls_rows_.update(dt);
     game_rows_.update(dt);
     mod_rows_.update(dt);
     option_rows_.update(dt);
     mapping_rows_.update(dt);
+    menu_mapping_rows_.update(dt);
     hud_rows_.update(dt);
     profile_rows_.update(dt);
     source_rows_.update(dt);
@@ -355,7 +376,8 @@ void Launcher::update(float dt)
     mods_switch_.update(dt, 22.0f);
     detail_.target = 1.0f;
     detail_.update(dt, 14.0f);
-    if (!selected_read_ && screen_ == Screen::library && detail_.value > 0.5f)
+    if (!selected_read_ && (screen_ == Screen::library || (screen_ == Screen::home && th().minimal_home)) &&
+        detail_.value > 0.5f)
         read_selected_details();
     section_.target = 1.0f;
     section_.update(dt, 14.0f);
@@ -446,6 +468,35 @@ void Launcher::update_offer(float dt)
 void Launcher::draw_screen(Canvas &c, Screen screen)
 {
     drawing_shown_ = screen == screen_;
+    if (th().top_nav)
+    {
+        draw_home(c);
+        if (screen == Screen::home)
+        {
+            draw_library(c);
+            return;
+        }
+        {
+            switch (screen)
+            {
+            case Screen::library:
+                return draw_library(c);
+            case Screen::multiplayer:
+                return draw_multiplayer(c);
+            case Screen::settings:
+                return draw_settings(c);
+            case Screen::files:
+                return draw_files(c);
+            case Screen::language:
+                return draw_language(c);
+            case Screen::about:
+                return draw_about(c);
+            default:
+                break;
+            }
+        }
+        return;
+    }
     switch (screen)
     {
     case Screen::home:
@@ -620,7 +671,7 @@ void Launcher::draw(gfx::DrawList &list)
     const float zoom =
         launching ? 1.0f + 0.045f * tween::cubic_in_out(launch_.progress()) * motion() : 1.0f;
     list.push_transform(zoom, 960.0f, 540.0f, 0.0f, 0.0f);
-    if (transition_.running)
+    if (transition_.running && !th().top_nav)
     {
         // The old screen leaves toward the rail as the new one arrives from the other side. The
         // rail and the artwork stay where they are.
@@ -651,13 +702,16 @@ void Launcher::draw(gfx::DrawList &list)
                       modal_shown_ == Modal::game_options || mapping_of_game;
     if (page)
         draw_game_page(c, opened);
-    draw_rail(c);
+    if (!page || opened < 0.99f)
+        draw_rail(c);
     draw_clock(c);
     if (modal_shown_ != Modal::none && (!page || mapping_of_game))
     {
         list.rounded_rect(kScreen, 0.0f, th().scrim.with_alpha(0.72f * opened));
         if (modal_shown_ == Modal::mapping)
             draw_mapping(c, opened);
+        else if (modal_shown_ == Modal::menu_mapping)
+            draw_menu_mapping(c, opened);
         else if (modal_shown_ == Modal::hud)
             draw_hud(c, opened);
         else if (modal_shown_ == Modal::profiles)

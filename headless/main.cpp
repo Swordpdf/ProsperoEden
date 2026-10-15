@@ -764,6 +764,7 @@ int main(int argc, char** argv) {
         Settings::values.memory_layout_mode = Settings::MemoryLayout::Memory_4Gb;
         // A development run that names jit_list in dev-settings decides the block list by itself.
         [[maybe_unused]] bool dev_block_list = false;  // read where a session applies its settings
+        [[maybe_unused]] int dev_vertex_input = -1;  // likewise: dev-settings vertex_input_dynamic=off/on
 #ifdef EDEN_DEV_PROFILE
         // One-run A/B switches written by the development runner; absent = defaults.
         {
@@ -793,9 +794,20 @@ int main(int argc, char** argv) {
                 } else if (entry == "gc_dirty=upstream") {
                     // Eden's rule: evict GPU-written textures from the "expected" memory mark on.
                     Eden::Performance::gc_keep_dirty = false;
+                } else if (entry == "tex_partial=off") {
+                    // Whole-image uploads after every guest write, as upstream (texture_partial.h).
+                    Eden::Performance::tex_partial = false;
+                } else if (entry == "tex_partial_check=on") {
+                    Eden::Performance::tex_partial_check = true;
+                } else if (entry.starts_with("tex_partial_kb=")) {
+                    Eden::Performance::tex_partial_min = std::strtoull(entry.c_str() + 15, nullptr, 10) << 10;
                 } else if (entry == "gc_scan=upstream") {
                     // Eden's rule: the collector's budget counts visits, not evictions.
                     Eden::Performance::gc_count_visits = true;
+                } else if (entry == "dma_batch=off") {
+                    // One engine call per GPU command word, as upstream (performance.h dma_batch).
+                    Eden::Performance::dma_batch = false;
+                    std::printf("EDEN_DEV_DMA_BATCH 0\n");
                 } else if (entry.starts_with("dispatch_draws=")) {
                     // Draws between Vulkan worker hand-offs: a power of two from 8 (upstream) to 512.
                     const unsigned long draws = std::strtoul(entry.c_str() + 15, nullptr, 10);
@@ -849,8 +861,10 @@ int main(int argc, char** argv) {
                     Eden::DevVulkan::disable_descriptor_buffer = true;
                 } else if (entry == "robustness2=on") {
                     Eden::DevVulkan::robustness2 = true;
-                } else if (entry == "vertex_input_dynamic=off") {
-                    Settings::values.vertex_input_dynamic_state.SetValue(false);
+                } else if (entry == "vertex_input_dynamic=off" || entry == "vertex_input_dynamic=on") {
+                    dev_vertex_input = entry.ends_with("on") ? 1 : 0;
+                } else if (entry == "static_vi=off") {
+                    Eden::DevVulkan::static_vertex_input = false;
                 } else if (entry == "pipeline_trace=on") {
                     Eden::DevVulkan::trace_pipelines = true;
                 } else if (entry.starts_with("radv_debug=")) {
@@ -932,7 +946,7 @@ int main(int argc, char** argv) {
                         unsigned(!Eden::DevVulkan::disable_null_descriptor),
                         unsigned(!Eden::DevVulkan::disable_descriptor_buffer),
                         unsigned(Eden::DevVulkan::robustness2),
-                        unsigned(Settings::values.vertex_input_dynamic_state.GetValue()),
+                        unsigned(dev_vertex_input != 0),
                         unsigned(Settings::values.dyna_state.GetValue()),
                         unsigned(!Eden::DevVulkan::disable_sparse),
                         unsigned(!Eden::DevVulkan::disable_multi_range),
@@ -1097,6 +1111,8 @@ int main(int argc, char** argv) {
             // The block list is off unless the settings turn it on (block-list.txt in the app
             // folder still does, further down).
             if (!dev_block_list) Eden::JitList::enabled = speed.block_list;
+            // Set for every session: the value outlives one.
+            Settings::values.vertex_input_dynamic_state.SetValue(dev_vertex_input != 0);
             // The report reads the values back: what the emulator has, whoever set it.
             const auto on = [](bool value) { return value ? "on" : "off"; };
             Eden::Report("launch", (std::string("Performance: block list ") + on(Eden::JitList::enabled) +
