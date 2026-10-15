@@ -10,6 +10,8 @@ set(PORT_BUILD_DIR "${CMAKE_BINARY_DIR}/headless")
 include("${CMAKE_CURRENT_LIST_DIR}/dynarmic/shared-jit.cmake")
 # Register-allocator bookkeeping visits only the host locations in use (compile time).
 include("${CMAKE_CURRENT_LIST_DIR}/dynarmic/reg_alloc.cmake")
+# Shorter x64 code for FCMP, DMB and CBZ/TBZ-style branches (block compile time switches).
+include("${CMAKE_CURRENT_LIST_DIR}/dynarmic/fast_paths.cmake")
 if(PS5_NATIVE OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(EDEN_SHARED_JIT ON)
 endif()
@@ -62,6 +64,13 @@ target_include_directories(dynarmic BEFORE PRIVATE "${PORT_BUILD_DIR}/jit-checks
 # Let the existing compiler inline across the JIT's translation units. Keep the
 # rest of the native application on its qualified non-LTO build path.
 target_compile_options(dynarmic PRIVATE -flto=thin)
+if(PS5_NATIVE)
+    # The GPU thread's per-draw work (command processing, buffer/texture caches) spans
+    # video_core's translation units, and the console's CPU is a Zen 2 (AVX2, BMI2, LZCNT/TZCNT).
+    # Not common or core: with them a title never reached its first frame (their fiber switches
+    # move guest threads between host threads, which cross-unit inlining may not survive).
+    target_compile_options(video_core PRIVATE -flto=thin -march=znver2)
+endif()
 if(NOT PS5_NATIVE)
     target_link_options(dynarmic INTERFACE -fuse-ld=lld-18)
 endif()
@@ -134,8 +143,16 @@ eden_sparse_replace("inline const u64 HostPageMask = ~(HostPageSize - 1);"
 eden_sparse_replace("mprotect(reinterpret_cast<void*>(page), HostPageSize, PROT_READ | PROT_WRITE)"
     "(CommitSparsePage(page), 0)" 1)
 eden_sparse_replace("void FreeMemoryPages(void* base, std::size_t size) noexcept;"
-    "void FreeMemoryPages(void* base, std::size_t size) noexcept;\nvoid* AllocateSparsePages(std::size_t size) noexcept;\nvoid FreeSparsePages(void* base, std::size_t size) noexcept;\nvoid CommitSparsePage(std::uintptr_t page) noexcept;" 1)
+    "void FreeMemoryPages(void* base, std::size_t size) noexcept;\nvoid* AllocateSparsePages(std::size_t size) noexcept;\nvoid FreeSparsePages(void* base, std::size_t size) noexcept;\nvoid CommitSparsePage(std::uintptr_t page) noexcept;\nbool SparseTablesAvailable() noexcept;" 1)
+# A vector can carry a mirror mirror_index entries further on (the JIT's direct page table,
+# headless/jit-page-table.cmake): committing a page of the first part commits its mirror first,
+# so a write of an entry may always write its mirror.
+eden_sparse_replace("    constexpr bool CommitPage(std::size_t index) noexcept {\n"
+    "    constexpr bool CommitPage(std::size_t index) noexcept {\n        if (mirror_index != 0 && index < mirror_index && !IsCommittedPage(index + mirror_index))\n            CommitPage(index + mirror_index);\n" 1)
+eden_sparse_replace("    std::size_t alloc_size{};\n"
+    "public:\n    std::size_t mirror_index{};\n\nprivate:\n    std::size_t alloc_size{};\n" 1)
 write_derived("${PORT_BUILD_DIR}/sparse/common/sparse_large_vector.h" "${sparse_header}")
+include("${EDEN_PORT_DIR}/jit-page-table.cmake")
 
 # An abandoned fiber stack is not unwound. Empty the by-value weak reference
 # before switching; jump_fcontext returns the live destination supplied by the
@@ -285,6 +302,7 @@ foreach(bits 32 64)
     if(bits EQUAL 64)
         eden_shared_jit_emitter()
     endif()
+    eden_fast_paths_emitter(${bits})
     write_derived("${PORT_BUILD_DIR}/a${bits}_emit_x64.cpp" "${emitter}")
     get_target_property(jit_sources dynarmic SOURCES)
     list(FILTER jit_sources EXCLUDE REGEX "(^|/)a${bits}_emit_x64\\.cpp$")
@@ -310,6 +328,7 @@ if(EDEN_SHARED_JIT)
 endif()
 if(PS5_NATIVE OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
     eden_reg_alloc_sources()
+    eden_fast_paths_sources()
 endif()
 
 # Patch lookup must not create a large empty record for every compiled block.
@@ -355,6 +374,10 @@ string(REPLACE "${scalar_write}" [=[    if (bitsize == 32 || bitsize == 64) {
 write_derived("${PORT_BUILD_DIR}/scalar_impl.cpp" "${scalar_source}")
 file(READ "${PROJECT_SOURCE_DIR}/src/dynarmic/src/${translator_relative}/a64_translate.cpp" translator)
 string(REPLACE "${translator_relative}/impl/impl.cpp" "${PORT_BUILD_DIR}/scalar_impl.cpp" translator "${translator}")
+if(EDEN_FAST_PATHS_SYSTEM)
+    eden_fast_paths_require("${translator}" "${translator_relative}/impl/system.cpp" "a64_translate.cpp system.cpp include")
+    string(REPLACE "${translator_relative}/impl/system.cpp" "${EDEN_FAST_PATHS_SYSTEM}" translator "${translator}")
+endif()
 write_derived("${PORT_BUILD_DIR}/a64_translate.cpp" "${translator}")
 get_target_property(jit_sources dynarmic SOURCES)
 list(FILTER jit_sources EXCLUDE REGEX "(^|/)a64_translate\\.cpp$")
@@ -399,6 +422,10 @@ if(fold_offset LESS 0)
 endif()
 file(READ "${EDEN_PORT_DIR}/scalar-fold.inc" scalar_fold)
 string(REPLACE "${fold_anchor}" "${fold_anchor}\n${scalar_fold}" optimizer "${optimizer}")
+# One page lookup for nearby A64 accesses (dynarmic/page-reuse.cmake).
+include("${CMAKE_CURRENT_LIST_DIR}/dynarmic/page-reuse.cmake")
+eden_page_reuse_opcodes()
+eden_page_reuse_optimizer()
 write_derived("${PORT_BUILD_DIR}/opt_passes.cpp" "${optimizer}")
 get_target_property(jit_sources dynarmic SOURCES)
 list(FILTER jit_sources EXCLUDE REGEX "(^|/)opt_passes\\.cpp$")
@@ -520,6 +547,7 @@ string(REPLACE "${mark_test}" [=[        if (*ctx.conf.page_table_marked_bit == 
     if(EDEN_SHARED_JIT)
         eden_shared_jit_memory_inc()
     endif()
+    eden_page_reuse_memory_inc()
     write_derived("${PORT_BUILD_DIR}/include/${memory_inc}" "${memory_source}")
 set(exclusive_lookup [=[template<typename EmitContext>
 Xbyak::RegExp EmitExclusiveVAddrLookup(BlockOfCode& code, EmitContext& ctx, size_t bitsize,
@@ -540,6 +568,26 @@ string(REPLACE "${fastmem_declaration}" "${exclusive_lookup}${fastmem_declaratio
 if(EDEN_SHARED_JIT)
     eden_shared_jit_memory_header()
 endif()
+# Ordered reads (LDAR, LDAPR, and every exclusive read: LDXR/LDAXR) were a locked RMW of zero
+# (lock xadd), ~20 cycles and a full barrier each; a game's job and object-table code runs them in
+# its hottest blocks. Under x86-TSO a naturally aligned 8-64-bit load is atomic and already has
+# acquire semantics, and ordered writes stay xchg (a full barrier), so a plain load keeps ARM's
+# STLR->LDAR order: the usual sequentially consistent mapping (load = mov, store = xchg). Exclusive
+# reads stay correct because misaligned ones leave for the callback and the exclusive write's
+# lock cmpxchg compares against the value read. 128-bit reads keep cmpxchg16b (a 16-byte load is
+# not atomic). dev-settings jit_plain_ordered_reads=off restores the locked read.
+set(ordered_read_old [=[const void* EmitReadMemoryMov(BlockOfCode& code, int value_idx, const Xbyak::RegExp& addr, bool ordered) {
+    if (ordered) {
+]=])
+string(FIND "${memory_emitter}" "${ordered_read_old}" ordered_read_at)
+if(ordered_read_at LESS 0)
+    message(FATAL_ERROR "Pinned EmitReadMemoryMov changed")
+endif()
+string(REPLACE "${ordered_read_old}" [=[const void* EmitReadMemoryMov(BlockOfCode& code, int value_idx, const Xbyak::RegExp& addr, bool ordered) {
+    if (ordered && (bitsize == 128 || !__atomic_load_n(&eden_plain_ordered_reads, __ATOMIC_RELAXED))) {
+]=] memory_emitter "${memory_emitter}")
+string(REPLACE "#pragma once\n" "#pragma once\nextern \"C\" bool eden_plain_ordered_reads;  // ProsperoEden (CMakeLists.txt, ordered reads)\n"
+    memory_emitter "${memory_emitter}")
 write_derived("${PORT_BUILD_DIR}/include/${memory_relative}" "${memory_emitter}")
 # New include overlays do not invalidate objects whose depfile still names
 # upstream headers. Derive both translation units so the first build cannot
@@ -550,6 +598,9 @@ foreach(bits 32 64)
     file(READ "${PROJECT_SOURCE_DIR}/src/dynarmic/src/dynarmic/backend/x64/${memory_unit}" memory_source)
     if(EDEN_SHARED_JIT)
         eden_shared_jit_memory_unit(${bits})
+    endif()
+    if(bits EQUAL 64)
+        eden_page_reuse_memory_unit()
     endif()
     write_derived("${PORT_BUILD_DIR}/${memory_unit}" "${memory_source}")
     list(FILTER jit_sources EXCLUDE REGEX "(^|/)a${bits}_emit_x64_memory\\.cpp$")
@@ -658,6 +709,14 @@ foreach(bits 32 64)
     set(relative "arm/dynarmic/arm_dynarmic_${bits}.cpp")
     file(READ "${PROJECT_SOURCE_DIR}/src/core/${relative}" wrapper)
     string(REPLACE "Common::PageTable::SIGN_BIT" "std::countl_zero(Common::PageTable::ATTRIBUTE_MASK)" wrapper "${wrapper}")
+    # The JIT's direct page table when the process has one (headless/jit-page-table.cmake).
+    set(direct_anchor "            config.page_table_sign_extension = std::uint8_t(std::countl_zero(Common::PageTable::ATTRIBUTE_MASK));\n        }\n")
+    string(FIND "${wrapper}" "${direct_anchor}" direct_at)
+    if(direct_at LESS 0)
+        message(FATAL_ERROR "Pinned page-table JIT configuration changed (${bits})")
+    endif()
+    string(REPLACE "${direct_anchor}" "${direct_anchor}        if (void* const direct = page_table->DirectTable()) {\n            config.page_table = reinterpret_cast<decltype(config.page_table)>(direct);\n            config.page_table_pointer_mask = 0;\n            config.page_table_marked_bit = std::nullopt;\n            config.page_table_sign_extension = std::nullopt;\n        }\n"
+        wrapper "${wrapper}")
     # Without fastmem every LDREX/STREX left JIT code through a callback under the
     # global monitor lock (~7,000 pairs/frame in a measured racing game). The exclusive
     # emitter patch below supports page-table addresses; eden-memory-check covers
@@ -705,8 +764,9 @@ foreach(bits 32 64)
     set(derived "${PORT_BUILD_DIR}/arm_dynarmic_${bits}.cpp")
     # The overlay's four core loads (performance.h, SampleCoreCpu): each core reads its own CPU
     # time after a run when the overlay has asked, which on the console only the thread itself
-    # can. The development build reads more at the same place (SampleCpu, below).
-    if(NOT EDEN_DEV_PROFILE)
+    # can. The development build reads more at the same place (SampleCpu, below). Only the
+    # console's app has the overlay and links performance.cpp; the PC checks link this core without it.
+    if(PS5_NATIVE AND NOT EDEN_DEV_PROFILE)
         string(PREPEND wrapper "#include \"${EDEN_PORT_DIR}/performance.h\"
 ")
         set(core_run_site "    return TranslateHaltReason(m_jit->Run());")
@@ -875,6 +935,17 @@ list(REMOVE_ITEM core_sources "core_timing.cpp")
 list(APPEND core_sources "${PORT_BUILD_DIR}/core_timing.cpp")
 list(REMOVE_ITEM core_sources "hle/kernel/physical_core.cpp")
 list(APPEND core_sources "${PORT_BUILD_DIR}/physical_core.cpp")
+# Guest kernel spin locks spin before blocking (performance.h kernel_spin_iterations).
+file(READ "${PROJECT_SOURCE_DIR}/src/core/hle/kernel/k_spin_lock.cpp" spin_source)
+set(spin_old "void KSpinLock::Lock() {\n    m_lock.lock();\n}")
+string(FIND "${spin_source}" "${spin_old}" spin_at)
+if(spin_at LESS 0)
+    message(FATAL_ERROR "Pinned KSpinLock::Lock changed")
+endif()
+string(REPLACE "${spin_old}" "void KSpinLock::Lock() {\n    ::Eden::Performance::SpinAcquire(m_lock);\n}" spin_source "${spin_source}")
+write_derived("${PORT_BUILD_DIR}/k_spin_lock.cpp" "#include \"${EDEN_PORT_DIR}/performance.h\"\n${spin_source}")
+list(REMOVE_ITEM core_sources "hle/kernel/k_spin_lock.cpp")
+list(APPEND core_sources "${PORT_BUILD_DIR}/k_spin_lock.cpp")
 if(EDEN_DEV_PROFILE)
     # Guest-visible waits: syncpoint event registration to signal (GPU-pipeline latency
     # the game waits on) and buffer-queue dequeue waits (presentation back-pressure).
@@ -885,7 +956,26 @@ if(EDEN_DEV_PROFILE)
         message(FATAL_ERROR "Pinned nvhost_ctrl event wait changed")
     endif()
     string(REPLACE "${ctrl_old}" "    const auto wait_start = ::Eden::Performance::NowNs();\n    event.wait_handle =\n        host1x_syncpoint_manager.RegisterHostAction(fence_id, target_value, [this, slot, wait_start]() {\n            ::Eden::Performance::AddSince(::Eden::Performance::guest_sync_wait, wait_start);\n            auto& event_ = events[slot];" ctrl_source "${ctrl_source}")
-    write_derived("${PORT_BUILD_DIR}/nvhost_ctrl.cpp" "#include \"${EDEN_PORT_DIR}/performance.h\"\n${ctrl_source}")
+    # Development: Eden stalls the guest when a syncpoint event wait failed three times; log the
+    # stall and its length (a stall that never ends leaves only the begin line).
+    set(stall_old [=[                auto lk = system.StallApplication();
+                host1x_syncpoint_manager.WaitHost(fence_id, target_value);
+                system.UnstallApplication();
+]=])
+    string(FIND "${ctrl_source}" "${stall_old}" stall_at)
+    if(stall_at LESS 0)
+        message(FATAL_ERROR "Pinned nvhost_ctrl stall changed")
+    endif()
+    string(REPLACE "${stall_old}" [=[                const long long stall_start = ::Eden::Performance::NowNs();
+                std::fprintf(stderr, "EDEN_GPU_STALL begin fence=%u target=%u fails=%u mono_ns=%lld\n",
+                             unsigned(fence_id), unsigned(target_value), unsigned(events[slot].fails), stall_start);
+                auto lk = system.StallApplication();
+                host1x_syncpoint_manager.WaitHost(fence_id, target_value);
+                system.UnstallApplication();
+                std::fprintf(stderr, "EDEN_GPU_STALL end fence=%u ms=%lld\n", unsigned(fence_id),
+                             (::Eden::Performance::NowNs() - stall_start) / 1000000);
+]=] ctrl_source "${ctrl_source}")
+    write_derived("${PORT_BUILD_DIR}/nvhost_ctrl.cpp" "#include <cstdio>\n#include \"${EDEN_PORT_DIR}/performance.h\"\n${ctrl_source}")
     list(REMOVE_ITEM core_sources "hle/service/nvdrv/devices/nvhost_ctrl.cpp")
     list(APPEND core_sources "${PORT_BUILD_DIR}/nvhost_ctrl.cpp")
     set(producer_old "        Status status = WaitForFreeSlotThenRelock(async, &found, &return_flags, lock);")
@@ -988,9 +1078,69 @@ if(EDEN_DEV_PROFILE)
     list(REMOVE_ITEM core_sources "hle/kernel/svc/svc_ipc.cpp")
     list(APPEND core_sources "${PORT_BUILD_DIR}/svc_ipc.cpp")
 endif()
+file(READ "${PROJECT_SOURCE_DIR}/src/core/memory.cpp" arena_source)
+# An unmap zeroes the entries directly: zero the JIT's direct values first (jit-page-table.cmake).
+set(unmap_old "            page_table.entries.ZeroRegion(base, end);\n")
+string(FIND "${arena_source}" "${unmap_old}" unmap_at)
+if(unmap_at LESS 0)
+    message(FATAL_ERROR "Pinned page-table unmap changed")
+endif()
+string(REPLACE "${unmap_old}" "            if (const auto mirror = page_table.entries.mirror_index; mirror != 0)\n                page_table.entries.ZeroRegion(base + mirror, end + mirror);\n${unmap_old}"
+    arena_source "${arena_source}")
+# Development: guest writes to GPU-tracked pages in detail (performance.h CpuWriteDetail).
+set(tracked_old [=[        gpu_device_memory->ApplyOpOnPointer(p, scratch_buffers[core], [&](DAddr address) {
+            auto& current_area = rasterizer_write_areas[core];
+            PAddr subaddress = address >> YUZU_PAGEBITS;
+]=])
+set(tracked_new [=[        const bool detail = ::Eden::Performance::cpu_write_detail.load(std::memory_order_relaxed);
+        auto& stats = ::Eden::Performance::cpu_write_stats[core];
+        const long long detail_start = detail ? ::Eden::Performance::NowNs() : 0;
+        SCOPE_EXIT {
+            if (detail) {
+                stats.tracked.fetch_add(1, std::memory_order_relaxed);
+                stats.tracked_ns.fetch_add(::Eden::Performance::NowNs() - detail_start, std::memory_order_relaxed);
+            }
+        };
+        ::Eden::Performance::cpu_write_core = static_cast<unsigned>(core);
+        gpu_device_memory->ApplyOpOnPointer(p, scratch_buffers[core], [&](DAddr address) {
+            auto& current_area = rasterizer_write_areas[core];
+            PAddr subaddress = address >> YUZU_PAGEBITS;
+            if (detail && current_area.last_address == subaddress)
+                stats.passed.fetch_add(1, std::memory_order_relaxed);
+            if (detail && current_area.last_address != subaddress) {
+                stats.sizes[size <= 8 ? 0 : size <= 64 ? 1 : size <= 4096 ? 2 : 3].fetch_add(1, std::memory_order_relaxed);
+                if (stats.last_page == subaddress)
+                    stats.same_page.fetch_add(1, std::memory_order_relaxed);
+                else if (stats.last_page + 1 == subaddress)
+                    stats.next_page.fetch_add(1, std::memory_order_relaxed);
+                stats.last_page = subaddress;
+            }
+]=])
+set(collect_old [=[                if (do_collection) {
+                    current_area.last_address = subaddress;
+                } else {
+                    return;
+                }
+]=])
+set(collect_new [=[                if (do_collection) {
+                    current_area.last_address = subaddress;
+                } else {
+                    if (detail && current_page_table->entries.GetUnchecked(v_address >> YUZU_PAGEBITS).Type() ==
+                                      Common::PageType::RasterizerCachedMemory)
+                        stats.still_tracked.fetch_add(1, std::memory_order_relaxed);
+                    return;
+                }
+]=])
+foreach(pair IN ITEMS tracked collect)
+    string(FIND "${arena_source}" "${${pair}_old}" pair_at)
+    if(pair_at LESS 0)
+        message(FATAL_ERROR "Pinned HandleRasterizerWrite changed (${pair})")
+    endif()
+    string(REPLACE "${${pair}_old}" "${${pair}_new}" arena_source "${arena_source}")
+endforeach()
+string(PREPEND arena_source "#include \"${EDEN_PORT_DIR}/performance.h\"\n")
 if(EDEN_A32_FASTMEM)
     # The window spans 4 GiB: only 32-bit applications get it as their fastmem arena.
-    file(READ "${PROJECT_SOURCE_DIR}/src/core/memory.cpp" arena_source)
     set(arena_old "        if (process.IsApplication() && Settings::IsFastmemEnabled()) {")
     string(FIND "${arena_source}" "${arena_old}" arena_at)
     if(arena_at LESS 0)
@@ -998,10 +1148,10 @@ if(EDEN_A32_FASTMEM)
     endif()
     string(REPLACE "${arena_old}" "        if (process.IsApplication() && !process.Is64Bit() && Settings::IsFastmemEnabled()) {"
         arena_source "${arena_source}")
-    write_derived("${PORT_BUILD_DIR}/memory.cpp" "${arena_source}")
-    list(REMOVE_ITEM core_sources "memory.cpp")
-    list(APPEND core_sources "${PORT_BUILD_DIR}/memory.cpp")
 endif()
+write_derived("${PORT_BUILD_DIR}/memory.cpp" "${arena_source}")
+list(REMOVE_ITEM core_sources "memory.cpp")
+list(APPEND core_sources "${PORT_BUILD_DIR}/memory.cpp")
 # Where a game's code is loaded: at a random offset, or at the one the game's seed gives
 # (load_address.h). Upstream takes the seed from its RNG seed setting, which also seeds the
 # random numbers a game is given; the port's seed fixes the offset alone.
@@ -1349,7 +1499,30 @@ set_property(TARGET core PROPERTY SOURCES "${core_sources}")
 # published for the renderer: frames a display has no refresh for are not presented
 # (headless/display_refresh.h).
 file(READ "${PROJECT_SOURCE_DIR}/src/core/hle/service/vi/conductor.cpp" conductor_source)
-string(PREPEND conductor_source "#include \"${EDEN_PORT_DIR}/display_refresh.h\"\n")
+# Vsync composition delay (every build, multicore; performance.h compose_delay_us): signal the
+# guest vsync first and compose later, so a frame the game queues in response to the vsync is
+# latched at that same vsync.
+set(compose_old "    for (auto& [display_id, manager] : m_vsync_managers) {
+        m_container.ComposeOnDisplay(&m_swap_interval, &m_compose_speed_scale, display_id);
+        manager.SignalVsync(m_system.Kernel());
+    }")
+string(FIND "${conductor_source}" "${compose_old}" compose_at)
+if(compose_at LESS 0)
+    message(FATAL_ERROR "Pinned VI conductor composition loop changed")
+endif()
+string(REPLACE "${compose_old}" "    if (const int compose_delay = ::Eden::Performance::compose_delay_us.load(std::memory_order_relaxed);
+        compose_delay > 0 && m_system.IsMulticore()) {
+        for (auto& [display_id, manager] : m_vsync_managers) {
+            manager.SignalVsync(m_system.Kernel());
+        }
+        std::this_thread::sleep_for(std::chrono::microseconds(compose_delay));
+        for (auto& [display_id, manager] : m_vsync_managers) {
+            m_container.ComposeOnDisplay(&m_swap_interval, &m_compose_speed_scale, display_id);
+        }
+        return;
+    }
+${compose_old}" conductor_source "${conductor_source}")
+string(PREPEND conductor_source "#include \"${EDEN_PORT_DIR}/display_refresh.h\"\n#include <thread>\n#include \"${EDEN_PORT_DIR}/performance.h\"\n")
 eden_patch(conductor_source
     "    const f32 effective_fps = 60.f / static_cast<f32>(m_swap_interval);\n    return static_cast<s64>(speed_scale * (1000000000.f / effective_fps));"
     "    const f32 effective_fps = 60.f / static_cast<f32>(m_swap_interval);\n    ::Eden::Display::game_millihertz.store(static_cast<int>(effective_fps * 1000.f / speed_scale),\n                                           std::memory_order_relaxed);\n    return static_cast<s64>(speed_scale * (1000000000.f / effective_fps));")
@@ -1944,6 +2117,17 @@ endif()
 string(REPLACE "${npad_update}"
     "        auto& controller = controller_data[aruid_index][controller_idx];\n        if (controller.device == nullptr) {\n            continue;  // ProsperoEden: this applet resource is not activated yet\n        }\n        const auto is_connected = controller.device->IsConnected();"
     npad_source "${npad_source}")
+# Since 67bada77 the NPad registers its controller callbacks in its constructor, before the HID
+# service hands it an applet resource: a motion sample from the pad thread in that window called
+# through the null resource (page fault in NPad::ControllerUpdate at boot, seen on the console).
+set(npad_entry "void NPad::ControllerUpdate(Kernel::KernelCore& kernel, Core::HID::ControllerTriggerType type, std::size_t controller_idx) {\n")
+string(FIND "${npad_source}" "${npad_entry}" npad_entry_at)
+if(npad_entry_at LESS 0)
+    message(FATAL_ERROR "Pinned NPad::ControllerUpdate changed")
+endif()
+string(REPLACE "${npad_entry}"
+    "${npad_entry}    if (applet_resource_holder.applet_resource == nullptr) {\n        return;  // ProsperoEden: the HID service has not set this NPad up yet\n    }\n"
+    npad_source "${npad_source}")
 write_derived("${PORT_BUILD_DIR}/npad.cpp" "${npad_source}")
 get_target_property(npad_sources hid_core SOURCES)
 list(FILTER npad_sources EXCLUDE REGEX "(^|/)npad\\.cpp$")
@@ -2093,8 +2277,11 @@ if(EDEN_PS5_OPENGL)
         list(APPEND video_sources "${MACRO_OUTPUT}")
     endif()
     file(READ "${PROJECT_SOURCE_DIR}/src/video_core/gpu_thread.h" gpu_thread_header)
+    # 256 entries (upstream: 4096). With 8, a heavy scene (a 3D platformer, ~37 submissions a
+    # frame) filled the queue mid-frame: the guest's render thread waited 0.6-0.8 s of every 5 s
+    # while the GPU worker sat idle 44% of the time, and the game dropped to 40-45 FPS.
     string(REPLACE "using CommandQueue = Common::SPSCQueue<CommandDataContainer>;"
-        "using CommandQueue = Common::SPSCQueue<CommandDataContainer, 8>;"
+        "using CommandQueue = Common::SPSCQueue<CommandDataContainer, 256>;"
         gpu_thread_header "${gpu_thread_header}")
     string(REPLACE "    ~ThreadManager();" "    ~ThreadManager();\n    void Stop() { thread.request_stop(); if (thread.joinable()) thread.join(); }" gpu_thread_header "${gpu_thread_header}")
     if(PS5_NATIVE)
@@ -2195,6 +2382,68 @@ if(EDEN_PS5_OPENGL)
         string(REPLACE "        sync_cv.wait(lk, [this]() { return synced; });"
             "        while (!synced && !system.IsShuttingDown())\n            sync_cv.wait_for(lk, std::chrono::milliseconds(10));\n        if (system.IsShuttingDown()) return false;" command_source "${command_source}")
         string(REPLACE "    while (word != value) {" "    while (word != value && !dma_pusher.system.IsShuttingDown()) {" command_source "${command_source}")
+        if(unit STREQUAL "dma_pusher")
+            # Guest writes queued while a cache lock was held (performance.h cpu_write_defer) reach the
+            # caches before the GPU thread runs work submitted after them (FlushCaching runs the queue).
+            set(dispatch_old "void DmaPusher::DispatchCalls() {\n")
+            string(FIND "${command_source}" "${dispatch_old}" dispatch_at)
+            if(dispatch_at LESS 0)
+                message(FATAL_ERROR "Pinned DmaPusher::DispatchCalls changed")
+            endif()
+            string(REPLACE "${dispatch_old}" [=[void DmaPusher::DispatchCalls() {
+    if (::Eden::Performance::gpu_dirty_pending.load(std::memory_order_relaxed)) {
+        memory_manager.FlushCaching();
+    }
+]=] command_source "${command_source}")
+            # Incrementing runs of store-only registers go to the engine's method sink in one pass
+            # (performance.h dma_batch); the first word that starts engine work, the puller's
+            # methods, increase-once writes and engines missing from the subchannel stay per word.
+            set(dma_word [=[        } else if (dma_state.method_count) {
+            auto const command_header = commands[index]; //can copy
+]=])
+            string(FIND "${command_source}" "${dma_word}" dma_word_at)
+            if(dma_word_at LESS 0)
+                message(FATAL_ERROR "Pinned DmaPusher::ProcessCommands changed")
+            endif()
+            if(EDEN_DEV_PROFILE)
+                set(dma_count_run [=[
+                    ::Eden::Performance::dma_batch_runs.store(::Eden::Performance::dma_batch_runs.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
+                    ::Eden::Performance::dma_batch_words.store(::Eden::Performance::dma_batch_words.load(std::memory_order_relaxed) + run, std::memory_order_relaxed);]=])
+                set(dma_count_word [=[
+            ::Eden::Performance::dma_single_words.store(::Eden::Performance::dma_single_words.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);]=])
+            else()
+                set(dma_count_run "")
+                set(dma_count_word "")
+            endif()
+            string(REPLACE "${dma_word}" "        } else if (dma_state.method_count) {
+            if (!dma_increment_once && dma_state.method >= non_puller_methods &&
+                ::Eden::Performance::dma_batch.load(std::memory_order_relaxed)) {
+                auto* const engine = subchannels[dma_state.subchannel];
+                if (engine) {
+                    const auto& mask = engine->execution_mask;
+                    const u32 available = u32(std::min<std::size_t>(dma_state.method_count, commands.size() - index));
+                    const u32 limit = dma_state.method < mask.size()
+                        ? u32(std::min<std::size_t>(available, mask.size() - dma_state.method)) : 0;
+                    u32 run = 0;
+                    while (run < limit && !mask[dma_state.method + run])
+                        ++run;
+                    if (run != 0) {
+                        auto& sink = engine->method_sink;
+                        for (u32 i = 0; i < run; ++i)
+                            sink.emplace_back(dma_state.method + i, commands[index + i].argument);
+                        dma_state.method += run;
+                        dma_state.method_count -= run;
+                        index += run;
+${dma_count_run}
+                        continue;
+                    }
+                }
+            }
+${dma_count_word}
+            auto const command_header = commands[index]; //can copy
+" command_source "${command_source}")
+            string(PREPEND command_source "#include <atomic>\n#include \"${EDEN_PORT_DIR}/performance.h\"\n")
+        endif()
         string(PREPEND command_source "#include <chrono>\n")
         string(REPLACE "/" "_" unit_name "${unit}")
         write_derived("${PORT_BUILD_DIR}/${unit_name}.cpp" "${command_source}")
@@ -2221,6 +2470,40 @@ if(EDEN_PS5_OPENGL)
 endif()
 write_derived("${PORT_BUILD_DIR}/gpu.cpp" "${gpu_source}")
 list(APPEND video_sources "${PORT_BUILD_DIR}/gpu.cpp")
+# Guest writes queued while a cache lock was held (performance.h cpu_write_defer) run before the next
+# draw, clear, dispatch or engine copy: the GPU thread calls FlushCaching first in each, so the caches
+# see them no later than had the guest waited for the lock.
+file(READ "${PROJECT_SOURCE_DIR}/src/video_core/memory_manager.cpp" gpu_memory_source)
+set(flush_caching_old "void MemoryManager::FlushCaching() {\n")
+string(FIND "${gpu_memory_source}" "${flush_caching_old}" flush_caching_at)
+if(flush_caching_at LESS 0)
+    message(FATAL_ERROR "Pinned MemoryManager::FlushCaching changed")
+endif()
+string(REPLACE "#include \"memory_manager.h\"\n" "" gpu_memory_source "${gpu_memory_source}")
+string(REPLACE "${flush_caching_old}" [=[void MemoryManager::FlushCaching() {
+    if (::Eden::Performance::gpu_dirty_pending.load(std::memory_order_relaxed) &&
+        ::Eden::Performance::gpu_dirty_pending.exchange(false, std::memory_order_acq_rel)) {
+        ::Eden::Performance::gpu_dirty_replays.fetch_add(1, std::memory_order_relaxed);
+        for (unsigned core = 0; core < 4; ++core) {
+            for (const auto& write : ::Eden::Performance::TakeDeferredWrites(core)) {
+                if (rasterizer->OnCPUWrite(write.address, write.end - write.address)) {
+                    // Collect represents 32 x 64-byte blocks, not an entire device page.
+                    constexpr u64 region_size = 1ULL << (Core::DEVICE_PAGEBITS - 1);
+                    for (u64 address = write.address; address < write.end;) {
+                        const u64 size = std::min<u64>(write.end - address,
+                                                  region_size - (address & (region_size - 1)));
+                        system.GetGPUDirtyMemoryManager()[core].Collect(address, size);
+                        address += size;
+                    }
+                }
+            }
+        }
+    }
+]=] gpu_memory_source "${gpu_memory_source}")
+write_derived("${PORT_BUILD_DIR}/memory_manager.cpp"
+    "#include <atomic>\n#include \"${EDEN_PORT_DIR}/performance.h\"\n#include \"core/core.h\"\n#include \"core/gpu_dirty_memory_manager.h\"\n${gpu_memory_source}")
+list(REMOVE_ITEM video_sources memory_manager.cpp)
+list(APPEND video_sources "${PORT_BUILD_DIR}/memory_manager.cpp")
 if(EDEN_DEV_PROFILE)
     # Render-enable evaluations per mode and result (EDEN_DEV_GUEST cond=), to tell GPU
     # render conditions apart from the game's own LOD choices (LOD swaps).

@@ -253,7 +253,7 @@ struct Home
     std::string last_language;
     int last_mods = 0;
     int last_mods_on = 0;
-    std::vector<Recent> recents; // at most four
+    std::vector<Recent> recents; // at most eight
     std::string system_status;
 };
 
@@ -273,6 +273,36 @@ inline ButtonMapping assign_button(ButtonMapping mapping, int game, int pad)
             mapping[static_cast<std::size_t>(other)] = mapping[static_cast<std::size_t>(game)];
     mapping[static_cast<std::size_t>(game)] = pad;
     return mapping;
+}
+
+// The launcher's own menu buttons (Settings > Controls > Menu keybinds): which face button presses
+// each core menu action. Only the four face buttons take part, each once; the D-pad, the shoulders
+// and Options stay fixed (headless/button_mapping.h). The action order is select, back, secondary,
+// game settings, matching Key's first four (cross, circle, square, triangle).
+constexpr int kMenuActions = 4;
+using MenuBinding = std::array<int, kMenuActions>; // menu action -> face button (Cross 0 Triangle 3)
+constexpr MenuBinding kDefaultMenuBinding = {0, 1, 2, 3};
+// The menu action a pressed face button means under this binding; the buttons that are not part of
+// it pass through unchanged.
+inline Key menu_key_for(Key pressed, const MenuBinding &binding)
+{
+    const int physical = static_cast<int>(pressed);
+    if (physical < 0 || physical >= kMenuActions)
+        return pressed;
+    for (int action = 0; action < kMenuActions; ++action)
+        if (binding[static_cast<std::size_t>(action)] == physical)
+            return static_cast<Key>(action);
+    return pressed;
+}
+// An action takes the face button; the action that had it gets this one's old one.
+inline MenuBinding assign_menu(MenuBinding binding, int action, int pad)
+{
+    if (action < 0 || action >= kMenuActions || pad < 0 || pad >= kMenuActions) return binding;
+    for (int other = 0; other < kMenuActions; ++other)
+        if (other != action && binding[static_cast<std::size_t>(other)] == pad)
+            binding[static_cast<std::size_t>(other)] = binding[static_cast<std::size_t>(action)];
+    binding[static_cast<std::size_t>(action)] = pad;
+    return binding;
 }
 
 // One of the people who play on this console.
@@ -312,6 +342,7 @@ struct Preferences
     int language = 0;
     int menu_volume = 70; // launcher sounds, 0-100
     std::string theme = "canopy"; // the launcher's look (theme.hpp); one this build lacks reads as the first
+    std::string accent;           // Settings > Colour: one of the theme's accent presets ("": its own colours)
     // Accessibility: how the launcher itself is shown (theme.hpp, Look).
     bool large_text = false;
     bool high_contrast = false;
@@ -333,8 +364,10 @@ struct Preferences
     int hud_corner = 0; // 0 top left, 1 top right, 2 bottom left, 3 bottom right
     bool hud_colors = true;  // the line in its inks rather than one
     // What the overlay's line may say, bit by bit (hud.h's kHudField*): the pieces the user has
-    // chosen to show. All of them by default.
-    int hud_fields = 0xff;
+    // chosen to show. All of them by default, the game's own resolution (bit 9) with the rest.
+    int hud_fields = 0x2ff;
+    // Which face button presses each core menu action (Settings > Controls > Menu keybinds).
+    MenuBinding menu_bind = kDefaultMenuBinding;
 };
 
 // What one game does differently from Settings (Library > Game settings). Each value is -1 while

@@ -1,0 +1,156 @@
+--- a/src/common/fs/file.h
++++ b/src/common/fs/file.h
+@@ -289,6 +289,14 @@
+     }
+ 
+     /**
++     * Reads length bytes at offset without the stdio buffer (which splits a read into
++     * buffer-sized system calls) and without moving the file pointer.
++     *
++     * @returns Count of bytes successfully read.
++     */
++    [[nodiscard]] size_t ReadAt(void* data, size_t length, s64 offset) const;
++
++    /**
+      * Writes a span of T data to a file sequentially.
+      * This function writes from the current position of the file pointer and
+      * advances it by the (count of T * sizeof(T)) bytes successfully written.
+--- a/src/common/fs/file.cpp
++++ b/src/common/fs/file.cpp
+@@ -427,6 +427,33 @@
+     return file_size;
+ }
+ 
++size_t IOFile::ReadAt(void* data, size_t length, s64 offset) const {
++    if (!IsOpen()) {
++        return 0;
++    }
++#ifdef _WIN32
++    if (fseeko(file, offset, SEEK_SET) != 0) {
++        return 0;
++    }
++    return std::fread(data, 1, length, file);
++#else
++    const int fd = fileno(file);
++    size_t done = 0;
++    while (done < length) {
++        const auto got = pread(fd, static_cast<u8*>(data) + done, length - done,
++                               static_cast<off_t>(offset + static_cast<s64>(done)));
++        if (got < 0 && errno == EINTR) {
++            continue;
++        }
++        if (got <= 0) {
++            break;
++        }
++        done += static_cast<size_t>(got);
++    }
++    return done;
++#endif
++}
++
+ bool IOFile::Seek(s64 offset, SeekOrigin origin) const {
+     if (!IsOpen()) {
+         return false;
+--- a/src/core/file_sys/vfs/vfs_real.h
++++ b/src/core/file_sys/vfs/vfs_real.h
+@@ -10,6 +10,7 @@
+ #include <mutex>
+ #include <optional>
+ #include <string_view>
++#include <vector>
+ #include "common/intrusive_list.h"
+ #include "core/file_sys/fs_filesystem.h"
+ #include "core/file_sys/vfs/vfs.h"
+@@ -22,6 +23,15 @@
+ 
+ struct FileReference : public Common::IntrusiveListBaseNode<FileReference> {
+     std::shared_ptr<Common::FS::IOFile> file{};
++    // Read-only files: recently read 1 MiB blocks. Each system call on the console's storage
++    // costs about the same whatever its size, so a game's small reads are served from whole blocks.
++    struct Block {
++        u64 index;
++        u64 used;
++        std::vector<u8> data;
++    };
++    std::vector<Block> blocks{};
++    u64 block_clock{};
+ };
+ 
+ class RealVfsFile;
+--- a/src/core/file_sys/vfs/vfs_real.cpp
++++ b/src/core/file_sys/vfs/vfs_real.cpp
+@@ -6,9 +6,11 @@
+ 
+ #include <algorithm>
+ #include <cstddef>
++#include <cstring>
+ #include <iterator>
+ #include <utility>
+ #include "common/assert.h"
++#include "common/literals.h"
+ #include "common/fs/file.h"
+ #include "common/fs/fs.h"
+ #include "common/fs/path_util.h"
+@@ -332,12 +334,60 @@
+     return True(perms & OpenMode::Read);
+ }
+ 
++using namespace Common::Literals;
++
++namespace {
++constexpr std::size_t ReadBlockSize = 1_MiB;
++constexpr std::size_t ReadBlocksPerFile = 8;
++} // namespace
++
+ std::size_t RealVfsFile::Read(u8* data, std::size_t length, std::size_t offset) const {
+     auto lk = base.RefreshReference(path, perms, *reference);
+-    if (!reference->file || !reference->file->Seek(static_cast<s64>(offset))) {
++    if (!reference->file) {
+         return 0;
+     }
+-    return reference->file->ReadSpan(std::span{data, length});
++    if (True(perms & OpenMode::Write)) {
++        // Writable files keep stdio's buffered view, which has their unflushed writes.
++        if (!reference->file->Seek(static_cast<s64>(offset))) {
++            return 0;
++        }
++        return reference->file->ReadSpan(std::span{data, length});
++    }
++    if (length >= ReadBlockSize) {
++        return reference->file->ReadAt(data, length, static_cast<s64>(offset));
++    }
++    std::size_t done = 0;
++    while (done < length) {
++        const u64 position = offset + done;
++        const u64 index = position / ReadBlockSize;
++        auto& blocks = reference->blocks;
++        auto block = std::find_if(blocks.begin(), blocks.end(),
++                                  [index](const auto& entry) { return entry.index == index; });
++        if (block == blocks.end()) {
++            if (blocks.size() < ReadBlocksPerFile) {
++                block = blocks.emplace(blocks.end());
++            } else {
++                block = std::min_element(blocks.begin(), blocks.end(),
++                                         [](const auto& a, const auto& b) { return a.used < b.used; });
++            }
++            block->index = index;
++            block->data.resize(ReadBlockSize);
++            block->data.resize(reference->file->ReadAt(block->data.data(), ReadBlockSize,
++                                                       static_cast<s64>(index * ReadBlockSize)));
++        }
++        block->used = ++reference->block_clock;
++        const u64 start = position - index * ReadBlockSize;
++        if (start >= block->data.size()) {
++            break;
++        }
++        const std::size_t count = std::min<std::size_t>(length - done, block->data.size() - start);
++        std::memcpy(data + done, block->data.data() + start, count);
++        done += count;
++        if (block->data.size() < ReadBlockSize) {
++            break;
++        }
++    }
++    return done;
+ }
+ 
+ std::size_t RealVfsFile::Write(const u8* data, std::size_t length, std::size_t offset) {

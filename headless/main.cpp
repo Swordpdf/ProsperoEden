@@ -28,6 +28,7 @@
 #include <cstdlib>
 #include <mutex>
 #include <thread>
+#include <bit>
 #include <new>
 #include <string_view>
 #include <stdexcept>
@@ -96,6 +97,7 @@ extern "C" std::int32_t sceKernelAvailableFlexibleMemorySize(std::size_t*);
 #pragma GCC diagnostic pop
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-private-field"
+#include "common/page_table.h"
 #include "core/hle/kernel/k_process.h"  // every build: the game's code address (jit_list.h)
 #ifdef PS5_NATIVE
 #include "core/hle/kernel/k_thread.h"
@@ -107,6 +109,14 @@ extern "C" std::int32_t sceKernelAvailableFlexibleMemorySize(std::size_t*);
 #include "core/arm/debug.h"
 #include "core/memory.h"
 extern "C" bool eden_jit_shared;  // headless/dynarmic/jit_group_support.inc
+extern "C" bool eden_page_reuse;  // headless/dynarmic/page_reuse_pass.inc
+extern "C" unsigned long long eden_page_reuse_groups, eden_page_reuse_accesses;
+extern "C" bool eden_free_moves;  // headless/dynarmic/reg_alloc.cmake
+extern "C" bool eden_alloc_r13;  // headless/dynarmic/reg_alloc.cmake
+extern "C" bool eden_plain_ordered_reads;  // headless/CMakeLists.txt
+extern "C" unsigned long long eden_free_moves_done, eden_free_moves_spilled;
+extern "C" bool eden_fcmp_adc, eden_light_dmb, eden_checkbit_flags;  // headless/dynarmic/fast_paths.cmake
+extern "C" unsigned long long eden_dmb_dropped, eden_checkbit_fused;
 #endif
 #include "video_core/gpu.h"
 #ifdef EDEN_PS5_FRAMEGEN
@@ -136,6 +146,34 @@ public:
 // First start with filesystem access: copy what the sandbox kept (settings, covers, Eden's saves
 // and caches) into /data/prosperoeden. Only folders that do not exist yet are filled, and the
 // sandbox copy stays, so an older ProsperoEden still finds its data.
+// dev-settings jit_table_check=on: the JIT's direct page table (headless/jit-page-table.cmake) must
+// hold, for every page, the pointer of Eden's entry, or 0 where the entry is marked or empty. A
+// difference that is still there when read again is a write path that missed the direct table.
+[[maybe_unused]] static bool jit_table_check = false;
+[[maybe_unused]] static void CheckDirectTable(Common::PageTable& table) {
+    const std::size_t mirror = table.entries.mirror_index;
+    if (mirror == 0) return;
+    using Entry = Common::PageTable::PageEntryData;
+    const auto* raw = reinterpret_cast<const volatile std::uint64_t*>(table.entries.data());
+    const auto expected = [](std::uint64_t entry) {
+        return std::uint64_t(Entry::ExtractPointer(std::bit_cast<Entry::Data>(entry)));
+    };
+    const std::size_t count = std::size_t{1} << (table.GetAddressSpaceBits() - 12);
+    std::size_t pages = 0, mismatches = 0;
+    for (std::size_t page = 0; page < count; ++page) {
+        if (raw[page] == 0 && raw[mirror + page] == 0) continue;
+        ++pages;
+        if (expected(raw[page]) == raw[mirror + page]) continue;
+        std::this_thread::yield(); // an update may be between its two stores
+        const std::uint64_t entry = raw[page], direct = raw[mirror + page];
+        if (expected(entry) == direct) continue;
+        if (++mismatches <= 8)
+            std::printf("EDEN_JIT_TABLE mismatch page=%zx entry=%llx direct=%llx\n", page,
+                        static_cast<unsigned long long>(entry), static_cast<unsigned long long>(direct));
+    }
+    std::printf("EDEN_JIT_TABLE check pages=%zu mismatches=%zu\n", pages, mismatches);
+}
+
 static void MigrateSandboxData() {
     const std::filesystem::path sandbox{"/mnt/sandbox/PPSA99008_000/download0"};
     const std::pair<std::filesystem::path, std::string> moves[] = {
@@ -764,6 +802,7 @@ int main(int argc, char** argv) {
         Settings::values.memory_layout_mode = Settings::MemoryLayout::Memory_4Gb;
         // A development run that names jit_list in dev-settings decides the block list by itself.
         [[maybe_unused]] bool dev_block_list = false;  // read where a session applies its settings
+        [[maybe_unused]] int dev_vertex_input = -1;  // likewise: dev-settings vertex_input_dynamic=off/on
 #ifdef EDEN_DEV_PROFILE
         // One-run A/B switches written by the development runner; absent = defaults.
         {
@@ -775,23 +814,59 @@ int main(int argc, char** argv) {
                     Eden::Performance::SetSecondaryPlacement(false);
                 } else if (entry == "fastmem=off" || entry == "fastmem=on") {
                     Eden::Fastmem::Request(entry.ends_with("on"));
+                } else if (entry == "jit_table=off") {
+                    // The JIT reads Eden's packed page table instead of the direct one
+                    // (headless/jit-page-table.cmake). Read when the first page table is sized.
+                    Common::PageTable::direct_tables_requested = false;
+                } else if (entry == "jit_table_check=on") {
+                    // Every 30 s compare the direct table with Eden's entries (EDEN_JIT_TABLE check).
+                    jit_table_check = true;
+                } else if (entry == "cpu_write_detail=on") {
+                    // EDEN_DEV_CPUWRITE: guest writes to GPU-tracked pages broken down per core.
+                    Eden::Performance::cpu_write_detail = true;
+                } else if (entry.starts_with("cpu_write_ahead=")) {
+                    // Buffer pages after a tracked write marked CPU-modified with it (performance.h).
+                    Eden::Performance::cpu_write_ahead = static_cast<unsigned>(std::min(256UL, std::strtoul(entry.c_str() + 16, nullptr, 10)));
                 } else if (entry.starts_with("cache_spin=")) {
                     // try_lock retries before a guest core sleeps on a GPU cache lock (0 = upstream).
                     Eden::Performance::cache_lock_spins = static_cast<unsigned>(std::strtoul(entry.c_str() + 11, nullptr, 10));
+                } else if (entry == "cpu_write_defer=off") {
+                    // Guest writes wait for a GPU cache lock the GPU thread holds, as upstream (performance.h).
+                    Eden::Performance::cpu_write_defer = false;
+                } else if (entry == "cpu_read_skip=on") {
+                    // Guest reads skip the download check while the GPU thread holds the texture cache lock.
+                    Eden::Performance::cpu_read_skip = true;
                 } else if (entry == "gc_dirty=upstream") {
                     // Eden's rule: evict GPU-written textures from the "expected" memory mark on.
                     Eden::Performance::gc_keep_dirty = false;
+                } else if (entry == "tex_partial=off") {
+                    // Whole-image uploads after every guest write, as upstream (texture_partial.h).
+                    Eden::Performance::tex_partial = false;
+                } else if (entry == "tex_partial_check=on") {
+                    Eden::Performance::tex_partial_check = true;
+                } else if (entry.starts_with("tex_partial_kb=")) {
+                    Eden::Performance::tex_partial_min = std::strtoull(entry.c_str() + 15, nullptr, 10) << 10;
                 } else if (entry == "gc_scan=upstream") {
                     // Eden's rule: the collector's budget counts visits, not evictions.
                     Eden::Performance::gc_count_visits = true;
+                } else if (entry == "dma_batch=off") {
+                    // One engine call per GPU command word, as upstream (performance.h dma_batch).
+                    Eden::Performance::dma_batch = false;
+                    std::printf("EDEN_DEV_DMA_BATCH 0\n");
                 } else if (entry.starts_with("dispatch_draws=")) {
                     // Draws between Vulkan worker hand-offs: a power of two from 8 (upstream) to 512.
                     const unsigned long draws = std::strtoul(entry.c_str() + 15, nullptr, 10);
                     if (draws >= 8 && draws <= 512 && (draws & (draws - 1)) == 0)
                         Eden::Performance::dispatch_mask = static_cast<unsigned>(draws - 1);
+                } else if (entry.starts_with("compose_delay_us=")) {
+                    // Guest vsync signalled first, composition N us later (VI conductor; 0 = upstream).
+                    Eden::Performance::compose_delay_us = std::stoi(entry.substr(17));
                 } else if (entry.starts_with("idle_spin_us=")) {
                     // Guest cores spin this long on their interrupt flag before sleeping (W1).
                     Eden::Performance::idle_spin_iterations = static_cast<unsigned>(std::stoul(entry.substr(13)) * 50);
+                } else if (entry.starts_with("kspin=")) {
+                    // PAUSE iterations a guest kernel spin lock retries before blocking (performance.h).
+                    Eden::Performance::kernel_spin_iterations = static_cast<unsigned>(std::stoul(entry.substr(6)));
                 } else if (entry.starts_with("pc_core=") && entry.size() == 9 && entry[8] >= '0' && entry[8] <= '3') {
                     // Host PC samples from this guest core instead of core 0 (with --pc-sample).
                     Eden::Performance::pc_sample_core = static_cast<unsigned>(entry[8] - '0');
@@ -809,6 +884,27 @@ int main(int argc, char** argv) {
                     // The saved block list (jit_list.h), whatever the settings file says.
                     Eden::JitList::enabled = entry.ends_with("on");
                     dev_block_list = true;
+                } else if (entry == "jit_page_reuse=off") {
+                    // One page-table lookup per A64 access, as upstream (headless/dynarmic/page-reuse.cmake).
+                    eden_page_reuse = false;
+                } else if (entry == "jit_plain_ordered_reads=off") {
+                    // Ordered and exclusive reads are a locked RMW again, as upstream (headless/CMakeLists.txt).
+                    eden_plain_ordered_reads = false;
+                } else if (entry == "jit_fcmp_adc=off") {
+                    // FCMP turns host flags into NZCV with rcl again, as upstream (headless/dynarmic/fast_paths.cmake).
+                    eden_fcmp_adc = false;
+                } else if (entry == "jit_light_dmb=off") {
+                    // Every DMB is an mfence again, as upstream (headless/dynarmic/fast_paths.cmake).
+                    eden_light_dmb = false;
+                } else if (entry == "jit_checkbit_flags=off") {
+                    // CBZ/TBZ-style terminals reload their condition from the stack, as upstream (headless/dynarmic/fast_paths.cmake).
+                    eden_checkbit_flags = false;
+                } else if (entry == "jit_r13=off") {
+                    // The JIT allocator skips R13 in every block, as upstream (headless/dynarmic/reg_alloc.cmake).
+                    eden_alloc_r13 = false;
+                } else if (entry == "jit_free_moves=off") {
+                    // Registers moved out of the way go to the stack, as upstream (headless/dynarmic/reg_alloc.cmake).
+                    eden_free_moves = false;
                 } else if (entry == "jit_shared=off") {
                     // Every guest core keeps its own compiled blocks (headless/dynarmic/jit_group.h).
                     eden_jit_shared = false;
@@ -837,8 +933,10 @@ int main(int argc, char** argv) {
                     Eden::DevVulkan::disable_descriptor_buffer = true;
                 } else if (entry == "robustness2=on") {
                     Eden::DevVulkan::robustness2 = true;
-                } else if (entry == "vertex_input_dynamic=off") {
-                    Settings::values.vertex_input_dynamic_state.SetValue(false);
+                } else if (entry == "vertex_input_dynamic=off" || entry == "vertex_input_dynamic=on") {
+                    dev_vertex_input = entry.ends_with("on") ? 1 : 0;
+                } else if (entry == "static_vi=off") {
+                    Eden::DevVulkan::static_vertex_input = false;
                 } else if (entry == "pipeline_trace=on") {
                     Eden::DevVulkan::trace_pipelines = true;
                 } else if (entry.starts_with("radv_debug=")) {
@@ -920,7 +1018,7 @@ int main(int argc, char** argv) {
                         unsigned(!Eden::DevVulkan::disable_null_descriptor),
                         unsigned(!Eden::DevVulkan::disable_descriptor_buffer),
                         unsigned(Eden::DevVulkan::robustness2),
-                        unsigned(Settings::values.vertex_input_dynamic_state.GetValue()),
+                        unsigned(dev_vertex_input != 0),
                         unsigned(Settings::values.dyna_state.GetValue()),
                         unsigned(!Eden::DevVulkan::disable_sparse),
                         unsigned(!Eden::DevVulkan::disable_multi_range),
@@ -1104,6 +1202,8 @@ int main(int argc, char** argv) {
             // The block list is off unless the settings turn it on (block-list.txt in the app
             // folder still does, further down).
             if (!dev_block_list) Eden::JitList::enabled = speed.block_list;
+            // Set for every session: the value outlives one.
+            Settings::values.vertex_input_dynamic_state.SetValue(dev_vertex_input != 0);
             // The report reads the values back: what the emulator has, whoever set it.
             const auto on = [](bool value) { return value ? "on" : "off"; };
             Eden::Report("launch", (std::string("Performance: block list ") + on(Eden::JitList::enabled) +
@@ -1731,6 +1831,22 @@ int main(int argc, char** argv) {
                                 if (poll % 20 == 0) {
                                     lock.unlock();
                                     Eden::Crash::DevelopmentRequest(Eden::AppFile("crash-app.txt"));
+                                    if (poll == 0)
+                                        std::printf("EDEN_JIT_PAGE_REUSE enabled=%d groups=%llu accesses=%llu\n", eden_page_reuse ? 1 : 0,
+                                                    __atomic_load_n(&eden_page_reuse_groups, __ATOMIC_RELAXED),
+                                                    __atomic_load_n(&eden_page_reuse_accesses, __ATOMIC_RELAXED));
+                                    if (jit_table_check && poll == 0) {
+                                        if (auto* process = system.ApplicationProcess())
+                                            CheckDirectTable(process->GetPageTable().GetImpl());
+                                    }
+                                    if (poll == 0)
+                                        std::printf("EDEN_JIT_FREE_MOVES enabled=%d r13=%d plain_ordered_reads=%d moves=%llu spills=%llu\n", eden_free_moves ? 1 : 0, eden_alloc_r13 ? 1 : 0, eden_plain_ordered_reads ? 1 : 0,
+                                                    __atomic_load_n(&eden_free_moves_done, __ATOMIC_RELAXED),
+                                                    __atomic_load_n(&eden_free_moves_spilled, __ATOMIC_RELAXED));
+                                    if (poll == 0)
+                                        std::printf("EDEN_JIT_FAST_PATHS fcmp_adc=%d light_dmb=%d checkbit_flags=%d dmb_dropped=%llu checkbit_fused=%llu\n", eden_fcmp_adc ? 1 : 0, eden_light_dmb ? 1 : 0, eden_checkbit_flags ? 1 : 0,
+                                                    __atomic_load_n(&eden_dmb_dropped, __ATOMIC_RELAXED),
+                                                    __atomic_load_n(&eden_checkbit_fused, __ATOMIC_RELAXED));
                                     lock.lock();
                                 }
 #ifndef EDEN_DEV_VULKAN

@@ -1,0 +1,2241 @@
+# ProsperoEden launcher - ms-MY
+# English text is the key (msgid); msgstr is the translation. Keep {0} {1} as they are,
+# keep UPPERCASE labels uppercase, and keep names (ProsperoEden, Eden, PS5, Vulkan, OpenGL,
+# AMD FSR, DLC, NSP, XCI, prod.keys, Ryujinx) unchanged.
+
+#: pe/ui/save_sync.cpp
+msgid "%Y-%m-%d %H:%M"
+msgstr "%d/%m/%Y %H:%M"
+
+#: settings_store.h
+msgid "0.5x (faster, softer)"
+msgstr "0.5x (lebih laju, kurang tajam)"
+
+#: settings_store.h
+msgid "0.75x (faster)"
+msgstr "0.75x (lebih laju)"
+
+#: settings_store.h
+msgid "1.5x (sharper)"
+msgstr "1.5x (lebih tajam)"
+
+#: settings_store.h
+msgid "1x (native)"
+msgstr "1x (asli)"
+
+#: settings_store.h
+msgid "2x (sharpest)"
+msgstr "2x (paling tajam)"
+
+#: settings_store.h
+msgid "3x (slower)"
+msgstr "3x (lebih perlahan)"
+
+#: settings_store.h
+msgid "4x (slowest)"
+msgstr "4x (paling perlahan)"
+
+#: eden_services.cpp
+msgid "A firmware NCA cannot be read. Reinstall the firmware dump."
+msgstr "Satu NCA firmware tidak dapat dibaca. Pasang semula dump firmware."
+
+#: pe/ui/pairing.cpp
+msgid "A pairing is running already."
+msgstr "Satu proses pemasangan sedang berjalan."
+
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "TENTANG"
+
+#. The menu's last section: about this app (its credits, where its files go). One short word.
+#: pe/ui/shell.cpp
+msgid "About"
+msgstr "Tentang"
+
+#: pe/ui/browse.cpp
+msgid "About ProsperoEden"
+msgstr "Tentang ProsperoEden"
+
+#. Time left while downloading; {0} is a number of minutes. Keep it short.
+#: pe/ui/remote.cpp, pe/ui/update.cpp
+msgid "About {0} min left"
+msgstr "Anggaran {0} min lagi"
+
+#. Time left while downloading; {0} is a number of seconds. Keep it short.
+#: pe/ui/remote.cpp, pe/ui/update.cpp
+msgid "About {0} s left"
+msgstr "Anggaran {0} s lagi"
+
+#. Label: which folders the app can read.
+#: pe/ui/browse.cpp
+msgid "ACCESS"
+msgstr "AKSES"
+
+#. A settings category: options that make the menu easier to see and follow.
+#: pe/ui/settings.cpp
+msgid "Accessibility"
+msgstr "Kebolehcapaian"
+
+#: pe/ui/profiles.cpp
+msgid "Add"
+msgstr "Tambah"
+
+#: pe/ui/remote.cpp
+msgid "Added to the downloads. Settings, Downloads shows the queue."
+msgstr "Ditambah ke muat turun. Tetapan, Muat Turun memaparkan giliran."
+
+#: pe/ui/profiles.cpp
+msgid "Added. Cross plays as this profile; left and right change its name."
+msgstr "Ditambah. Tekan Silang untuk bermain sebagai profil ini; kiri dan kanan untuk menukar namanya."
+
+#: pe/ui/browse.cpp
+msgid "All credit for the Eden emulator goes to its developers and contributors."
+msgstr "Semua kredit untuk emulator Eden adalah milik pembangun dan penyumbangnya."
+
+#: settings_store.h
+msgid "AMD FSR"
+msgstr "AMD FSR"
+
+#: eden_services.cpp
+msgid "Another language"
+msgstr "Bahasa lain"
+
+#. The button mapping has not been changed.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "As usual"
+msgstr "Seperti biasa"
+
+#: pe/ui/pairing.cpp
+msgid "Asking the server for a code..."
+msgstr "Meminta kod daripada pelayan..."
+
+#. Setting: how a game's textures in the ASTC format are held in graphics memory. ASTC is a format's name (unchanged).
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "ASTC textures"
+msgstr "Tekstur ASTC"
+
+#. A switch. A shader is a small graphics program; keep the word the language's players use for it.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Asynchronous shaders"
+msgstr "Shader tak segerak"
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
+msgid "Audio"
+msgstr "Audio"
+
+#: eden_services.cpp
+msgid "Australia"
+msgstr "Australia"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Auto"
+msgstr "Auto"
+
+#: pe/ui/game_options.cpp
+msgid "Automatic"
+msgstr "Automatik"
+
+#. Button hint: go back one screen.
+#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/pairing.cpp, pe/ui/profiles.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
+msgid "Back"
+msgstr "Kembali"
+
+#: pe/ui/settings.cpp
+msgid "Backend"
+msgstr "Renderer"
+
+#: pe/ui/save_sync.cpp
+msgid "Backing up save data"
+msgstr "Menyandarkan data simpanan"
+
+#. An upscaling filter.
+#: settings_store.h
+msgid "Bicubic"
+msgstr "Bikubik"
+
+#. An upscaling filter.
+#: settings_store.h
+msgid "Bilinear"
+msgstr "Bilinear"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom left"
+msgstr "Kiri bawah"
+
+#: pe/ui/game_options.cpp
+msgid "Bottom right"
+msgstr "Kanan bawah"
+
+#. Button hint: move through the list.
+#: pe/ui/browse.cpp, pe/ui/multiplayer.cpp
+msgid "Browse"
+msgstr "Layari"
+
+#: pe/ui/multiplayer.cpp
+msgid "Browse the public directory and choose a room."
+msgstr "Layari direktori awam dan pilih bilik."
+
+#. Which controller button presses each of the game's buttons.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Button mapping"
+msgstr "Pemetaan butang"
+
+#: pe/ui/pairing.cpp, pe/ui/update.cpp
+msgid "Cancel"
+msgstr "Batal"
+
+#: pe/ui/library.cpp, pe/ui/remote.cpp
+msgid "Cancel download"
+msgstr "Batalkan muat turun"
+
+#: pe/ui/update.cpp
+msgid "Cancelling"
+msgstr "Membatalkan"
+
+#: eden_services.cpp
+msgid "Cannot read firmware/ in {0}. Install extracted firmware NCAs."
+msgstr "Tidak dapat membaca firmware/ dalam {0}. Pasang NCA firmware yang telah diekstrak."
+
+#. Button hint: change the highlighted setting.
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+msgid "Change"
+msgstr "Ubah"
+
+#: pe/ui/library.cpp
+msgid "Change mode. Saved per game."
+msgstr "Ubah mod. Disimpan bagi setiap game."
+
+#: pe/ui/save_sync.cpp
+msgid "Change nothing"
+msgstr "Jangan ubah apa-apa"
+
+#. The button mapping has been changed.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Changed"
+msgstr "Diubah"
+
+#. What a mod is made of: cheat codes.
+#: eden_services.cpp, host/fake_services.cpp
+msgid "Cheats"
+msgstr "Cheat"
+
+#: pe/ui/pairing.cpp
+msgid "Check that the code there is this one, and approve."
+msgstr "Pastikan kod di situ sama dengan ini, kemudian luluskan."
+
+#: pe/ui/remote.cpp
+msgid "Checking the game files {0}"
+msgstr "Menyemak fail game {0}"
+
+#: pe/ui/remote.cpp
+msgid "Checking {0}"
+msgstr "Menyemak {0}"
+
+#: eden_services.cpp
+msgid "China"
+msgstr "China"
+
+#: settings_store.h
+msgid "Chinese (Simplified)"
+msgstr "Cina (Ringkas)"
+
+#: settings_store.h
+msgid "Chinese (Traditional)"
+msgstr "Cina (Tradisional)"
+
+#. Button hint: choose the highlighted language.
+#: pe/ui/browse.cpp, pe/ui/save_sync.cpp
+msgid "Choose"
+msgstr "Pilih"
+
+#: pe/ui/home.cpp
+msgid "Choose a game from your library."
+msgstr "Pilih game daripada perpustakaan anda."
+
+#: pe/ui/browse.cpp
+msgid "Choose the folder that holds your keys, firmware and games"
+msgstr "Pilih folder yang menyimpan kunci, firmware dan game anda"
+
+#: pe/ui/browse.cpp
+msgid "Choose the language games use"
+msgstr "Pilih bahasa yang digunakan oleh game"
+
+#. A DualSense button.
+#: pe/ui/game_options.cpp
+msgid "Circle"
+msgstr "Bulatan"
+
+#: pe/ui/remote.cpp, pe/ui/update.cpp
+msgid "Close"
+msgstr "Tutup"
+
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "Warna"
+
+#. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Compile ahead"
+msgstr "Kompilasi awal"
+
+#: pe/ui/settings.cpp
+msgid "Compiles the code a game used before as it starts, so new areas stutter less."
+msgstr "Mengkompilasi kod yang pernah digunakan game semasa ia bermula, supaya kawasan baharu kurang tersekat-sekat."
+
+#. A choice of 'ASTC textures': the textures are kept compressed (less memory). Keep it short.
+#: settings_store.h
+msgid "Compressed"
+msgstr "Dimampat"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connect using a room address, port and password."
+msgstr "Sambung menggunakan alamat bilik, port dan kata laluan."
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp
+msgid "Connected"
+msgstr "Disambungkan"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connecting..."
+msgstr "Menyambung..."
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection failed"
+msgstr "Sambungan gagal"
+
+#: pe/ui/multiplayer.cpp
+msgid "Connection problem"
+msgstr "Masalah sambungan"
+
+#: pe/ui/library.cpp
+msgid "Console mode"
+msgstr "Mod konsol"
+
+#: pe/ui/home.cpp
+msgid "CONTINUE PLAYING"
+msgstr "TERUSKAN BERMAIN"
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
+msgid "Controller shortcuts and supported features."
+msgstr "Pintasan pengawal dan ciri yang disokong."
+
+#: pe/ui/game_options.cpp
+msgid "Controller type"
+msgstr "Jenis pengawal"
+
+#: pe/ui/home.cpp
+msgid "CONTROLLERS"
+msgstr "PENGAWAL"
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
+msgid "Controls"
+msgstr "Kawalan"
+
+#: pe/ui/settings.cpp
+msgid "Corner"
+msgstr "Penjuru"
+
+#: pe/ui/remote.cpp
+msgid "Could not cancel the download."
+msgstr "Tidak dapat membatalkan muat turun."
+
+#: pe/ui/pairing.cpp
+msgid "Could not change save-sync.json."
+msgstr "Tidak dapat mengubah save-sync.json."
+
+#: pe/ui/library.cpp
+msgid "Could not create the folder. Check that the game files folder can be written."
+msgstr "Tidak dapat mencipta folder. Pastikan folder fail game boleh ditulis."
+
+#: pe/ui/library.cpp
+msgid "Could not delete the game."
+msgstr "Tidak dapat memadam game."
+
+#: eden_services.cpp
+msgid "Could not delete {0}."
+msgstr "Tidak dapat memadam {0}."
+
+#: pe/ui/launcher.cpp
+msgid "Could not save settings. Please try again."
+msgstr "Tidak dapat menyimpan tetapan. Sila cuba lagi."
+
+#: pe/ui/browse.cpp
+msgid "Could not save the folder. Please try again."
+msgstr "Tidak dapat menyimpan folder. Sila cuba lagi."
+
+#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
+msgid "Could not save. Please try again."
+msgstr "Tidak dapat menyimpan. Sila cuba lagi."
+
+#: pe/ui/multiplayer.cpp
+msgid "Could not start the connection or save its settings."
+msgstr "Tidak dapat memulakan sambungan atau menyimpan tetapannya."
+
+#: pe/ui/settings.cpp
+msgid "CPU"
+msgstr "CPU"
+
+#: pe/ui/settings.cpp
+msgid "CPU by core"
+msgstr "CPU mengikut teras"
+
+#. The DualSense button labelled CREATE: keep the label if the language's players do.
+#: pe/ui/game_options.cpp
+msgid "Create"
+msgstr "Create"
+
+#. Button hint: make the folder a game's mods go in.
+#: pe/ui/library.cpp
+msgid "Create the folder"
+msgstr "Cipta folder"
+
+#. {0} is a folder.
+#: pe/ui/library.cpp
+msgid "Created {0}. Copy each mod's folder into it."
+msgstr "{0} dicipta. Salin folder setiap mod ke dalamnya."
+
+#: pe/ui/browse.cpp
+msgid "Credits and setup"
+msgstr "Kredit dan persediaan"
+
+#. A DualSense button (the X-shaped one). Name the shape, not the letter.
+#: pe/ui/game_options.cpp
+msgid "Cross"
+msgstr "Silang"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "Lalai"
+
+#. A per-game setting that follows the general setting; {0} is its value.
+#: pe/ui/game_options.cpp
+msgid "Default ({0})"
+msgstr "Lalai ({0})"
+
+#: pe/ui/browse.cpp
+msgid "Default folder"
+msgstr "Folder lalai"
+
+#: pe/ui/browse.cpp
+msgid "Default folder saved. Reopen ProsperoEden to use it."
+msgstr "Folder lalai disimpan. Buka semula ProsperoEden untuk menggunakannya."
+
+#: pe/ui/library.cpp
+msgid "Delete"
+msgstr "Padam"
+
+#: pe/ui/library.cpp
+msgid "Delete from console"
+msgstr "Padam daripada konsol"
+
+#: eden_services.cpp
+msgid "Deleted 1 file ({0}). Save data and settings are kept."
+msgstr "1 fail dipadam ({0}). Data simpanan dan tetapan dikekalkan."
+
+#: eden_services.cpp, host/fake_services.cpp
+msgid "Deleted {1} files ({0}). Save data and settings are kept."
+msgstr "{1} fail dipadam ({0}). Data simpanan dan tetapan dikekalkan."
+
+#: pe/ui/settings.cpp
+msgid "Detailed logging"
+msgstr "Pencatatan log terperinci"
+
+#: pe/ui/settings.cpp
+msgid "Detailed logs apply to the next game launch."
+msgstr "Log terperinci berkuat kuasa pada pelancaran game seterusnya."
+
+#: pe/ui/settings.cpp
+msgid "Detailed logs on"
+msgstr "Log terperinci aktif"
+
+#: pe/ui/settings.cpp
+msgid "Diagnostics"
+msgstr "Diagnostik"
+
+#. Console mode: the console as if connected to a TV. Keep it short (about 9 letters).
+#: pe/ui/library.cpp, pe/ui/shell.cpp
+msgid "Docked"
+msgstr "TV"
+
+#: pe/ui/pairing.cpp
+msgid "Done"
+msgstr "Selesai"
+
+#: pe/ui/library.cpp, pe/ui/remote.cpp
+msgid "Download"
+msgstr "Muat turun"
+
+#: pe/ui/library.cpp
+msgid "Download and play"
+msgstr "Muat turun dan main"
+
+#: pe/ui/remote.cpp
+msgid "Download cancelled."
+msgstr "Muat turun dibatalkan."
+
+#: pe/ui/remote.cpp
+msgid "Download failed"
+msgstr "Muat turun gagal"
+
+#: pe/ui/remote.cpp
+msgid "Download from"
+msgstr "Muat turun daripada"
+
+#: pe/ui/remote.cpp
+msgid "Download in the background"
+msgstr "Muat turun di latar belakang"
+
+#. {0} is a size such as 36.4 MB.
+#: pe/ui/update.cpp
+msgid "Download size: {0}"
+msgstr "Saiz muat turun: {0}"
+
+#: pe/ui/library.cpp
+msgid "Download the game to change its settings."
+msgstr "Muat turun game untuk mengubah tetapannya."
+
+#: pe/ui/update.cpp
+msgid "Downloading"
+msgstr "Memuat turun"
+
+#: pe/ui/remote.cpp
+msgid "Downloading {0}"
+msgstr "Memuat turun {0}"
+
+#: pe/ui/remote.cpp, pe/ui/settings.cpp
+msgid "Downloads"
+msgstr "Muat Turun"
+
+#: pe/ui/remote.cpp
+msgid "Downloads need an FTP server running on the console, on port {0}."
+msgstr "Muat turun memerlukan pelayan FTP berjalan pada konsol, pada port {0}."
+
+#: pe/ui/settings.cpp
+msgid "Draws an effect once its shader is ready instead of pausing. Things can be missing for a moment."
+msgstr "Melukis kesan sebaik sahaja shadernya sedia, bukan menjeda. Beberapa visual mungkin tidak muncul seketika."
+
+#: pe/ui/settings.cpp
+msgid "Draws the menu's small text larger."
+msgstr "Melukis teks kecil menu dengan lebih besar."
+
+#: pe/ui/game_options.cpp
+msgid "Dual Joy-Cons"
+msgstr "Dua Joy-Con"
+
+#: settings_store.h
+msgid "Dutch"
+msgstr "Belanda"
+
+#: pe/ui/profiles.cpp
+msgid "Each profile keeps its own save data, settings and recent games."
+msgstr "Setiap profil menyimpan data simpanan, tetapan dan game terbarunya sendiri."
+
+#: pe/ui/pairing.cpp
+msgid "Each profile keeps its save data on a server, as its own user there. Pair one with Cross: no typing, your phone does the signing in."
+msgstr "Setiap profil menyimpan data simpanannya pada pelayan sebagai pengguna tersendiri di situ. Pasangkan profil dengan menekan Silang: tiada penaipan, telefon anda akan melog masuk."
+
+#: pe/ui/settings.cpp
+msgid "Each profile's save data on a server of its own, synced before and after a game."
+msgstr "Data simpanan setiap profil pada pelayan tersendiri, diselaraskan sebelum dan selepas bermain."
+
+#: pe/ui/settings.cpp
+msgid "Eden's debug messages in the logs of a game."
+msgstr "Mesej debug Eden dalam log sesuatu game."
+
+#. A button hint: opens the keyboard to type a number. One short word, and not the word used for Change.
+#: pe/ui/library.cpp
+msgid "Edit"
+msgstr "Sunting"
+
+#: pe/ui/settings.cpp
+msgid "Enable colors"
+msgstr "Aktifkan warna"
+
+#: pe/ui/settings.cpp
+msgid "End the game and return to this menu"
+msgstr "Tamatkan game dan kembali ke menu ini"
+
+#: settings_store.h
+msgid "English (UK)"
+msgstr "Inggeris (UK)"
+
+#: host/fake_services.cpp, settings_store.h
+msgid "English (US)"
+msgstr "Inggeris (AS)"
+
+#. Shown when what was typed for the RNG seed is not such a number.
+#: pe/ui/game_options.cpp
+msgid "Enter a number between 0 and 4294967295."
+msgstr "Masukkan nombor antara 0 dan 4294967295."
+
+#: pe/ui/multiplayer.cpp
+msgid "Enter a UDP port between 1 and 65535."
+msgstr "Masukkan port UDP antara 1 dan 65535."
+
+#: eden_services.cpp
+msgid "Europe"
+msgstr "Eropah"
+
+#. Button hint: copy the game's save out to a folder.
+#: pe/ui/library.cpp
+msgid "Export a copy"
+msgstr "Eksport salinan"
+
+#: eden_services.cpp
+msgid "Export failed. Check that the game files folder can be written."
+msgstr "Eksport gagal. Pastikan folder fail game boleh ditulis."
+
+#. {0} is a folder.
+#: eden_services.cpp, host/fake_services.hpp
+msgid "Exported to {0}."
+msgstr "Dieksport ke {0}."
+
+#. A switch: the emulated processor's floating-point math is less exact and faster. CPU stays.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Faster CPU emulation"
+msgstr "Emulasi CPU lebih laju"
+
+#. A switch: memory transfers to the emulated graphics processor are less exact and faster. DMA is a name (unchanged).
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Faster DMA"
+msgstr "DMA lebih laju"
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
+msgid "Faster games, at some cost in accuracy."
+msgstr "Game lebih laju, dengan sedikit pengorbanan ketepatan."
+
+#. A switch: the emulated graphics processor is less exact and faster. GPU stays.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Faster GPU emulation"
+msgstr "Emulasi GPU lebih laju"
+
+#. What a mod is made of: files that replace the game's own.
+#: eden_services.cpp, host/fake_services.cpp
+msgid "Files"
+msgstr "Fail"
+
+#: pe/ui/settings.cpp
+msgid "Fine-tune your experience"
+msgstr "Tala halus pengalaman anda"
+
+#: pe/ui/browse.cpp
+msgid "FIRMWARE"
+msgstr "FIRMWARE"
+
+#: eden_services.cpp
+msgid "Firmware NCA validation failed (code {0}). Check that firmware and prod.keys are compatible."
+msgstr "Pengesahan NCA firmware gagal (kod {0}). Pastikan firmware dan prod.keys serasi."
+
+#: eden_services.cpp, host/fake_services.cpp
+msgid "Firmware ready"
+msgstr "Firmware sedia"
+
+#: eden_services.cpp
+msgid "Firmware SystemVersion data is missing or unreadable. Install a complete firmware dump."
+msgstr "Data SystemVersion firmware tiada atau tidak dapat dibaca. Pasang dump firmware yang lengkap."
+
+#: pe/ui/browse.cpp
+msgid "FOLDERS"
+msgstr "FOLDER"
+
+#. A kind of setting that this game takes from the launcher's Settings menu.
+#: pe/ui/library.cpp
+msgid "Follows Settings"
+msgstr "Mengikut Tetapan"
+
+#: pe/ui/game_options.cpp
+msgid "For every controller. A game can have its own."
+msgstr "Untuk setiap pengawal. Game boleh mempunyai miliknya sendiri."
+
+#: pe/ui/settings.cpp
+msgid "FPS"
+msgstr "FPS"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "FPS overlay"
+msgstr "Lapisan FPS"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Frame gen multiplier"
+msgstr "Pengganda Frame Gen"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Frame gen target"
+msgstr "Sasaran Frame Gen"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
+msgid "Frame generation"
+msgstr "Penjanaan bingkai"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."
+msgstr "Penjanaan bingkai memerlukan Lossless.dll, daripada Lossless Scaling, dalam folder lossless."
+
+#: pe/ui/settings.cpp
+msgid "Frame time"
+msgstr "Masa bingkai"
+
+#: settings_store.h
+msgid "French"
+msgstr "Perancis"
+
+#: settings_store.h
+msgid "French (Canada)"
+msgstr "Perancis (Kanada)"
+
+#: pe/ui/remote.cpp
+msgid "From {0}"
+msgstr "Daripada {0}"
+
+#. The app can read every folder of the console.
+#: pe/ui/browse.cpp
+msgid "Full filesystem"
+msgstr "Seluruh sistem fail"
+
+#. A choice of 'ASTC textures': the textures are kept uncompressed (more memory). Keep it short.
+#: settings_store.h
+msgid "Full quality"
+msgstr "Kualiti penuh"
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
+msgid "Game audio; PS5 system-menu music is unchanged."
+msgstr "Audio game; muzik menu sistem PS5 tidak berubah."
+
+#. {0} is the reason, a sentence in English; {1} is a file.
+#: eden_services.cpp, host/fake_services.cpp
+msgid "Game could not start: {0} Details: {1}"
+msgstr "Game tidak dapat dimulakan: {0} Butiran: {1}"
+
+#: pe/ui/library.cpp
+msgid "GAME DETAILS"
+msgstr "BUTIRAN GAME"
+
+#: pe/ui/browse.cpp, pe/ui/settings.cpp
+msgid "Game files"
+msgstr "Fail game"
+
+#: pe/ui/home.cpp, pe/ui/library.cpp
+msgid "Game settings"
+msgstr "Tetapan game"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Game volume"
+msgstr "Kelantangan game"
+
+#: pe/ui/settings.cpp
+msgid "Game volume, and the sounds of this menu."
+msgstr "Kelantangan game, dan bunyi menu ini."
+
+#: pe/ui/browse.cpp
+msgid "GAMES"
+msgstr "GAME"
+
+#: pe/ui/remote.cpp, pe/ui/settings.cpp
+msgid "Games on your network, downloaded when you play them."
+msgstr "Game pada rangkaian anda, dimuat turun apabila anda memainkannya."
+
+#: pe/ui/browse.cpp
+msgid "Games use this language when they offer it, and their own default otherwise. It applies when a game starts."
+msgstr "Game menggunakan bahasa ini jika ditawarkan, dan bahasa lalainya sendiri jika tidak. Ia berkuat kuasa apabila game bermula."
+
+#: pe/ui/home.cpp
+msgid "Games you launch will appear here."
+msgstr "Game yang anda lancarkan akan dipaparkan di sini."
+
+#: settings_store.h
+msgid "German"
+msgstr "Jerman"
+
+#: pe/ui/browse.cpp
+msgid "GETTING STARTED"
+msgstr "PANDUAN MULA"
+
+#: pe/ui/multiplayer.cpp
+msgid "Go offline"
+msgstr "Beralih ke luar talian"
+
+#: pe/ui/settings.cpp
+msgid "GPU"
+msgstr "GPU"
+
+#: pe/ui/settings.cpp
+msgid "Graphics backend and how games are scaled to your TV."
+msgstr "Renderer grafik dan cara game diskalakan ke TV anda."
+
+#: eden_services.cpp
+msgid "Graphics backend initialization failed. Try another backend in Settings; see stderr.log and eden_log.txt for driver details."
+msgstr "Permulaan backend grafik gagal. Cuba backend lain dalam Tetapan; lihat stderr.log dan eden_log.txt untuk butiran pemacu."
+
+#. Console mode: the console as if held in the hands. Keep it short (about 9 letters).
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/shell.cpp
+msgid "Handheld"
+msgstr "Genggam"
+
+#. A switch: solid dark panels, brighter text.
+#: pe/ui/settings.cpp
+msgid "High contrast"
+msgstr "Kontras tinggi"
+
+#. The menu's first section, its opening screen (not a house, and not the PS5's own home screen).
+#: pe/ui/shell.cpp
+msgid "Home"
+msgstr "Utama"
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
+msgid "How games are drawn and scaled to your TV."
+msgstr "Cara game dilukis dan diskalakan ke TV anda."
+
+#. Button hint: copy a save in.
+#: pe/ui/library.cpp
+msgid "Import"
+msgstr "Import"
+
+#: eden_services.cpp
+msgid "Import failed. The current save is unchanged."
+msgstr "Import gagal. Simpanan semasa tidak berubah."
+
+#: eden_services.cpp
+msgid "Imported."
+msgstr "Telah diimport."
+
+#: eden_services.cpp, host/fake_services.hpp
+msgid "Imported. The save it replaced was backed up."
+msgstr "Telah diimport. Simpanan yang digantikan telah disandarkan."
+
+#. Tag on the language or folder that is in use now.
+#: pe/ui/browse.cpp
+msgid "IN USE"
+msgstr "DIGUNAKAN"
+
+#: pe/ui/multiplayer.cpp
+msgid "Incompatible"
+msgstr "Tidak serasi"
+
+#: pe/ui/save_sync.cpp
+msgid "It goes to the server."
+msgstr "Ia dihantar ke pelayan."
+
+#: pe/ui/save_sync.cpp
+msgid "It is tried again when the menu opens next."
+msgstr "Ia akan dicuba semula apabila menu dibuka kali seterusnya."
+
+#: pe/ui/save_sync.cpp
+msgid "It replaces this console's."
+msgstr "Ia menggantikan milik konsol ini."
+
+#: pe/ui/pairing.cpp
+msgid "It was declined on the server."
+msgstr "Ia telah ditolak pada pelayan."
+
+#: settings_store.h
+msgid "Italian"
+msgstr "Itali"
+
+#: eden_services.cpp
+msgid "Japan"
+msgstr "Jepun"
+
+#: settings_store.h
+msgid "Japanese"
+msgstr "Jepun"
+
+#: pe/ui/multiplayer.cpp
+msgid "Join a room before launching a game, then choose Local Wireless in the game."
+msgstr "Sertai bilik sebelum melancarkan game, kemudian pilih Local Wireless dalam game."
+
+#: pe/ui/launcher.cpp
+msgid "Join a room successfully or leave it before starting a game."
+msgstr "Sertai bilik dengan jayanya atau tinggalkannya sebelum memulakan game."
+
+#: pe/ui/multiplayer.cpp
+msgid "Join room"
+msgstr "Sertai bilik"
+
+#. keys, firmware and roms are folder names (unchanged). TRIANGLE is the controller's triangle button, in capitals.
+#: pe/ui/browse.cpp
+msgid "Keep keys, firmware and roms folders together. TRIANGLE uses the folder shown."
+msgstr "Simpan folder keys, firmware dan roms bersama-sama. Tekan SEGI TIGA untuk menggunakan folder yang dipaparkan."
+
+#: pe/ui/save_sync.cpp
+msgid "Keep this console's"
+msgstr "Kekalkan milik konsol ini"
+
+#: pe/ui/settings.cpp
+msgid "Keeps the last line before a crash, but games stutter. From the next start."
+msgstr "Mengekalkan baris terakhir sebelum ranap, tetapi game tersekat-sekat. Mulai permulaan seterusnya."
+
+#: pe/ui/settings.cpp
+msgid "Keeps what a game reads back from the GPU exact. Off is faster, and some effects break."
+msgstr "Mengekalkan data yang dibaca semula oleh game daripada GPU dengan tepat. Jika ditutup, ia lebih laju tetapi sesetengah kesan visual akan terjejas."
+
+#. Label: the encryption keys file (prod.keys).
+#: pe/ui/browse.cpp
+msgid "KEYS"
+msgstr "KUNCI"
+
+#: eden_services.cpp, host/fake_services.cpp
+msgid "Keys and firmware: startup checks passed. Game-specific compatibility is checked at launch."
+msgstr "Kunci dan firmware: semakan permulaan lulus. Keserasian khusus game disemak semasa pelancaran."
+
+#: eden_services.cpp
+msgid "Korea"
+msgstr "Korea"
+
+#: settings_store.h
+msgid "Korean"
+msgstr "Korea"
+
+#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+msgid "Language"
+msgstr "Bahasa"
+
+#: pe/ui/browse.cpp
+msgid "LANGUAGES"
+msgstr "BAHASA"
+
+#: pe/ui/game_options.cpp
+msgid "Large"
+msgstr "Besar"
+
+#. A switch: the menu's small text is drawn larger.
+#: pe/ui/settings.cpp
+msgid "Larger text"
+msgstr "Teks lebih besar"
+
+#. Caption under the title of the game played last.
+#: eden_services.cpp
+msgid "Last game opened"
+msgstr "Game terakhir dibuka"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave / cancel"
+msgstr "Tinggalkan / batal"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave room"
+msgstr "Tinggalkan bilik"
+
+#: pe/ui/multiplayer.cpp
+msgid "Leave the room before changing connection details."
+msgstr "Tinggalkan bilik sebelum menukar butiran sambungan."
+
+#: pe/ui/profiles.cpp
+msgid "Leaving the room. Select the profile again when disconnected."
+msgstr "Meninggalkan bilik. Pilih profil semula apabila diputuskan sambungan."
+
+#: pe/ui/multiplayer.cpp
+msgid "Leaving..."
+msgstr "Meninggalkan..."
+
+#: pe/ui/game_options.cpp
+msgid "Left Joy-Con"
+msgstr "Joy-Con kiri"
+
+#. Pressing the left stick down like a button.
+#: pe/ui/game_options.cpp
+msgid "Left stick press"
+msgstr "Tekan stick kiri"
+
+#: pe/ui/settings.cpp
+msgid "Less exact floating-point math: faster, and a few games misbehave."
+msgstr "Pengiraan titik terapung kurang tepat: lebih laju, dan sesetengah game berkelakuan tidak betul."
+
+#: pe/ui/settings.cpp
+msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
+msgstr "Pemindahan memori ke GPU kurang tepat: lebih laju, dan sesetengah game memaparkan grafik yang salah."
+
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "PERPUSTAKAAN"
+
+#: pe/ui/library.cpp, pe/ui/shell.cpp
+msgid "Library"
+msgstr "Perpustakaan"
+
+#: pe/ui/pairing.cpp
+msgid "Linked"
+msgstr "Dipautkan"
+
+#: pe/ui/multiplayer.cpp
+msgid "Loading public rooms..."
+msgstr "Memuatkan bilik awam..."
+
+#: pe/ui/settings.cpp
+msgid "Lowest GPU accuracy: faster in demanding games, and graphics can be wrong."
+msgstr "Ketepatan GPU paling rendah: lebih laju dalam game yang intensif, namun grafik mungkin salah."
+
+#: pe/ui/settings.cpp
+msgid "Make the menu easier to see and follow."
+msgstr "Jadikan menu lebih mudah dilihat dan diikuti."
+
+#: pe/ui/game_options.cpp
+msgid "Medium"
+msgstr "Sederhana"
+
+#: pe/ui/settings.cpp
+msgid "Memory"
+msgstr "Memori"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Menu keybinds"
+msgstr "Butang menu"
+
+#: pe/ui/browse.cpp
+msgid "Menu sound effects made with ElevenLabs."
+msgstr "Kesan bunyi menu dihasilkan dengan ElevenLabs."
+
+#: pe/ui/settings.cpp
+msgid "Menu sounds"
+msgstr "Bunyi menu"
+
+#: eden_services.cpp, host/fake_services.cpp
+msgid "Missing or empty keys/prod.keys in {0}."
+msgstr "keys/prod.keys tiada atau kosong dalam {0}."
+
+#. Label on the About screen: the folder that holds games' mods (see 'Mods').
+#: pe/ui/browse.cpp
+msgid "MODS"
+msgstr "MOD"
+
+#. Changes to a game that the player added: patches, replaced files, cheats. Keep the word 'mod' if the language uses it.
+#: pe/ui/library.cpp
+msgid "Mods"
+msgstr "Mod"
+
+#: pe/ui/home.cpp, pe/ui/multiplayer.cpp, pe/ui/shell.cpp
+msgid "Multiplayer"
+msgstr "Berbilang Pemain"
+
+#: pe/ui/multiplayer.cpp
+msgid "MULTIPLAYER"
+msgstr "BERBILANG PEMAIN"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Mute"
+msgstr "Senyap"
+
+#: pe/ui/settings.cpp
+msgid "Muted"
+msgstr "Disenyapkan"
+
+#. Button hint: move the highlight.
+#: pe/ui/update.cpp
+msgid "Navigate"
+msgstr "Navigasi"
+
+#. An upscaling filter (nearest neighbour). Keep it short.
+#: settings_store.h
+msgid "Nearest"
+msgstr "Terdekat"
+
+#: pe/ui/pairing.cpp, pe/ui/settings.cpp
+msgid "Needs attention"
+msgstr "Perlu perhatian"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "Kaca neutral, bersih dan tenang."
+
+#: pe/ui/profiles.cpp
+msgid "New profile"
+msgstr "Profil baharu"
+
+#. {0} is the folder used the next time the app starts.
+#: pe/ui/browse.cpp
+msgid "Next launch: {0}"
+msgstr "Pelancaran seterusnya: {0}"
+
+#: pe/ui/multiplayer.cpp
+msgid "Nickname"
+msgstr "Nama samaran"
+
+#: pe/ui/multiplayer.cpp
+msgid "Nickname: {0}"
+msgstr "Nama samaran: {0}"
+
+#: pe/ui/remote.cpp
+msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
+msgstr "Tiada sumber muat turun disediakan. Simpan fail bernama {0} yang menyenaraikan sumber anda, seperti contoh ini dengan pelayan RomM, kemudian buka menu ini semula. Muat turun memerlukan pelayan FTP berjalan pada konsol, pada port {1}."
+
+#: pe/ui/remote.cpp
+msgid "No downloads. In the Library, Square puts a game from a source in the queue."
+msgstr "Tiada muat turun. Dalam Perpustakaan, tekan Petak untuk meletakkan game daripada sumber ke dalam giliran."
+
+#: pe/ui/browse.cpp
+msgid "No firmware folder"
+msgstr "Tiada folder firmware"
+
+#: eden_services.cpp
+msgid "No firmware NCAs found in {0}."
+msgstr "Tiada NCA firmware ditemui dalam {0}."
+
+#: pe/ui/browse.cpp
+msgid "No folders here."
+msgstr "Tiada folder di sini."
+
+#. Shown on the Mods row of a game that has none.
+#: pe/ui/library.cpp
+msgid "No mods"
+msgstr "Tiada mod"
+
+#. {0} is a folder; roms/ is a folder name (unchanged).
+#: pe/ui/library.cpp
+msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
+msgstr "Belum ada mod untuk game ini. Salin folder setiap mod ke {0}, bersebelahan dengan roms/."
+
+#: pe/ui/multiplayer.cpp
+msgid "No public rooms are available."
+msgstr "Tiada bilik awam yang tersedia."
+
+#: pe/ui/library.cpp
+msgid "No ROM files found."
+msgstr "Tiada fail ROM ditemui."
+
+#: pe/ui/library.cpp
+msgid "No ROM selected"
+msgstr "Tiada ROM dipilih"
+
+#: pe/ui/browse.cpp
+msgid "No roms folder"
+msgstr "Tiada folder roms"
+
+#: pe/ui/pairing.cpp
+msgid "No server to pair with: add a RomM server to sources.json, or set save-sync.json up over FTP."
+msgstr "Tiada pelayan untuk dipasangkan: tambah pelayan RomM ke sources.json, atau sediakan save-sync.json melalui FTP."
+
+#: pe/ui/pairing.cpp
+msgid "Nobody approved the code in time."
+msgstr "Tiada sesiapa meluluskan kod tepat pada masanya."
+
+#. No add-ons (updates or DLC).
+#: pe/ui/library.cpp
+msgid "None"
+msgstr "Tiada"
+
+#: pe/ui/remote.cpp
+msgid "Not connected yet"
+msgstr "Belum disambungkan"
+
+#: pe/ui/pairing.cpp
+msgid "Not linked"
+msgstr "Tidak dipautkan"
+
+#: pe/ui/pairing.cpp
+msgid "Not linked: its save data stays on the console"
+msgstr "Tidak dipautkan: data simpanannya kekal pada konsol"
+
+#: pe/ui/library.cpp
+msgid "Not on the console"
+msgstr "Tiada pada konsol"
+
+#: pe/ui/pairing.cpp
+msgid "Not paired"
+msgstr "Tidak dipasangkan"
+
+#: pe/ui/remote.cpp
+msgid "Not reachable"
+msgstr "Tidak dapat dihubungi"
+
+#: pe/ui/settings.cpp
+msgid "Not set up"
+msgstr "Belum disediakan"
+
+#. Short status at the right of the Save data row.
+#: pe/ui/library.cpp
+msgid "Nothing to import"
+msgstr "Tiada apa-apa untuk diimport"
+
+#. A setting that is switched off.
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+msgid "Off"
+msgstr "Nyahaktif"
+
+#: pe/ui/multiplayer.cpp
+msgid "Offline"
+msgstr "Luar Talian"
+
+#. A setting that is switched on.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "On"
+msgstr "Aktif"
+
+#. Short tag on a folder row.
+#: pe/ui/browse.cpp
+msgid "OPEN"
+msgstr "BUKA"
+
+#. Button hint: open the highlighted folder.
+#: pe/ui/browse.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+msgid "Open"
+msgstr "Buka"
+
+#: pe/ui/update.cpp
+msgid "Open it again to use version {0}."
+msgstr "Buka semula untuk menggunakan versi {0}."
+
+#: pe/ui/home.cpp
+msgid "Open library"
+msgstr "Buka perpustakaan"
+
+#. The DualSense button labelled OPTIONS: keep the label if the language's players do.
+#: pe/ui/game_options.cpp
+msgid "Options"
+msgstr "Options"
+
+#. Setting: the size of the picture sent to the TV (1080p, 1440p or 2160p). Not the same as 'Resolution', which scales the game's own picture (1x, 2x...).
+#: pe/ui/settings.cpp
+msgid "Output resolution"
+msgstr "Resolusi output"
+
+#: pe/ui/game_options.cpp
+msgid "Overlay corner"
+msgstr "Penjuru lapisan"
+
+#: pe/ui/settings.cpp
+msgid "Overlay options"
+msgstr "Pilihan lapisan"
+
+#: pe/ui/game_options.cpp
+msgid "Overlay size"
+msgstr "Saiz lapisan"
+
+#. Button hint: jump a page of the list (L1 / R1).
+#: pe/ui/browse.cpp, pe/ui/multiplayer.cpp, pe/ui/update.cpp
+msgid "Page"
+msgstr "Langkau"
+
+#: pe/ui/pairing.cpp
+msgid "Pair"
+msgstr "Pasangkan"
+
+#: pe/ui/pairing.cpp
+msgid "Pair again"
+msgstr "Pasangkan semula"
+
+#: pe/ui/pairing.cpp
+msgid "Pair {0}"
+msgstr "Pasangkan {0}"
+
+#: pe/ui/pairing.cpp
+msgid "Pair {0} with"
+msgstr "Pasangkan {0} dengan"
+
+#: pe/ui/pairing.cpp
+msgid "Paired"
+msgstr "Dipasangkan"
+
+#: pe/ui/pairing.cpp
+msgid "Paired. The profile's save data syncs from now on."
+msgstr "Dipasangkan. Data simpanan profil ini akan diselaraskan mulai sekarang."
+
+#: pe/ui/browse.cpp
+msgid "Parent folder"
+msgstr "Folder induk"
+
+#: pe/ui/multiplayer.cpp
+msgid "Password"
+msgstr "Kata laluan"
+
+#. What a mod is made of: a change to the game's program (not a game update).
+#: eden_services.cpp, host/fake_services.cpp
+msgid "Patch"
+msgstr "Patch"
+
+#. A settings category: options that make games run faster, at some cost in accuracy.
+#: pe/ui/library.cpp, pe/ui/settings.cpp
+msgid "Performance"
+msgstr "Prestasi"
+
+#: pe/ui/settings.cpp
+msgid "Ping"
+msgstr "Ping"
+
+#. Button and button hint: start the game shown. Keep it to one short word.
+#: pe/ui/home.cpp, pe/ui/library.cpp
+msgid "Play"
+msgstr "Main"
+
+#: pe/ui/save_sync.cpp
+msgid "Play anyway"
+msgstr "Main juga"
+
+#: pe/ui/profiles.cpp
+msgid "Play as"
+msgstr "Main sebagai"
+
+#: pe/ui/library.cpp
+msgid "Play when downloaded"
+msgstr "Main apabila dimuat turun"
+
+#: pe/ui/save_sync.cpp
+msgid "Play with this console's; you are asked again next time."
+msgstr "Main guna data konsol ini; anda akan ditanya lagi lain kali."
+
+#: pe/ui/pairing.cpp
+msgid "playing"
+msgstr "sedang bermain"
+
+#: pe/ui/profiles.cpp
+msgid "Playing"
+msgstr "Bermain"
+
+#: pe/ui/profiles.cpp
+msgid "Playing as {0}"
+msgstr "Bermain sebagai {0}"
+
+#: settings_store.h
+msgid "Polish"
+msgstr "Poland"
+
+#: settings_store.h
+msgid "Portuguese"
+msgstr "Portugis"
+
+#: settings_store.h
+msgid "Portuguese (Brazil)"
+msgstr "Portugis (Brazil)"
+
+#. Eden is the emulator's name (unchanged).
+#: pe/ui/browse.cpp
+msgid "Powered by Eden"
+msgstr "Dikuasakan oleh Eden"
+
+#. Update dialog headline while the download starts.
+#: pe/ui/remote.cpp, pe/ui/update.cpp
+msgid "Preparing"
+msgstr "Menyediakan"
+
+#: pe/ui/library.cpp
+msgid "Press again to delete the game and its updates and DLC from the console. Save data and settings are kept."
+msgstr "Tekan lagi untuk memadam game beserta kemas kini dan DLC-nya daripada konsol. Data simpanan dan tetapan dikekalkan."
+
+#. Asked before a save is imported over the one in use.
+#: pe/ui/library.cpp
+msgid "Press again to replace this game's save. The current one is backed up."
+msgstr "Tekan lagi untuk menggantikan simpanan game ini. Yang semasa akan disandarkan."
+
+#: pe/ui/multiplayer.cpp
+msgid "Private room"
+msgstr "Bilik peribadi"
+
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "BILIK PERIBADI"
+
+#: pe/ui/game_options.cpp
+msgid "Pro Controller"
+msgstr "Pro Controller"
+
+#: eden_services.cpp
+msgid "prod.keys could not supply an NCA header key. Replace it with a valid key dump."
+msgstr "prod.keys tidak dapat membekalkan 'NCA header key'. Gantikan dengan dump kunci yang sah."
+
+#: pe/ui/browse.cpp
+msgid "prod.keys found"
+msgstr "prod.keys ditemui"
+
+#: pe/ui/browse.cpp
+msgid "prod.keys missing"
+msgstr "prod.keys tiada"
+
+#: pe/ui/save_sync.cpp
+msgid "Profile {0}"
+msgstr "Profil {0}"
+
+#: pe/ui/profiles.cpp, pe/ui/settings.cpp
+msgid "Profiles"
+msgstr "Profil"
+
+#: pe/ui/browse.cpp
+msgid "PROJECT CREDITS"
+msgstr "KREDIT PROJEK"
+
+#: pe/ui/update.cpp
+msgid "ProsperoEden closes now."
+msgstr "ProsperoEden ditutup sekarang."
+
+#: pe/ui/update.cpp
+msgid "ProsperoEden closes to finish the update."
+msgstr "ProsperoEden ditutup untuk menyelesaikan kemas kini."
+
+#: eden_services.cpp
+msgid "ProsperoEden could not get access to the console's storage, so it cannot read your settings, saves and games. Nothing was changed. Close ProsperoEden and open it again. (Code {0})"
+msgstr "ProsperoEden tidak dapat mengakses storan konsol, jadi ia tidak dapat membaca tetapan, simpanan dan game anda. Tiada apa yang diubah. Tutup ProsperoEden dan buka semula. (Kod {0})"
+
+#: pe/ui/browse.cpp
+msgid "ProsperoEden is an unofficial PS5 port brought to you by BlackBearReloaded."
+msgstr "ProsperoEden ialah port PS5 tidak rasmi yang dipersembahkan oleh BlackBearReloaded."
+
+#. Shown on the home screen after the app crashed and started again; {0} is a file.
+#: eden_services.cpp, host/fake_services.cpp
+msgid "ProsperoEden stopped because of an error. A report was saved to {0}."
+msgstr "ProsperoEden terhenti kerana ralat. Laporan telah disimpan ke {0}."
+
+#: pe/ui/update.cpp
+msgid "ProsperoEden was not changed."
+msgstr "ProsperoEden tidak diubah."
+
+#. Why a game did not start.
+#: eden_services.cpp
+msgid "PS5 controller initialization failed"
+msgstr "Permulaan pengawal PS5 gagal"
+
+#: pe/ui/browse.cpp
+msgid "PS5 EDITION"
+msgstr "EDISI PS5"
+
+#: pe/ui/multiplayer.cpp
+msgid "Public rooms"
+msgstr "Bilik awam"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
+msgstr "BILIK AWAM"
+
+#: pe/ui/remote.cpp
+msgid "Queued"
+msgstr "Dalam giliran"
+
+#: pe/ui/remote.cpp
+msgid "Queued, from {0}"
+msgstr "Dalam giliran, daripada {0}"
+
+#. The usual value of RNG seed: no fixed seed, a new random one at every start of the game.
+#: pe/ui/game_options.cpp
+msgid "Random"
+msgstr "Rawak"
+
+#. A switch, on by default: what a game reads back from the graphics processor is kept exact. Keep the term the language's emulator players use, or translate it plainly.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Reactive flushing"
+msgstr "Reactive Flushing"
+
+#: pe/ui/remote.cpp
+msgid "Read the lists again"
+msgstr "Baca semula senarai"
+
+#: pe/ui/remote.cpp
+msgid "Reading the game lists..."
+msgstr "Membaca senarai game..."
+
+#: pe/ui/library.cpp, pe/ui/remote.cpp
+msgid "Reading..."
+msgstr "Membaca..."
+
+#: pe/ui/settings.cpp
+msgid "Ready"
+msgstr "Sedia"
+
+#: pe/ui/home.cpp
+msgid "RECENTLY PLAYED"
+msgstr "BARU DIMAINKAN"
+
+#. A switch: no drifting, sliding or zooming on screen.
+#: pe/ui/settings.cpp
+msgid "Reduce motion"
+msgstr "Kurangkan gerakan"
+
+#: pe/ui/multiplayer.cpp
+msgid "Refresh"
+msgstr "Segar semula"
+
+#. Setting: how many times a second the TV picture is refreshed while a game runs (60 or 120 Hz).
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Refresh rate"
+msgstr "Kadar segar semula"
+
+#: pe/ui/browse.cpp
+msgid "REGION"
+msgstr "RANTAU"
+
+#: pe/ui/game_options.cpp
+msgid "Regular"
+msgstr "Biasa"
+
+#: pe/ui/profiles.cpp
+msgid "Remove"
+msgstr "Buang"
+
+#: pe/ui/profiles.cpp
+msgid "Rename"
+msgstr "Namakan semula"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Renderer"
+msgstr "Renderer"
+
+#: pe/ui/game_options.cpp
+msgid "Reset"
+msgstr "Tetap semula"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Resolution"
+msgstr "Resolusi"
+
+#: pe/ui/game_options.cpp
+msgid "Right Joy-Con"
+msgstr "Joy-Con kanan"
+
+#: pe/ui/game_options.cpp
+msgid "Right stick press"
+msgstr "Tekan stick kanan"
+
+#. A game setting. RNG is a random number generator and the seed is the number it starts from. A game with a seed is loaded at the same place in memory at every start, which some mods need. Keep it short; RNG and seed may stay in English where players say them so.
+#: pe/ui/game_options.cpp
+msgid "RNG seed"
+msgstr "Benih RNG"
+
+#: eden_services.cpp, pe/ui/launcher.cpp
+msgid "ROM missing from the game files folder"
+msgstr "ROM tiada dalam folder fail game"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room address"
+msgstr "Alamat bilik"
+
+#: pe/ui/multiplayer.cpp
+msgid "Room {0} of {1}"
+msgstr "Bilik {0} daripada {1}"
+
+#: settings_store.h
+msgid "Russian"
+msgstr "Rusia"
+
+#. Short status at the right of the Save data row. Ryujinx is a name (unchanged).
+#: pe/ui/library.cpp
+msgid "Ryujinx save found"
+msgstr "Simpanan Ryujinx ditemui"
+
+#. The app can read only its own folder; {0} is a number.
+#: pe/ui/browse.cpp
+msgid "Sandboxed (code {0}): app folder only"
+msgstr "Sandboxed (kod {0}): folder aplikasi sahaja"
+
+#. A row of a game's settings: the game's saved progress, which can be copied in or out.
+#: pe/ui/library.cpp
+msgid "Save data"
+msgstr "Data simpanan"
+
+#: pe/ui/save_sync.cpp
+msgid "Save data backed up"
+msgstr "Data simpanan disandarkan"
+
+#: pe/ui/save_sync.cpp
+msgid "Save data changed on both sides"
+msgstr "Data simpanan berubah pada konsol dan pelayan"
+
+#: pe/ui/save_sync.cpp
+msgid "Save data from the server"
+msgstr "Data simpanan daripada pelayan"
+
+#: pe/ui/save_sync.cpp
+msgid "Save data left as it was"
+msgstr "Data simpanan dibiarkan seperti sedia ada"
+
+#: pe/ui/save_sync.cpp
+msgid "Save data not backed up"
+msgstr "Data simpanan tidak disandarkan"
+
+#: pe/ui/save_sync.cpp
+msgid "Save data not synced"
+msgstr "Data simpanan tidak diselaraskan"
+
+#. Short status at the right of the Save data row: a folder with a save to import.
+#: pe/ui/library.cpp
+msgid "Save folder found"
+msgstr "Folder simpanan ditemui"
+
+#: pe/ui/pairing.cpp, pe/ui/settings.cpp
+msgid "Save sync"
+msgstr "Penyelarasan simpanan"
+
+#: pe/ui/pairing.cpp
+msgid "save-sync.json cannot be read ({0}). Nothing syncs until it is corrected over FTP."
+msgstr "save-sync.json tidak dapat dibaca ({0}). Tiada apa diselaraskan sehingga ia diperbetulkan melalui FTP."
+
+#: pe/ui/pairing.cpp
+msgid "save-sync.json cannot be read: correct it over FTP first."
+msgstr "save-sync.json tidak dapat dibaca: perbetulkan dahulu melalui FTP."
+
+#: pe/ui/game_options.cpp, pe/ui/library.cpp
+msgid "Saved for this game. Applies on next launch."
+msgstr "Disimpan untuk game ini. Berkuat kuasa pada pelancaran seterusnya."
+
+#: pe/ui/save_sync.cpp
+msgid "Saved {0}. It goes to the server."
+msgstr "{0} disimpan. Ia dihantar ke pelayan."
+
+#: pe/ui/save_sync.cpp
+msgid "Saved {0}. It replaces this console's."
+msgstr "{0} disimpan. Ia menggantikan milik konsol ini."
+
+#. Shown after choosing 120 Hz.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Saved. A display that cannot show 120 Hz stays at 60 Hz."
+msgstr "Disimpan. Paparan yang tidak dapat memaparkan 120 Hz akan kekal pada 60 Hz."
+
+#: pe/ui/browse.cpp, pe/ui/launcher.cpp
+msgid "Saved. Applies when a game starts."
+msgstr "Disimpan. Berkuat kuasa apabila game bermula."
+
+#. Shown after choosing 'Full quality' for 'ASTC textures'. 1x is a resolution scale (unchanged). It has two lines: keep it short.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Saved. Full quality uses four times the graphics memory for these textures and can run out above 1x."
+msgstr "Disimpan. Kualiti penuh menggunakan empat kali ganda memori grafik untuk tekstur ini dan boleh kehabisan melebihi 1x."
+
+#: pe/ui/browse.cpp
+msgid "Saved. Reopen ProsperoEden to use this folder."
+msgstr "Disimpan. Buka semula ProsperoEden untuk menggunakan folder ini."
+
+#: pe/ui/pairing.cpp
+msgid "Scan the code with your phone, or open the address below."
+msgstr "Imbas kod dengan telefon anda, atau buka alamat di bawah."
+
+#. Button hint: move through a long text (Up/Down).
+#: pe/ui/update.cpp
+msgid "Scroll"
+msgstr "Tatal"
+
+#: pe/ui/game_options.cpp
+msgid "Secondary"
+msgstr "Sekunder"
+
+#. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
+#: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
+msgid "Sections"
+msgstr "Bahagian"
+
+#. Button hint: choose the highlighted item (not the Select button).
+#: pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/pairing.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
+msgid "Select"
+msgstr "Pilih"
+
+#. Heading: the language highlighted in the list.
+#: pe/ui/browse.cpp
+msgid "SELECTED"
+msgstr "DIPILIH"
+
+#. Why a game did not start (the file is gone).
+#: eden_services.cpp
+msgid "Selected ROM is no longer available"
+msgstr "ROM yang dipilih tidak lagi tersedia"
+
+#: pe/ui/save_sync.cpp
+msgid "Server too old for save sync"
+msgstr "Pelayan terlalu lama untuk penyelarasan simpanan"
+
+#: pe/ui/home.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
+msgid "Settings"
+msgstr "Tetapan"
+
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
+msgstr "TETAPAN"
+
+#: eden_services.cpp, host/fake_services.cpp
+msgid "Setup required"
+msgstr "Persediaan diperlukan"
+
+#: eden_services.cpp, host/fake_services.cpp
+msgid "Setup required: {0} Open Settings, Game files to choose the folder that holds your keys, firmware and roms folders (or add the files to {1}), then reopen ProsperoEden."
+msgstr "Persediaan diperlukan: {0} Buka Tetapan, Fail game untuk memilih folder yang menyimpan folder keys, firmware dan roms anda (atau tambah failnya ke {1}), kemudian buka semula ProsperoEden."
+
+#: pe/ui/settings.cpp
+msgid "Setup status and detailed logs."
+msgstr "Status persediaan dan log terperinci."
+
+#: eden_services.cpp
+msgid "Setup validation failed. Check that firmware and key files are readable and valid."
+msgstr "Pengesahan persediaan gagal. Pastikan fail firmware dan kunci boleh dibaca dan sah."
+
+#: pe/ui/pairing.cpp
+msgid "Several servers can keep the save data. Which one should this profile use?"
+msgstr "Beberapa pelayan boleh menyimpan data simpanan. Yang mana patut digunakan oleh profil ini?"
+
+#: pe/ui/remote.cpp
+msgid "Several sources have this game. Which one should it come from?"
+msgstr "Beberapa sumber mempunyai game ini. Yang mana patut dimuat turun?"
+
+#: pe/ui/settings.cpp
+msgid "Show or hide the FPS overlay"
+msgstr "Papar atau sembunyikan lapisan FPS"
+
+#: pe/ui/multiplayer.cpp
+msgid "Showing the previous list."
+msgstr "Memaparkan senarai sebelumnya."
+
+#: pe/ui/pairing.cpp
+msgid "Sign in to {0} as the user this profile's save data belongs to."
+msgstr "Log masuk ke {0} sebagai pengguna pemilik data simpanan profil ini."
+
+#: pe/ui/settings.cpp
+msgid "Size"
+msgstr "Saiz"
+
+#. Button and hint: not now (the dialog shows again the next time the app opens).
+#: pe/ui/update.cpp
+msgid "Skip"
+msgstr "Langkau"
+
+#. A switch: fewer checks when a game changes memory the graphics processor uses. CPU stays.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Skip CPU invalidation"
+msgstr "Langkau pembatalan sah CPU"
+
+#: pe/ui/settings.cpp
+msgid "Skips some checks when a game changes memory the GPU uses: faster, and textures can be stale."
+msgstr "Melangkau sesetengah semakan apabila game mengubah memori yang digunakan GPU: lebih laju, dan tekstur mungkin lapuk."
+
+#: pe/ui/settings.cpp
+msgid "Solid panels, brighter text and an outlined highlight."
+msgstr "Panel pejal, teks lebih terang dan sorotan bergaris sempadan."
+
+#: settings_store.h
+msgid "Spanish"
+msgstr "Sepanyol"
+
+#: settings_store.h
+msgid "Spanish (Latin America)"
+msgstr "Sepanyol (Amerika Latin)"
+
+#: pe/ui/settings.cpp
+msgid "Speed"
+msgstr "Kelajuan"
+
+#. A DualSense button.
+#: pe/ui/game_options.cpp
+msgid "Square"
+msgstr "Petak"
+
+#: pe/ui/profiles.cpp
+msgid "Square again takes {0} off the list. Its save data stays on the console."
+msgstr "Petak sekali lagi mengeluarkan {0} daripada senarai. Data simpanannya kekal pada konsol."
+
+#: pe/ui/pairing.cpp
+msgid "Square again unlinks {0}. Its save data stays on the console and on the server."
+msgstr "Petak sekali lagi menyahpaut {0}. Data simpanannya kekal pada konsol dan pelayan."
+
+#. The app creates its user the first time a game runs.
+#: eden_services.cpp
+msgid "Start any game once before importing a save."
+msgstr "Mulakan mana-mana game sekali sebelum mengimport simpanan."
+
+#. Shown over a game's cover while it starts.
+#: pe/ui/launcher.cpp
+msgid "STARTING"
+msgstr "MEMULAKAN"
+
+#: pe/ui/settings.cpp
+msgid "Stops the background drifting and the screens sliding, here and on the loading screen."
+msgstr "Menghentikan latar belakang yang bergerak dan skrin yang meluncur, di sini dan pada skrin pemuatan."
+
+#: pe/ui/browse.cpp
+msgid "Supply your own files"
+msgstr "Sediakan fail anda sendiri"
+
+#: pe/ui/save_sync.cpp
+msgid "Sync the save data once more."
+msgstr "Selaraskan data simpanan sekali lagi."
+
+#: pe/ui/save_sync.cpp
+msgid "Syncing save data"
+msgstr "Menyelaraskan data simpanan"
+
+#. A category of a game's settings: how the emulated console itself behaves.
+#: pe/ui/library.cpp
+msgid "System"
+msgstr "Sistem"
+
+#: eden_services.cpp
+msgid "Taiwan"
+msgstr "Taiwan"
+
+#: pe/ui/save_sync.cpp
+msgid "Take the server's"
+msgstr "Ambil milik pelayan"
+
+#: pe/ui/profiles.cpp
+msgid "Taken off the list. Its save data stays on the console."
+msgstr "Dikeluarkan daripada senarai. Data simpanannya kekal pada konsol."
+
+#: settings_store.h
+msgid "Thai"
+msgstr "Thai"
+
+#. Heading of the acknowledgements.
+#: pe/ui/browse.cpp
+msgid "THANKS"
+msgstr "TERIMA KASIH"
+
+#: pe/ui/browse.cpp
+msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
+msgstr "Terima kasih kepada seluruh komuniti homebrew PS5 dan setiap pembangun yang pemacu, alat dan pustakanya menjadikan ProsperoEden mungkin."
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "Warna aksen tema semasa."
+
+#: pe/ui/remote.cpp
+msgid "The download stopped"
+msgstr "Muat turun terhenti"
+
+#: pe/ui/settings.cpp
+msgid "The folder that holds your keys, firmware and games."
+msgstr "Folder yang menyimpan kunci, firmware dan game anda."
+
+#: pe/ui/save_sync.cpp
+msgid "The game does not start."
+msgstr "Game tidak bermula."
+
+#: pe/ui/remote.cpp
+msgid "The game list of {0} could not be read."
+msgstr "Senarai game {0} tidak dapat dibaca."
+
+#: pe/ui/remote.cpp
+msgid "The game lists are read: {0} game."
+msgstr "Senarai game telah dibaca: {0} game."
+
+#: pe/ui/remote.cpp
+msgid "The game lists are read: {0} games."
+msgstr "Senarai game telah dibaca: {0} game."
+
+#. Why a game stopped. 'Settings, Video' is the menu path; 'the game's own settings' is the Game settings dialog of the Library.
+#: eden_services.cpp
+msgid "The game ran out of graphics memory. Lower the resolution in Settings, Video (or in the game's own settings) and start it again."
+msgstr "Game kehabisan memori grafik. Turunkan resolusi dalam Tetapan, Video (atau dalam tetapan game itu sendiri), kemudian mulakan semula."
+
+#: pe/ui/save_sync.cpp
+msgid "The game starts when its save data is in step."
+msgstr "Game bermula apabila data simpanannya selaras."
+
+#: pe/ui/remote.cpp
+msgid "The game starts when the download is done."
+msgstr "Game bermula apabila muat turun selesai."
+
+#: pe/ui/game_options.cpp, pe/ui/multiplayer.cpp
+msgid "The keyboard could not be opened."
+msgstr "Papan kekunci tidak dapat dibuka."
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
+msgid "The language games use when they offer it."
+msgstr "Bahasa yang digunakan game apabila ditawarkan."
+
+#. Under the title Theme: what a theme changes.
+#: pe/ui/settings.cpp
+msgid "The look of this menu."
+msgstr "Rupa menu ini."
+
+#: pe/ui/pairing.cpp
+msgid "The profile or the server is no longer there."
+msgstr "Profil atau pelayan itu tidak lagi wujud."
+
+#: pe/ui/profiles.cpp
+msgid "The profile that is playing stays. Choose another one first."
+msgstr "Profil yang sedang bermain kekal. Pilih profil lain dahulu."
+
+#: pe/ui/pairing.cpp
+msgid "The profile's save data syncs as {0} from now on."
+msgstr "Data simpanan profil ini akan diselaraskan sebagai {0} mulai sekarang."
+
+#: pe/ui/pairing.cpp
+msgid "The profile's save data syncs with the server from now on."
+msgstr "Data simpanan profil ini akan diselaraskan dengan pelayan mulai sekarang."
+
+#. Shown at the end of release notes that were cut short; homebrew.page is a site's name and stays as it is.
+#: pe/ui/update.cpp
+msgid "The rest is on the app's page on homebrew.page."
+msgstr "Selebihnya ada pada halaman aplikasi di homebrew.page."
+
+#: pe/ui/save_sync.cpp
+msgid "The server does not have {0}."
+msgstr "Pelayan tiada {0}."
+
+#: pe/ui/save_sync.cpp
+msgid "The server runs RomM {0}; the save sync needs RomM {1} or newer. Update the server: until then no save data is synced with it."
+msgstr "Pelayan menjalankan RomM {0}; penyelarasan simpanan memerlukan RomM {1} atau lebih baharu. Kemas kini pelayan: sehingga itu tiada data simpanan diselaraskan dengannya."
+
+#: pe/ui/remote.cpp
+msgid "The source no longer has this game."
+msgstr "Sumber tidak lagi mempunyai game ini."
+
+#: pe/ui/update.cpp
+msgid "The update could not finish"
+msgstr "Kemas kini tidak dapat diselesaikan"
+
+#. A tile of Settings and its dialog's title: the look of this menu (its colours and artwork).
+#: pe/ui/settings.cpp
+msgid "Theme"
+msgstr "Tema"
+
+#: pe/ui/save_sync.cpp
+msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
+msgstr "Konsol ini dan pelayan kedua-duanya mempunyai data simpanan yang tidak diketahui oleh pihak satu lagi. Yang mana patut kekal? Yang satu lagi disimpan sebagai sandaran."
+
+#: pe/ui/browse.cpp
+msgid "THIS FOLDER"
+msgstr "FOLDER INI"
+
+#: pe/ui/browse.cpp
+msgid "This folder cannot be opened."
+msgstr "Folder ini tidak dapat dibuka."
+
+#. The game has a button mapping of its own.
+#: pe/ui/game_options.cpp
+msgid "This game"
+msgstr "Game ini"
+
+#: eden_services.cpp
+msgid "This game has no save to export yet."
+msgstr "Game ini belum mempunyai simpanan untuk dieksport."
+
+#: pe/ui/library.cpp
+msgid "This game's settings cannot be saved (no title ID)."
+msgstr "Tetapan game ini tidak dapat disimpan (tiada ID tajuk)."
+
+#: pe/ui/multiplayer.cpp
+msgid "This room uses a different protocol version."
+msgstr "Bilik ini menggunakan versi protokol yang berbeza."
+
+#. ryujinx/, save-import/ and roms/ are folder names (unchanged); {0} is the game's ID.
+#: eden_services.cpp
+msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
+msgstr "Untuk mengimport, salin folder Ryujinx ke ryujinx/ atau simpanan ke save-import/{0}/, bersebelahan dengan roms/."
+
+#: pe/ui/game_options.cpp
+msgid "Top left"
+msgstr "Kiri atas"
+
+#: pe/ui/game_options.cpp
+msgid "Top right"
+msgstr "Kanan atas"
+
+#. The DualSense controller's touch pad, pressed as a button. Use the name players know.
+#: pe/ui/game_options.cpp
+msgid "Touchpad"
+msgstr "Touchpad"
+
+#. A DualSense button.
+#: pe/ui/game_options.cpp
+msgid "Triangle"
+msgstr "Segi Tiga"
+
+#. One line about the theme named Canopy: its artwork is a tropical sunset, its panels are dark green glass, its accent colour is lime green.
+#: pe/ui/theme.cpp
+msgid "Tropical dusk, dark green glass and lime."
+msgstr "Senja tropika, kaca hijau gelap dan hijau limau."
+
+#: pe/ui/pairing.cpp, pe/ui/remote.cpp, pe/ui/save_sync.cpp, pe/ui/update.cpp
+msgid "Try again"
+msgstr "Cuba lagi"
+
+#: pe/ui/remote.cpp
+msgid "Trying again."
+msgstr "Mencuba lagi."
+
+#. Button hint: switch the highlighted mod on or off.
+#: pe/ui/library.cpp
+msgid "Turn on or off"
+msgstr "Aktifkan atau nyahaktifkan"
+
+#: pe/ui/multiplayer.cpp
+msgid "UDP port"
+msgstr "Port UDP"
+
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+msgid "Unavailable"
+msgstr "Tidak tersedia"
+
+#: pe/ui/save_sync.cpp
+msgid "Understood"
+msgstr "Faham"
+
+#: pe/ui/pairing.cpp
+msgid "Unlink"
+msgstr "Nyahpaut"
+
+#: pe/ui/pairing.cpp
+msgid "Unlinked. Its save data is no longer synced."
+msgstr "Dinyahpaut. Data simpanannya tidak lagi diselaraskan."
+
+#. Update dialog headline while the downloaded release is extracted.
+#: pe/ui/update.cpp
+msgid "Unpacking"
+msgstr "Mengekstrak"
+
+#. Short tag on the 'Parent folder' row.
+#: pe/ui/browse.cpp
+msgid "UP"
+msgstr "NAIK"
+
+#. Notification title: a newer release of this app is listed (not a game update).
+#: pe/ui/launcher.cpp, pe/ui/update.cpp
+msgid "Update available"
+msgstr "Kemas kini tersedia"
+
+#. Button: download and install the newer release of this app now.
+#: pe/ui/update.cpp
+msgid "Update now"
+msgstr "Kemas kini sekarang"
+
+#: pe/ui/update.cpp
+msgid "Update ready"
+msgstr "Kemas kini sedia"
+
+#. A game update; {0} is its version, for example 1.2.0.
+#: eden_services.cpp, host/fake_services.cpp
+msgid "Update {0}"
+msgstr "Kemas kini {0}"
+
+#: pe/ui/browse.cpp
+msgid "UPDATES, DLC"
+msgstr "KEMAS KINI, DLC"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Upscaling filter"
+msgstr "Penapis Upscaling"
+
+#: eden_services.cpp
+msgid "USA"
+msgstr "AS"
+
+#: pe/ui/browse.cpp
+msgid "Use extracted firmware NCA files. Choose the folder in Settings, Game files; restart the app after changing it."
+msgstr "Gunakan fail NCA firmware yang telah diekstrak. Pilih folder dalam Tetapan, Fail game; mulakan semula aplikasi selepas menukarnya."
+
+#: pe/ui/browse.cpp
+msgid "Use this folder"
+msgstr "Gunakan folder ini"
+
+#. {0} is the app's new version number, for example 1.000.060.
+#: pe/ui/update.cpp
+msgid "Version {0}"
+msgstr "Versi {0}"
+
+#. {0}: the newer release's number, for example 1.000.050; homebrew.page is a site's name and stays as it is.
+#: pe/ui/launcher.cpp
+msgid "Version {0} is on homebrew.page"
+msgstr "Versi {0} ada di homebrew.page"
+
+#. Update dialog: a newer release of this app; {0} is its number, for example 1.000.060.
+#: pe/ui/update.cpp
+msgid "Version {0} is ready to install."
+msgstr "Versi {0} sedia dipasang."
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Vibration"
+msgstr "Getaran"
+
+#: pe/ui/settings.cpp
+msgid "Vibration off"
+msgstr "Getaran nyahaktif"
+
+#: pe/ui/settings.cpp
+msgid "Vibration on"
+msgstr "Getaran aktif"
+
+#: pe/ui/settings.cpp
+msgid "Vibration strength"
+msgstr "Kekuatan getaran"
+
+#: pe/ui/settings.cpp
+msgid "Vibration, button mapping and the shortcuts during a game."
+msgstr "Getaran, pemetaan butang dan pintasan semasa bermain."
+
+#: pe/ui/library.cpp, pe/ui/settings.cpp
+msgid "Video"
+msgstr "Video"
+
+#: pe/ui/home.cpp
+msgid "VIEW ALL GAMES"
+msgstr "LIHAT SEMUA GAME"
+
+#. Vulkan is a name (unchanged).
+#: pe/ui/settings.cpp
+msgid "Vulkan (recommended)"
+msgstr "Vulkan (disyorkan)"
+
+#: pe/ui/pairing.cpp
+msgid "Waiting for the approval  ·  the code works {0} more"
+msgstr "Menunggu kelulusan  ·  kod ini sah selama {0} lagi"
+
+#: pe/ui/remote.cpp
+msgid "Waiting for {0}"
+msgstr "Menunggu {0}"
+
+#: pe/ui/remote.cpp
+msgid "Waiting to download"
+msgstr "Menunggu untuk dimuat turun"
+
+#: pe/ui/settings.cpp
+msgid "What the FPS overlay's line says, and how the chip is drawn."
+msgstr "Apa yang dipaparkan oleh baris lapisan FPS, dan cara cip dilukis."
+
+#. Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.
+#: pe/ui/update.cpp
+msgid "What's new"
+msgstr "Apa yang baharu"
+
+#. Title of the release notes view; {0} is the new version, for example 1.000.080.
+#: pe/ui/update.cpp
+msgid "What's new in version {0}"
+msgstr "Apa yang baharu dalam versi {0}"
+
+#: pe/ui/game_options.cpp
+msgid "Which face button does what in the menu."
+msgstr "Butang tindakan mana yang melakukan apa dalam menu."
+
+#: pe/ui/settings.cpp
+msgid "Who is playing. Each profile keeps its own save data and settings."
+msgstr "Siapa yang bermain. Setiap profil menyimpan data simpanan dan tetapannya sendiri."
+
+#: pe/ui/save_sync.cpp
+msgid "With this console's save data; it is not synced."
+msgstr "Dengan data simpanan konsol ini; ia tidak diselaraskan."
+
+#: pe/ui/save_sync.cpp
+msgid "With this console's save data; it is synced after the game."
+msgstr "Dengan data simpanan konsol ini; ia diselaraskan selepas bermain."
+
+#: pe/ui/pairing.cpp
+msgid "with {0}"
+msgstr "dengan {0}"
+
+#: pe/ui/settings.cpp
+msgid "Write logs at once"
+msgstr "Tulis log serta-merta"
+
+#: pe/ui/save_sync.cpp
+msgid "You are asked again next time."
+msgstr "Anda akan ditanya lagi lain kali."
+
+#: pe/ui/save_sync.cpp
+msgid "You are told again at the next sync."
+msgstr "Anda akan diberitahu lagi pada penyelarasan seterusnya."
+
+#. Update dialog: installing the new app version keeps the player's files.
+#: pe/ui/update.cpp
+msgid "Your games, saves and settings are kept."
+msgstr "Game, simpanan dan tetapan anda dikekalkan."
+
+#. Headline when no game has been played yet.
+#: pe/ui/home.cpp
+msgid "Your next adventure"
+msgstr "Pengembaraan anda yang seterusnya"
+
+#: pe/ui/save_sync.cpp
+msgid "Your save data is checked against the server's."
+msgstr "Data simpanan anda disemak berbanding dengan pelayan."
+
+#. How many settings of a kind this game has of its own; {0} is a number.
+#: pe/ui/library.cpp
+msgid "{0} changed"
+msgstr "{0} diubah"
+
+#. {0} is how many DLC (add-on content) a game has installed.
+#: eden_services.cpp, host/fake_services.cpp
+msgid "{0} DLC"
+msgstr "{0} DLC"
+
+#. Exactly one game. In a language with more than two plural forms, word it so that it reads well with any number (Games: {0}).
+#: pe/ui/browse.cpp, pe/ui/remote.cpp
+msgid "{0} game"
+msgstr "{0} game"
+
+#. Exactly one game. See '{0} game'.
+#: eden_services.cpp
+msgid "{0} game installed"
+msgstr "{0} game dipasang"
+
+#: pe/ui/remote.cpp
+msgid "{0} game lists could not be read."
+msgstr "{0} senarai game tidak dapat dibaca."
+
+#. Any number of games other than one (also 0). See '{0} game'.
+#: pe/ui/browse.cpp, pe/ui/library.cpp, pe/ui/remote.cpp
+msgid "{0} games"
+msgstr "{0} game"
+
+#. Any number of games other than one. See '{0} game'.
+#: eden_services.cpp, host/fake_services.cpp
+msgid "{0} games installed"
+msgstr "{0} game dipasang"
+
+#. {0} is 60 or 120 (hertz).
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+msgid "{0} Hz"
+msgstr "{0} Hz"
+
+#. Exactly one mod, in the list of what a game comes with (Update 1.2.0, 2 DLC, 1 mod). See '{0} game'.
+#: pe/ui/library.cpp
+msgid "{0} mod"
+msgstr "{0} mod"
+
+#. Any number of mods other than one. See '{0} mod'.
+#: pe/ui/library.cpp
+msgid "{0} mods"
+msgstr "{0} mod"
+
+#. Exactly one file. See '{0} game'.
+#: pe/ui/browse.cpp
+msgid "{0} NCA file"
+msgstr "{0} fail NCA"
+
+#. Any number of files other than one. See '{0} game'.
+#: pe/ui/browse.cpp
+msgid "{0} NCA files"
+msgstr "{0} fail NCA"
+
+#. {0} is a language name. Shown beside a game that lacks that language.
+#: eden_services.cpp, host/fake_services.cpp
+msgid "{0} not available"
+msgstr "{0} tidak tersedia"
+
+#. Position in a list: 3 OF 12.
+#: pe/ui/widgets.cpp
+msgid "{0} OF {1}"
+msgstr "{0} DARIPADA {1}"
+
+#. In the same list, when some of the game's mods are switched off: 1 of 2 mods on. Keep it short.
+#: pe/ui/library.cpp
+msgid "{0} of {1} mods on"
+msgstr "{0} daripada {1} mod aktif"
+
+#. How many of a game's mods are switched on: 2 of 3 on.
+#: pe/ui/library.cpp, pe/ui/settings.cpp
+msgid "{0} of {1} on"
+msgstr "{0} daripada {1} aktif"
+
+#: pe/ui/settings.cpp
+msgid "{0} of {1} profiles"
+msgstr "{0} daripada {1} profil"
+
+#: pe/ui/save_sync.cpp
+msgid "{0} on {1}"
+msgstr "{0} pada {1}"
+
+#: pe/ui/multiplayer.cpp
+msgid "{0} public rooms"
+msgstr "{0} bilik awam"
+
+#: pe/ui/remote.cpp, pe/ui/settings.cpp
+msgid "{0} sources"
+msgstr "{0} sumber"
+
+#: pe/ui/save_sync.cpp
+msgid "{0} · Profile {1}"
+msgstr "{0} · Profil {1}"
+
+#. A percentage (a volume): write it as the language does, for example with a space before the sign.
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/remote.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
+msgid "{0}%"
+msgstr "{0}%"
+
+#. {0} is a folder; NSP and XCI are file types.
+#: pe/ui/browse.cpp
+msgid "{0}/ (NSP or XCI)"
+msgstr "{0}/ (NSP atau XCI)"
+
+#. {0} is the mods folder; inside it each game has a folder named after its ID (16 letters and digits).
+#: pe/ui/browse.cpp
+msgid "{0}/ (one folder per game ID)"
+msgstr "{0}/ (satu folder bagi setiap ID game)"

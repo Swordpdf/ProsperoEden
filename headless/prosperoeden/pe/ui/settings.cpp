@@ -32,20 +32,23 @@ enum Category
     kSaveSync,
     kLanguage,
     kTheme,
+    kColour,
     kCategoryCount,
 };
 constexpr const char *kCategories[kCategoryCount] = {
     TR("Profiles"), TR("Video"), TR("Performance"), TR("Audio"), TR("Controls"), TR("Accessibility"),
-    TR("Diagnostics"), TR("Game files"), TR("Downloads"), TR("Save sync"), TR("Language"), TR("Theme")};
+    TR("Diagnostics"), TR("Game files"), TR("Downloads"), TR("Save sync"), TR("Language"), TR("Theme"),
+    TR("Colour")};
 constexpr Icon kIcons[kCategoryCount] = {
     Icon::profile, Icon::video, Icon::performance, Icon::audio, Icon::controls, Icon::accessibility,
-    Icon::diagnostics, Icon::files, Icon::downloads, Icon::sync, Icon::language, Icon::theme};
+    Icon::diagnostics, Icon::files, Icon::downloads, Icon::sync, Icon::language, Icon::theme,
+    Icon::theme};
 constexpr int kTileColumns = 4;
-constexpr int kTileRows = 3;
-constexpr float kTileGap = 24.0f;
+constexpr int kTileRows = 4;
+constexpr float kTileGap = 20.0f;
 constexpr float kTileWidth = (layout::kWidth - kTileGap * (kTileColumns - 1)) / kTileColumns;
-constexpr float kTileHeight = 224.0f;
-constexpr float kTilesTop = 152.0f;
+constexpr float kTileHeight = 182.0f;
+constexpr float kTilesTop = 140.0f;
 constexpr Rect kStrip{layout::kLeft, kTilesTop + (kTileHeight + kTileGap) * kTileRows, layout::kWidth, 68.0f};
 Rect tile_rect(int index)
 {
@@ -88,6 +91,7 @@ enum HudRow : int
     hud_mem_row,
     hud_ping_row,
     hud_cores_row, // the CPU piece as each of the four cores (its bit clear), or only the busiest
+    hud_resolution_row, // the game's own picture, as it renders it (bit 9; last, so no earlier bit moves)
     kHudRows,
 };
 constexpr int kFrameGenTargets = 6;     // Auto, 60, 90, 120, 144, 240 Hz (settings_store.h)
@@ -122,6 +126,20 @@ constexpr int kPerformanceSwitches = speed_memory_layout;
 constexpr int kPerformanceRowsShown = 4;
 constexpr Rect kPerformanceWindow{592.0f, kVideoRowsTop, 736.0f,
                                   kVideoRowPitch * (kPerformanceRowsShown - 1) + kVideoRowHeight};
+// The Controls dialog's rows, under its shortcuts: three of the four show and the list scrolls.
+constexpr float kControlsRowsTop = 510.0f;
+constexpr int kControlsRowsShown = 3;
+constexpr Rect kControlsWindow{592.0f, kControlsRowsTop, 736.0f,
+                               kVideoRowPitch * (kControlsRowsShown - 1) + kVideoRowHeight};
+// The Controls rows, in order.
+enum ControlRow : int
+{
+    kControlVibration,
+    kControlStrength,
+    kControlMapping,
+    kControlMenuKeys,
+    kControlRows,
+};
 // The sizes of Preferences::output, as every language writes them.
 constexpr const char *kOutputs[] = {"1080p", "1440p", "2160p"};
 // Settings > Performance > Memory: what the guest's kernel is told the console has
@@ -165,20 +183,24 @@ void Launcher::press_settings(Key key)
         go_section(0);
         return;
     case Key::up:
-        if (at >= kTileColumns)
+        if (th().list_settings)
+            settings_.move(-1);
+        else if (at >= kTileColumns)
             at -= kTileColumns;
         break;
     case Key::down:
-        if (at < kTileColumns * (kTileRows - 1))
+        if (th().list_settings)
+            settings_.move(1);
+        else if (at < kTileColumns * (kTileRows - 1))
             at += kTileColumns;
         break;
     case Key::left:
-        if (at % kTileColumns == 0)
+        if (th().list_settings || at % kTileColumns == 0)
             return focus_rail();
         at -= 1;
         break;
     case Key::right:
-        if (at % kTileColumns != kTileColumns - 1)
+        if (!th().list_settings && at % kTileColumns != kTileColumns - 1)
             at += 1;
         break;
     case Key::cross:
@@ -219,6 +241,9 @@ void Launcher::press_settings(Key key)
             break;
         case kControls:
             open_modal(Modal::controls);
+            controls_rows_.visible = kControlsRowsShown;
+            controls_rows_.pitch = kVideoRowPitch;
+            controls_rows_.reset(dialog_rows(Modal::controls), 0);
             break;
         case kAccessibility:
             open_modal(Modal::accessibility);
@@ -227,6 +252,11 @@ void Launcher::press_settings(Key key)
             open_modal(Modal::theme);
             option_ = theme_index();
             option_cursor_.snap(dialog_row_top(Modal::theme, option_));
+            break;
+        case kColour:
+            open_modal(Modal::accent);
+            option_ = accent_index() + 1;
+            option_cursor_.snap(dialog_row_top(Modal::accent, option_));
             break;
         default:
             open_modal(Modal::diagnostics);
@@ -238,7 +268,6 @@ void Launcher::press_settings(Key key)
     }
     if (at != before)
     {
-        // What the tile is about comes in again under the tiles.
         section_.value = 0.0f;
         section_.velocity = 0.0f;
         message_.clear();
@@ -277,92 +306,150 @@ void Launcher::draw_settings(Canvas &c)
         }(),
         pick(services_.language_labels(), prefs_.language),
         t.name,
+        accent_index() < 0 ? std::string{tr("Default")} :
+            std::string{accent_presets()[static_cast<std::size_t>(accent_index())].name},
     };
-    for (int i = 0; i < kCategoryCount; ++i)
+    if (t.list_settings)
     {
-        const Rect r = tile_rect(i);
-        const float f = tween::clamp01(settings_springs_[static_cast<std::size_t>(i)].value);
-        const float scale = 1.0f + (0.03f * f - 0.035f * press_ * f) * motion();
-        const float here = arrive(i);
-        list.push_opacity(here);
-        list.push_transform(scale, r.x + r.w * 0.5f, r.y + r.h * 0.5f, 0.0f,
-                            -3.0f * f * motion() + (1.0f - here) * 18.0f);
-        plate(c, tile_plate(), r, f);
-        icon(c, kIcons[i], r.x + 50.0f, r.y + 52.0f, 44.0f, gfx::mix(t.accent, t.accent_pale, f));
+        constexpr float kListRowHeight = 78.0f;
+        const float kListLeft = t.top_nav ? 960.0f : layout::kLeft;
+        const float kListWidth = t.top_nav ? 864.0f : layout::kWidth;
+        const float kListTop = t.top_nav ? 110.0f : 152.0f;
+        const float kListWindowHeight = t.top_nav ? 870.0f : 840.0f;
+        if (t.top_nav)
+            kicker(c, tr("SETTINGS"), kListLeft, baseline(80.0f, 30.0f, t.size_small), t.accent_pale, kListWidth);
+        const auto list_row_rect = [&](int row) -> Rect
         {
-            // A name of two long words takes two lines: the icon over it leaves the room.
-            const Heavy heavy(c);
-            const char *name = tr(kCategories[i]);
-            const float width = r.w - 56.0f;
-            const float line = baseline(r.y + r.h - 98.0f, 38.0f, 30.0f);
-            // (Two words: one long word is drawn smaller rather than broken.)
-            if (text_width(c, name, 30.0f) > width && std::string_view{name}.find(' ') != std::string_view::npos &&
-                fonts_.font->wrap(name, text_size(30.0f), width).size() == 2)
-                text_block(c, name, r.x + 28.0f, line - 36.0f, 30.0f, 36.0f, t.title, width, 2, kShrink);
-            else
-                text_shrink(c, name, r.x + 28.0f, line, 30.0f, t.title, width);
+            return {kListLeft, kListTop + static_cast<float>(row) * settings_.pitch - settings_.scroll(),
+                    kListWidth, kListRowHeight};
+        };
+        list.push_clip({kListLeft - 24.0f, kListTop - 6.0f, kListWidth + 48.0f, kListWindowHeight + 12.0f});
+        for (int row = settings_.first_row(); row <= settings_.last_row(); ++row)
+        {
+            list.push_opacity(settings_.row_alpha(row, kListRowHeight));
+            plate_rest(c, row_plate(), list_row_rect(row));
+            list.pop_opacity();
         }
-        text_shrink(c, summaries[i], r.x + 28.0f, baseline(r.y + r.h - 56.0f, 28.0f, t.size_small), t.size_small,
-                    gfx::mix(t.meta, t.body, f), r.w - 56.0f);
+        plate_focus(c, row_plate(),
+                    {kListLeft, kListTop + settings_.cursor() - settings_.scroll(), kListWidth, kListRowHeight},
+                    1.0f);
+        for (int row = settings_.first_row(); row <= settings_.last_row(); ++row)
+        {
+            const Rect r = list_row_rect(row);
+            list.push_opacity(settings_.row_alpha(row, kListRowHeight));
+            icon(c, kIcons[row], r.x + 48.0f, r.y + r.h * 0.5f, 36.0f,
+                 gfx::mix(t.accent, t.accent_pale,
+                           tween::clamp01(settings_springs_[static_cast<std::size_t>(row)].value)));
+            {
+                const Heavy heavy(c);
+                text_shrink(c, tr(kCategories[row]), r.x + 88.0f,
+                            baseline(r.y, r.h, t.size_text), t.size_text, t.title, 420.0f);
+            }
+            text_shrink(c, summaries[row], r.x + r.w - 28.0f,
+                        baseline(r.y, r.h, t.size_small), t.size_small,
+                        gfx::mix(t.meta, t.body,
+                                  tween::clamp01(settings_springs_[static_cast<std::size_t>(row)].value)),
+                        r.w - 560.0f, Align::right);
+            list.pop_opacity();
+        }
+        list.pop_clip();
+        if (settings_.count > settings_.visible)
+            scrollbar(c, settings_, kListLeft + kListWidth + 16.0f, kListTop, kListWindowHeight);
+    }
+    else
+    {
+        for (int i = 0; i < kCategoryCount; ++i)
+        {
+            const Rect r = tile_rect(i);
+            const float f = tween::clamp01(settings_springs_[static_cast<std::size_t>(i)].value);
+            const float scale = 1.0f + (0.03f * f - 0.035f * press_ * f) * motion();
+            const float here = arrive(i);
+            list.push_opacity(here);
+            list.push_transform(scale, r.x + r.w * 0.5f, r.y + r.h * 0.5f, 0.0f,
+                                -3.0f * f * motion() + (1.0f - here) * 18.0f);
+            plate(c, tile_plate(), r, f);
+            icon(c, kIcons[i], r.x + 50.0f, r.y + 52.0f, 44.0f, gfx::mix(t.accent, t.accent_pale, f));
+            {
+                const Heavy heavy(c);
+                const char *name = tr(kCategories[i]);
+                const float width = r.w - 56.0f;
+                const float line = baseline(r.y + r.h - 98.0f, 38.0f, 30.0f);
+                if (text_width(c, name, 30.0f) > width && std::string_view{name}.find(' ') != std::string_view::npos &&
+                    fonts_.font->wrap(name, text_size(30.0f), width).size() == 2)
+                    text_block(c, name, r.x + 28.0f, line - 36.0f, 30.0f, 36.0f, t.title, width, 2, kShrink);
+                else
+                    text_shrink(c, name, r.x + 28.0f, line, 30.0f, t.title, width);
+            }
+            text_shrink(c, summaries[i], r.x + 28.0f, baseline(r.y + r.h - 56.0f, 28.0f, t.size_small), t.size_small,
+                        gfx::mix(t.meta, t.body, f), r.w - 56.0f);
+            list.pop_transform();
+            list.pop_opacity();
+        }
+        if (!t.top_nav)
+        {
+        glass(c, kStrip, t.radius_row + 2.0f, t.panel.with_alpha(0.80f), t.panel_edge.with_alpha(0.34f), 0.5f);
+        const char *about = "";
+        switch (settings_.selected)
+        {
+        case kProfiles:
+            about = tr("Who is playing. Each profile keeps its own save data and settings.");
+            break;
+        case kVideo:
+            about = tr("Graphics backend and how games are scaled to your TV.");
+            break;
+        case kPerformance:
+            about = tr("Faster games, at some cost in accuracy.");
+            break;
+        case kAudio:
+            about = tr("Game volume, and the sounds of this menu.");
+            break;
+        case kControls:
+            about = tr("Vibration, button mapping and the shortcuts during a game.");
+            break;
+        case kAccessibility:
+            about = tr("Make the menu easier to see and follow.");
+            break;
+        case kDiagnostics:
+            about = tr("Setup status and detailed logs.");
+            break;
+        case kFiles:
+            about = tr("The folder that holds your keys, firmware and games.");
+            break;
+        case kDownloads:
+            about = tr("Games on your network, downloaded when you play them.");
+            break;
+        case kSaveSync:
+            about = tr("Each profile's save data on a server of its own, synced before and after a game.");
+            break;
+        case kLanguage:
+            about = tr("The language games use when they offer it.");
+            break;
+        case kTheme:
+            about = tr(t.summary);
+            break;
+        default:
+            break;
+        }
+        const float version = text(c, version_, kStrip.x + kStrip.w - 28.0f, baseline(kStrip.y, kStrip.h, t.size_small),
+                                   t.size_small, t.faint, Align::right);
+        const float shown = tween::clamp01(section_.value);
+        list.push_opacity(shown);
+        list.push_transform(1.0f, 0.0f, 0.0f, 0.0f, (1.0f - shown) * 8.0f * motion());
+        list.circle(kStrip.x + 34.0f, kStrip.y + kStrip.h * 0.5f, 5.0f, t.accent);
+        text_shrink(c, about, kStrip.x + 56.0f, baseline(kStrip.y, kStrip.h, 22.0f), 22.0f, t.copy,
+                    kStrip.w - 28.0f - version - 40.0f - 56.0f);
         list.pop_transform();
         list.pop_opacity();
+        }
     }
 
-    // ---- under the tiles: what the focused one is about ----
-    glass(c, kStrip, t.radius_row + 2.0f, t.panel.with_alpha(0.80f), t.panel_edge.with_alpha(0.34f), 0.5f);
-    const char *about = "";
-    switch (settings_.selected)
+    if (t.top_nav)
     {
-    case kProfiles:
-        about = tr("Who is playing. Each profile keeps its own save data and settings.");
-        break;
-    case kVideo:
-        about = tr("Graphics backend and how games are scaled to your TV.");
-        break;
-    case kPerformance:
-        about = tr("Faster games, at some cost in accuracy.");
-        break;
-    case kAudio:
-        about = tr("Game volume, and the sounds of this menu.");
-        break;
-    case kControls:
-        about = tr("Vibration, button mapping and the shortcuts during a game.");
-        break;
-    case kAccessibility:
-        about = tr("Make the menu easier to see and follow.");
-        break;
-    case kDiagnostics:
-        about = tr("Setup status and detailed logs.");
-        break;
-    case kFiles:
-        about = tr("The folder that holds your keys, firmware and games.");
-        break;
-    case kDownloads:
-        about = tr("Games on your network, downloaded when you play them.");
-        break;
-    case kSaveSync:
-        about = tr("Each profile's save data on a server of its own, synced before and after a game.");
-        break;
-    case kLanguage:
-        about = tr("The language games use when they offer it.");
-        break;
-    case kTheme:
-        about = tr(t.summary);
-        break;
-    default:
-        break;
+        static constexpr Hint kHints[] = {
+            {Pad::cross, TR("Select")}, {Pad::circle, TR("Home")}, {Pad::l1, TR("Sections"), Pad::r1}};
+        draw_footer(c, kHints, 3);
+        return;
     }
-    const float version = text(c, version_, kStrip.x + kStrip.w - 28.0f, baseline(kStrip.y, kStrip.h, t.size_small),
-                               t.size_small, t.faint, Align::right);
-    const float shown = tween::clamp01(section_.value);
-    list.push_opacity(shown);
-    list.push_transform(1.0f, 0.0f, 0.0f, 0.0f, (1.0f - shown) * 8.0f * motion());
-    list.circle(kStrip.x + 34.0f, kStrip.y + kStrip.h * 0.5f, 5.0f, t.accent);
-    text_shrink(c, about, kStrip.x + 56.0f, baseline(kStrip.y, kStrip.h, 22.0f), 22.0f, t.copy,
-                kStrip.w - 28.0f - version - 40.0f - 56.0f);
-    list.pop_transform();
-    list.pop_opacity();
-
     static constexpr Hint kHints[] = {
         {Pad::cross, TR("Select")}, {Pad::circle, TR("Back")}, {Pad::l1, TR("Sections"), Pad::r1}};
     draw_footer(c, kHints, 3, home_.system_status);
@@ -405,6 +492,8 @@ int Launcher::dialog_rows(Modal modal) const
         return 3;
     case Modal::theme:
         return static_cast<int>(themes().size());
+    case Modal::accent:
+        return static_cast<int>(accent_presets().size()) + 1;
     case Modal::game:
         // Console mode, video, performance, audio, controls, system, language, mods; save data in
         // builds that move saves.
@@ -413,8 +502,8 @@ int Launcher::dialog_rows(Modal modal) const
                (library_.selected < static_cast<int>(games_.size()) &&
                         !games_[static_cast<std::size_t>(library_.selected)].sources.empty() &&
                         !games_[static_cast<std::size_t>(library_.selected)].remote ? 1 : 0);
-    case Modal::controls:     // vibration, its strength, the button mapping
-        return 3;
+    case Modal::controls:     // vibration, its strength, the button mapping, the menu's own buttons
+        return kControlRows;
     case Modal::diagnostics:  // detailed logging, logs written at once
         return 2;
     default:
@@ -430,14 +519,16 @@ float Launcher::dialog_row_top(Modal modal, int row) const
     case Modal::accessibility:
     case Modal::theme:
         return 370.0f + 102.0f * static_cast<float>(row);
+    case Modal::accent:
+        return 274.0f + 80.0f * static_cast<float>(row);
     case Modal::performance: // four of its rows show; the list scrolls to the others
         return kVideoRowsTop + kVideoRowPitch * static_cast<float>(row) - performance_rows_.scroll();
     case Modal::video: // five of its rows show; the list scrolls to the others
         return kVideoRowsTop + kVideoRowPitch * static_cast<float>(row) - video_rows_.scroll();
     case Modal::game:
         return 334.0f + 96.0f * static_cast<float>(row);
-    case Modal::controls: // under the shortcuts
-        return 528.0f + 96.0f * static_cast<float>(row);
+    case Modal::controls: // under the shortcuts; the list scrolls
+        return kControlsRowsTop + kVideoRowPitch * static_cast<float>(row) - controls_rows_.scroll();
     case Modal::diagnostics: // under the setup's state
         return 500.0f + 102.0f * static_cast<float>(row);
     default:
@@ -456,9 +547,12 @@ void Launcher::press_dialog(Key key)
         close_modal();
         return;
     }
-    if ((key == Key::up || key == Key::down) && (modal_ == Modal::video || modal_ == Modal::performance))
+    if ((key == Key::up || key == Key::down) &&
+        (modal_ == Modal::video || modal_ == Modal::performance || modal_ == Modal::controls))
     {
-        ListView &rows_view = modal_ == Modal::video ? video_rows_ : performance_rows_;
+        ListView &rows_view = modal_ == Modal::video      ? video_rows_
+                              : modal_ == Modal::controls ? controls_rows_
+                                                          : performance_rows_;
         if (rows_view.move(key == Key::down ? 1 : -1))
         {
             option_ = rows_view.selected;
@@ -483,12 +577,41 @@ void Launcher::press_dialog(Key key)
             return;
         const Theme &chosen = themes()[static_cast<std::size_t>(std::clamp(option_, 0, rows - 1))];
         const std::string had = prefs_.theme;
+        const std::string had_accent = prefs_.accent;
         prefs_.theme = chosen.id;
+        prefs_.accent.clear(); // a preset belongs to one theme
         const bool saved = save_preferences(true);
         if (saved)
+        {
             use_theme(chosen.id);
+            settings_.visible = th().list_settings ? 10 : kCategoryCount;
+            settings_.pitch = th().list_settings ? 84.0f : 88.0f;
+            settings_.reset(kCategoryCount, settings_.selected);
+            use_accent("");
+        }
         else
+        {
             prefs_.theme = had;
+            prefs_.accent = had_accent;
+        }
+        cue(saved ? Cue::saved : Cue::error);
+        return;
+    }
+    if (modal_ == Modal::accent)
+    {
+        if (!activate)
+            return;
+        const auto presets = accent_presets();
+        const int chosen = std::clamp(option_, 0, rows - 1);
+        const std::string had = prefs_.accent;
+        prefs_.accent = chosen == 0 ? "" : presets[static_cast<std::size_t>(chosen - 1)].id;
+        const bool saved = save_preferences(true);
+        if (saved)
+        {
+            use_accent(prefs_.accent);
+        }
+        else
+            prefs_.accent = had;
         cue(saved ? Cue::saved : Cue::error);
         return;
     }
@@ -579,14 +702,21 @@ void Launcher::press_dialog(Key key)
         break;
     }
     case Modal::controls:
-        if (option_ == 2)
+        if (option_ == kControlMapping)
         {
             // The button mapping has its own list (game_options.cpp).
             if (activate)
                 open_mapping(false);
             return;
         }
-        if (option_ == 1)
+        if (option_ == kControlMenuKeys)
+        {
+            // The menu's own buttons have their own list (game_options.cpp).
+            if (activate)
+                open_menu_mapping();
+            return;
+        }
+        if (option_ == kControlStrength)
         {
             // The strength: a quarter at a time, never off (the switch above is for that).
             if (!adjust)
@@ -681,6 +811,10 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         title = tr("Theme");
         copy = tr("The look of this menu.");
         break;
+    case Modal::accent:
+        title = tr("Colour");
+        copy = tr("The accent colour of the current theme.");
+        break;
     default:
         title = tr("Diagnostics");
         copy = tr("Detailed logs apply to the next game launch.");
@@ -692,42 +826,49 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
                 th().copy, 736.0f);
 
     const int rows = dialog_rows(modal);
-    // Video's rows scroll in a window of five and Performance's in one of four; the other dialogs
-    // show all of theirs.
-    const bool scrolls = modal == Modal::video || modal == Modal::performance;
-    const ListView &rows_view = modal == Modal::performance ? performance_rows_ : video_rows_;
-    const Rect &window = modal == Modal::performance ? kPerformanceWindow : kVideoWindow;
+    // Video's rows scroll in a window of five, Performance's in one of four and Controls' in one
+    // of three under its shortcuts; the other dialogs show all of theirs.
+    const bool scrolls =
+        modal == Modal::video || modal == Modal::performance || modal == Modal::controls;
+    const ListView &rows_view = modal == Modal::performance    ? performance_rows_
+                                : modal == Modal::controls     ? controls_rows_
+                                                               : video_rows_;
+    const Rect &window = modal == Modal::performance    ? kPerformanceWindow
+                         : modal == Modal::controls     ? kControlsWindow
+                                                        : kVideoWindow;
+    const float rows_top = modal == Modal::controls ? kControlsRowsTop : kVideoRowsTop;
     const int first = scrolls ? rows_view.first_row() : 0;
     const int last = scrolls ? rows_view.last_row() : rows - 1;
     if (scrolls)
         list.push_clip({window.x - 24.0f, window.y - 6.0f, window.w + 48.0f, window.h + 12.0f});
+    const float row_h = modal == Modal::accent ? 72.0f : 94.0f;
     for (int row = first; row <= last; ++row)
     {
         list.push_opacity(scrolls ? rows_view.row_alpha(row, kVideoRowHeight) : 1.0f);
-        plate_rest(c, row_plate(), {592.0f, dialog_row_top(modal, row), 736.0f, 94.0f});
+        plate_rest(c, row_plate(), {592.0f, dialog_row_top(modal, row), 736.0f, row_h});
         list.pop_opacity();
     }
     plate_focus(c, row_plate(),
                 {592.0f,
-                 scrolls ? kVideoRowsTop + rows_view.cursor() - rows_view.scroll() :
+                 scrolls ? rows_top + rows_view.cursor() - rows_view.scroll() :
                            option_cursor_.value,
-                 736.0f, 94.0f},
+                 736.0f, row_h},
                 1.0f);
 
     // A row's name takes what its control (`taken` wide, at the right) leaves of the row.
     const auto label = [&](int row, const char *value, float taken)
     {
-        text_shrink(c, value, 628.0f, baseline(dialog_row_top(modal, row), 94.0f, th().size_text),
+        text_shrink(c, value, 628.0f, baseline(dialog_row_top(modal, row), row_h, th().size_text),
                     th().size_text, th().value, 664.0f - taken - 28.0f);
     };
     const auto choice = [&](int row, const std::string &value)
     {
         return chooser(c, value, 1296.0f,
-                       baseline(dialog_row_top(modal, row), 94.0f, th().size_text),
+                       baseline(dialog_row_top(modal, row), row_h, th().size_text),
                        row == option_ ? 1.0f : 0.0f, th().accent_pale);
     };
     constexpr float kToggle = 64.0f;
-    const auto row_centre = [&](int row) { return dialog_row_top(modal, row) + 47.0f; };
+    const auto row_centre = [&](int row) { return dialog_row_top(modal, row) + row_h * 0.5f; };
     const float knob = tween::clamp01(switches_[0].value);
 
     switch (modal)
@@ -835,24 +976,38 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
             text_shrink(c, tr(kShortcuts[i].action), 802.0f, baseline(top, 54.0f, 22.0f), 22.0f,
                         th().body, 526.0f);
         }
-        label(0, tr("Vibration"), kToggle);
-        toggle(c, 1292.0f, row_centre(0), knob);
-        // The button mapping: as usual or changed, opened with Cross.
-        const float shown = text_shrink(
-            c, prefs_.mapping == kDefaultMapping ? tr("As usual") : tr("Changed"), 1292.0f,
-            baseline(dialog_row_top(modal, 2), 94.0f, th().size_small), th().size_small,
-            prefs_.mapping == kDefaultMapping ? th().meta : th().accent_pale, 320.0f, Align::right);
-        label(2, tr("Button mapping"), shown);
-        // The vibration's strength: a level row, as the volumes are.
+        for (int row = first; row <= last; ++row)
         {
-            const float value =
-                text(c, percent(prefs_.vibration_strength), 1292.0f,
-                     baseline(dialog_row_top(modal, 1), 94.0f, th().size_text), th().size_text, th().accent_pale,
-                     Align::right);
-            const float gap = std::max(96.0f, value + 20.0f);
-            level_bar(c, 1292.0f - gap, row_centre(1), 260.0f,
-                      static_cast<float>(prefs_.vibration_strength) / 100.0f, option_ == 1 ? 1.0f : 0.0f);
-            label(1, tr("Vibration strength"), 260.0f + gap);
+            list.push_opacity(rows_view.row_alpha(row, kVideoRowHeight));
+            if (row == kControlVibration)
+            {
+                label(row, tr("Vibration"), kToggle);
+                toggle(c, 1292.0f, row_centre(row), knob);
+            }
+            else if (row == kControlStrength)
+            {
+                const float value =
+                    text(c, percent(prefs_.vibration_strength), 1292.0f,
+                         baseline(dialog_row_top(modal, row), 94.0f, th().size_text), th().size_text,
+                         th().accent_pale, Align::right);
+                const float gap = std::max(96.0f, value + 20.0f);
+                level_bar(c, 1292.0f - gap, row_centre(row), 260.0f,
+                          static_cast<float>(prefs_.vibration_strength) / 100.0f,
+                          option_ == row ? 1.0f : 0.0f);
+                label(row, tr("Vibration strength"), 260.0f + gap);
+            }
+            else
+            {
+                // An opener (Button mapping, Menu keybinds): as usual or changed, opened with Cross.
+                const bool changed = row == kControlMapping ? prefs_.mapping != kDefaultMapping
+                                                            : prefs_.menu_bind != kDefaultMenuBinding;
+                const float shown = text_shrink(
+                    c, changed ? tr("Changed") : tr("As usual"), 1292.0f,
+                    baseline(dialog_row_top(modal, row), 94.0f, th().size_small), th().size_small,
+                    changed ? th().accent_pale : th().meta, 320.0f, Align::right);
+                label(row, row == kControlMapping ? tr("Button mapping") : tr("Menu keybinds"), shown);
+            }
+            list.pop_opacity();
         }
         break;
     }
@@ -927,6 +1082,25 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
                    kShrink);
         break;
     }
+    case Modal::accent:
+    {
+        const auto presets = accent_presets();
+        const int active = accent_index();
+        for (int row = 0; row < rows; ++row)
+        {
+            const char *name = row == 0 ? tr("Default") : presets[static_cast<std::size_t>(row - 1)].name;
+            label(row, name, 64.0f);
+            const bool current = (row == 0 && active < 0) || (row > 0 && row - 1 == active);
+            if (!current)
+                continue;
+            list.circle(1268.0f, row_centre(row), 17.0f, th().accent);
+            const bool contrast = look().high_contrast;
+            look().high_contrast = false;
+            icon(c, Icon::check, 1268.0f, row_centre(row), 22.0f, th().on_accent);
+            look().high_contrast = contrast;
+        }
+        break;
+    }
     default:
     {
         text_block(c, services_.setup_details(), 592.0f, baseline(364.0f, 40.0f, th().size_text),
@@ -963,8 +1137,8 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
     }
 
     // Under the rows: Video's five, Performance's four with their line of text, and Controls'
-    // three under its shortcuts end lower than the other dialogs' three.
-    const float foot = scrolls || modal == Modal::controls ? 848.0f : 811.0f;
+    // that scroll under its shortcuts all end lower than the other dialogs' rows.
+    const float foot = scrolls ? 848.0f : 811.0f;
     if (!message_.empty() && scrolls)
     {
         // Two lines, placed as a game's own settings place theirs: what a Video choice costs
@@ -977,28 +1151,28 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         notice(c, message_, 592.0f, foot + 7.0f, th().size_small,
                message_warning_ ? th().warning : th().accent_pale, 736.0f, message_warning_);
     }
-    else if (modal == Modal::controls && option_ == 2)
+    else if (modal == Modal::controls && (option_ == kControlMapping || option_ == kControlMenuKeys))
     {
         static constexpr Hint kOpen[] = {
             {Pad::updown, TR("Select")}, {Pad::cross, TR("Open")}, {Pad::circle, TR("Back")}};
-        draw_hints(c, kOpen, 3, 592.0f, foot, th().copy, 736.0f);
+        draw_menu_hints(c, kOpen, 3, 592.0f, foot, th().copy, 736.0f);
     }
     else if (modal == Modal::video && option_ == video_overlay_options)
     {
         static constexpr Hint kOpen[] = {
             {Pad::updown, TR("Select")}, {Pad::cross, TR("Open")}, {Pad::circle, TR("Back")}};
-        draw_hints(c, kOpen, 3, 592.0f, foot, th().copy, 736.0f);
+        draw_menu_hints(c, kOpen, 3, 592.0f, foot, th().copy, 736.0f);
     }
     else if (rows > 1)
     {
         static constexpr Hint kHints[] = {
             {Pad::updown, TR("Select")}, {Pad::leftright, TR("Change")}, {Pad::circle, TR("Back")}};
-        draw_hints(c, kHints, 3, 592.0f, foot, th().copy, 736.0f);
+        draw_menu_hints(c, kHints, 3, 592.0f, foot, th().copy, 736.0f);
     }
     else
     {
         static constexpr Hint kHints[] = {{Pad::cross, TR("Change")}, {Pad::circle, TR("Back")}};
-        draw_hints(c, kHints, 2, 592.0f, foot, th().copy, 736.0f);
+        draw_menu_hints(c, kHints, 2, 592.0f, foot, th().copy, 736.0f);
     }
     list.pop_transform();
     list.pop_opacity();
@@ -1103,7 +1277,7 @@ void Launcher::draw_hud(Canvas &c, float open)
     static constexpr const char *kNames[kHudRows] = {
         TR("Enable colors"), TR("Size"), TR("Corner"), TR("Backend"), TR("FPS"),
         TR("Frame time"), TR("Speed"), TR("CPU"), TR("GPU"), TR("Memory"), TR("Ping"),
-        TR("CPU by core")};
+        TR("CPU by core"), TR("Resolution")};
     for (int row = hud_rows_.first_row(); row <= hud_rows_.last_row(); ++row)
     {
         list.push_opacity(hud_rows_.row_alpha(row, kVideoRowHeight));
@@ -1139,7 +1313,7 @@ void Launcher::draw_hud(Canvas &c, float open)
     {
         static constexpr Hint kHints[] = {
             {Pad::updown, TR("Select")}, {Pad::leftright, TR("Change")}, {Pad::circle, TR("Back")}};
-        draw_hints(c, kHints, 3, 592.0f, foot, th().copy, 736.0f);
+        draw_menu_hints(c, kHints, 3, 592.0f, foot, th().copy, 736.0f);
     }
     list.pop_transform();
     list.pop_opacity();

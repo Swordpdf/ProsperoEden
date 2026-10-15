@@ -43,6 +43,10 @@ msgstr "无法读取固件 NCA。请重新安装固件。"
 msgid "A pairing is running already."
 msgstr "已有配对正在进行。"
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "关于"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "圆圈键"
 msgid "Close"
 msgstr "关闭"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "颜色"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "制作人员与设置说明"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "叉键"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "默认"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "浮点运算精度较低：更快，但少数游戏运行异常。"
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "向 GPU 传输内存的精度较低：更快，但少数游戏画面出错。"
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "游戏库"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "游戏库"
@@ -959,6 +975,10 @@ msgstr "中"
 #: pe/ui/settings.cpp
 msgid "Memory"
 msgstr "内存"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Menu keybinds"
+msgstr "菜单按键"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1011,6 +1031,10 @@ msgstr "最近邻"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "需要处理"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "中性玻璃，简洁安静。"
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1294,6 +1318,10 @@ msgstr "再按一次将替换此游戏的存档。当前存档会被备份。"
 msgid "Private room"
 msgstr "私人房间"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "私人房间"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro 控制器"
@@ -1358,6 +1386,10 @@ msgstr "PS5 版"
 
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
+msgstr "公开房间"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
 msgstr "公开房间"
 
 #: pe/ui/remote.cpp
@@ -1564,6 +1596,10 @@ msgstr "用手机扫描此码，或打开下方的地址。"
 msgid "Scroll"
 msgstr "滚动"
 
+#: pe/ui/game_options.cpp
+msgid "Secondary"
+msgstr "次要操作"
+
 #. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
 #: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Sections"
@@ -1590,6 +1626,10 @@ msgstr "服务器版本过旧，无法同步存档"
 
 #: pe/ui/home.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Settings"
+msgstr "设置"
+
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
 msgstr "设置"
 
 #: eden_services.cpp, host/fake_services.cpp
@@ -1730,6 +1770,10 @@ msgstr "鸣谢"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "感谢整个 PS5 自制软件社区，以及让 ProsperoEden 成为可能的驱动、工具和库的每一位开发者。"
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "当前主题的强调色。"
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"
@@ -2035,6 +2079,10 @@ msgstr "新功能"
 #: pe/ui/update.cpp
 msgid "What's new in version {0}"
 msgstr "版本 {0} 的新功能"
+
+#: pe/ui/game_options.cpp
+msgid "Which face button does what in the menu."
+msgstr "菜单中各个动作按键的功能。"
 
 #: pe/ui/settings.cpp
 msgid "Who is playing. Each profile keeps its own save data and settings."

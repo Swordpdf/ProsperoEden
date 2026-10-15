@@ -11,7 +11,8 @@
   controller.tga     a controller in white on transparent, tinted by the home screen: 144x100,
                      twice the size it is drawn at
 
-render-art.py [name...] renders only the named pictures (backdrop, brand, controller).
+render-art.py [name...] renders only the named pictures (backdrop, brand, controller,
+                     slate-backdrop).
 """
 
 import sys
@@ -111,6 +112,41 @@ def controller():
     return icon
 
 
+def slate_backdrop():
+    """A procedural dark neutral gradient: no source photo, just darkness and grain."""
+    size = (2048, 1152)
+    base = (16, 16, 18)
+    art = Image.new("RGBA", size, (*base, 255))
+    # A faint lighter band right of centre, so the backdrop is not perfectly flat.
+    overlay = Image.new("RGBA", size)
+    draw = ImageDraw.Draw(overlay)
+    for x in range(size[0]):
+        fraction = x / (size[0] - 1)
+        lift = max(0.0, 1.0 - abs(fraction - 0.62) / 0.35) * 0.06
+        draw.line((x, 0, x, size[1]), fill=(180, 178, 174, round(lift * 255)))
+    art.alpha_composite(overlay)
+    # Dark on the left (same stop pattern as Canopy, neutral colour).
+    overlay = Image.new("RGBA", size)
+    draw = ImageDraw.Draw(overlay)
+    stops = ((0, .97), (.26, .94), (.48, .70), (.72, .28), (1, .05))
+    for x in range(size[0]):
+        fraction = x / (size[0] - 1)
+        for (a, first), (b, second) in zip(stops, stops[1:]):
+            if fraction <= b:
+                opacity = first + (second - first) * (fraction - a) / (b - a)
+                break
+        draw.line((x, 0, x, size[1]), fill=(*base, round(opacity * 255)))
+    art.alpha_composite(overlay)
+    # Subtle bottom fade.
+    fade = Image.new("RGBA", size)
+    draw = ImageDraw.Draw(fade)
+    for y in range(size[1]):
+        opacity = max(0, (y / size[1] - .68) / .32) * .65
+        draw.line((0, y, size[0], y), fill=(*base, round(opacity * 255)))
+    art.alpha_composite(fade)
+    return art
+
+
 def main():
     ART.mkdir(parents=True, exist_ok=True)
     wanted = set(sys.argv[1:]) or {"backdrop", "brand", "controller"}
@@ -121,6 +157,11 @@ def main():
         # A quarter of the size, blurred until only light and colour remain.
         small = art.resize((512, 288), Image.Resampling.LANCZOS).filter(ImageFilter.GaussianBlur(9))
         save_tga(small, "backdrop-blur.tga")
+    if "slate-backdrop" in wanted:
+        art = slate_backdrop()
+        save_tga(grain(art, .02), "slate-backdrop.tga")
+        small = art.resize((512, 288), Image.Resampling.LANCZOS).filter(ImageFilter.GaussianBlur(9))
+        save_tga(small, "slate-backdrop-blur.tga")
     if "brand" in wanted:
         icon = Image.open(ROOT / "sce_sys/icon-source.png").convert("RGBA")
         save_tga(icon.resize((384, 384), Image.Resampling.LANCZOS), "brand.tga")
