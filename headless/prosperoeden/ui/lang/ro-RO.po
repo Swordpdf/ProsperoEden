@@ -43,6 +43,10 @@ msgstr "Un fișier NCA din firmware nu poate fi citit. Reinstalează dump-ul de 
 msgid "A pairing is running already."
 msgstr "O asociere este deja în curs."
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "DESPRE"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "Cerc"
 msgid "Close"
 msgstr "Închide"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "Culoare"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "Credite și configurare"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "Cruce"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "Implicit"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "Calcul în virgulă mobilă mai puțin exact: mai rapid, dar câteva joc
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "Transferuri de memorie către GPU mai puțin exacte: mai rapid, dar câteva jocuri afișează grafică greșită."
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "BIBLIOTECĂ"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "Bibliotecă"
@@ -1015,6 +1031,10 @@ msgstr "Cel mai apropiat"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "Necesită atenție"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "Sticlă neutră, curată și liniștită."
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1298,6 +1318,10 @@ msgstr "Apasă din nou pentru a înlocui salvarea acestui joc. Se face o copie d
 msgid "Private room"
 msgstr "Cameră privată"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "CAMERĂ PRIVATĂ"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1363,6 +1387,10 @@ msgstr "EDIȚIA PS5"
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
 msgstr "Camere publice"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
+msgstr "CAMERE PUBLICE"
 
 #: pe/ui/remote.cpp
 msgid "Queued"
@@ -1600,6 +1628,10 @@ msgstr "Server prea vechi pentru sincronizare"
 msgid "Settings"
 msgstr "Setări"
 
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
+msgstr "SETĂRI"
+
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
 msgstr "Configurare necesară"
@@ -1738,6 +1770,10 @@ msgstr "MULȚUMIRI"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "Mulțumiri întregii comunități homebrew de PS5 și fiecărui dezvoltator ale cărui drivere, instrumente și biblioteci fac posibil ProsperoEden."
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "Culoarea de accent a temei curente."
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"

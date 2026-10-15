@@ -43,6 +43,10 @@ msgstr "Laiteohjelmiston NCA-tiedostoa ei voi lukea. Asenna laiteohjelmistovedos
 msgid "A pairing is running already."
 msgstr "Paritus on jo käynnissä."
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "TIETOJA"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "Ympyrä"
 msgid "Close"
 msgstr "Sulje"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "Väri"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "Tekijät ja määritys"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "Risti"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "Oletus"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "Epätarkempi liukulukulaskenta: nopeampi, mutta muutama peli toimii vä�
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "Epätarkemmat muistisiirrot GPU:lle: nopeampi, mutta muutamassa pelissä grafiikka näkyy väärin."
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "KIRJASTO"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "Kirjasto"
@@ -1015,6 +1031,10 @@ msgstr "Lähin"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "Vaatii huomiota"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "Neutraalia lasia, puhdas ja tyyni."
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1298,6 +1318,10 @@ msgstr "Paina uudelleen, niin pelin tallennus korvataan. Nykyinen varmuuskopioid
 msgid "Private room"
 msgstr "Yksityinen huone"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "YKSITYINEN HUONE"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1363,6 +1387,10 @@ msgstr "PS5-VERSIO"
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
 msgstr "Julkiset huoneet"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
+msgstr "JULKISET HUONEET"
 
 #: pe/ui/remote.cpp
 msgid "Queued"
@@ -1600,6 +1628,10 @@ msgstr "Palvelin liian vanha synkronointiin"
 msgid "Settings"
 msgstr "Asetukset"
 
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
+msgstr "ASETUKSET"
+
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
 msgstr "Määritys vaaditaan"
@@ -1738,6 +1770,10 @@ msgstr "KIITOKSET"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "Kiitos koko PS5:n homebrew-yhteisölle ja kaikille kehittäjille, joiden ajurien, työkalujen ja kirjastojen ansiosta ProsperoEden on mahdollinen."
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "Nykyisen teeman korostusväri."
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"

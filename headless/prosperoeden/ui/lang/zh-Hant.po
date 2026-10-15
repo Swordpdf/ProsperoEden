@@ -43,6 +43,10 @@ msgstr "無法讀取韌體 NCA。請重新安裝韌體。"
 msgid "A pairing is running already."
 msgstr "已有配對正在進行。"
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "關於"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "圓圈鍵"
 msgid "Close"
 msgstr "關閉"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "顏色"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "製作名單與設定說明"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "叉鍵"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "預設"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "浮點運算精確度較低：更快，但少數遊戲執行異常。"
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "向 GPU 傳輸記憶體的精確度較低：更快，但少數遊戲畫面出錯。"
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "遊戲庫"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "遊戲庫"
@@ -1015,6 +1031,10 @@ msgstr "最近鄰"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "需要處理"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "中性玻璃，簡潔安靜。"
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1298,6 +1318,10 @@ msgstr "再按一次將取代此遊戲的存檔。目前的存檔會先備份。
 msgid "Private room"
 msgstr "私人房間"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "私人房間"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro 控制器"
@@ -1362,6 +1386,10 @@ msgstr "PS5 版"
 
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
+msgstr "公開房間"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
 msgstr "公開房間"
 
 #: pe/ui/remote.cpp
@@ -1600,6 +1628,10 @@ msgstr "伺服器版本過舊，無法同步存檔"
 msgid "Settings"
 msgstr "設定"
 
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
+msgstr "設定"
+
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
 msgstr "需要設定"
@@ -1738,6 +1770,10 @@ msgstr "致謝"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "感謝整個 PS5 自製軟體社群，以及讓 ProsperoEden 得以實現的驅動程式、工具與程式庫的每一位開發者。"
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "目前主題的強調色。"
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"

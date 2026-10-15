@@ -43,6 +43,10 @@ msgstr "อ่าน​ไฟล์ NCA ​ของ​เฟิร์มแว�
 msgid "A pairing is running already."
 msgstr "กำลัง​จับคู่​อยู่​แล้ว"
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "เกี่ยวกับ"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "วงกลม"
 msgid "Close"
 msgstr "ปิด"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "สี"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "เครดิตและการเตรียมระบบ"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "กากบาท"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "ค่าเริ่มต้น"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "คำนวณทศนิยมแม่นยำน้อยลง: �
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "การถ่ายโอนหน่วยความจำไปยัง GPU แม่นยำน้อยลง: เร็วขึ้น แต่บางเกมแสดงกราฟิกผิด"
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "คลังเกม"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "คลังเกม"
@@ -1015,6 +1031,10 @@ msgstr "ใกล้ที่สุด"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "ต้องตรวจสอบ"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "กระจกโทนกลาง สะอาดและสงบ"
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1298,6 +1318,10 @@ msgstr "กด​อีกครั้ง​เพื่อ​แทนที่
 msgid "Private room"
 msgstr "ห้อง​ส่วนตัว"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "ห้อง​ส่วนตัว"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1362,6 +1386,10 @@ msgstr "รุ่น PS5"
 
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
+msgstr "ห้อง​สาธารณะ"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
 msgstr "ห้อง​สาธารณะ"
 
 #: pe/ui/remote.cpp
@@ -1600,6 +1628,10 @@ msgstr "เซิร์ฟเวอร์เก่าเกินไปสำห
 msgid "Settings"
 msgstr "การตั้งค่า"
 
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
+msgstr "การตั้งค่า"
+
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
 msgstr "ต้องเตรียมระบบก่อน"
@@ -1738,6 +1770,10 @@ msgstr "ขอบคุณ"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "ขอบคุณ​ชุมชน​โฮมบรูว์ PS5 ​ทั้งหมด ​และ​นักพัฒนา​ทุกคน​ที่​ไดรเวอร์ เครื่องมือ ​และ​ไลบรารี​ของ​พวกเขา​ทำให้ ProsperoEden ​เกิดขึ้น​ได้"
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "สีเน้นของธีมปัจจุบัน"
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"

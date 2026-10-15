@@ -43,6 +43,10 @@ msgstr ""
 msgid "A pairing is running already."
 msgstr ""
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr ""
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr ""
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -299,7 +307,7 @@ msgstr ""
 msgid "Connection problem"
 msgstr ""
 
-#: pe/ui/library.cpp
+#: pe/ui/home.cpp, pe/ui/library.cpp
 msgid "Console mode"
 msgstr ""
 
@@ -355,7 +363,7 @@ msgstr ""
 msgid "Could not save the folder. Please try again."
 msgstr ""
 
-#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
+#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
 msgid "Could not save. Please try again."
 msgstr ""
 
@@ -393,6 +401,10 @@ msgstr ""
 #. A DualSense button (the X-shaped one). Name the shape, not the letter.
 #: pe/ui/game_options.cpp
 msgid "Cross"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "Default"
 msgstr ""
 
 #. A per-game setting that follows the general setting; {0} is its value.
@@ -441,7 +453,7 @@ msgid "Diagnostics"
 msgstr ""
 
 #. Console mode: the console as if connected to a TV. Keep it short (about 9 letters).
-#: pe/ui/library.cpp, pe/ui/shell.cpp
+#: pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Docked"
 msgstr ""
 
@@ -627,7 +639,7 @@ msgid "FOLDERS"
 msgstr ""
 
 #. A kind of setting that this game takes from the launcher's Settings menu.
-#: pe/ui/library.cpp
+#: pe/ui/home.cpp, pe/ui/library.cpp
 msgid "Follows Settings"
 msgstr ""
 
@@ -694,7 +706,7 @@ msgstr ""
 msgid "Game could not start: {0} Details: {1}"
 msgstr ""
 
-#: pe/ui/library.cpp
+#: pe/ui/home.cpp, pe/ui/library.cpp
 msgid "GAME DETAILS"
 msgstr ""
 
@@ -755,7 +767,7 @@ msgid "Graphics backend initialization failed. Try another backend in Settings; 
 msgstr ""
 
 #. Console mode: the console as if held in the hands. Keep it short (about 9 letters).
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/shell.cpp
+#: pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Handheld"
 msgstr ""
 
@@ -765,7 +777,7 @@ msgid "High contrast"
 msgstr ""
 
 #. The menu's first section, its opening screen (not a house, and not the PS5's own home screen).
-#: pe/ui/shell.cpp
+#: pe/ui/browse.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Home"
 msgstr ""
 
@@ -932,6 +944,10 @@ msgstr ""
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr ""
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr ""
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr ""
@@ -982,7 +998,7 @@ msgid "MODS"
 msgstr ""
 
 #. Changes to a game that the player added: patches, replaced files, cheats. Keep the word 'mod' if the language uses it.
-#: pe/ui/library.cpp
+#: pe/ui/home.cpp, pe/ui/library.cpp
 msgid "Mods"
 msgstr ""
 
@@ -1014,6 +1030,10 @@ msgstr ""
 
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
+msgstr ""
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
 msgstr ""
 
 #: pe/ui/profiles.cpp
@@ -1054,7 +1074,7 @@ msgid "No folders here."
 msgstr ""
 
 #. Shown on the Mods row of a game that has none.
-#: pe/ui/library.cpp
+#: pe/ui/home.cpp, pe/ui/library.cpp
 msgid "No mods"
 msgstr ""
 
@@ -1071,7 +1091,7 @@ msgstr ""
 msgid "No ROM files found."
 msgstr ""
 
-#: pe/ui/library.cpp
+#: pe/ui/home.cpp, pe/ui/library.cpp
 msgid "No ROM selected"
 msgstr ""
 
@@ -1126,7 +1146,7 @@ msgid "Nothing to import"
 msgstr ""
 
 #. A setting that is switched off.
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Off"
 msgstr ""
 
@@ -1298,6 +1318,10 @@ msgstr ""
 msgid "Private room"
 msgstr ""
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr ""
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr ""
@@ -1362,6 +1386,10 @@ msgstr ""
 
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
+msgstr ""
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
 msgstr ""
 
 #: pe/ui/remote.cpp
@@ -1529,7 +1557,7 @@ msgstr ""
 msgid "save-sync.json cannot be read: correct it over FTP first."
 msgstr ""
 
-#: pe/ui/game_options.cpp, pe/ui/library.cpp
+#: pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp
 msgid "Saved for this game. Applies on next launch."
 msgstr ""
 
@@ -1598,6 +1626,10 @@ msgstr ""
 
 #: pe/ui/home.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Settings"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
 msgstr ""
 
 #: eden_services.cpp, host/fake_services.cpp
@@ -1737,6 +1769,10 @@ msgstr ""
 
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
 msgstr ""
 
 #: pe/ui/remote.cpp
@@ -1905,7 +1941,7 @@ msgstr ""
 msgid "UDP port"
 msgstr ""
 
-#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Unavailable"
 msgstr ""
 
@@ -2091,7 +2127,7 @@ msgid "Your save data is checked against the server's."
 msgstr ""
 
 #. How many settings of a kind this game has of its own; {0} is a number.
-#: pe/ui/library.cpp
+#: pe/ui/home.cpp, pe/ui/library.cpp
 msgid "{0} changed"
 msgstr ""
 
@@ -2165,7 +2201,7 @@ msgid "{0} of {1} mods on"
 msgstr ""
 
 #. How many of a game's mods are switched on: 2 of 3 on.
-#: pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "{0} of {1} on"
 msgstr ""
 
