@@ -74,7 +74,7 @@ std::atomic<bool> hud_enabled{true};
 std::atomic<int> hud_size{0};
 std::atomic<int> hud_corner{0};
 std::atomic<bool> hud_colors{true};
-std::atomic<int> hud_fields{0xff};
+std::atomic<int> hud_fields{0x2ff};
 // What the session's settings say the overlay should look like, for all of them at once.
 void LoadHudPreferences() {
     const auto prefs = PreferencesFor(session_title.load());
@@ -629,6 +629,8 @@ GraphicsWindow::GraphicsWindow(bool use_vulkan) : vulkan(use_vulkan) {
     vulkan_loading_start = -1;
     vulkan_loading_frames = 0;
     vulkan_loading_pace = {};
+    // The next game's picture is its own; a stale size would say the last one's.
+    Hud::ForgetGuestScreen();
     LoadHudPreferences();
 #ifdef EDEN_PS5_VULKAN
     if (vulkan) {

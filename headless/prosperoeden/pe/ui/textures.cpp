@@ -74,9 +74,42 @@ void Textures::drop_splash()
     splash_ = 0;
 }
 
+void Textures::load_game_backdrop(const std::string &cover_path)
+{
+    if (cover_path == game_backdrop_path_)
+        return;
+    clear_game_backdrop();
+    game_backdrop_path_ = cover_path;
+    if (cover_path.empty())
+        return;
+    gfx::Image image;
+    if (!services_.load_image(cover_path, &image))
+        return;
+    for (std::size_t i = 0; i + 3 < image.rgba.size(); i += 4)
+    {
+        image.rgba[i + 0] = static_cast<std::uint8_t>(image.rgba[i + 0] * 0.35f);
+        image.rgba[i + 1] = static_cast<std::uint8_t>(image.rgba[i + 1] * 0.35f);
+        image.rgba[i + 2] = static_cast<std::uint8_t>(image.rgba[i + 2] * 0.35f);
+    }
+    gfx::blur(image, image.width / 32);
+    game_backdrop_ = create(image);
+    gfx::Image blurred = gfx::halve(image);
+    game_backdrop_blur_ = create(blurred);
+}
+
+void Textures::clear_game_backdrop()
+{
+    batch_.delete_texture(game_backdrop_);
+    batch_.delete_texture(game_backdrop_blur_);
+    game_backdrop_ = 0;
+    game_backdrop_blur_ = 0;
+    game_backdrop_path_.clear();
+}
+
 void Textures::release()
 {
     drop_splash();
+    clear_game_backdrop();
     for (std::uint32_t *texture : {&backdrop_, &backdrop_blur_, &brand_, &controller_})
     {
         batch_.delete_texture(*texture);

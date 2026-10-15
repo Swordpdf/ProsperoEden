@@ -18,9 +18,11 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
     "${EDEN_PORT_DIR}/vulkan_loading.inc")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
     "${EDEN_PORT_DIR}/vulkan_download_batch.inc"
-    "${EDEN_PORT_DIR}/vulkan_gc_downloads.inc")
-list(REMOVE_ITEM video_sources vulkan_common/vulkan_device.cpp renderer_vulkan/vk_scheduler.cpp)
-list(APPEND video_sources "${PORT_BUILD_DIR}/vulkan_device.cpp" "${PORT_BUILD_DIR}/vulkan_scheduler.cpp")
+    "${EDEN_PORT_DIR}/vulkan_gc_downloads.inc"
+    "${EDEN_PORT_DIR}/texture_rows.inc" "${EDEN_PORT_DIR}/texture_partial_refresh.inc")
+list(REMOVE_ITEM video_sources vulkan_common/vulkan_device.cpp renderer_vulkan/vk_scheduler.cpp texture_cache/util.cpp)
+list(APPEND video_sources "${PORT_BUILD_DIR}/vulkan_device.cpp" "${PORT_BUILD_DIR}/vulkan_scheduler.cpp"
+    "${PORT_BUILD_DIR}/texture_util.cpp")
 # An image or a buffer the allocator's budget refuses is asked for outside it (prepare-vulkan-port.py).
 list(REMOVE_ITEM video_sources vulkan_common/vulkan_memory_allocator.cpp)
 list(APPEND video_sources "${PORT_BUILD_DIR}/vulkan_memory_allocator.cpp")

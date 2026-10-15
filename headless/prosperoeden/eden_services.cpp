@@ -975,6 +975,7 @@ pe::ui::Preferences EdenServices::preferences() {
     result.high_contrast = saved.high_contrast;
     result.reduce_motion = saved.reduce_motion;
     result.theme = saved.theme;
+    result.accent = saved.accent;
     // Settings > Performance: the general values (settings_store.h).
     const Eden::PerformanceSettings speed = Eden::LoadPerformance(0);
     result.block_list = speed.block_list;
@@ -984,7 +985,9 @@ pe::ui::Preferences EdenServices::preferences() {
     result.unsafe_dma = speed.unsafe_dma;
     result.reactive_flushing = speed.reactive_flushing;
     result.skip_invalidation = speed.skip_invalidation;
+    result.memory_layout = speed.memory_layout;
     result.mapping = saved.mapping;
+    result.menu_bind = saved.menu_bind;
     return result;
 }
 
@@ -1016,7 +1019,9 @@ bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     value.high_contrast = preferences.high_contrast;
     value.reduce_motion = preferences.reduce_motion;
     value.theme = preferences.theme;
+    value.accent = preferences.accent;
     value.mapping = preferences.mapping;
+    value.menu_bind = preferences.menu_bind;
     Eden::PerformanceSettings speed = Eden::LoadPerformance(0);
     speed.block_list = preferences.block_list;
     speed.async_shaders = preferences.async_shaders;
@@ -1025,6 +1030,10 @@ bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     speed.unsafe_dma = preferences.unsafe_dma;
     speed.reactive_flushing = preferences.reactive_flushing;
     speed.skip_invalidation = preferences.skip_invalidation;
+    // One of the layouts, whatever reached the launcher: a value outside them would make the whole
+    // save fail, and with it every other setting on the page (settings_store.h's SavePerformance).
+    speed.memory_layout = std::clamp(preferences.memory_layout, 0,
+                                     static_cast<int>(std::size(Eden::kMemoryLayoutKeys)) - 1);
     const bool saved = Eden::SavePreferences(value) && Eden::SavePerformance(0, speed);
     if (!saved) Eden::Report("settings", "Could not write preferences");
     if (saved) Eden::Multiplayer::SetDetailedLogging(value.detailed_logging);

@@ -4,6 +4,11 @@
 // before the renderer creates its device (tools/prepare-vulkan-port.py applies them).
 namespace Eden::DevVulkan {
 inline bool disable_null_descriptor = false;
+// Pipelines whose vertex shader reads no vertex attribute get a static vertex input (no attribute)
+// although VK_EXT_vertex_input_dynamic_state is on: with the dynamic one the console's driver drew
+// them wrong (a full-screen triangle made from the vertex index covering a game's cutscenes with
+// a flat colour). dev-settings static_vi=off: as upstream.
+inline bool static_vertex_input = true;
 inline bool disable_descriptor_buffer = false;
 inline bool robustness2 = false; // robustBufferAccess2 + robustImageAccess2
 inline bool trace_pipelines = false; // report first pipeline uses to klog

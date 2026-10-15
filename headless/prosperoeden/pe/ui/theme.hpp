@@ -105,8 +105,28 @@ struct Theme
     int motes = 26;     // 0: none
     float drift = 1.0f; // how far the artwork wanders (0: it stands still)
 
+    // ---- layout variants ----
+    bool list_settings = false;  // settings shows a list instead of tiles
+    bool game_backdrop = false;  // the selected game's cover art fills the background
+    bool minimal_home = false;   // home screen: clean layout, no controller display
+    bool top_nav = false;        // horizontal section tabs at the top instead of the sidebar rail
+    float scrim_opacity = 0.0f;  // >0: flat scrim at this alpha; 0: directional gradient scrim
+    float game_page_offset = 0.0f; // px to push the game settings columns below their base position
+
     // ---- sound: a folder of ui/sounds with its own cues ("": the launcher's) ----
     const char *sounds = "";
+};
+
+// An accent colour preset: a named set of the five accent roles a theme can swap.
+struct AccentPreset
+{
+    const char *id;   // stored in the settings file
+    const char *name; // shown in Settings
+    Color accent;
+    Color accent_deep;
+    Color accent_pale;
+    Color on_accent;
+    Color highlight;
 };
 
 // The theme in use. Read where things are drawn, so a change of theme shows in the next frame.
@@ -117,6 +137,12 @@ std::span<const Theme> themes();
 int theme_index();
 // Puts a theme in use by its id; false when this build has none of that name (the one in use stays).
 bool use_theme(std::string_view id);
+// The accent presets for the theme in use.
+std::span<const AccentPreset> accent_presets();
+// Which accent preset is active (-1: the theme's own colours).
+int accent_index();
+// Applies an accent preset by id on top of the active theme; "" restores the theme's own.
+void use_accent(std::string_view id);
 
 // A kit theme (ps5-homebrew-ui) as a launcher theme: every role filled from the kit's colours, its
 // corners, focus ring and motion. False when the kit has no theme of that id (theme_kit.cpp).

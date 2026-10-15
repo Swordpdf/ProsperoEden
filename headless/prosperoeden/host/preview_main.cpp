@@ -564,6 +564,33 @@ void pictures(Stage &s)
             std::fprintf(stderr, "error: the Performance switches did not reach the settings\n");
             s.ok = false;
         }
+        // The row after the switches: the memory a game's console is told it has. Left and right
+        // move over the layouts, and the choice reaches the settings file the launcher writes.
+        s.press({Key::down});
+        s.wait(0.4f);
+        s.press({Key::right});
+        s.wait(0.4f);
+        s.shoot("49-performance-memory");
+        if (s.services.preferences().memory_layout != 1)
+        {
+            std::fprintf(stderr, "error: the console memory did not reach the settings\n");
+            s.ok = false;
+        }
+        s.press({Key::right});
+        s.wait(0.4f);
+        if (s.services.preferences().memory_layout != 2)
+        {
+            std::fprintf(stderr, "error: the console memory did not go past 6 GiB\n");
+            s.ok = false;
+        }
+        // The last of them wraps to the first, which is what a game's console really has.
+        s.press({Key::right});
+        s.wait(0.4f);
+        if (s.services.preferences().memory_layout != 0)
+        {
+            std::fprintf(stderr, "error: the console memory did not wrap to 4 GiB\n");
+            s.ok = false;
+        }
     }
     s.press({Key::circle});
     s.walk(2, 3);
@@ -1221,6 +1248,13 @@ int main(int argc, char **argv)
         preferences.large_text = names.find("large") != std::string_view::npos;
         preferences.high_contrast = names.find("contrast") != std::string_view::npos;
         preferences.reduce_motion = names.find("calm") != std::string_view::npos;
+        services.set_preferences(preferences);
+    }
+    // PE_THEME=slate: the tour in another of the build's themes.
+    if (const char *theme = std::getenv("PE_THEME"); theme != nullptr && theme[0] != 0)
+    {
+        pe::ui::Preferences preferences = services.preferences();
+        preferences.theme = theme;
         services.set_preferences(preferences);
     }
     pe::ui::Textures textures(batch, services);

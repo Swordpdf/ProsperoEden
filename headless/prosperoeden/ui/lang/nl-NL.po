@@ -43,6 +43,10 @@ msgstr "Een firmware-NCA kan niet worden gelezen. Installeer de firmwaredump opn
 msgid "A pairing is running already."
 msgstr "Er wordt al gekoppeld."
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "OVER"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "Rondje"
 msgid "Close"
 msgstr "Sluiten"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "Kleur"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "Credits en configuratie"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "Kruis"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "Standaard"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "Minder nauwkeurige drijvendekommaberekeningen: sneller, maar enkele game
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "Minder nauwkeurige geheugenoverdracht naar de GPU: sneller, maar enkele games tonen beeldfouten."
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "BIBLIOTHEEK"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "Bibliotheek"
@@ -959,6 +975,10 @@ msgstr "Middel"
 #: pe/ui/settings.cpp
 msgid "Memory"
 msgstr "Geheugen"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Menu keybinds"
+msgstr "Menuknoppen"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1011,6 +1031,10 @@ msgstr "Naaste buur"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "Aandacht vereist"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "Neutraal glas, strak en rustig."
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1294,6 +1318,10 @@ msgstr "Druk nogmaals om de opgeslagen data van deze game te vervangen. Van de h
 msgid "Private room"
 msgstr "Privékamer"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "PRIVÉKAMER"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1359,6 +1387,10 @@ msgstr "PS5-EDITIE"
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
 msgstr "Openbare kamers"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
+msgstr "OPENBARE KAMERS"
 
 #: pe/ui/remote.cpp
 msgid "Queued"
@@ -1564,6 +1596,10 @@ msgstr "Scan de code met je telefoon of open het adres hieronder."
 msgid "Scroll"
 msgstr "Scrollen"
 
+#: pe/ui/game_options.cpp
+msgid "Secondary"
+msgstr "Secundair"
+
 #. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
 #: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Sections"
@@ -1591,6 +1627,10 @@ msgstr "Server te oud voor synchronisatie"
 #: pe/ui/home.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Settings"
 msgstr "Instellingen"
+
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
+msgstr "INSTELLINGEN"
 
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
@@ -1730,6 +1770,10 @@ msgstr "DANKWOORD"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "Dank aan de hele PS5-homebrewcommunity en aan elke ontwikkelaar wiens drivers, tools en bibliotheken ProsperoEden mogelijk maken."
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "De accentkleur van het huidige thema."
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"
@@ -2035,6 +2079,10 @@ msgstr "Wat is er nieuw"
 #: pe/ui/update.cpp
 msgid "What's new in version {0}"
 msgstr "Nieuw in versie {0}"
+
+#: pe/ui/game_options.cpp
+msgid "Which face button does what in the menu."
+msgstr "Welke actieknop wat doet in het menu."
 
 #: pe/ui/settings.cpp
 msgid "Who is playing. Each profile keeps its own save data and settings."

@@ -33,6 +33,25 @@ assert 'width - box_w - units(kHudBoxX)' in draw_hud
 assert 'height - box_h - units(kHudBoxY)' in draw_hud
 assert 'hud_size.load' in draw_hud and 'hud_corner.load' in draw_hud
 assert 'hud_colors.load' in draw_hud and 'hud_fields.load' in graphics
+# The game's own picture reaches the line from where the guest hands it to the display: the port
+# records it in RendererVulkan::Composite (vulkan_guest_resolution.inc), a new session forgets it,
+# and the launcher has a switch for the piece (Settings > Video > Overlay options > Resolution).
+guest_inc = (root/'headless/vulkan_guest_resolution.inc').read_text()
+port_script = (root/'tools/prepare-vulkan-port.py').read_text()
+assert 'Eden::Hud::GuestScreen(' in guest_inc and 'crop_rect' in guest_inc
+assert "vulkan_guest_resolution.inc" in port_script
+assert 'void RendererVulkan::Composite(std::span<const Tegra::FramebufferConfig> framebuffers) {' in port_script
+assert 'Hud::ForgetGuestScreen();' in graphics
+store = (root/'headless/settings_store.h').read_text()
+assert 'int hud_fields = 0x2ff;' in store and '!ValidHudFields(value.hud_fields)' in store
+assert 'ValidHudFields(hud_fields)' in store
+# The three places that name the line's default all say the same: every piece, and the CPU piece
+# read as each of the four cores (bit 8 clear).
+assert 'std::atomic<int> hud_fields{0x2ff};' in graphics
+assert 'int hud_fields = 0x2ff;' in (root/'headless/prosperoeden/pe/ui/services.hpp').read_text()
+launcher = (root/'headless/prosperoeden/pe/ui/settings.cpp').read_text()
+assert 'hud_resolution_row' in launcher and 'TR("Resolution")' in launcher
+assert '1 << (row - hud_backend_row)' in launcher
 # The line in its inks when colours are on, in the one ink when they are off.
 assert 'colors ? hud_ink(pick.ink) : kHudInk' in draw_hud
 # The Vulkan overlay draws that same line with that same font (vulkan_hud.frag, which the build
@@ -213,6 +232,36 @@ int main() {
                                                     Eden::kHudFieldMem).data())
            == "VLK 60FPS MEM 4.1/8.0G");
     assert(std::string_view(Eden::FormatHudText(clock, 100, "VLK", known, -1, 0).data()).empty());
+    // The game's own picture, next to the renderer that drew it (bit 9). It is said as soon as the
+    // guest hands a frame to the display, and not before; with the piece off, or another game's
+    // size left over from a session, nothing goes on the line.
+    {
+        Eden::Hud::GuestScreen(1280, 720);
+        assert(std::string_view(Eden::FormatHudText(clock, 100, "VLK", known).data())
+               == "VLK 1280x720 60FPS 17.0MS CPU 55% GPU 43% MEM 4.1/8.0G");
+        // A dynamic-resolution game moves the number: it is read again every picture.
+        Eden::Hud::GuestScreen(960, 540);
+        assert(std::string_view(Eden::FormatHudText(clock, 100, "VLK", known).data())
+               == "VLK 960x540 60FPS 17.0MS CPU 55% GPU 43% MEM 4.1/8.0G");
+        assert(std::string_view(Eden::FormatHudText(clock, 100, "VLK", known, -1,
+                                                    Eden::kHudFieldAll & ~Eden::kHudFieldResolution).data())
+               == "VLK 60FPS 17.0MS CPU 55% GPU 43% MEM 4.1/8.0G");
+        Eden::Hud::ForgetGuestScreen();
+        assert(std::string_view(Eden::FormatHudText(clock, 100, "VLK", known).data())
+               == "VLK 60FPS 17.0MS CPU 55% GPU 43% MEM 4.1/8.0G");
+        assert(Eden::kHudFieldResolution == (1u << 9));
+        assert(Eden::kHudFieldAll == 0x2ffu); // every piece; bit 8 is a mode, not a piece
+        // The whole line, with everything on, still fits in a snapshot's words.
+        Eden::Hud::GuestScreen(3840, 2160);
+        const auto widest = Eden::MakeHudSnapshot(clock, clock, 99, known, 119.88, 9999, 0, 0, false,
+                                                  Eden::kHudFieldAll | Eden::kHudFieldOneCore);
+        // The size is in the words the GPU draws, not only in the formatted line.
+        assert(std::string_view(reinterpret_cast<const char*>(widest.glyphs.data()))
+               .starts_with("VLK 3840x2160 "));
+        assert(std::string_view(reinterpret_cast<const char*>(widest.glyphs.data())).size()
+               <= Eden::kHudTextMax);
+        Eden::Hud::ForgetGuestScreen();
+    }
     // All four corners: each the same distance in from the two edges it stands against.
     for (int corner = 0; corner < Eden::kHudCornerCount; ++corner)
     {

@@ -43,6 +43,10 @@ msgstr "تعذّرت قراءة أحد ملفات NCA للبرنامج الثا�
 msgid "A pairing is running already."
 msgstr "هناك اقتران جارٍ بالفعل."
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "حول"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "دائرة"
 msgid "Close"
 msgstr "إغلاق"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "اللون"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "الشكر والإعداد"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "إكس"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "الافتراضي"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "حسابات الفاصلة العائمة أقل دقة: أسرع، ل�
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "نقل الذاكرة إلى GPU أقل دقة: أسرع، لكن بعض الألعاب تعرض رسومًا خاطئة."
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "المكتبة"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "المكتبة"
@@ -959,6 +975,10 @@ msgstr "متوسط"
 #: pe/ui/settings.cpp
 msgid "Memory"
 msgstr "الذاكرة"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Menu keybinds"
+msgstr "أزرار القائمة"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1011,6 +1031,10 @@ msgstr "الأقرب"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "يحتاج إلى انتباه"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "زجاج محايد، نظيف وهادئ."
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1294,6 +1318,10 @@ msgstr "اضغط مرة أخرى لاستبدال بيانات حفظ هذه ا�
 msgid "Private room"
 msgstr "غرفة خاصة"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "غرفة خاصة"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1358,6 +1386,10 @@ msgstr "إصدار PS5"
 
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
+msgstr "الغرف العامة"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
 msgstr "الغرف العامة"
 
 #: pe/ui/remote.cpp
@@ -1564,6 +1596,10 @@ msgstr "امسح الرمز بهاتفك أو افتح العنوان أدناه
 msgid "Scroll"
 msgstr "تمرير"
 
+#: pe/ui/game_options.cpp
+msgid "Secondary"
+msgstr "ثانوي"
+
 #. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
 #: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Sections"
@@ -1590,6 +1626,10 @@ msgstr "الخادم أقدم من أن يدعم مزامنة الحفظ"
 
 #: pe/ui/home.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Settings"
+msgstr "الإعدادات"
+
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
 msgstr "الإعدادات"
 
 #: eden_services.cpp, host/fake_services.cpp
@@ -1730,6 +1770,10 @@ msgstr "شكر"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "شكرًا لمجتمع برامج PS5 المنزلية كله ولكل مطوّر جعلت برامج تشغيله وأدواته ومكتباته ProsperoEden ممكنًا."
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "لون التمييز في المظهر الحالي."
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"
@@ -2035,6 +2079,10 @@ msgstr "ما الجديد"
 #: pe/ui/update.cpp
 msgid "What's new in version {0}"
 msgstr "ما الجديد في الإصدار {0}"
+
+#: pe/ui/game_options.cpp
+msgid "Which face button does what in the menu."
+msgstr "أي زر أمامي يقوم بأي إجراء في القائمة."
 
 #: pe/ui/settings.cpp
 msgid "Who is playing. Each profile keeps its own save data and settings."

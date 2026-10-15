@@ -17,7 +17,7 @@
 //     "diagnostics": { "detailed_logging": false, "immediate_logs": false },
 //     "performance": { "block_list": false, "async_shaders": false, "fast_gpu": false,
 //                      "unsafe_cpu": false, "unsafe_dma": false, "reactive_flushing": true,
-//                      "skip_invalidation": false },
+//                      "skip_invalidation": false, "memory_layout": "4Gb" },
 //     "game_files": "/mnt/ext1/eden",
 //     "library": { "last_game": "Game [id].nsp", "recent": ["Game [id].nsp"] },
 //     "games": { "0100000000010000": { "console_mode": "handheld", "renderer": "opengl",
@@ -39,6 +39,7 @@
 // text files of earlier versions (settings.txt, last-game.txt, recent-games.txt, assets-dir.txt,
 // game-<title>-mode.txt) are read once into the JSON file and left in place.
 #pragma once
+#include "hud.h"
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -146,6 +147,7 @@ struct Preferences {
     bool high_contrast = false;
     bool reduce_motion = false;
     std::string theme = "canopy";        // Settings > Theme: the launcher's look, by its id
+    std::string accent;                   // Settings > Theme > Colour: accent preset id ("": theme's own)
     ButtonMapping mapping = kDefaultMapping;  // Settings > Controls > Button mapping
     int controller = -1;                 // a game's own Controller type (kControllerKeys); -1: automatic
     bool immediate_logs = false;         // Settings > Diagnostics: log lines written as they come
@@ -155,8 +157,10 @@ struct Preferences {
     int hud_corner = 0;      // index into kHudCornerKeys: which corner of the picture it stands in
     bool hud_colors = true;  // the line in its inks rather than one (bake-loading-text.py)
     // What the overlay's line may say, bit by bit (hud.h's kHudField*): the pieces the user has
-    // chosen to show. All of them by default.
-    int hud_fields = 0xff;
+    // chosen to show. All of them by default, the game's own resolution (bit 9) with the rest.
+    int hud_fields = 0x2ff;
+    // Which face button presses each core menu action (Settings > Controls > Menu keybinds).
+    MenuBinding menu_bind = kDefaultMenuBinding;
 };
 
 inline int KeyIndex(const std::string& value, const char* const* keys, int count, int fallback) {
@@ -340,6 +344,28 @@ inline Json MappingJson(const ButtonMapping& mapping) {
     return result;
 }
 
+// A menu button binding as the file names it: the default with the actions it names. One that names
+// a face button twice, or none of the four, is the fallback.
+inline MenuBinding MenuMapping(const Json& document, const Json::json_pointer& at, const MenuBinding& fallback) {
+    if (!document.contains(at) || !document.at(at).is_object()) return fallback;
+    MenuBinding result = kDefaultMenuBinding;
+    for (const auto& [name, value] : document.at(at).items()) {
+        const int action = KeyIndex(name, kMenuActionKeys, kMenuActions, -1);
+        const int pad = value.is_string() ? KeyIndex(value.get<std::string>(), kPadButtonKeys, kMenuActions, -1) : -1;
+        if (action < 0 || pad < 0) return fallback;
+        result[action] = pad;
+    }
+    return ValidMenuBinding(result) ? result : fallback;
+}
+// What differs from the default, by name.
+inline Json MenuMappingJson(const MenuBinding& binding) {
+    Json result = Json::object();
+    for (int action = 0; action < kMenuActions; ++action)
+        if (binding[action] != kDefaultMenuBinding[action])
+            result[kMenuActionKeys[action]] = kPadButtonKeys[binding[action]];
+    return result;
+}
+
 inline bool Bool(const Json& document, const Json::json_pointer& at, bool fallback) {
     return document.contains(at) && document.at(at).is_boolean() ? document.at(at).get<bool>() : fallback;
 }
@@ -364,7 +390,7 @@ inline Preferences LoadPreferences(const std::string& file = SettingsFile()) {
                                        result.hud_colors);
     const int hud_fields =
         Settings::Int(document, Json::json_pointer("/video/fps_overlay_fields"), result.hud_fields);
-    if (hud_fields >= 0 && hud_fields <= 0x1ff) result.hud_fields = hud_fields;
+    if (ValidHudFields(hud_fields)) result.hud_fields = hud_fields;
     result.backend = Settings::String(document, Json::json_pointer("/video/renderer")) == "opengl" ?
         GraphicsBackend::OpenGL : GraphicsBackend::Vulkan;
     const int volume = Settings::Int(document, Json::json_pointer("/audio/volume"), result.volume);
@@ -377,6 +403,10 @@ inline Preferences LoadPreferences(const std::string& file = SettingsFile()) {
     if (!theme.empty() && theme.size() <= 32 &&
         std::all_of(theme.begin(), theme.end(), [](char c) { return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-'; }))
         result.theme = theme;
+    const std::string accent = Settings::String(document, Json::json_pointer("/launcher/accent"));
+    if (accent.size() <= 32 &&
+        std::all_of(accent.begin(), accent.end(), [](char c) { return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-'; }))
+        result.accent = accent;
     result.detailed_logging = Settings::Bool(document, Json::json_pointer("/diagnostics/detailed_logging"),
                                              result.detailed_logging);
     result.immediate_logs = Settings::Bool(document, Json::json_pointer("/diagnostics/immediate_logs"),
@@ -410,6 +440,8 @@ inline Preferences LoadPreferences(const std::string& file = SettingsFile()) {
     result.high_contrast = Settings::Bool(document, Json::json_pointer("/accessibility/high_contrast"), false);
     result.reduce_motion = Settings::Bool(document, Json::json_pointer("/accessibility/reduce_motion"), false);
     result.mapping = Settings::Mapping(document, Json::json_pointer("/controls/mapping"), kDefaultMapping);
+    result.menu_bind =
+        Settings::MenuMapping(document, Json::json_pointer("/controls/menu_mapping"), kDefaultMenuBinding);
     return result;
 }
 
@@ -424,7 +456,8 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
         value.language < 0 || value.language >= int(std::size(kLanguageKeys)) ||
         value.hud_size < 0 || value.hud_size >= int(std::size(kHudSizeKeys)) ||
         value.hud_corner < 0 || value.hud_corner >= int(std::size(kHudCornerKeys)) ||
-        value.hud_fields < 0 || value.hud_fields > 0x1ff || !ValidMapping(value.mapping)) return false;
+        !ValidHudFields(value.hud_fields) || !ValidMapping(value.mapping) ||
+        !ValidMenuBinding(value.menu_bind)) return false;
     Settings::Json document = Settings::Load(file);
     document["version"] = 1;
     document["video"]["renderer"] = value.backend == GraphicsBackend::Vulkan ? "vulkan" : "opengl";
@@ -448,6 +481,8 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
     document["controls"]["vibration_strength"] = value.vibration_strength;
     if (value.mapping == kDefaultMapping) document["controls"].erase("mapping");
     else document["controls"]["mapping"] = Settings::MappingJson(value.mapping);
+    if (value.menu_bind == kDefaultMenuBinding) document["controls"].erase("menu_mapping");
+    else document["controls"]["menu_mapping"] = Settings::MenuMappingJson(value.menu_bind);
     document["system"]["language"] = kLanguageKeys[value.language];
     document["diagnostics"]["detailed_logging"] = value.detailed_logging;
     document["diagnostics"]["immediate_logs"] = value.immediate_logs;
@@ -455,6 +490,10 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
     document["accessibility"]["high_contrast"] = value.high_contrast;
     document["accessibility"]["reduce_motion"] = value.reduce_motion;
     document["launcher"]["theme"] = value.theme;
+    if (!value.accent.empty())
+        document["launcher"]["accent"] = value.accent;
+    else if (document["launcher"].contains("accent"))
+        document["launcher"].erase("accent");
     return Settings::Write(document, file);
 }
 
@@ -484,6 +523,18 @@ inline bool SaveGameDocked(uint64_t title_id, bool docked, const std::string& fi
 inline constexpr const char* kPerformanceKeys[] = {"block_list", "async_shaders", "fast_gpu", "unsafe_cpu",
                                                    "unsafe_dma", "reactive_flushing", "skip_invalidation"};
 inline constexpr int kPerformanceSwitches = int(std::size(kPerformanceKeys));
+// Settings > Performance > Memory: how much memory the guest's console is told it has. Eden calls
+// this the memory layout, and it is what a mod that keeps a heap of its own (an HD camera pack)
+// asks for: the standard layout is the Switch's 4 GiB, and a mod written against a larger one
+// reads the size from the kernel and reserves what it does not find, which stops the game before
+// its first picture rather than the mod. Above 4 GiB the guest's memory is a block backed where
+// the game's kernel uses it, so a 6 GiB layout holds only what a session touches; the pool the CPU
+// shares with the GPU still has to take that much, so a demanding game can run out of it instead
+// of running out of graphics memory. The menu shows the three as plain sizes (settings.cpp's
+// kMemoryLayouts); the line at launch in main.cpp says which one a session took.
+inline constexpr const char* kMemoryLayoutKeys[] = {"4Gb", "6Gb", "8Gb"};
+inline constexpr int kMemoryLayoutGib[] = {4, 6, 8};
+static_assert(std::size(kMemoryLayoutKeys) == std::size(kMemoryLayoutGib));
 
 // Library > Game settings: what one game does differently from Settings. Each value is -1 (absent
 // from the file) while the game follows Settings; switches are 0 off, 1 on.
@@ -672,6 +723,7 @@ struct PerformanceSettings {
     bool unsafe_dma = false;     // Eden's unsafe DMA accuracy
     bool reactive_flushing = true;   // Eden's reactive flushing: off is faster, some effects break
     bool skip_invalidation = false;  // Eden's skip_cpu_inner_invalidation: fewer cache invalidations
+    int memory_layout = 0;           // index into kMemoryLayoutKeys (0 is the Switch's own 4 GiB)
 };
 
 inline PerformanceSettings LoadPerformance(uint64_t title_id, const std::string& file = SettingsFile()) {
@@ -689,6 +741,10 @@ inline PerformanceSettings LoadPerformance(uint64_t title_id, const std::string&
         value("unsafe_dma", result.unsafe_dma);
         value("reactive_flushing", result.reactive_flushing);
         value("skip_invalidation", result.skip_invalidation);
+        // A name that is not one of the layouts leaves the value the general settings gave.
+        result.memory_layout = KeyIndex(Settings::String(document,
+                                                         Json::json_pointer(base + "/performance/memory_layout")),
+                                        kMemoryLayoutKeys, int(std::size(kMemoryLayoutKeys)), result.memory_layout);
     };
     read("");
     if (title_id) read("/games/" + Settings::TitleKey(title_id));
@@ -698,6 +754,7 @@ inline PerformanceSettings LoadPerformance(uint64_t title_id, const std::string&
 // Title 0 saves the general values.
 inline bool SavePerformance(uint64_t title_id, const PerformanceSettings& value,
                             const std::string& file = SettingsFile()) {
+    if (value.memory_layout < 0 || value.memory_layout >= int(std::size(kMemoryLayoutKeys))) return false;
     Settings::Json document = Settings::Load(file);
     document["version"] = 1;
     auto& owner = title_id ? document["games"][Settings::TitleKey(title_id)] : document;
@@ -705,7 +762,8 @@ inline bool SavePerformance(uint64_t title_id, const PerformanceSettings& value,
     owner["performance"] = {{"block_list", value.block_list}, {"async_shaders", value.async_shaders},
                             {"fast_gpu", value.fast_gpu}, {"unsafe_cpu", value.unsafe_cpu},
                             {"unsafe_dma", value.unsafe_dma}, {"reactive_flushing", value.reactive_flushing},
-                            {"skip_invalidation", value.skip_invalidation}};
+                            {"skip_invalidation", value.skip_invalidation},
+                            {"memory_layout", kMemoryLayoutKeys[value.memory_layout]}};
     return Settings::Write(document, file);
 }
 
@@ -809,7 +867,7 @@ inline std::vector<std::string> LoadRecentGames(const std::string& file = Settin
     for (const auto& entry : document.at(at)) {
         if (!entry.is_string()) continue;
         const std::string name = entry.get<std::string>();
-        if (recent.size() < 4 && ValidRomFilename(name) && std::find(recent.begin(), recent.end(), name) == recent.end())
+        if (recent.size() < 8 && ValidRomFilename(name) && std::find(recent.begin(), recent.end(), name) == recent.end())
             recent.push_back(name);
     }
     return recent;
@@ -820,7 +878,7 @@ inline bool SaveRecentGame(std::string_view name, const std::string& file = Sett
     auto recent = LoadRecentGames(file);
     recent.erase(std::remove(recent.begin(), recent.end(), name), recent.end());
     recent.insert(recent.begin(), std::string(name));
-    if (recent.size() > 4) recent.resize(4);
+    if (recent.size() > 8) recent.resize(8);
     Settings::Json document = Settings::Load(file);
     document["version"] = 1;
     document["library"]["recent"] = recent;

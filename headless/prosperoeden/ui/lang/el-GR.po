@@ -43,6 +43,10 @@ msgstr "Δεν είναι δυνατή η ανάγνωση ενός NCA του f
 msgid "A pairing is running already."
 msgstr "Μια σύζευξη εκτελείται ήδη."
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "ΠΛΗΡΟΦΟΡΙΕΣ"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "Κύκλος"
 msgid "Close"
 msgstr "Κλείσιμο"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "Χρώμα"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "Συντελεστές και ρύθμιση"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "Σταυρός"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "Προεπιλογή"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "Λιγότερο ακριβείς πράξεις κινητής υποδ
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "Λιγότερο ακριβείς μεταφορές μνήμης προς την GPU: ταχύτερα, αλλά λίγα παιχνίδια δείχνουν λάθος γραφικά."
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "ΒΙΒΛΙΟΘΗΚΗ"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "Βιβλιοθήκη"
@@ -959,6 +975,10 @@ msgstr "Μεσαίο"
 #: pe/ui/settings.cpp
 msgid "Memory"
 msgstr "Μνήμη"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Menu keybinds"
+msgstr "Κουμπιά μενού"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1011,6 +1031,10 @@ msgstr "Πλησιέστερο"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "Χρειάζεται προσοχή"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "Ουδέτερο γυαλί, καθαρό και ήρεμο."
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1294,6 +1318,10 @@ msgstr "Πατήστε ξανά για να αντικατασταθεί η απ
 msgid "Private room"
 msgstr "Ιδιωτικό δωμάτιο"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "ΙΔΙΩΤΙΚΟ ΔΩΜΑΤΙΟ"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1359,6 +1387,10 @@ msgstr "ΕΚΔΟΣΗ PS5"
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
 msgstr "Δημόσια δωμάτια"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
+msgstr "ΔΗΜΟΣΙΑ ΔΩΜΑΤΙΑ"
 
 #: pe/ui/remote.cpp
 msgid "Queued"
@@ -1564,6 +1596,10 @@ msgstr "Σάρωσε τον κωδικό με το κινητό σου ή άνο
 msgid "Scroll"
 msgstr "Κύλιση"
 
+#: pe/ui/game_options.cpp
+msgid "Secondary"
+msgstr "Δευτερεύον"
+
 #. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
 #: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Sections"
@@ -1591,6 +1627,10 @@ msgstr "Διακομιστής πολύ παλιός για συγχρονισμ
 #: pe/ui/home.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Settings"
 msgstr "Ρυθμίσεις"
+
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
+msgstr "ΡΥΘΜΙΣΕΙΣ"
 
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
@@ -1730,6 +1770,10 @@ msgstr "ΕΥΧΑΡΙΣΤΙΕΣ"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "Ευχαριστούμε όλη την κοινότητα homebrew του PS5 και κάθε προγραμματιστή του οποίου τα προγράμματα οδήγησης, τα εργαλεία και οι βιβλιοθήκες κάνουν εφικτό το ProsperoEden."
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "Το χρώμα έμφασης του τρέχοντος θέματος."
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"
@@ -2035,6 +2079,10 @@ msgstr "Τι νέο υπάρχει"
 #: pe/ui/update.cpp
 msgid "What's new in version {0}"
 msgstr "Τι νέο υπάρχει στην έκδοση {0}"
+
+#: pe/ui/game_options.cpp
+msgid "Which face button does what in the menu."
+msgstr "Ποιο κουμπί ενεργειών κάνει τι στο μενού."
 
 #: pe/ui/settings.cpp
 msgid "Who is playing. Each profile keeps its own save data and settings."
