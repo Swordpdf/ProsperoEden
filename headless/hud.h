@@ -125,6 +125,11 @@ inline constexpr uint32_t kHudFieldResolution = 1u << 9;
 // Every piece of the line, which is what a setting that names none starts at. Bit 8 is a mode of
 // the CPU piece rather than a piece, so it is not in this, as it was not before.
 inline constexpr uint32_t kHudFieldAll = 0x2ffu;
+inline constexpr uint32_t kHudFieldSupported = kHudFieldAll | kHudFieldOneCore;
+inline constexpr bool ValidHudFields(int fields) {
+    return fields >= 0 && (static_cast<uint32_t>(fields) & ~kHudFieldSupported) == 0;
+}
+
 // The game's size, as the RES piece names it: the frame it last handed to the display, with a
 // cropped layer counted as the part that is shown. 0 until the first one arrives, which is also
 // what a session starts at (graphics.cpp), and what the OpenGL renderer leaves it at: it does not

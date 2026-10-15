@@ -43,8 +43,8 @@ assert "vulkan_guest_resolution.inc" in port_script
 assert 'void RendererVulkan::Composite(std::span<const Tegra::FramebufferConfig> framebuffers) {' in port_script
 assert 'Hud::ForgetGuestScreen();' in graphics
 store = (root/'headless/settings_store.h').read_text()
-assert 'int hud_fields = 0x2ff;' in store and 'hud_fields > 0x3ff' in store
-assert 'hud_fields <= 0x3ff' in store
+assert 'int hud_fields = 0x2ff;' in store and '!ValidHudFields(value.hud_fields)' in store
+assert 'ValidHudFields(hud_fields)' in store
 # The three places that name the line's default all say the same: every piece, and the CPU piece
 # read as each of the four cores (bit 8 clear).
 assert 'std::atomic<int> hud_fields{0x2ff};' in graphics
