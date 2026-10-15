@@ -28,6 +28,7 @@
 #include <cstdlib>
 #include <mutex>
 #include <thread>
+#include <bit>
 #include <new>
 #include <string_view>
 #include <stdexcept>
@@ -96,6 +97,7 @@ extern "C" std::int32_t sceKernelAvailableFlexibleMemorySize(std::size_t*);
 #pragma GCC diagnostic pop
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-private-field"
+#include "common/page_table.h"
 #include "core/hle/kernel/k_process.h"  // every build: the game's code address (jit_list.h)
 #ifdef PS5_NATIVE
 #include "core/hle/kernel/k_thread.h"
@@ -107,6 +109,8 @@ extern "C" std::int32_t sceKernelAvailableFlexibleMemorySize(std::size_t*);
 #include "core/arm/debug.h"
 #include "core/memory.h"
 extern "C" bool eden_jit_shared;  // headless/dynarmic/jit_group_support.inc
+extern "C" bool eden_page_reuse;  // headless/dynarmic/page_reuse_pass.inc
+extern "C" unsigned long long eden_page_reuse_groups, eden_page_reuse_accesses;
 extern "C" bool eden_free_moves;  // headless/dynarmic/reg_alloc.cmake
 extern "C" bool eden_alloc_r13;  // headless/dynarmic/reg_alloc.cmake
 extern "C" bool eden_plain_ordered_reads;  // headless/CMakeLists.txt
@@ -142,6 +146,34 @@ public:
 // First start with filesystem access: copy what the sandbox kept (settings, covers, Eden's saves
 // and caches) into /data/prosperoeden. Only folders that do not exist yet are filled, and the
 // sandbox copy stays, so an older ProsperoEden still finds its data.
+// dev-settings jit_table_check=on: the JIT's direct page table (headless/jit-page-table.cmake) must
+// hold, for every page, the pointer of Eden's entry, or 0 where the entry is marked or empty. A
+// difference that is still there when read again is a write path that missed the direct table.
+[[maybe_unused]] static bool jit_table_check = false;
+[[maybe_unused]] static void CheckDirectTable(Common::PageTable& table) {
+    const std::size_t mirror = table.entries.mirror_index;
+    if (mirror == 0) return;
+    using Entry = Common::PageTable::PageEntryData;
+    const auto* raw = reinterpret_cast<const volatile std::uint64_t*>(table.entries.data());
+    const auto expected = [](std::uint64_t entry) {
+        return std::uint64_t(Entry::ExtractPointer(std::bit_cast<Entry::Data>(entry)));
+    };
+    const std::size_t count = std::size_t{1} << (table.GetAddressSpaceBits() - 12);
+    std::size_t pages = 0, mismatches = 0;
+    for (std::size_t page = 0; page < count; ++page) {
+        if (raw[page] == 0 && raw[mirror + page] == 0) continue;
+        ++pages;
+        if (expected(raw[page]) == raw[mirror + page]) continue;
+        std::this_thread::yield(); // an update may be between its two stores
+        const std::uint64_t entry = raw[page], direct = raw[mirror + page];
+        if (expected(entry) == direct) continue;
+        if (++mismatches <= 8)
+            std::printf("EDEN_JIT_TABLE mismatch page=%zx entry=%llx direct=%llx\n", page,
+                        static_cast<unsigned long long>(entry), static_cast<unsigned long long>(direct));
+    }
+    std::printf("EDEN_JIT_TABLE check pages=%zu mismatches=%zu\n", pages, mismatches);
+}
+
 static void MigrateSandboxData() {
     const std::filesystem::path sandbox{"/mnt/sandbox/PPSA99008_000/download0"};
     const std::pair<std::filesystem::path, std::string> moves[] = {
@@ -788,6 +820,13 @@ int main(int argc, char** argv) {
                 } else if (entry == "fastmem_sites=off") {
                     // Window and reserved register kept, every access on the page-table path.
                     Eden::Fastmem::RequestSites(false);
+                } else if (entry == "jit_table=off") {
+                    // The JIT reads Eden's packed page table instead of the direct one
+                    // (headless/jit-page-table.cmake). Read when the first page table is sized.
+                    Common::PageTable::direct_tables_requested = false;
+                } else if (entry == "jit_table_check=on") {
+                    // Every 30 s compare the direct table with Eden's entries (EDEN_JIT_TABLE check).
+                    jit_table_check = true;
                 } else if (entry == "cpu_write_detail=on") {
                     // EDEN_DEV_CPUWRITE: guest writes to GPU-tracked pages broken down per core.
                     Eden::Performance::cpu_write_detail = true;
@@ -851,6 +890,9 @@ int main(int argc, char** argv) {
                     // The saved block list (jit_list.h), whatever the settings file says.
                     Eden::JitList::enabled = entry.ends_with("on");
                     dev_block_list = true;
+                } else if (entry == "jit_page_reuse=off") {
+                    // One page-table lookup per A64 access, as upstream (headless/dynarmic/page-reuse.cmake).
+                    eden_page_reuse = false;
                 } else if (entry == "jit_plain_ordered_reads=off") {
                     // Ordered and exclusive reads are a locked RMW again, as upstream (headless/CMakeLists.txt).
                     eden_plain_ordered_reads = false;
@@ -1776,6 +1818,14 @@ int main(int argc, char** argv) {
                                 if (poll % 20 == 0) {
                                     lock.unlock();
                                     Eden::Crash::DevelopmentRequest(Eden::AppFile("crash-app.txt"));
+                                    if (poll == 0)
+                                        std::printf("EDEN_JIT_PAGE_REUSE enabled=%d groups=%llu accesses=%llu\n", eden_page_reuse ? 1 : 0,
+                                                    __atomic_load_n(&eden_page_reuse_groups, __ATOMIC_RELAXED),
+                                                    __atomic_load_n(&eden_page_reuse_accesses, __ATOMIC_RELAXED));
+                                    if (jit_table_check && poll == 0) {
+                                        if (auto* process = system.ApplicationProcess())
+                                            CheckDirectTable(process->GetPageTable().GetImpl());
+                                    }
                                     if (poll == 0)
                                         std::printf("EDEN_JIT_FREE_MOVES enabled=%d r13=%d plain_ordered_reads=%d moves=%llu spills=%llu\n", eden_free_moves ? 1 : 0, eden_alloc_r13 ? 1 : 0, eden_plain_ordered_reads ? 1 : 0,
                                                     __atomic_load_n(&eden_free_moves_done, __ATOMIC_RELAXED),

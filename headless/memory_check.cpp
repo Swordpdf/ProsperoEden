@@ -19,6 +19,7 @@
 #include "dynarmic/interface/A64/a64.h"
 #include "dynarmic/interface/exclusive_monitor.h"
 #include "common/host_memory.h"
+#include "common/page_table.h"
 #include "common/sparse_large_vector.h"
 #include "../src/fastmem.h"
 #include <csignal>
@@ -1473,6 +1474,304 @@ static void CheckSparseTables() {
               "six threads on shared slots, an unmap that touches only what was written");
 }
 
+// The JIT's direct page table (headless/jit-page-table.cmake). Every PageEntryData write keeps a
+// page's direct value equal to the entry's pointer, 0 when marked or empty; a first write in an
+// untouched part of the table commits the mirror too (the mirror store would fault otherwise);
+// an A64 JIT given the direct table loads and stores through it and calls back for a page that
+// is marked, cleared or out of range.
+static void CheckDirectPageTable(uint8_t* backing) {
+    using Common::PageType;
+    Common::PageTable table;
+    table.Resize(39, 12);
+    require(Common::PageTable::DirectTables() && table.DirectTable() != nullptr);
+    const auto* direct = static_cast<const volatile uint64_t*>(table.DirectTable());
+    const std::size_t mirror = table.entries.mirror_index;
+    unsigned cases = 0;
+    const uint64_t near = 0x100000, far = (uint64_t{1} << 38) + 0x5000;
+    const auto pointer = [&](uint64_t vaddr) { return reinterpret_cast<uintptr_t>(backing) - vaddr; };
+    for (uint64_t vaddr : {near, far}) {
+        const std::size_t page = vaddr >> 12;
+        table.entries.CommitRegion(page, page + 1);
+        auto& entry = table.entries.GetUnchecked(page);
+        entry.Store(false, PageType::Memory, 5, pointer(vaddr));
+        require(entry.Pointer() == pointer(vaddr) && direct[page] == pointer(vaddr));
+        entry.MarkRasterizerCached();
+        require(entry.Pointer() == 0 && direct[page] == 0);
+        entry.Store(false, PageType::Memory, 5, entry.Pointer(true));
+        require(direct[page] == pointer(vaddr));
+        entry.MarkDebug(pointer(vaddr), 5);
+        require(direct[page] == 0);
+        entry.Store(false, PageType::Unmapped, 5, 0);
+        require(direct[page] == 0 && direct[page - 1] == 0 && direct[page + 1] == 0);
+        entry.Store(false, PageType::Memory, 5, pointer(vaddr));
+        cases += 5;
+    }
+    // An unmap (core/memory.cpp) zeroes the direct values, then the entries.
+    table.entries.ZeroRegion((near >> 12) + mirror, (near >> 12) + 1 + mirror);
+    table.entries.ZeroRegion(near >> 12, (near >> 12) + 1);
+    require(direct[near >> 12] == 0 && table.entries[near >> 12].Pointer() == 0 && direct[far >> 12] == pointer(far));
+    table.entries.GetUnchecked(near >> 12).Store(false, PageType::Memory, 5, pointer(near));
+    ++cases;
+
+    Memory<false> memory;
+    A64::UserConfig config{};
+    config.callbacks = &memory;
+    config.enable_cycle_counting = false;
+    config.code_cache_size = 16 * 1024 * 1024;
+    config.page_table = static_cast<void**>(table.DirectTable());
+    config.page_table_address_space_bits = 39;
+    config.silently_mirror_page_table = false;
+    config.absolute_offset_page_table = true;
+    config.detect_misaligned_access_via_page_table = 16 | 32 | 64 | 128;
+    config.only_detect_misalignment_via_page_table_on_page_boundary = true;
+    A64::Jit jit{config};
+    memory.jit = &jit;
+    const auto run = [&](bool write, uint64_t vaddr) {
+        memory.instruction = write ? 0xf9000001u : 0xf9400001u; // str/ldr x1, [x0]
+        memory.address = vaddr;
+        memory.reads = memory.writes = 0;
+        jit.Reset(); jit.ClearHalt(~HaltReason{}); jit.ClearCache();
+        jit.SetPC(0x1000); jit.SetRegister(0, vaddr); jit.SetRegister(1, write ? memory.value[0] : 0);
+        require(jit.Run() == HaltReason::UserDefined1);
+        ++cases;
+        return jit.GetRegister(1);
+    };
+    for (uint64_t vaddr : {near, far}) {
+        auto& entry = table.entries.GetUnchecked(vaddr >> 12);
+        const uint64_t stored = 0x0123456789abcdefULL ^ vaddr;
+        std::memcpy(backing, &stored, 8);
+        require(run(false, vaddr) == stored && memory.reads == 0);
+        std::memset(backing, 0, 8);
+        run(true, vaddr);
+        require(memory.writes == 0 && std::memcmp(backing, &memory.value[0], 8) == 0);
+        entry.MarkRasterizerCached();
+        require(run(false, vaddr) == memory.value[0] && memory.reads == 1);
+        run(true, vaddr);
+        require(memory.writes == 1);
+        entry.Store(false, PageType::Memory, 5, entry.Pointer(true));
+        std::memcpy(backing, &stored, 8);
+        require(run(false, vaddr) == stored && memory.reads == 0);
+    }
+    require(run(false, uint64_t{1} << 39) == memory.value[0] && memory.reads == 1); // out of range
+    require(run(false, 0x200000) == memory.value[0] && memory.reads == 1);          // never mapped
+    std::memset(backing, 0, 8);
+    std::printf("Direct page table PASS: %u cases\n", cases);
+}
+
+extern "C" bool eden_page_reuse;  // headless/dynarmic/page_reuse_pass.inc
+extern "C" unsigned long long eden_page_reuse_groups, eden_page_reuse_accesses;
+
+// Grouped A64 accesses (headless/dynarmic/page-reuse.cmake) give the same results as one lookup
+// per access, with and without the grouping: groups within a page, straddling into a page
+// whose host memory is elsewhere, on pages that must take the callback path, and a base
+// register advanced by post-indexing. Guest pages map to scattered host pages.
+struct ReuseMemory : A64::UserCallbacks {
+    static constexpr uint32_t program[] = {
+        0xa9400c02u, // ldp x2, x3, [x0]
+        0xf9400804u, // ldr x4, [x0, #16]
+        0xb9401805u, // ldr w5, [x0, #24]
+        0x39407006u, // ldrb w6, [x0, #28]
+        0x79403c07u, // ldrh w7, [x0, #30]
+        0x3dc00800u, // ldr q0, [x0, #32]
+        0xbd403001u, // ldr s1, [x0, #48]
+        0xfd401c02u, // ldr d2, [x0, #56]
+        0xf9000422u, // str x2, [x1, #8]
+        0xf9000823u, // str x3, [x1, #16]
+        0xa9019424u, // stp x4, x5, [x1, #24]
+        0x3900a026u, // strb w6, [x1, #40]
+        0x79005427u, // strh w7, [x1, #42]
+        0x3d800c20u, // str q0, [x1, #48]
+        0xbd004021u, // str s1, [x1, #64]
+        0xfd002422u, // str d2, [x1, #72]
+        0xf8408408u, // ldr x8, [x0], #8
+        0xf9400409u, // ldr x9, [x0, #8]
+        0x9102002au, // add x10, x1, #128
+        0xf9000148u, // str x8, [x10]
+        0xf9000549u, // str x9, [x10, #8]
+        0xd4000001u, // svc #0
+    };
+    A64::Jit* jit{};
+    uint8_t* host{};                 // guest page i lives at host + Slot(i) * 4096
+    unsigned reads{}, writes{};
+    static uint64_t Slot(uint64_t page) { return (page * 5) % 16; }
+    uint8_t* Byte(uint64_t vaddr) const { return host + Slot(vaddr >> 12) * 4096 + (vaddr & 0xfff); }
+    template<class T> T Read(uint64_t vaddr) {
+        ++reads; T value; uint8_t bytes[sizeof value];
+        for (size_t i = 0; i < sizeof value; ++i) bytes[i] = *Byte(vaddr + i);
+        std::memcpy(&value, bytes, sizeof value); return value;
+    }
+    template<class T> void Write(uint64_t vaddr, T value) {
+        ++writes; uint8_t bytes[sizeof value]; std::memcpy(bytes, &value, sizeof value);
+        for (size_t i = 0; i < sizeof value; ++i) *Byte(vaddr + i) = bytes[i];
+    }
+    const std::vector<uint32_t>* program_override{};
+    std::optional<uint32_t> MemoryReadCode(uint64_t pc) {
+        if (program_override) {
+            require(pc >= 0x400000 && pc < 0x400000 + 4 * program_override->size() && pc % 4 == 0);
+            return (*program_override)[(pc - 0x400000) / 4];
+        }
+        require(pc >= 0x400000 && pc < 0x400000 + sizeof program && pc % 4 == 0);
+        return program[(pc - 0x400000) / 4];
+    }
+    uint64_t MemoryRead(uint64_t a, std::size_t size) override {
+        switch (size) {
+        case 1: return Read<uint8_t>(a);
+        case 2: return Read<uint16_t>(a);
+        case 4: return Read<uint32_t>(a);
+        case 8: return Read<uint64_t>(a);
+        }
+        std::abort();
+    }
+    A64::Vector MemoryRead128(uint64_t a) { return Read<A64::Vector>(a); }
+    void MemoryWrite(uint64_t a, uint64_t v, std::size_t size) override {
+        switch (size) {
+        case 1: return Write(a, static_cast<uint8_t>(v));
+        case 2: return Write(a, static_cast<uint16_t>(v));
+        case 4: return Write(a, static_cast<uint32_t>(v));
+        case 8: return Write(a, v);
+        }
+        std::abort();
+    }
+    void MemoryWrite128(uint64_t a, A64::Vector v) { Write(a, v); }
+    bool MemoryWriteExclusive8(uint64_t, uint8_t, uint8_t) { std::abort(); }
+    bool MemoryWriteExclusive16(uint64_t, uint16_t, uint16_t) { std::abort(); }
+    bool MemoryWriteExclusive32(uint64_t, uint32_t, uint32_t) { std::abort(); }
+    bool MemoryWriteExclusive64(uint64_t, uint64_t, uint64_t) { std::abort(); }
+    bool MemoryWriteExclusive128(uint64_t, A64::Vector, A64::Vector) { std::abort(); }
+    void CallSVC(uint32_t n) { require(n == 0); jit->HaltExecution(); }
+    void ExceptionRaised(uint64_t, A64::Exception) { std::abort(); }
+    void AddTicks(uint64_t) { std::abort(); }
+    uint64_t GetTicksRemaining() { std::abort(); }
+    uint64_t GetCNTPCT() { std::abort(); }
+};
+
+static void CheckPageReuse() {
+    auto* host = static_cast<uint8_t*>(mmap(nullptr, 16 * 4096, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+    require(host != MAP_FAILED);
+    std::vector<uint64_t> table(4096);  // 24-bit guest addresses; direct values as in jit-page-table.cmake
+    ReuseMemory memory;
+    memory.host = host;
+    A64::UserConfig config{};
+    config.callbacks = &memory;
+    config.enable_cycle_counting = false;
+    config.code_cache_size = 16 * 1024 * 1024;
+    config.page_table = reinterpret_cast<void**>(table.data());
+    config.page_table_address_space_bits = 24;
+    config.silently_mirror_page_table = false;
+    config.absolute_offset_page_table = true;
+    config.detect_misaligned_access_via_page_table = 16 | 32 | 64 | 128;
+    config.only_detect_misalignment_via_page_table_on_page_boundary = true;
+    A64::Jit jit{config};
+    memory.jit = &jit;
+    const auto map = [&](uint64_t page, bool direct) {
+        table[page] = direct ? reinterpret_cast<uintptr_t>(memory.Byte(page << 12)) - (page << 12) : 0;
+    };
+    // The program's effect on dst, computed from src.
+    const auto expected = [](const uint8_t* src, uint8_t* dst) {
+        std::memcpy(dst + 8, src, 24);
+        std::memcpy(dst + 32, src + 24, 4); std::memset(dst + 36, 0, 4);
+        dst[40] = src[28];
+        std::memcpy(dst + 42, src + 30, 2);
+        std::memcpy(dst + 48, src + 32, 16);
+        std::memcpy(dst + 64, src + 48, 4);
+        std::memcpy(dst + 72, src + 56, 8);
+        std::memcpy(dst + 128, src, 8);
+        std::memcpy(dst + 136, src + 16, 8);
+    };
+    unsigned cases = 0;
+    const uint64_t groups_before = eden_page_reuse_groups;
+    struct Case { uint64_t src, dst; bool src_direct, dst_direct; };
+    const Case all[] = {
+        {0x2100, 0x4200, true, true},     // within pages
+        {0x2fd8, 0x4200, true, true},     // source group straddles into page 3
+        {0x2100, 0x4f90, true, true},     // destination group straddles into page 5
+        {0x2ffc, 0x4ff4, true, true},     // single accesses cross page boundaries
+        {0x2100, 0x4200, false, true},    // source pages take the callback path
+        {0x2100, 0x4200, true, false},    // destination pages take the callback path
+        {0x2fd8, 0x4f90, false, false},
+    };
+    for (const Case& c : all) {
+        for (bool reuse : {true, false}) {
+            for (uint64_t page = 0; page < 16; ++page) map(page, true);
+            if (!c.src_direct) { map(c.src >> 12, false); map((c.src >> 12) + 1, false); }
+            if (!c.dst_direct) { map(c.dst >> 12, false); map((c.dst >> 12) + 1, false); }
+            uint8_t src[64], dst[144], want[144];
+            for (unsigned i = 0; i < 64; ++i) src[i] = static_cast<uint8_t>(i * 37 + c.src + (reuse ? 1 : 3));
+            for (unsigned i = 0; i < 144; ++i) dst[i] = want[i] = static_cast<uint8_t>(0xa5 ^ i);
+            for (unsigned i = 0; i < 64; ++i) *memory.Byte(c.src + i) = src[i];
+            for (unsigned i = 0; i < 144; ++i) *memory.Byte(c.dst + i) = dst[i];
+            expected(src, want);
+            eden_page_reuse = reuse;
+            memory.reads = memory.writes = 0;
+            jit.Reset(); jit.ClearHalt(~HaltReason{}); jit.ClearCache();
+            jit.SetPC(0x400000); jit.SetRegister(0, c.src); jit.SetRegister(1, c.dst);
+            require(jit.Run() == HaltReason::UserDefined1);
+            for (unsigned i = 0; i < 144; ++i) require(*memory.Byte(c.dst + i) == want[i]);
+            require(jit.GetRegister(0) == c.src + 8);
+            if (c.src_direct && c.dst_direct && (c.src & 0xfff) <= 0x1000 - 64 && (c.dst & 0xfff) <= 0x1000 - 144)
+                require(memory.reads == 0 && memory.writes == 0);
+            if (!c.src_direct) require(memory.reads >= 10);
+            if (!c.dst_direct) require(memory.writes >= 10);
+            ++cases;
+        }
+    }
+    // Random blocks: loads and stores of every size from two bases and a derived one, scaled,
+    // unscaled and post-indexed, near page boundaries. Grouped, ungrouped and all-callback runs
+    // (the reference) must leave the same memory and registers.
+    std::vector<uint32_t> random_program;
+    uint64_t seed = 0x9e3779b97f4a7c15ULL;
+    const auto next = [&](uint64_t bound) { seed ^= seed << 13; seed ^= seed >> 7; seed ^= seed << 17; return seed % bound; };
+    const auto program_memory = [&] { std::vector<uint8_t> all(16 * 4096); std::memcpy(all.data(), host, all.size()); return all; };
+    for (unsigned round = 0; round < 300; ++round) {
+        random_program.clear();
+        for (unsigned i = 0, count = 8 + unsigned(next(40)); i < count; ++i) {
+            const uint32_t base = next(3) == 2 ? 10 : uint32_t(next(2));  // x0, x1 or x10
+            const uint32_t rt = 2 + uint32_t(next(6));                     // x2-x7 or q2-q7
+            const bool store = next(2);
+            switch (next(8)) {
+            case 0: random_program.push_back((store ? 0xf9000000u : 0xf9400000u) | uint32_t(next(48)) << 10 | base << 5 | rt); break;
+            case 1: random_program.push_back((store ? 0xb9000000u : 0xb9400000u) | uint32_t(next(96)) << 10 | base << 5 | rt); break;
+            case 2: random_program.push_back((store ? 0x79000000u : 0x79400000u) | uint32_t(next(192)) << 10 | base << 5 | rt); break;
+            case 3: random_program.push_back((store ? 0x39000000u : 0x39400000u) | uint32_t(next(384)) << 10 | base << 5 | rt); break;
+            case 4: random_program.push_back((store ? 0x3d800000u : 0x3dc00000u) | uint32_t(next(24)) << 10 | base << 5 | rt); break;
+            case 5: random_program.push_back((store ? 0xf8000000u : 0xf8400000u) | (uint32_t(next(512)) & 0x1ff) << 12 | base << 5 | rt); break;
+            case 6: if (!store && base != 10) random_program.push_back(0xf8400400u | uint32_t(next(64)) << 12 | base << 5 | rt); break;
+            default: random_program.push_back(0x91000000u | uint32_t(next(256)) << 10 | (base == 10 ? 1u : base) << 5 | 10u); break;
+            }
+        }
+        random_program.push_back(0xd4000001u);
+        const uint64_t x0 = 0x2000 + next(10) * 0x1000 + (next(2) ? 0x1000 - next(320) : next(4096)) - 256;
+        const uint64_t x1 = 0x2000 + next(10) * 0x1000 + (next(2) ? 0x1000 - next(320) : next(4096)) - 256;
+        std::vector<uint8_t> results[3];
+        std::array<uint64_t, 11> registers[3];
+        std::array<A64::Vector, 8> vectors[3];
+        for (unsigned mode = 0; mode < 3; ++mode) {  // 0: grouped, 1: ungrouped, 2: callbacks only
+            for (uint64_t page = 0; page < 16; ++page) map(page, mode != 2);
+            for (unsigned i = 0; i < 16 * 4096; ++i) host[i] = static_cast<uint8_t>(i * 131 + round);
+            eden_page_reuse = mode == 0;
+            memory.program_override = &random_program;
+            jit.Reset(); jit.ClearHalt(~HaltReason{}); jit.ClearCache();
+            jit.SetPC(0x400000); jit.SetRegister(0, x0); jit.SetRegister(1, x1);
+            for (unsigned r = 2; r < 11; ++r) jit.SetRegister(r, 0x1111111111111111ULL * r);
+            for (unsigned v = 0; v < 8; ++v) jit.SetVector(v, {0x0101010101010101ULL * v, 0x2020202020202020ULL * v});
+            require(jit.Run() == HaltReason::UserDefined1);
+            results[mode] = program_memory();
+            for (unsigned r = 0; r < 11; ++r) registers[mode][r] = jit.GetRegister(r);
+            for (unsigned v = 0; v < 8; ++v) vectors[mode][v] = jit.GetVector(v);
+        }
+        require(results[0] == results[2] && results[1] == results[2]);
+        require(registers[0] == registers[2] && registers[1] == registers[2]);
+        require(vectors[0] == vectors[2] && vectors[1] == vectors[2]);
+        cases += 3;
+    }
+    memory.program_override = nullptr;
+    eden_page_reuse = true;
+    require(eden_page_reuse_groups > groups_before);
+    require(munmap(host, 16 * 4096) == 0);
+    std::printf("Page reuse PASS: %u cases, %llu groups of %llu accesses\n", cases,
+                eden_page_reuse_groups - groups_before, eden_page_reuse_accesses);
+}
+
 int main(int argc, char** argv) {
     CheckSparseTables();
     if (argc == 2 && std::strcmp(argv[1], "--link-check") == 0) {
@@ -1496,6 +1795,17 @@ int main(int argc, char** argv) {
     }
     if (argc == 2 && std::strcmp(argv[1], "--fastmem") == 0) {
         CheckFastmemA32();
+        return 0;
+    }
+    if (argc == 2 && std::strcmp(argv[1], "--direct-table") == 0) {
+        auto* page = static_cast<uint8_t*>(mmap(nullptr, 8192, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+        require(page != MAP_FAILED);
+        CheckDirectPageTable(page);
+        require(munmap(page, 8192) == 0);
+        return 0;
+    }
+    if (argc == 2 && std::strcmp(argv[1], "--page-reuse") == 0) {
+        CheckPageReuse();
         return 0;
     }
     if (argc == 2 && std::strcmp(argv[1], "--fastmem-bench") == 0) {
@@ -1545,6 +1855,8 @@ int main(int argc, char** argv) {
     CheckBlockList();
     CheckBlockListFile();
     CheckLinks();
+    CheckDirectPageTable(backing);
+    CheckPageReuse();
     CheckFastPaths();
     CheckFastmemA32();
     StressFastmemA32();

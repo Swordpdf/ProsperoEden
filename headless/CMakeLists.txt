@@ -143,8 +143,16 @@ eden_sparse_replace("inline const u64 HostPageMask = ~(HostPageSize - 1);"
 eden_sparse_replace("mprotect(reinterpret_cast<void*>(page), HostPageSize, PROT_READ | PROT_WRITE)"
     "(CommitSparsePage(page), 0)" 1)
 eden_sparse_replace("void FreeMemoryPages(void* base, std::size_t size) noexcept;"
-    "void FreeMemoryPages(void* base, std::size_t size) noexcept;\nvoid* AllocateSparsePages(std::size_t size) noexcept;\nvoid FreeSparsePages(void* base, std::size_t size) noexcept;\nvoid CommitSparsePage(std::uintptr_t page) noexcept;" 1)
+    "void FreeMemoryPages(void* base, std::size_t size) noexcept;\nvoid* AllocateSparsePages(std::size_t size) noexcept;\nvoid FreeSparsePages(void* base, std::size_t size) noexcept;\nvoid CommitSparsePage(std::uintptr_t page) noexcept;\nbool SparseTablesAvailable() noexcept;" 1)
+# A vector can carry a mirror mirror_index entries further on (the JIT's direct page table,
+# headless/jit-page-table.cmake): committing a page of the first part commits its mirror first,
+# so a write of an entry may always write its mirror.
+eden_sparse_replace("    constexpr bool CommitPage(std::size_t index) noexcept {\n"
+    "    constexpr bool CommitPage(std::size_t index) noexcept {\n        if (mirror_index != 0 && index < mirror_index && !IsCommittedPage(index + mirror_index))\n            CommitPage(index + mirror_index);\n" 1)
+eden_sparse_replace("    std::size_t alloc_size{};\n"
+    "public:\n    std::size_t mirror_index{};\n\nprivate:\n    std::size_t alloc_size{};\n" 1)
 write_derived("${PORT_BUILD_DIR}/sparse/common/sparse_large_vector.h" "${sparse_header}")
+include("${EDEN_PORT_DIR}/jit-page-table.cmake")
 
 # An abandoned fiber stack is not unwound. Empty the by-value weak reference
 # before switching; jump_fcontext returns the live destination supplied by the
@@ -430,6 +438,10 @@ if(fold_offset LESS 0)
 endif()
 file(READ "${EDEN_PORT_DIR}/scalar-fold.inc" scalar_fold)
 string(REPLACE "${fold_anchor}" "${fold_anchor}\n${scalar_fold}" optimizer "${optimizer}")
+# One page lookup for nearby A64 accesses (dynarmic/page-reuse.cmake).
+include("${CMAKE_CURRENT_LIST_DIR}/dynarmic/page-reuse.cmake")
+eden_page_reuse_opcodes()
+eden_page_reuse_optimizer()
 write_derived("${PORT_BUILD_DIR}/opt_passes.cpp" "${optimizer}")
 get_target_property(jit_sources dynarmic SOURCES)
 list(FILTER jit_sources EXCLUDE REGEX "(^|/)opt_passes\\.cpp$")
@@ -551,6 +563,7 @@ string(REPLACE "${mark_test}" [=[        if (*ctx.conf.page_table_marked_bit == 
     if(EDEN_SHARED_JIT)
         eden_shared_jit_memory_inc()
     endif()
+    eden_page_reuse_memory_inc()
     write_derived("${PORT_BUILD_DIR}/include/${memory_inc}" "${memory_source}")
 set(exclusive_lookup [=[template<typename EmitContext>
 Xbyak::RegExp EmitExclusiveVAddrLookup(BlockOfCode& code, EmitContext& ctx, size_t bitsize,
@@ -601,6 +614,9 @@ foreach(bits 32 64)
     file(READ "${PROJECT_SOURCE_DIR}/src/dynarmic/src/dynarmic/backend/x64/${memory_unit}" memory_source)
     if(EDEN_SHARED_JIT)
         eden_shared_jit_memory_unit(${bits})
+    endif()
+    if(bits EQUAL 64)
+        eden_page_reuse_memory_unit()
     endif()
     write_derived("${PORT_BUILD_DIR}/${memory_unit}" "${memory_source}")
     list(FILTER jit_sources EXCLUDE REGEX "(^|/)a${bits}_emit_x64_memory\\.cpp$")
@@ -709,6 +725,14 @@ foreach(bits 32 64)
     set(relative "arm/dynarmic/arm_dynarmic_${bits}.cpp")
     file(READ "${PROJECT_SOURCE_DIR}/src/core/${relative}" wrapper)
     string(REPLACE "Common::PageTable::SIGN_BIT" "std::countl_zero(Common::PageTable::ATTRIBUTE_MASK)" wrapper "${wrapper}")
+    # The JIT's direct page table when the process has one (headless/jit-page-table.cmake).
+    set(direct_anchor "            config.page_table_sign_extension = std::uint8_t(std::countl_zero(Common::PageTable::ATTRIBUTE_MASK));\n        }\n")
+    string(FIND "${wrapper}" "${direct_anchor}" direct_at)
+    if(direct_at LESS 0)
+        message(FATAL_ERROR "Pinned page-table JIT configuration changed (${bits})")
+    endif()
+    string(REPLACE "${direct_anchor}" "${direct_anchor}        if (void* const direct = page_table->DirectTable()) {\n            config.page_table = reinterpret_cast<decltype(config.page_table)>(direct);\n            config.page_table_pointer_mask = 0;\n            config.page_table_marked_bit = std::nullopt;\n            config.page_table_sign_extension = std::nullopt;\n        }\n"
+        wrapper "${wrapper}")
     # Without fastmem every LDREX/STREX left JIT code through a callback under the
     # global monitor lock (~7,000 pairs/frame in a measured racing game). The exclusive
     # emitter patch below supports page-table addresses; eden-memory-check covers
@@ -1071,6 +1095,14 @@ if(EDEN_DEV_PROFILE)
     list(APPEND core_sources "${PORT_BUILD_DIR}/svc_ipc.cpp")
 endif()
 file(READ "${PROJECT_SOURCE_DIR}/src/core/memory.cpp" arena_source)
+# An unmap zeroes the entries directly: zero the JIT's direct values first (jit-page-table.cmake).
+set(unmap_old "            page_table.entries.ZeroRegion(base, end);\n")
+string(FIND "${arena_source}" "${unmap_old}" unmap_at)
+if(unmap_at LESS 0)
+    message(FATAL_ERROR "Pinned page-table unmap changed")
+endif()
+string(REPLACE "${unmap_old}" "            if (const auto mirror = page_table.entries.mirror_index; mirror != 0)\n                page_table.entries.ZeroRegion(base + mirror, end + mirror);\n${unmap_old}"
+    arena_source "${arena_source}")
 # Development: guest writes to GPU-tracked pages in detail (performance.h CpuWriteDetail).
 set(tracked_old [=[        gpu_device_memory->ApplyOpOnPointer(p, scratch_buffers[core], [&](DAddr address) {
             auto& current_area = rasterizer_write_areas[core];
