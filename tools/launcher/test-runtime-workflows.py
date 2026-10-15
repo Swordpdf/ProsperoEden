@@ -55,6 +55,14 @@ class Session:
     def need(self,condition,label):assert condition,label;checks.append({'case':self.name,'check':label,'passed':True})
     def close(self):self.p.stdin.write('exit\n');self.p.stdin.flush();self.p.wait(timeout=15);assert self.p.returncode==0;self.err.close();(out/(self.name+'-commands.log')).write_text(''.join(self.log))
 
+workflow=(folder/'main.lua').read_text()
+(folder/'main.lua').write_text('''return {init=function() end,draw=function() end,input=function(e)
+    local fields=e.key=="cross" and host.query("preferences").hud_fields or 1073741824
+    local result=host.action("preferences.set",{hud_fields=fields})
+    host.action("state.save",{result=result})
+end}''')
+s=Session('overlay-fields');s.key('cross');s.need(s.result()['ok'],'Current overlay defaults accepted');s.key('circle');s.need(not s.result()['ok'],'Unknown overlay bit rejected');s.close()
+(folder/'main.lua').write_text(workflow)
 s=Session('current-profile');s.key('right');s.need(s.result()['ok'],'Current profile switches');s.key('cross');s.need(s.result()['ok'],'Launch request accepted');s.key('left');s.need(not s.result()['ok'],'Profile cannot change during pending launch');s.key('triangle');s.need(s.result()['ok'],'Ready launch commits');launches=s.command('launches');s.need('"profile":1' in launches,'Captured current profile reaches will_play');s.key('triangle');s.need(not s.result()['ok'],'Repeated commit rejected');s.need(s.command('launches').count('"profile":1')==1,'will_play called exactly once');s.close()
 s=Session('unavailable');s.key('square');s.need(not s.result()['ok'],'Arbitrary game path rejected');s.key('options');s.need(not s.result()['ok'],'Duplicate mapping rejected');s.key('r1');s.need(not s.result()['ok'],'Update cannot apply before ready');s.command('room connecting');s.key('cross');s.need(not s.result()['ok'],'Connecting room blocks launch');s.command('room idle');s.key('cross');s.command('remove-first');s.key('triangle');s.need(not s.result()['ok'],'Deleted game is rechecked before commit');s.need('LAUNCHES []' in s.command('launches'),'Failed commits do not register play');s.close()
 s=Session('save-conflict');s.command('sync conflict');s.key('cross');s.command('tick 30');s.key('triangle');s.need(not s.result()['ok'],'Save conflict blocks commit');s.key('up');s.command('tick 60');s.key('triangle');s.need(s.result()['ok'],'Conflict answer allows completed sync to launch');s.close()

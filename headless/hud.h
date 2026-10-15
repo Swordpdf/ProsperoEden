@@ -121,6 +121,11 @@ inline constexpr uint32_t kHudFieldPing = 1u << 7;
 // choice, each of the four.
 inline constexpr uint32_t kHudFieldOneCore = 1u << 8;
 inline constexpr uint32_t kHudFieldAll = 0xffu;
+inline constexpr uint32_t kHudFieldSupported = kHudFieldAll | kHudFieldOneCore;
+inline constexpr bool ValidHudFields(int fields) {
+    return fields >= 0 && (static_cast<uint32_t>(fields) & ~kHudFieldSupported) == 0;
+}
+
 // True while the snapshot is the loading screen rather than the overlay's line.
 inline bool HudLoading(const HudSnapshot& hud) {
     return hud.loading != 0 && (hud.loading & kHudOverlayFlag) == 0;

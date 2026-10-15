@@ -98,6 +98,7 @@ class DrawList
 {
   public:
     void clear();
+    void reset_state(); // Retain recorded geometry, reset clip/transform/opacity stacks.
 
     // ---- shapes ----
     void rounded_rect(const Rect &r, float radius, Color fill);

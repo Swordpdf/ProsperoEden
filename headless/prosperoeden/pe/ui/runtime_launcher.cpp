@@ -1,3 +1,4 @@
+#include "../../../hud.h"
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "pe/ui/runtime_launcher.hpp"
 #include "pe/ui/runtime_models.hpp"
@@ -382,7 +383,7 @@ struct RuntimeLauncher::Impl {
             // Preserve native fields added after this API contract was defined.
             auto v=before;from_json(values,v);
             if (v.volume<0 || v.volume>100 || v.menu_volume<0 || v.menu_volume>100 || v.renderer<0 || v.renderer>1 || v.output<0 || v.output>2 || v.resolution<0 || v.resolution>=static_cast<int>(services.resolution_labels().size()) || v.filter<0 || v.filter>=static_cast<int>(services.filter_labels().size()) || v.astc<0 || v.astc>1 || v.language<0 || v.language>=static_cast<int>(services.language_labels().size()) || v.refresh<0 || v.refresh>1 || (v.vibration_strength!=25 && v.vibration_strength!=50 && v.vibration_strength!=75 && v.vibration_strength!=100) || v.hud_size<0 || v.hud_size>2 || v.hud_corner<0 || v.hud_corner>3 || v.frame_gen_target<0 || v.frame_gen_target>5 || v.frame_gen_multiplier<0 || v.frame_gen_multiplier>2) throw std::runtime_error("Preference is out of range");
-            if(v.hud_fields<0 || v.hud_fields>511) throw std::runtime_error("Invalid overlay fields");
+            if(!Eden::ValidHudFields(v.hud_fields)) throw std::runtime_error("Invalid overlay fields");
             std::set<int> mapped; for(int button:v.mapping) if(button<0 || button>=kPadButtons || !mapped.insert(button).second) throw std::runtime_error("Invalid controller mapping");
             std::set<int> menu_buttons; for(int button:v.menu_bind) if(button<0 || button>=kMenuActions || !menu_buttons.insert(button).second) throw std::runtime_error("Invalid menu mapping");
             ok=services.set_preferences(v); if(ok) cached_preferences=v; if(ok && v.vibration_strength!=before.vibration_strength && v.vibration) services.vibration_pulse(v.vibration_strength);
@@ -506,6 +507,7 @@ struct RuntimeLauncher::Impl {
         if(pack) { drawing=&list; draw_commands=0; const bool ok=call(*pack,"draw",{{"time",time}},true); drawing=nullptr; if(!ok) {list.clear(); fallback(); if(builtin) builtin->draw(list);} else batch.sync_font_texture(pack->font_texture,pack->font); }
         else if(builtin) builtin->draw(list);
         if(picker) {
+            list.reset_state();
             const auto& t=th(); list.rounded_rect({0,0,1920,1080},0,t.base.with_alpha(0.96f));
             list.text(*fonts.font,fonts.texture,"Choose launcher",184,144,{48,t.title});
             const int total=static_cast<int>(installed.size())+1;
