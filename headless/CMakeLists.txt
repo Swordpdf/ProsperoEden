@@ -2324,7 +2324,14 @@ string(REPLACE "${flush_caching_old}" [=[void MemoryManager::FlushCaching() {
         for (unsigned core = 0; core < 4; ++core) {
             for (const auto& write : ::Eden::Performance::TakeDeferredWrites(core)) {
                 if (rasterizer->OnCPUWrite(write.address, write.end - write.address)) {
-                    system.GetGPUDirtyMemoryManager()[core].Collect(write.address, write.end - write.address);
+                    // Collect represents 32 x 64-byte blocks, not an entire device page.
+                    constexpr u64 region_size = 1ULL << (Core::DEVICE_PAGEBITS - 1);
+                    for (u64 address = write.address; address < write.end;) {
+                        const u64 size = std::min<u64>(write.end - address,
+                                                  region_size - (address & (region_size - 1)));
+                        system.GetGPUDirtyMemoryManager()[core].Collect(address, size);
+                        address += size;
+                    }
                 }
             }
         }
