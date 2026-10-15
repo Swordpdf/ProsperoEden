@@ -484,19 +484,18 @@ inline bool SaveGameDocked(uint64_t title_id, bool docked, const std::string& fi
 inline constexpr const char* kPerformanceKeys[] = {"block_list", "async_shaders", "fast_gpu", "unsafe_cpu",
                                                    "unsafe_dma", "reactive_flushing", "skip_invalidation"};
 inline constexpr int kPerformanceSwitches = int(std::size(kPerformanceKeys));
-// Settings > Performance > Console memory: how much memory the guest's console is told it has.
-// Eden calls this the memory layout, and it is what a mod that keeps a heap of its own (an HD
-// camera pack) asks for: the standard layout is the Switch's 4 GiB, and a mod written against a
-// larger one reads the size from the kernel and reserves what it does not find, which stops the
-// game before its first picture rather than the mod. Above 4 GiB the guest's memory is a block
-// backed where the game's kernel uses it, so a 6 GiB layout holds only what a session touches;
-// the pool the CPU shares with the GPU still has to take it, so main.cpp refuses a layout the
-// console's pool cannot hold beside the graphics budget.
+// Settings > Performance > Memory: how much memory the guest's console is told it has. Eden calls
+// this the memory layout, and it is what a mod that keeps a heap of its own (an HD camera pack)
+// asks for: the standard layout is the Switch's 4 GiB, and a mod written against a larger one
+// reads the size from the kernel and reserves what it does not find, which stops the game before
+// its first picture rather than the mod. Above 4 GiB the guest's memory is a block backed where
+// the game's kernel uses it, so a 6 GiB layout holds only what a session touches; the pool the CPU
+// shares with the GPU still has to take that much, so a demanding game can run out of it instead
+// of running out of graphics memory. The menu shows the three as plain sizes (settings.cpp's
+// kMemoryLayouts); the line at launch in main.cpp says which one a session took.
 inline constexpr const char* kMemoryLayoutKeys[] = {"4Gb", "6Gb", "8Gb"};
-inline constexpr const char* kMemoryLayoutLabels[] = {"4 GiB (standard)", "6 GiB (larger)", "8 GiB (largest)"};
 inline constexpr int kMemoryLayoutGib[] = {4, 6, 8};
-static_assert(std::size(kMemoryLayoutKeys) == std::size(kMemoryLayoutLabels) &&
-              std::size(kMemoryLayoutKeys) == std::size(kMemoryLayoutGib));
+static_assert(std::size(kMemoryLayoutKeys) == std::size(kMemoryLayoutGib));
 
 // Library > Game settings: what one game does differently from Settings. Each value is -1 (absent
 // from the file) while the game follows Settings; switches are 0 off, 1 on.

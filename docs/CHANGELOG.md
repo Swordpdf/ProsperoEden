@@ -4,7 +4,7 @@ What changed in each release of ProsperoEden, newest first. A release's notes on
 
 ## Unreleased
 
-- **A larger console memory, for the mods that ask for it.** `memory_layout` in the settings file tells a game its console has 6 GiB or 8 GiB instead of the 4 GiB every game has, the way the console's developer units are. A mod that keeps a block of memory of its own measures what the game is told and reserves from it, so a mod that wants more than 4 GiB stops the game before its first picture; with the larger memory it finds what it asked for. The extra is taken from the console's pool only where the session touches it. For now it is in the settings file, for every game or for one; see [Console memory](SETTINGS.md#console-memory).
+- **A larger console memory, for the mods that ask for it.** **Settings > Performance > Memory** tells a game its console has 6 GiB or 8 GiB instead of the 4 GiB every game has, the way the console's developer units are. A mod that keeps a block of memory of its own measures what the game is told and reserves from it, so a mod that wants more than 4 GiB stops the game before its first picture; with the larger memory it finds what it asked for. The extra is taken from the console's pool only where the session touches it. Left and right choose the size, and it applies when the game next starts; the same value is `"memory_layout"` in the settings file, where a single game can also have its own. See [Console memory](SETTINGS.md#console-memory).
 
 ## v1.002.000
 

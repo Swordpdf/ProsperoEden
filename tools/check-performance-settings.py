@@ -77,5 +77,28 @@ assert 'kMemoryLayoutKeys[value.memory_layout]' in store
 pages = (root / 'src/memory_pages.cpp').read_text()
 assert 'void* AllocateGuestMemoryWhereUsed(std::size_t size) noexcept {' in pages
 assert 'EDEN_GUEST_MEMORY sparse refused bytes=%zu step=%s' in pages
+# The menu holds it too, so nobody has to open the settings file: Settings > Performance > Memory,
+# a row after the switches whose value is one of the three sizes and reaches the same key. Every
+# language already says "Memory" (the overlay's piece of the same name), and the sizes are numbers,
+# so the row adds no text a catalog has to translate.
+ui = (root / 'headless/prosperoeden/pe/ui/settings.cpp').read_text()
+launcher = (root / 'headless/prosperoeden/pe/ui/services.hpp').read_text()
+assert 'int memory_layout = 0;' in launcher
+assert 'speed_memory_layout, // the memory a game\'s console is told it has' in ui
+assert 'constexpr const char *kMemoryLayouts[] = {"4 GiB", "6 GiB", "8 GiB"};' in ui
+assert 'result.memory_layout = speed.memory_layout;' in load
+assert 'speed.memory_layout = std::clamp(preferences.memory_layout,' in save
+# The clamped value is the last word on it: a plain copy of what the launcher sent would leave a
+# number outside the three layouts in place, and SavePerformance refuses one, which would take the
+# rest of the page's settings with it.
+assert 'speed.memory_layout = preferences.memory_layout;' not in save
+assert 'prefs_.memory_layout =' in ui and 'TR("Memory")' in ui
+# A change is worth a line on where it arrives, and the words for that are already translated.
+assert 'else if (modal_ == Modal::performance && option_ == speed_memory_layout)' in ui
+assert 'Saved. Applies when a game starts.' in ui
+# The switches keep their own count: the dialog's rows are seven switches and this new one, and the
+# hint line under them only has the seven to show.
+assert 'constexpr int kPerformanceSwitches = speed_memory_layout;' in ui
+assert 'kAbout[kPerformanceSwitches]' in ui and 'kNames[kPerformanceRows]' in ui
 print('Performance settings: the block list, shaders, GPU, CPU and DMA accuracy, flushing and invalidation '
-      'reach the session PASS')
+      'and the console memory reach the session, and the menu writes them PASS')

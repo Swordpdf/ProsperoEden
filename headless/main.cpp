@@ -1082,7 +1082,7 @@ int main(int argc, char** argv) {
             if (speed.unsafe_dma) Settings::values.dma_accuracy.SetValue(Settings::DmaAccuracy::Unsafe);
             Settings::values.use_reactive_flushing.SetValue(speed.reactive_flushing);
             Settings::values.skip_cpu_inner_invalidation.SetValue(speed.skip_invalidation);
-            // Settings > Performance > Console memory: the memory the guest's console is told it has
+            // Settings > Performance > Memory: the memory the guest's console is told it has
             // (Eden's memory layout). A mod that keeps a heap of its own asks the kernel how much
             // memory there is and reserves what it wants from it; on the Switch's own 4 GiB it finds
             // less than it asked for and the game stops before its first picture, which is the

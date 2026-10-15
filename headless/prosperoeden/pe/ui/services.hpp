@@ -324,6 +324,9 @@ struct Preferences
     bool unsafe_dma = false;    // unsafe DMA accuracy
     bool reactive_flushing = true;  // off is faster; some effects break
     bool skip_invalidation = false; // fewer invalidations of what the GPU caches hold
+    // How much memory a game's console is told it has (settings_store.h's kMemoryLayoutKeys): an
+    // index into them, and the memory a mod that keeps a heap of its own asks the kernel for.
+    int memory_layout = 0;
     ButtonMapping mapping = kDefaultMapping; // Settings > Controls > Button mapping
     // Settings > Video: the overlay's chip (the same values Eden::Preferences keeps).
     int hud_size = 0;   // 0 regular, 1 medium, 2 large
