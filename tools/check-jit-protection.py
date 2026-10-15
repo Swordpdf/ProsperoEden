@@ -37,6 +37,7 @@ program = r'''
 #include <cstdint>
 #include <vector>
 #include <sys/mman.h>
+#include <sys/prctl.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #define ASSERT assert
@@ -89,6 +90,7 @@ void fault(unsigned char* p, bool write) {
     assert(WIFSIGNALED(status) && WTERMSIG(status) == SIGSEGV);
 }
 int main(int argc, char** argv) {
+    prctl(PR_SET_DUMPABLE, 0); // expected faults: no host crash reports (apport takes seconds each)
     assert(argc == 2);
     protection_page = std::strtoul(argv[1], nullptr, 10);
     const size_t page = protection_page, capacity = 32*page;

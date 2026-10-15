@@ -43,6 +43,10 @@ msgstr "En firmware-NCA kan ikke læses. Geninstallér firmware-dumpet."
 msgid "A pairing is running already."
 msgstr "En parring er allerede i gang."
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "OM"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "Cirkel"
 msgid "Close"
 msgstr "Luk"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "Farve"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "Medvirkende og opsætning"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "Kryds"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "Standard"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "Mindre nøjagtig flydende komma-regning: hurtigere, men enkelte spil opf
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "Mindre nøjagtige hukommelsesoverførsler til GPU'en: hurtigere, men enkelte spil viser forkert grafik."
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "BIBLIOTEK"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "Bibliotek"
@@ -1015,6 +1031,10 @@ msgstr "Nærmeste"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "Kræver handling"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "Neutralt glas, rent og roligt."
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1298,6 +1318,10 @@ msgstr "Tryk igen for at erstatte spillets gemte data. De nuværende sikkerhedsk
 msgid "Private room"
 msgstr "Privat rum"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "PRIVAT RUM"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1363,6 +1387,10 @@ msgstr "PS5-UDGAVE"
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
 msgstr "Offentlige rum"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
+msgstr "OFFENTLIGE RUM"
 
 #: pe/ui/remote.cpp
 msgid "Queued"
@@ -1600,6 +1628,10 @@ msgstr "Serveren er for gammel til synkronisering"
 msgid "Settings"
 msgstr "Indstillinger"
 
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
+msgstr "INDSTILLINGER"
+
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
 msgstr "Opsætning påkrævet"
@@ -1738,6 +1770,10 @@ msgstr "TAK"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "Tak til hele PS5-homebrew-fællesskabet og til alle de udviklere, hvis drivere, værktøjer og biblioteker gør ProsperoEden mulig."
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "Accentfarven i det aktuelle tema."
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"

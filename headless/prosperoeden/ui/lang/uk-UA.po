@@ -43,6 +43,10 @@ msgstr "Не вдалося прочитати один із файлів NCA п
 msgid "A pairing is running already."
 msgstr "Сполучення вже триває."
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "ПРО ПРОГРАМУ"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "Коло"
 msgid "Close"
 msgstr "Закрити"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "Колір"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "Автори та початок роботи"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "Хрестик"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "Типово"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "Менш точні обчислення з рухомою комою: �
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "Менш точне передавання пам'яті до GPU: швидше, але в окремих іграх графіка з помилками."
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "БІБЛІОТЕКА"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "Бібліотека"
@@ -1015,6 +1031,10 @@ msgstr "Найближчий"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "Потребує уваги"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "Нейтральне скло, чисто й спокійно."
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1298,6 +1318,10 @@ msgstr "Натисніть ще раз, щоб замінити збережен
 msgid "Private room"
 msgstr "Приватна кімната"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "ПРИВАТНА КІМНАТА"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1363,6 +1387,10 @@ msgstr "ВЕРСІЯ ДЛЯ PS5"
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
 msgstr "Публічні кімнати"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
+msgstr "ПУБЛІЧНІ КІМНАТИ"
 
 #: pe/ui/remote.cpp
 msgid "Queued"
@@ -1600,6 +1628,10 @@ msgstr "Сервер застарий для синхронізації"
 msgid "Settings"
 msgstr "Налаштування"
 
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
+msgstr "НАЛАШТУВАННЯ"
+
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
 msgstr "Потрібне налаштування"
@@ -1738,6 +1770,10 @@ msgstr "ПОДЯКИ"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "Дякуємо всій homebrew-спільноті PS5 і кожному розробнику, чиї драйвери, інструменти та бібліотеки зробили ProsperoEden можливим."
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "Акцентний колір поточної теми."
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"

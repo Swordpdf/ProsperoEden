@@ -147,6 +147,7 @@ struct Preferences {
     bool high_contrast = false;
     bool reduce_motion = false;
     std::string theme = "canopy";        // Settings > Theme: the launcher's look, by its id
+    std::string accent;                   // Settings > Theme > Colour: accent preset id ("": theme's own)
     ButtonMapping mapping = kDefaultMapping;  // Settings > Controls > Button mapping
     int controller = -1;                 // a game's own Controller type (kControllerKeys); -1: automatic
     bool immediate_logs = false;         // Settings > Diagnostics: log lines written as they come
@@ -156,8 +157,8 @@ struct Preferences {
     int hud_corner = 0;      // index into kHudCornerKeys: which corner of the picture it stands in
     bool hud_colors = true;  // the line in its inks rather than one (bake-loading-text.py)
     // What the overlay's line may say, bit by bit (hud.h's kHudField*): the pieces the user has
-    // chosen to show. All of them by default.
-    int hud_fields = 0xff;
+    // chosen to show. All of them by default, the game's own resolution (bit 9) with the rest.
+    int hud_fields = 0x2ff;
     // Which face button presses each core menu action (Settings > Controls > Menu keybinds).
     MenuBinding menu_bind = kDefaultMenuBinding;
 };
@@ -402,6 +403,10 @@ inline Preferences LoadPreferences(const std::string& file = SettingsFile()) {
     if (!theme.empty() && theme.size() <= 32 &&
         std::all_of(theme.begin(), theme.end(), [](char c) { return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-'; }))
         result.theme = theme;
+    const std::string accent = Settings::String(document, Json::json_pointer("/launcher/accent"));
+    if (accent.size() <= 32 &&
+        std::all_of(accent.begin(), accent.end(), [](char c) { return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-'; }))
+        result.accent = accent;
     result.detailed_logging = Settings::Bool(document, Json::json_pointer("/diagnostics/detailed_logging"),
                                              result.detailed_logging);
     result.immediate_logs = Settings::Bool(document, Json::json_pointer("/diagnostics/immediate_logs"),
@@ -485,6 +490,10 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
     document["accessibility"]["high_contrast"] = value.high_contrast;
     document["accessibility"]["reduce_motion"] = value.reduce_motion;
     document["launcher"]["theme"] = value.theme;
+    if (!value.accent.empty())
+        document["launcher"]["accent"] = value.accent;
+    else if (document["launcher"].contains("accent"))
+        document["launcher"].erase("accent");
     return Settings::Write(document, file);
 }
 
@@ -839,7 +848,7 @@ inline std::vector<std::string> LoadRecentGames(const std::string& file = Settin
     for (const auto& entry : document.at(at)) {
         if (!entry.is_string()) continue;
         const std::string name = entry.get<std::string>();
-        if (recent.size() < 4 && ValidRomFilename(name) && std::find(recent.begin(), recent.end(), name) == recent.end())
+        if (recent.size() < 8 && ValidRomFilename(name) && std::find(recent.begin(), recent.end(), name) == recent.end())
             recent.push_back(name);
     }
     return recent;
@@ -850,7 +859,7 @@ inline bool SaveRecentGame(std::string_view name, const std::string& file = Sett
     auto recent = LoadRecentGames(file);
     recent.erase(std::remove(recent.begin(), recent.end(), name), recent.end());
     recent.insert(recent.begin(), std::string(name));
-    if (recent.size() > 4) recent.resize(4);
+    if (recent.size() > 8) recent.resize(8);
     Settings::Json document = Settings::Load(file);
     document["version"] = 1;
     document["library"]["recent"] = recent;

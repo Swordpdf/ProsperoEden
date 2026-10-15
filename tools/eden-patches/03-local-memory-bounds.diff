@@ -1,0 +1,69 @@
+--- a/src/shader_recompiler/frontend/maxwell/translate/impl/load_store_local_shared.cpp
++++ b/src/shader_recompiler/frontend/maxwell/translate/impl/load_store_local_shared.cpp
+@@ -88,10 +88,31 @@
+     return ir.BitwiseAnd(ir.ShiftLeftLogical(offset, ir.Imm32(3)), ir.Imm32(16));
+ }
+ 
+-IR::U32 LoadLocal(TranslatorVisitor& v, const IR::U32& word_offset, const IR::U32& offset) {
++IR::U1 LocalInBounds(TranslatorVisitor& v, const IR::U32& offset) {
+     const IR::U32 local_memory_size{v.ir.Imm32(v.env.LocalMemorySize())};
+-    const IR::U1 in_bounds{v.ir.ILessThan(offset, local_memory_size, false)};
+-    return IR::U32{v.ir.Select(in_bounds, v.ir.LoadLocal(word_offset), v.ir.Imm32(0))};
++    return v.ir.ILessThan(offset, local_memory_size, false);
++}
++
++// An out of bounds offset reads as zero. The load itself goes to word 0, so it never leaves
++// the local memory: hosts that fault on scratch accesses outside it (PS5) would kill the
++// process, e.g. a game indexing a local array with -1 after its intro.
++IR::U32 LoadLocal(TranslatorVisitor& v, const IR::U32& word_offset, const IR::U32& offset) {
++    const IR::U1 in_bounds{LocalInBounds(v, offset)};
++    const IR::U32 safe_word_offset{v.ir.Select(in_bounds, word_offset, v.ir.Imm32(0))};
++    return IR::U32{v.ir.Select(in_bounds, v.ir.LoadLocal(safe_word_offset), v.ir.Imm32(0))};
++}
++
++// An out of bounds store is dropped: word 0 is rewritten with its own value.
++void WriteLocal(TranslatorVisitor& v, const IR::U32& word_offset, const IR::U32& offset,
++                const IR::U32& value) {
++    if (offset.IsImmediate()) {
++        v.ir.WriteLocal(word_offset, value);
++        return;
++    }
++    const IR::U1 in_bounds{LocalInBounds(v, offset)};
++    const IR::U32 safe_word_offset{v.ir.Select(in_bounds, word_offset, v.ir.Imm32(0))};
++    const IR::U32 safe_value{v.ir.Select(in_bounds, value, v.ir.LoadLocal(safe_word_offset))};
++    v.ir.WriteLocal(safe_word_offset, safe_value);
+ }
+ } // Anonymous namespace
+ 
+@@ -166,14 +187,14 @@
+     switch (bit_size) {
+     case 8: {
+         const IR::U32 bit{ByteOffset(ir, offset)};
+-        const IR::U32 value{ir.BitFieldInsert(ir.LoadLocal(word_offset), src, bit, ir.Imm32(8))};
+-        ir.WriteLocal(word_offset, value);
++        const IR::U32 value{ir.BitFieldInsert(LoadLocal(*this, word_offset, offset), src, bit, ir.Imm32(8))};
++        WriteLocal(*this, word_offset, offset, value);
+         break;
+     }
+     case 16: {
+         const IR::U32 bit{ShortOffset(ir, offset)};
+-        const IR::U32 value{ir.BitFieldInsert(ir.LoadLocal(word_offset), src, bit, ir.Imm32(16))};
+-        ir.WriteLocal(word_offset, value);
++        const IR::U32 value{ir.BitFieldInsert(LoadLocal(*this, word_offset, offset), src, bit, ir.Imm32(16))};
++        WriteLocal(*this, word_offset, offset, value);
+         break;
+     }
+     case 32:
+@@ -182,9 +203,10 @@
+         if (!IR::IsAligned(reg, static_cast<size_t>(bit_size / 32))) {
+             throw NotImplementedException("Unaligned source register");
+         }
+-        ir.WriteLocal(word_offset, src);
++        WriteLocal(*this, word_offset, offset, src);
+         for (int i = 1; i < bit_size / 32; ++i) {
+-            ir.WriteLocal(ir.IAdd(word_offset, ir.Imm32(i)), X(reg + i));
++            WriteLocal(*this, ir.IAdd(word_offset, ir.Imm32(i)), ir.IAdd(offset, ir.Imm32(i * 4)),
++                       X(reg + i));
+         }
+         break;
+     }

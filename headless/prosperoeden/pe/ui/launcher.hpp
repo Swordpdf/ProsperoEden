@@ -99,6 +99,7 @@ class Launcher
         pairing,      // a profile paired with a server by a QR code (pairing.cpp)
         appearance,   // Settings > Appearance: theme and launcher settings
         theme,        // Settings > Appearance > Theme: the launcher's look
+        accent,       // Settings > Colour: the accent preset
     };
     // The update dialog's steps: the offer, installing, stopping it, closing for the helper to
     // finish, and a failure.
@@ -445,7 +446,8 @@ class Launcher
     std::array<tween::Spring, 4> controller_lit_{};
     std::array<float, 4> controller_pop_{}; // 1 when a controller appears, then decays
     int home_focus_ = 0;
-    std::array<tween::Spring, 10> home_springs_{};
+    bool home_on_grid_ = false;
+    std::array<tween::Spring, 12> home_springs_{};
     float intro_ = 0.0f;
     bool first_start_ = true;
     // The opening, when the app has just been started and the launch picture is there: that
@@ -489,7 +491,7 @@ class Launcher
     // settings and dialogs
     Preferences prefs_;
     ListView settings_;
-    std::array<tween::Spring, 12> settings_springs_{}; // the highlight on each tile
+    std::array<tween::Spring, 13> settings_springs_{}; // the highlight on each tile
     tween::Spring section_;
     int option_ = 0;
     tween::Spring option_cursor_; // highlight position in pixels

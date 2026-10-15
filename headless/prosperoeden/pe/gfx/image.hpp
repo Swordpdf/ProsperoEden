@@ -41,4 +41,8 @@ bool load_dds_bc7(const std::string &path, Blocks *blocks);
 // Half the size in each direction, averaging 2x2 blocks (alpha-weighted).
 Image halve(const Image &image);
 
+// Box blur at the image's own resolution. Three horizontal+vertical passes at the given radius
+// (clamped to half the shorter side). Treats alpha as opaque for the backdrop use case.
+void blur(Image &image, int radius);
+
 } // namespace pe::gfx

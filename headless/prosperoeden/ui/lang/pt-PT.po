@@ -43,6 +43,10 @@ msgstr "Não foi possível ler um NCA do firmware. Reinstala o dump do firmware.
 msgid "A pairing is running already."
 msgstr "Já há um emparelhamento em curso."
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "ACERCA DE"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "Círculo"
 msgid "Close"
 msgstr "Fechar"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "Cor"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "Créditos e configuração"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "Cruz"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "Predefinição"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "Cálculo de vírgula flutuante menos exato: mais rápido, mas alguns jog
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "Transferências de memória para a GPU menos exatas: mais rápido, mas alguns jogos mostram gráficos errados."
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "BIBLIOTECA"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "Biblioteca"
@@ -1015,6 +1031,10 @@ msgstr "Mais próximo"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "Requer atenção"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "Vidro neutro, limpo e calmo."
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1298,6 +1318,10 @@ msgstr "Prime novamente para substituir a gravação deste jogo. É feita uma c�
 msgid "Private room"
 msgstr "Sala privada"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "SALA PRIVADA"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1363,6 +1387,10 @@ msgstr "EDIÇÃO PS5"
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
 msgstr "Salas públicas"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
+msgstr "SALAS PÚBLICAS"
 
 #: pe/ui/remote.cpp
 msgid "Queued"
@@ -1600,6 +1628,10 @@ msgstr "Servidor demasiado antigo para a sincronização"
 msgid "Settings"
 msgstr "Definições"
 
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
+msgstr "DEFINIÇÕES"
+
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
 msgstr "Configuração necessária"
@@ -1738,6 +1770,10 @@ msgstr "AGRADECIMENTOS"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "Obrigado a toda a comunidade homebrew da PS5 e a todos os programadores cujos drivers, ferramentas e bibliotecas tornam o ProsperoEden possível."
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "A cor de destaque do tema atual."
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"

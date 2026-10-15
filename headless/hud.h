@@ -120,12 +120,28 @@ inline constexpr uint32_t kHudFieldPing = 1u << 7;
 // cores (the one that holds a game back); clear, as in every setting saved before there was a
 // choice, each of the four.
 inline constexpr uint32_t kHudFieldOneCore = 1u << 8;
-inline constexpr uint32_t kHudFieldAll = 0xffu;
+// The game's own picture: what it renders at, before the upscaling filter and the output size.
+inline constexpr uint32_t kHudFieldResolution = 1u << 9;
+// Every piece of the line, which is what a setting that names none starts at. Bit 8 is a mode of
+// the CPU piece rather than a piece, so it is not in this, as it was not before.
+inline constexpr uint32_t kHudFieldAll = 0x2ffu;
 inline constexpr uint32_t kHudFieldSupported = kHudFieldAll | kHudFieldOneCore;
 inline constexpr bool ValidHudFields(int fields) {
     return fields >= 0 && (static_cast<uint32_t>(fields) & ~kHudFieldSupported) == 0;
 }
 
+// The game's size, as the RES piece names it: the frame it last handed to the display, with a
+// cropped layer counted as the part that is shown. 0 until the first one arrives, which is also
+// what a session starts at (graphics.cpp), and what the OpenGL renderer leaves it at: it does not
+// say (vulkan_guest_resolution.inc records it on the Vulkan one).
+namespace Hud {
+inline std::atomic<uint32_t> guest_width{0}, guest_height{0};
+inline void GuestScreen(uint32_t width, uint32_t height) {
+    guest_width.store(width, std::memory_order_relaxed);
+    guest_height.store(height, std::memory_order_relaxed);
+}
+inline void ForgetGuestScreen() { GuestScreen(0, 0); }
+} // namespace Hud
 // True while the snapshot is the loading screen rather than the overlay's line.
 inline bool HudLoading(const HudSnapshot& hud) {
     return hud.loading != 0 && (hud.loading & kHudOverlayFlag) == 0;
@@ -238,7 +254,8 @@ struct LoadingPace {
         return true;
     }
 };
-// The line the overlay shows: "VLK 27FPS 37.0MS CPU 55% GPU 43% MEM 4.1/8.0G GFX 2.5G". The rate the
+// The line the overlay shows: "VLK 960x540 27FPS 37.0MS CPU 55% GPU 43% MEM 4.1/8.0G GFX 2.5G".
+// The rate the
 // guest itself produces, and the rate the display shows when they differ (with frame generation
 // the display is handed frames the guest never made, and never more than `refresh`, its own
 // rate; refresh 0: not known, no limit); then the worst frame of the last second, how far behind
@@ -265,6 +282,16 @@ inline std::array<char, kHudTextMax + 1> FormatHudText(const HudClock& clock, co
     if (fields & kHudFieldBackend) {
         std::snprintf(piece, sizeof(piece), "%s", backend);
         put(piece);
+    }
+    // The picture the game renders, next to the renderer that drew it. Nothing is said until the
+    // first frame is handed to the display, so a game that is still loading has no piece.
+    if ((fields & kHudFieldResolution) != 0) {
+        const uint32_t width = Hud::guest_width.load(std::memory_order_relaxed);
+        const uint32_t height = Hud::guest_height.load(std::memory_order_relaxed);
+        if (width != 0 && height != 0) {
+            std::snprintf(piece, sizeof(piece), " %ux%u", width, height);
+            put(piece);
+        }
     }
     if (clock.fps < 0) {
         if (fields & kHudFieldFps) put(" --FPS");

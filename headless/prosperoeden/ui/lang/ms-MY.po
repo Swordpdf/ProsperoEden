@@ -43,6 +43,10 @@ msgstr "Satu NCA firmware tidak dapat dibaca. Pasang semula dump firmware."
 msgid "A pairing is running already."
 msgstr "Satu proses pemasangan sedang berjalan."
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "TENTANG"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "Bulatan"
 msgid "Close"
 msgstr "Tutup"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "Warna"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "Kredit dan persediaan"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "Silang"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "Lalai"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "Pengiraan titik terapung kurang tepat: lebih laju, dan sesetengah game b
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "Pemindahan memori ke GPU kurang tepat: lebih laju, dan sesetengah game memaparkan grafik yang salah."
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "PERPUSTAKAAN"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "Perpustakaan"
@@ -1015,6 +1031,10 @@ msgstr "Terdekat"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "Perlu perhatian"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "Kaca neutral, bersih dan tenang."
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1298,6 +1318,10 @@ msgstr "Tekan lagi untuk menggantikan simpanan game ini. Yang semasa akan disand
 msgid "Private room"
 msgstr "Bilik peribadi"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "BILIK PERIBADI"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1363,6 +1387,10 @@ msgstr "EDISI PS5"
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
 msgstr "Bilik awam"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
+msgstr "BILIK AWAM"
 
 #: pe/ui/remote.cpp
 msgid "Queued"
@@ -1600,6 +1628,10 @@ msgstr "Pelayan terlalu lama untuk penyelarasan simpanan"
 msgid "Settings"
 msgstr "Tetapan"
 
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
+msgstr "TETAPAN"
+
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
 msgstr "Persediaan diperlukan"
@@ -1738,6 +1770,10 @@ msgstr "TERIMA KASIH"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "Terima kasih kepada seluruh komuniti homebrew PS5 dan setiap pembangun yang pemacu, alat dan pustakanya menjadikan ProsperoEden mungkin."
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "Warna aksen tema semasa."
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"

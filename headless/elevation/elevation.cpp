@@ -168,6 +168,38 @@ struct ResidentResult
     bool allow_helper;
 };
 
+// OnionHEN's app jailbreak (for title IDs in its [app_jailbreak] exact_title_ids list) reads
+// this file instead of Lapy's: it gives the process root credentials and the console's root.
+// Written beside Lapy's request; whichever service is loaded answers, and /data proves it.
+bool publish_onionhen_request(pid_t pid) noexcept
+{
+    constexpr char path[] = "/download0/onionhen_jailbreak";
+    std::array<char, 80> temporary{};
+    std::array<char, 64> body{};
+    const int body_length =
+        std::snprintf(body.data(), body.size(), "{\"PID\":\"%ld\"}\n", static_cast<long>(pid));
+    const int path_length = std::snprintf(temporary.data(), temporary.size(),
+                                          "/download0/.onionhen_jailbreak.%ld", static_cast<long>(pid));
+    if (body_length <= 0 || static_cast<std::size_t>(body_length) >= body.size() ||
+        path_length <= 0 || static_cast<std::size_t>(path_length) >= temporary.size())
+        return false;
+    (void)unlink(temporary.data());
+    File output{open(temporary.data(), O_WRONLY | O_CREAT | O_EXCL, 0644)};
+    if (output.get() < 0 ||
+        !write_all(output.get(), body.data(), static_cast<std::size_t>(body_length)))
+    {
+        (void)unlink(temporary.data());
+        return false;
+    }
+    const int descriptor = output.release();
+    if (close(descriptor) != 0 || rename(temporary.data(), path) != 0)
+    {
+        (void)unlink(temporary.data());
+        return false;
+    }
+    return true;
+}
+
 ResidentResult try_resident(pid_t pid) noexcept
 {
     using elevation::Status;
@@ -177,7 +209,8 @@ ResidentResult try_resident(pid_t pid) noexcept
     (void)fchmod(result.get(), 0644);
     if (seteuid(geteuid()) != 0)
         return {Status::prepare_failed, false};
-    if (!publish_request(pid))
+    const bool onionhen_asked = publish_onionhen_request(pid);
+    if (!publish_request(pid) && !onionhen_asked)
         return {Status::transport_error, true};
 
     int open_error = 0;

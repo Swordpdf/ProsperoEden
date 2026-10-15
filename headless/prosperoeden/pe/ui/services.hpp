@@ -253,7 +253,7 @@ struct Home
     std::string last_language;
     int last_mods = 0;
     int last_mods_on = 0;
-    std::vector<Recent> recents; // at most four
+    std::vector<Recent> recents; // at most eight
     std::string system_status;
 };
 
@@ -342,6 +342,7 @@ struct Preferences
     int language = 0;
     int menu_volume = 70; // launcher sounds, 0-100
     std::string theme = "canopy"; // the launcher's look (theme.hpp); one this build lacks reads as the first
+    std::string accent;           // Settings > Colour: one of the theme's accent presets ("": its own colours)
     // Accessibility: how the launcher itself is shown (theme.hpp, Look).
     bool large_text = false;
     bool high_contrast = false;
@@ -360,8 +361,8 @@ struct Preferences
     int hud_corner = 0; // 0 top left, 1 top right, 2 bottom left, 3 bottom right
     bool hud_colors = true;  // the line in its inks rather than one
     // What the overlay's line may say, bit by bit (hud.h's kHudField*): the pieces the user has
-    // chosen to show. All of them by default.
-    int hud_fields = 0xff;
+    // chosen to show. All of them by default, the game's own resolution (bit 9) with the rest.
+    int hud_fields = 0x2ff;
     // Which face button presses each core menu action (Settings > Controls > Menu keybinds).
     MenuBinding menu_bind = kDefaultMenuBinding;
 };

@@ -241,7 +241,8 @@ ui::Home FakeServices::home()
         };
         // As the console does: a game taken away is not offered, the next recent one is.
         const char *const recent[] = {"Echoes of the Valley", "Kart Carnival Deluxe", "Starfall Odyssey",
-                                      "Caf\xC3\xA9 Nocturne"};
+                                      "Caf\xC3\xA9 Nocturne", "Neon Drifters", "Pocket Rally Turbo",
+                                      "Cloudline", "Ember Knights II"};
         const char *first = recent[0];
         for (const char *name : recent)
             if (game_exists(find(name).file))
