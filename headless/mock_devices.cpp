@@ -196,8 +196,19 @@ int sceAudioOutOutput(int handle, const void* samples) {
     return 0;
 }
 int sceAudioOutClose(int handle) {
+    std::chrono::milliseconds delay{0};
+    {
+        std::scoped_lock lock(state.mutex);
+        if (state.haptic_audio.contains(handle)) delay = state.haptic_close_delay;
+    }
+    // Delay outside the lock so tests must wait for close completion.
+    std::this_thread::sleep_for(delay);
     std::scoped_lock lock(state.mutex);
-    if (state.haptic_audio.contains(handle)) { ++state.haptic_closes; return 0; }
+    if (state.haptic_audio.contains(handle)) {
+        ++state.haptic_closes;
+        state.wake.notify_all();
+        return 0;
+    }
     ++state.audio_closes;
     return 0;
 }

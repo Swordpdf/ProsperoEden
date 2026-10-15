@@ -758,22 +758,22 @@ void CheckPad() {
             std::unique_lock lock(state.mutex);
             CHECK(state.wake.wait_for(lock, 2s, [&] { return !state.haptic_audio[haptic].empty(); }));
         }
-        state.vibrations.clear();
-        const std::size_t modes_before = state.vibration_modes.size();
-        state.fail_haptic_output = true;
-        bool fell_back = false;
-        for (int i = 0; i < 400 && !fell_back; ++i) {
-            std::this_thread::sleep_for(5ms);
-            std::scoped_lock lock(state.mutex);
-            fell_back = !state.vibrations.empty();
+        {
+            std::unique_lock lock(state.mutex);
+            state.vibrations.clear();
+            const std::size_t modes_before = state.vibration_modes.size();
+            state.haptic_close_delay = 100ms;
+            state.fail_haptic_output = true;
+            CHECK(state.wake.wait_for(lock, 2s, [&] {
+                return !state.vibrations.empty() && state.haptic_closes == closes_before + 1;
+            }));
+            CHECK(state.vibrations.size() == 1);
+            CHECK(state.vibrations[0].large_motor == 255); CHECK(state.vibrations[0].small_motor == 154);
+            CHECK(state.vibration_modes.size() == modes_before + 1);
+            CHECK((state.vibration_modes.back() == std::pair<int, int>{7, 2}));
+            state.fail_haptic_output = false;
+            state.haptic_close_delay = 0ms;
         }
-        CHECK(fell_back);
-        CHECK(state.vibrations.size() == 1);
-        CHECK(state.vibrations[0].large_motor == 255); CHECK(state.vibrations[0].small_motor == 154);
-        CHECK(state.vibration_modes.size() == modes_before + 1);
-        CHECK((state.vibration_modes.back() == std::pair<int, int>{7, 2}));
-        CHECK(state.haptic_closes == closes_before + 1);
-        state.fail_haptic_output = false;
         const int opens_before = state.haptic_opens;
         std::this_thread::sleep_for(2200ms); // the bring-up retry interval passes
         CHECK(pad.Poll());

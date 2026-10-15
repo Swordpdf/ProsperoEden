@@ -31,6 +31,7 @@ struct State {
     // for F32).
     bool fail_haptic_open = false, fail_haptic_output = false;
     int haptic_fail_format = 0;
+    std::chrono::milliseconds haptic_close_delay{0};
     int haptic_opens = 0, haptic_closes = 0, haptic_drains = 0;
     std::vector<int> haptic_open_users;
     std::vector<int> haptic_open_formats;
