@@ -1,3 +1,4 @@
+set(memory_emitter "#include \"${EDEN_PORT_DIR}/dynarmic/checked_site.h\"\n${memory_emitter}")
 # Checked A32 fastmem. HostMemory (src/host_memory.cpp) keeps one byte per 4 KiB guest
 # page directly below the fastmem window: bit 0 blocks direct reads, bit 1 direct writes,
 # each also set when the following page is blocked, so a direct access never crosses into
@@ -114,7 +115,7 @@ foreach(direction Read Write)
         if constexpr (checked_fastmem) {
             const Xbyak::Reg64 index = ctx.reg_alloc.ScratchGpr(code);
             SharedLabel blocked = ctx.GenSharedLabel(), slow = ctx.GenSharedLabel(), demote = ctx.GenSharedLabel();
-            CheckedSite* const site = conf.recompile_on_fastmem_failure ? NewCheckedSite(*fastmem_marker) : nullptr;
+            CheckedSite* const site = conf.recompile_on_fastmem_failure ? NewCheckedSite(this, *fastmem_marker) : nullptr;
             EmitCheckedFastmemTest(code, vaddr, index, ${blocked_bit}, *blocked);
             const auto location = ${direct_access};
             ctx.deferred_emits.emplace_back([=, this, &ctx] {
@@ -156,7 +157,7 @@ set(vec_read [=[
             const auto vector = ctx.reg_alloc.ScratchXmm(code);
             const auto wrapped_fn = read_fallbacks[std::make_tuple(false, bitsize, vaddr.getIdx(), temporary.getIdx())];
             SharedLabel blocked = ctx.GenSharedLabel(), slow = ctx.GenSharedLabel(), demote = ctx.GenSharedLabel(), abort = ctx.GenSharedLabel(), end = ctx.GenSharedLabel();
-            CheckedSite* const site = conf.recompile_on_fastmem_failure ? NewCheckedSite(*fastmem_marker) : nullptr;
+            CheckedSite* const site = conf.recompile_on_fastmem_failure ? NewCheckedSite(this, *fastmem_marker) : nullptr;
             EmitCheckedFastmemTest(code, vaddr, temporary, checked_read_blocked, *blocked);
             const auto location = code.getCurr();
             if constexpr (bitsize == 32) code.movd(vector, code.dword[r13 + vaddr]);
@@ -200,7 +201,7 @@ set(vec_write [=[
             const auto vector = ctx.reg_alloc.UseXmm(code, args[2]);
             const auto wrapped_fn = write_fallbacks[std::make_tuple(false, bitsize, vaddr.getIdx(), temporary.getIdx())];
             SharedLabel blocked = ctx.GenSharedLabel(), slow = ctx.GenSharedLabel(), demote = ctx.GenSharedLabel(), abort = ctx.GenSharedLabel(), end = ctx.GenSharedLabel();
-            CheckedSite* const site = conf.recompile_on_fastmem_failure ? NewCheckedSite(*fastmem_marker) : nullptr;
+            CheckedSite* const site = conf.recompile_on_fastmem_failure ? NewCheckedSite(this, *fastmem_marker) : nullptr;
             EmitCheckedFastmemTest(code, vaddr, temporary, checked_write_blocked, *blocked);
             const auto location = code.getCurr();
             if constexpr (bitsize == 32) code.movd(code.dword[r13 + vaddr], vector);
@@ -275,19 +276,14 @@ set(memory_source "${checked_prefix}${checked_exclusive}")
 # for A64; only A32 emits these.
 set(checked_sites [=[
 // Checked fastmem: one record per access site, allocated when the site is emitted and kept
-// for the session. The JIT counts the site's blocked executions down in place.
+// until full cache retirement or session destruction. The JIT counts the site's blocked executions down in place.
 void CheckedFastmemDemoted() noexcept; // headless/fastmem_handler.cpp
 bool CheckedFastmemSites() noexcept;   // false: dev-settings fastmem_sites=off
 namespace {
-constexpr u8 checked_site_budget = 64;
-struct CheckedSite {
-    u64 location;
-    unsigned name;
-    u8 budget;
-    bool demoted;
-};
-[[maybe_unused]] CheckedSite* NewCheckedSite(const std::tuple<IR::LocationDescriptor, unsigned>& marker) {
-    return new CheckedSite{std::get<0>(marker).Value(), std::get<1>(marker), checked_site_budget, false};
+using Eden::CheckedSite;
+template<typename Emitter>
+CheckedSite* NewCheckedSite(Emitter* emitter, const std::tuple<IR::LocationDescriptor, unsigned>& marker) {
+    return &emitter->checked_sites.emplace_back(CheckedSite{std::get<0>(marker).Value(), std::get<1>(marker)});
 }
 // In a site's out-of-line path, before its page-table lookup: count one blocked execution.
 [[maybe_unused]] void EmitCheckedSiteCount(BlockOfCode& code, CheckedSite* site, Xbyak::Reg64 scratch, Xbyak::Label& demote) {
