@@ -100,6 +100,14 @@ msgstr ""
 msgid "Another language"
 msgstr ""
 
+#: pe/ui/settings.cpp
+msgid "Appearance"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "Apply"
+msgstr ""
+
 #. The button mapping has not been changed.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "As usual"
@@ -252,6 +260,14 @@ msgstr ""
 msgid "Choose a game from your library."
 msgstr ""
 
+#: pe/ui/settings.cpp
+msgid "Choose a theme or change the launcher layout."
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "Choose the colours and appearance of this menu."
+msgstr ""
+
 #: pe/ui/browse.cpp
 msgid "Choose the folder that holds your keys, firmware and games"
 msgstr ""
@@ -377,6 +393,10 @@ msgstr ""
 
 #: pe/ui/settings.cpp
 msgid "CPU by core"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "Crash reports (FTP): {0}\nAttach crash-*.txt and its matching logs to your issue."
 msgstr ""
 
 #. The DualSense button labelled CREATE: keep the label if the language's players do.
@@ -701,6 +721,10 @@ msgstr ""
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr ""
 
+#: pe/ui/launcher.cpp
+msgid "Game cannot start now."
+msgstr ""
+
 #. {0} is the reason, a sentence in English; {1} is a file.
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
@@ -905,6 +929,10 @@ msgstr ""
 #. Caption under the title of the game played last.
 #: eden_services.cpp
 msgid "Last game opened"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "Launcher"
 msgstr ""
 
 #: pe/ui/multiplayer.cpp
@@ -1574,7 +1602,7 @@ msgstr ""
 msgid "Saved. A display that cannot show 120 Hz stays at 60 Hz."
 msgstr ""
 
-#: pe/ui/browse.cpp, pe/ui/launcher.cpp
+#: pe/ui/browse.cpp, pe/ui/launcher.cpp, pe/ui/settings.cpp
 msgid "Saved. Applies when a game starts."
 msgstr ""
 
@@ -1867,6 +1895,10 @@ msgstr ""
 msgid "Theme"
 msgstr ""
 
+#: pe/ui/settings.cpp
+msgid "Theme and launcher settings."
+msgstr ""
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr ""
@@ -1996,6 +2028,10 @@ msgstr ""
 
 #: eden_services.cpp
 msgid "USA"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "Use another home screen, library and menu layout."
 msgstr ""
 
 #: pe/ui/browse.cpp

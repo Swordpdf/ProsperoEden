@@ -434,6 +434,19 @@ void CheckPad() {
                 return pad.Engine().GetButton({}, button);
             };
             pad.SetGrip(0, Grip::upright_left);
+            {
+                sample.buttons = 0; consume();
+                auto up = Common::Input::CreateInputDeviceFromString("engine:virtual_gamepad,port:0,button:13");
+                std::vector<bool> edges;
+                up->SetCallback({[&](const auto& status) { edges.push_back(status.button_status.value); }});
+                sample.buttons = kButtonUp; consume(); consume();
+                sample.buttons = 0; consume();
+                CHECK(std::none_of(edges.begin(), edges.end(), [](bool down) { return down; }));
+                sample.buttons = kButtonTriangle; consume();
+                CHECK(!edges.empty() && edges.back());
+                sample.buttons = 0; consume();
+            }
+
             CHECK(pressed(kButtonUp, {})); CHECK(pressed(kButtonRight, {}));
             CHECK(pressed(kButtonDown, {})); CHECK(pressed(kButtonLeft, {}));
             CHECK(pressed(kButtonTriangle, {13, 2})); CHECK(pressed(kButtonCircle, {14, 0}));
@@ -575,6 +588,59 @@ void CheckPad() {
             CHECK(pad.Poll());
         }
 
+        // Click side is latched; release samples often no longer contain touch coordinates.
+        for (const unsigned x : {100u, 1500u}) {
+            sample.buttons = 0; sample.touch = {}; consume();
+            for (int i = 0; i < 30; ++i) consume();
+            sample.touch.count = 1; sample.touch.points[0].x = x;
+            sample.buttons = kButtonTouchPad; consume();
+            sample.buttons = 0; sample.touch = {}; consume();
+            CHECK(pad.Engine().GetButton({}, x < 960 ? 11 : 10));
+            CHECK(!pad.Engine().GetButton({}, x < 960 ? 10 : 11));
+            for (int i = 0; i < 30; ++i) consume();
+            CHECK(!pad.Engine().GetButton({}, 10)); CHECK(!pad.Engine().GetButton({}, 11));
+        }
+        // Both shortcuts, both sides, and either order (including one simultaneous sample).
+        for (unsigned x : {100u, 1500u}) {
+            for (ButtonMask shoulder : {kButtonL1, kButtonR1}) {
+                for (int order = 0; order < 3; ++order) {
+                    sample.buttons = 0; sample.touch = {}; consume();
+                    for (int i = 0; i < 30; ++i) consume();
+                    sample.touch.count = 1; sample.touch.points[0].x = x;
+                    if (order != 0) {
+                        sample.buttons = order == 1 ? kButtonTouchPad : shoulder;
+                        consume();
+                    }
+                    sample.buttons = kButtonTouchPad | shoulder; consume();
+                    CHECK(pad.TakeHudToggle() == (x < 960 && shoulder == kButtonR1));
+                    CHECK(pad.TakeReturnToMenu() == (x < 960 && shoulder == kButtonL1));
+                    // Crossing the midpoint while held must not change the latched side.
+                    sample.touch.points[0].x = x < 960 ? 1500 : 100; consume();
+                    CHECK(!pad.TakeHudToggle()); CHECK(!pad.TakeReturnToMenu());
+                    CHECK(pad.Engine().GetButton({}, shoulder == kButtonL1 ? 6 : 7) == (x >= 960));
+                    sample.buttons = 0; sample.touch = {}; consume();
+                    CHECK(pad.Engine().GetButton({}, 10) == (x >= 960));
+                    CHECK(!pad.Engine().GetButton({}, 11));
+                    for (int i = 0; i < 30; ++i) consume();
+                }
+            }
+        }
+        sample.touch.count = 1; sample.touch.points[0].x = 1500;
+        sample.buttons = kButtonTouchPad;
+        for (int i = 0; i < 65; ++i) consume();
+        CHECK(pad.Engine().GetButton({}, 10));
+        {
+            auto plus = Common::Input::CreateInputDeviceFromString("engine:virtual_gamepad,port:0,button:10");
+            std::vector<bool> edges;
+            plus->SetCallback({[&](const auto& status) { edges.push_back(status.button_status.value); }});
+            consume(); consume();
+            CHECK(std::none_of(edges.begin(), edges.end(), [](bool down) { return !down; }));
+        }
+        sample.buttons |= kButtonR1; consume();
+        CHECK(!pad.TakeHudToggle()); CHECK(pad.Engine().GetButton({}, 10));
+        CHECK(pad.Engine().GetButton({}, 7));
+        sample.buttons = 0; sample.touch = {}; consume();
+        CHECK(!pad.Engine().GetButton({}, 10)); CHECK(!pad.Engine().GetButton({}, 11));
         auto button = Common::Input::CreateInputDeviceFromString("engine:virtual_gamepad,port:0,button:0");
         std::vector<bool> changes;
         button->SetCallback({[&](const auto& status) { changes.push_back(status.button_status.value); }});

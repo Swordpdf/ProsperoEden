@@ -812,6 +812,11 @@ std::vector<pe::ui::Profile> EdenServices::profiles() {
     return list;
 }
 
+std::string EdenServices::profile_key(int index) {
+    const auto who=Eden::Profiles::Resolve(user_);
+    return index>=0 && index<static_cast<int>(who.profiles.size()) ? who.profiles[index].Key() : std::string{};
+}
+
 bool EdenServices::choose_profile(int index) {
     if (rooms_.GetSnapshot().phase != Eden::Multiplayer::Phase::Idle) return false;
     const auto who = Eden::Profiles::Resolve(user_);
@@ -985,6 +990,7 @@ pe::ui::Preferences EdenServices::preferences() {
     result.unsafe_dma = speed.unsafe_dma;
     result.reactive_flushing = speed.reactive_flushing;
     result.skip_invalidation = speed.skip_invalidation;
+    result.memory_layout = speed.memory_layout;
     result.mapping = saved.mapping;
     result.menu_bind = saved.menu_bind;
     return result;
@@ -1029,6 +1035,10 @@ bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     speed.unsafe_dma = preferences.unsafe_dma;
     speed.reactive_flushing = preferences.reactive_flushing;
     speed.skip_invalidation = preferences.skip_invalidation;
+    // One of the layouts, whatever reached the launcher: a value outside them would make the whole
+    // save fail, and with it every other setting on the page (settings_store.h's SavePerformance).
+    speed.memory_layout = std::clamp(preferences.memory_layout, 0,
+                                     static_cast<int>(std::size(Eden::kMemoryLayoutKeys)) - 1);
     const bool saved = Eden::SavePreferences(value) && Eden::SavePerformance(0, speed);
     if (!saved) Eden::Report("settings", "Could not write preferences");
     if (saved) Eden::Multiplayer::SetDetailedLogging(value.detailed_logging);
@@ -1075,6 +1085,8 @@ std::string EdenServices::language_region(int language) {
     if (language < 0 || language >= int(std::size(Eden::kLanguageRegions))) return {};
     return tr(kRegions[Eden::kLanguageRegions[language]]);
 }
+
+std::string EdenServices::crash_reports_folder() { return Eden::LogsDir(); }
 
 std::string EdenServices::setup_details() {
     return setup_.empty() ?

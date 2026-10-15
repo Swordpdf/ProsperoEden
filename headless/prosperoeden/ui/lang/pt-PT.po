@@ -2239,3 +2239,7 @@ msgstr "{0}/ (NSP ou XCI)"
 #: pe/ui/browse.cpp
 msgid "{0}/ (one folder per game ID)"
 msgstr "{0}/ (uma pasta por ID de título)"
+
+#: pe/ui/settings.cpp
+msgid "Crash reports (FTP): {0}\nAttach crash-*.txt and its matching logs to your issue."
+msgstr "Relatórios de falha (FTP): {0}\nAnexe crash-*.txt e os registos correspondentes ao relato do problema."

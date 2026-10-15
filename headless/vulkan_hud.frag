@@ -51,7 +51,7 @@ void main() {
     const vec2 box = vec2(hud_line_width(glyphs, kHudCapUnits * unit * scale) +
                               2.0 * kHudPadUnits * unit * scale,
                           kHudBoxUnits * unit * scale);
-    const vec4 panel = hud_panel(gl_FragCoord.xy - vec2(float(text.x), float(text.y)), box, colors);
+    const vec4 panel = hud_panel(gl_FragCoord.xy - vec2(float(text.x), float(text.y)), box);
     // The line in its inks when colours are on, in the one ink when they are off.
     const vec3 ink = colors ? hud_ink(pick.ink) : kHudInk;
     color = vec4(mix(panel.rgb, ink, cover), mix(panel.a, 1.0, cover));

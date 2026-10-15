@@ -30,6 +30,27 @@ The accuracy switches help only where a game is held back by what they relax. In
 
 Resolution, the upscaling filter, the renderer and the refresh rate, which change speed too, are in **Settings > Video** and in a game's own settings.
 
+### Console memory
+
+A game's console has 4 GiB of memory, and its kernel divides them between the game, the applets and the system. **Settings > Performance > Memory** gives games the larger memory the console's developer units have: how much the game and everything running in it is told there is. Left and right move over the three; it applies when a game starts, so leave the game and start it again.
+
+| In the menu | In the file | The game is told | |
+|---|---|---|---|
+| 4 GiB | `4Gb` (the default) | 4 GiB | The memory a game's console has. Everything works with it. |
+| 6 GiB | `6Gb` | 6 GiB | |
+| 8 GiB | `8Gb` | 8 GiB | |
+
+A mod that keeps memory of its own asks the kernel how much there is and takes what it wants from the answer. A mod that wants more than 4 GiB then finds less than it asked for, and the game stops before its first picture; that mod's game needs 6 or 8 GiB, as [Mods](MODS.md) describes.
+
+```json
+{
+  "performance": { "memory_layout": "6Gb" },
+  "games": { "0100000000010000": { "performance": { "memory_layout": "8Gb" } } }
+}
+```
+
+The menu is `"performance" / "memory_layout"` in the settings file, so the two are the same thing and either can be changed with the other. A game can still be given one of its own in the file, inside its entry under `"games"`, which comes first: the menu's value is for every game. Above 4 GiB the guest's memory is backed where the game's kernel uses it, so a 6 GiB layout holds only what a session touches; the memory pool the processor shares with the graphics still has to take that much, so a demanding game at a high resolution can go from running out of graphics memory to running out of the pool. Give the larger memory to the game that needs it rather than to every game. A line at launch says which one a game got (`Memory layout:` in `stderr.log`).
+
 ## Frame generation
 
 Frame generation shows, between two pictures a game draws, one that is made up from them. A game that runs at 30 FPS then looks like 60. It does not make the game itself faster, it adds a little delay between a button and its effect, and fast motion can show faults in the made-up pictures. It works with the Vulkan renderer.
@@ -70,7 +91,7 @@ The menu opens with the profile that the PS5 user in front chose last. If you us
 | Kind | What a game can have of its own |
 |---|---|
 | Video | Renderer, resolution, upscaling filter, ASTC textures, refresh rate, FPS overlay, frame generation with its target and multiplier |
-| Performance | Each of the seven switches |
+| Performance | Each of the seven switches. The game's console memory is one value for every game in **Settings > Performance > Memory**; a game's own is in the settings file ([Console memory](#console-memory)) |
 | Audio | Game volume, mute |
 | Controls | Vibration, and a button mapping of its own |
 | System | RNG seed: with a seed the game is loaded at the same place in memory at every start, which some mods need. Left and right switch between **Random** and the seed; Cross opens the keyboard to type another one. The game's own random numbers still change from start to start |

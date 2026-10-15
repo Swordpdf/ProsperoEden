@@ -621,12 +621,13 @@ void Launcher::draw_home(Canvas &c)
     begin_part(5, 26.0f);
     if (!home_.status.empty())
     {
-        const float sw = minimal ? words : layout::kWidth;
-        const float sy = minimal ? 960.0f : kShelfTop + 12.0f;
-        const Rect scard{left, sy, sw, 164.0f};
+        const float sw = minimal ? 864.0f : layout::kWidth;
+        const float sx = minimal ? 960.0f : left;
+        const float sy = minimal ? 820.0f : kShelfTop + 12.0f;
+        const Rect scard{sx, sy, sw, 164.0f};
         const Color accent = home_.launch_failed ? t.warning : t.accent;
         glass(c, scard, t.radius_card, t.panel.with_alpha(0.78f), accent.with_alpha(0.45f), 0.6f);
-        notice_block(c, home_.status, left + 32.0f, baseline(scard.y + 26.0f, 36.0f, t.size_text), t.size_text, 36.0f,
+        notice_block(c, home_.status, sx + 32.0f, baseline(scard.y + 26.0f, 36.0f, t.size_text), t.size_text, 36.0f,
                      t.text, sw - 64.0f, 3, home_.launch_failed);
     }
     else if (!minimal)

@@ -53,9 +53,6 @@ CAP_UNITS, PAD_UNITS = 14.0, 3.0
 # The chip that box draws (hud_panel): how far its corners are cut round, in the same picture as
 # the rest of it, so they scale with it.
 RADIUS_UNITS = 5.0
-# The accent bar down that chip's left edge, when the line is drawn in its inks (hud_panel), in
-# that same picture.
-ACCENT_UNITS = 1.5
 # The overlay's line, in characters (hud.h, kHudTextMax): four go to a word, and the line ends
 # at a NUL, so this is what hud_pick stops at.
 TEXT_MAX = 111
@@ -227,10 +224,10 @@ float hud_line_width(uint words[28], float cap)
 }
 
 // The chip the line stands in: a rounded panel, quiet enough to read the picture through, and in
-// no colour of its own. When colours are on it takes an accent bar down its left edge. local is
+// no colour of its own. local is
 // the pixel's place in the box, counted down and right from its top left corner; size is the
 // box's own size in pixels.
-vec4 hud_panel(vec2 local, vec2 size, bool colors)
+vec4 hud_panel(vec2 local, vec2 size)
 {
     float unit = size.y / kHudBoxUnits;
     float radius = kHudRadiusUnits * unit;
@@ -239,14 +236,6 @@ vec4 hud_panel(vec2 local, vec2 size, bool colors)
     float edge = min(max(q.x, q.y), 0.0) + length(max(q, vec2(0.0))) - radius;
     float inside = 1.0 - smoothstep(-0.75, 0.75, edge);
     vec4 panel = vec4(vec3(0.05, 0.06, 0.095), 0.78 * inside);
-    if (colors && inside > 0.0)
-    {
-        // An accent bar down the left edge, the width of kHudAccentUnits, only where the panel
-        // itself stands (the same rounded edge `inside` is cut from).
-        float accent = kHudAccentUnits * unit;
-        float bar = (1.0 - smoothstep(accent - 0.75, accent + 0.75, local.x)) * inside;
-        panel = vec4(mix(panel.rgb, vec3(0.663, 0.859, 0.388), bar), mix(panel.a, 0.95, bar));
-    }
     return panel;
 }
 
@@ -361,9 +350,8 @@ def main():
         f"const float kHudBoxUnits = {CAP_UNITS + 2 * PAD_UNITS:.1f};",
         f"const float kHudBaselineUnits = {PAD_UNITS + CAP_UNITS:.1f};",
         f"// The chip the line stands in (hud_panel), in that same picture: how far its corners are",
-        f"// cut round, and how wide its accent bar is when colours are on.",
+        f"// cut round.",
         f"const float kHudRadiusUnits = {RADIUS_UNITS:.1f};",
-        f"const float kHudAccentUnits = {ACCENT_UNITS:.1f};",
         f"// The overlay's line, in characters (hud.h, kHudTextMax).",
         f"const int kHudTextMax = {TEXT_MAX};",
         f"const int kDigit = {GLYPHS.index('0')};",

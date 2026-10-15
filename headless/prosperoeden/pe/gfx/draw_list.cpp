@@ -44,6 +44,11 @@ void DrawList::clear()
 {
     instances_.clear();
     runs_.clear();
+    reset_state();
+}
+
+void DrawList::reset_state()
+{
     clips_.clear();
     transforms_.clear();
     opacities_.clear();

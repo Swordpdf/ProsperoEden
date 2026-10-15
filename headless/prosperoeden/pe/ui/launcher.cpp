@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pe/ui/launcher.hpp"
+#include "pe/ui/launch_commit.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -190,8 +191,8 @@ void Launcher::start_game(const std::string &file, const std::string &title, con
         cue(Cue::error);
         return;
     }
-    services_.will_play(file);
-    selected_game_ = services_.game_path(file);
+    selected_game_ = commit_launch(services_, file);
+    if (selected_game_.empty()) { say(tr("Game cannot start now."), true); cue(Cue::error); return; }
     launch_title_ = title;
     launch_cover_ = cover;
     launch_.start(th().launch_seconds);

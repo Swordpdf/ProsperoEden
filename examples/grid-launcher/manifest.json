@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "grid-example",
+  "name": "Grid Example",
+  "host_contract": "launcher-v1.0",
+  "api": { "major": 1, "min_minor": 0 },
+  "entry": "main.lua",
+  "state_schema": 1,
+  "required_capabilities": ["draw.atlas.v1", "actions.launch.v1"],
+  "assets": {},
+  "font": "assets/font.pefont",
+  "sounds": ""
+}

@@ -2,8 +2,14 @@
 
 The launcher's look is a theme. This build has two: **Canopy** (a tropical dusk, dark green
 glass and lime) and **Slate** (neutral glass, clean and still). Canopy is the default for a
-new install. **Settings > Theme** lists the themes a build has; the choice is kept in the
+new install. **Settings > Appearance > Theme** lists the themes a build has; the choice is kept in the
 settings file as `"launcher": { "theme": "canopy" }`.
+
+**Settings > Appearance > Launcher** selects a separately installed runtime launcher.
+Runtime packs can replace layout, navigation, assets and sounds without rebuilding the
+app; see [Runtime launcher packs](RUNTIME_LAUNCHERS.md). The built-in color themes
+described here remain compiled into the app. Runtime packs are not loaded into this
+color-theme table.
 
 A theme is data. It says what the screens are painted with, and nothing about where things are.
 

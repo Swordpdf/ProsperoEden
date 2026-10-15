@@ -2239,3 +2239,7 @@ msgstr "{0}/ (NSP หรือ XCI)"
 #: pe/ui/browse.cpp
 msgid "{0}/ (one folder per game ID)"
 msgstr "{0}/ (หนึ่ง​โฟลเดอร์​ต่อ ID ​ของ​เกม)"
+
+#: pe/ui/settings.cpp
+msgid "Crash reports (FTP): {0}\nAttach crash-*.txt and its matching logs to your issue."
+msgstr "รายงานข้อขัดข้อง (FTP): {0}\nแนบ crash-*.txt และบันทึกที่เกี่ยวข้องในรายงานปัญหาของคุณ"

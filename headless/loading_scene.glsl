@@ -18,6 +18,8 @@
 // right, a blurred copy of it kArtBlur texels a side. Its first row is the picture's top. A game
 // without a cover gets the same screen around a pane of glass with the progress as a figure.
 
+#include "runtime_loading.glsl"
+
 const vec3 kAccent = vec3(0.663, 0.859, 0.388);
 const vec3 kPale = vec3(0.875, 0.910, 0.651);
 const vec3 kDeep = vec3(0.141, 0.365, 0.290);
@@ -165,6 +167,7 @@ vec3 theme_colour(uint word, vec3 otherwise)
 
 vec3 loading_scene(vec2 pixel, vec2 size, float seconds, uint state[24])
 {
+    if(state[23]==0x50454c31u) return runtime_loading_scene(pixel,size,seconds);
     bool calm = seconds >= 1000.0;
     if (calm)
         seconds -= 1000.0;

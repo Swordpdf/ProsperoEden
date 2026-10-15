@@ -355,14 +355,17 @@ struct Preferences
     bool unsafe_dma = false;    // unsafe DMA accuracy
     bool reactive_flushing = true;  // off is faster; some effects break
     bool skip_invalidation = false; // fewer invalidations of what the GPU caches hold
+    // How much memory a game's console is told it has (settings_store.h's kMemoryLayoutKeys): an
+    // index into them, and the memory a mod that keeps a heap of its own asks the kernel for.
+    int memory_layout = 0;
     ButtonMapping mapping = kDefaultMapping; // Settings > Controls > Button mapping
     // Settings > Video: the overlay's chip (the same values Eden::Preferences keeps).
     int hud_size = 0;   // 0 regular, 1 medium, 2 large
     int hud_corner = 0; // 0 top left, 1 top right, 2 bottom left, 3 bottom right
     bool hud_colors = true;  // the line in its inks rather than one
     // What the overlay's line may say, bit by bit (hud.h's kHudField*): the pieces the user has
-    // chosen to show. All of them by default.
-    int hud_fields = 0xff;
+    // chosen to show. All of them by default, the game's own resolution (bit 9) with the rest.
+    int hud_fields = 0x2ff;
     // Which face button presses each core menu action (Settings > Controls > Menu keybinds).
     MenuBinding menu_bind = kDefaultMenuBinding;
 };
@@ -506,6 +509,7 @@ class Services
     virtual const std::vector<std::string> &language_labels() = 0;
     virtual std::string language_region(int language) = 0;
     virtual std::string setup_details() = 0;
+    virtual std::string crash_reports_folder() { return {}; }
 
     // ---- game files ----
     // The subfolder names of a folder; false when it cannot be opened.
@@ -526,6 +530,10 @@ class Services
         return {};
     }
     // The profile games start with from now on.
+    virtual std::string profile_key(int index) {
+        const auto list=profiles();
+        return index>=0 && index<static_cast<int>(list.size()) ? std::to_string(index)+":"+list[index].name : std::string{};
+    }
     virtual bool choose_profile(int)
     {
         return false;

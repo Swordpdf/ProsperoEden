@@ -52,6 +52,7 @@ public:
     const std::vector<std::string>& language_labels() override;
     std::string language_region(int language) override;
     std::string setup_details() override;
+    std::string crash_reports_folder() override;
 
     bool folders(const std::string& directory, std::vector<std::string>* names) override;
     pe::ui::FolderInfo folder_info(const std::string& directory) override;
@@ -62,6 +63,7 @@ public:
     int filesystem_access() override;
 
     std::vector<pe::ui::Profile> profiles() override;
+    std::string profile_key(int index) override;
     bool choose_profile(int index) override;
     int add_profile() override;
     bool rename_profile(int index, int step) override;

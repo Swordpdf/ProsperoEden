@@ -6,6 +6,7 @@
 
 #include "assets_dir.h"
 #include "hud.h"
+#include "loading_art.h"
 #include "audio_out_init.h"
 #include "boot_trace.h"
 #include "diagnostics.h"
@@ -18,7 +19,8 @@
 #include "pe/gfx/system_fonts.hpp"
 #include "pe/platform/audio_out.hpp"
 #include "pe/platform/display_egl.hpp"
-#include "pe/ui/launcher.hpp"
+#include "pe/ui/runtime_launcher.hpp"
+#include "storage_paths.h"
 #include "radio_input.h"
 #include "ps5_system_language.hpp"
 #ifdef EDEN_DEV_ROM_ID
@@ -222,6 +224,7 @@ std::string RunApp(const std::string& launch_error, bool first_start, Eden::Mult
         pe::ui::Textures textures(batch, services);
         // The look the player chose names the artwork (pe/ui/theme.hpp).
         pe::ui::use_theme(services.preferences().theme);
+        pe::ui::use_accent(services.preferences().accent);
         if (!textures.load_art(Eden::AppFile("ui")))
             Eden::Report("menu", "Launcher art is incomplete; check the app's ui/art folder");
         // The picture the console is showing now, for the opening.
@@ -243,7 +246,7 @@ std::string RunApp(const std::string& launch_error, bool first_start, Eden::Mult
         if (!input_ready) Eden::Report("menu failure", "The controller could not be opened");
         // Once per launch: is a newer release listed? The launcher shows the answer when it comes.
         Eden::UpdateNotice::Start();
-        pe::ui::Launcher launcher(services, textures, fonts, first_start);
+        pe::ui::RuntimeLauncher launcher(services, textures, fonts, batch, first_start, Eden::kDataDir, audio_ready ? mixer.get() : nullptr, LoadLanguage);
         int menu_volume = launcher.menu_volume();
         mixer->set_bus_gain(pe::audio::Bus::ui, MenuGain(menu_volume));
         std::fprintf(stderr, "EDEN_LAUNCHER display=%dx%d sounds=%d audio=%d ready_ms=%lld\n", display.width(),
@@ -340,6 +343,7 @@ std::string RunApp(const std::string& launch_error, bool first_start, Eden::Mult
                 // it is, on the row that was changed.
                 const auto reopen = Clock::now();
                 output = output_open = std::clamp(launcher.output(), 0, static_cast<int>(std::size(Eden::kOutputKeys)) - 1);
+                launcher.release_pack_textures();
                 textures.release();
                 batch.delete_texture(font_texture);
                 font_texture = 0;
@@ -351,6 +355,7 @@ std::string RunApp(const std::string& launch_error, bool first_start, Eden::Mult
                 }
                 font_texture = batch.create_font_texture(font);
                 launcher.set_font_texture(font_texture);
+                launcher.reload_pack_textures();
                 if (!textures.load_art(Eden::AppFile("ui")))
                     Eden::Report("menu", "Launcher art is incomplete; check the app's ui/art folder");
                 textures.set_output_scale(static_cast<float>(display.width()) / 1920.0f);
@@ -407,6 +412,10 @@ std::string RunApp(const std::string& launch_error, bool first_start, Eden::Mult
         if (!splash_hidden) sceSystemServiceHideSplashScreen();
         selected_game = launcher.selected_game();
         if (!launcher.done()) selected_game.clear();
+        if(const auto* scene=launcher.loading_scene(); scene && !selected_game.empty()) {
+            Eden::Loading::Art art; art.width=scene->atlas.width;art.height=scene->atlas.height;art.rgba=scene->atlas.rgba;
+            Eden::Loading::SetRuntimeArt(std::move(art),true);
+        } else Eden::Loading::SetRuntimeArt({},false);
         // The loading screen that follows wears the theme's colours (hud.h).
         {
             const pe::ui::Theme& theme = pe::ui::th();

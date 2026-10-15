@@ -112,6 +112,8 @@ private:
         bool select_held = false;  // a long press: its button stays down until the release
         unsigned touch_polls = 0;  // polls the touchpad has been down
         unsigned select_pulse = 0; // polls left of a tap's press
+        unsigned touch_width = 0; // no coordinates: retain the configured touchpad mapping
+        bool touch_right = false; // latched when clicked, until the release pulse ends
     };
     void Rescan();
     void OpenSlot(std::size_t player, int user);

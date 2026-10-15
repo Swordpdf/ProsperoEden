@@ -31,13 +31,13 @@ enum Category
     kDownloads,
     kSaveSync,
     kLanguage,
-    kTheme,
+    kAppearance,
     kColour,
     kCategoryCount,
 };
 constexpr const char *kCategories[kCategoryCount] = {
     TR("Profiles"), TR("Video"), TR("Performance"), TR("Audio"), TR("Controls"), TR("Accessibility"),
-    TR("Diagnostics"), TR("Game files"), TR("Downloads"), TR("Save sync"), TR("Language"), TR("Theme"),
+    TR("Diagnostics"), TR("Game files"), TR("Downloads"), TR("Save sync"), TR("Language"), TR("Appearance"),
     TR("Colour")};
 constexpr Icon kIcons[kCategoryCount] = {
     Icon::profile, Icon::video, Icon::performance, Icon::audio, Icon::controls, Icon::accessibility,
@@ -91,6 +91,7 @@ enum HudRow : int
     hud_mem_row,
     hud_ping_row,
     hud_cores_row, // the CPU piece as each of the four cores (its bit clear), or only the busiest
+    hud_resolution_row, // the game's own picture, as it renders it (bit 9; last, so no earlier bit moves)
     kHudRows,
 };
 constexpr int kFrameGenTargets = 6;     // Auto, 60, 90, 120, 144, 240 Hz (settings_store.h)
@@ -118,8 +119,10 @@ enum PerformanceRow : int
     speed_unsafe_dma,
     speed_reactive_flushing,
     speed_skip_invalidation,
+    speed_memory_layout, // the memory a game's console is told it has; last, so no row moves
     kPerformanceRows,
 };
+constexpr int kPerformanceSwitches = speed_memory_layout;
 constexpr int kPerformanceRowsShown = 4;
 constexpr Rect kPerformanceWindow{592.0f, kVideoRowsTop, 736.0f,
                                   kVideoRowPitch * (kPerformanceRowsShown - 1) + kVideoRowHeight};
@@ -139,6 +142,9 @@ enum ControlRow : int
 };
 // The sizes of Preferences::output, as every language writes them.
 constexpr const char *kOutputs[] = {"1080p", "1440p", "2160p"};
+// Settings > Performance > Memory: what the guest's kernel is told the console has
+// (settings_store.h's kMemoryLayoutKeys). A size and its unit, so nothing here to translate.
+constexpr const char *kMemoryLayouts[] = {"4 GiB", "6 GiB", "8 GiB"};
 
 constexpr const char *kFrameGenTargetNames[] = {"", "60", "90", "120", "144", "240"};
 constexpr const char *kFrameGenMultiplierNames[] = {"2x", "3x", "4x"};
@@ -173,6 +179,9 @@ void Launcher::press_settings(Key key)
     const int before = at;
     switch (key)
     {
+    case Key::options:
+        launcher_picker_ = true;
+        return;
     case Key::circle:
         go_section(0);
         return;
@@ -242,10 +251,8 @@ void Launcher::press_settings(Key key)
         case kAccessibility:
             open_modal(Modal::accessibility);
             break;
-        case kTheme:
-            open_modal(Modal::theme);
-            option_ = theme_index();
-            option_cursor_.snap(dialog_row_top(Modal::theme, option_));
+        case kAppearance:
+            open_modal(Modal::appearance);
             break;
         case kColour:
             open_modal(Modal::accent);
@@ -282,7 +289,7 @@ void Launcher::draw_settings(Canvas &c)
         playing_,
         pick(services_.resolution_keys(), prefs_.resolution) + "  /  " + pick(services_.filter_labels(), prefs_.filter) +
             "  /  " + output_name(prefs_.output) + "  /  " + hertz(prefs_.refresh),
-        fill(tr("{0} of {1} on"), {std::to_string(switches), std::to_string(static_cast<int>(kPerformanceRows))}),
+        fill(tr("{0} of {1} on"), {std::to_string(switches), std::to_string(kPerformanceSwitches)}),
         prefs_.mute ? tr("Muted") : percent(prefs_.volume),
         prefs_.vibration ? tr("Vibration on") : tr("Vibration off"),
         prefs_.large_text || prefs_.high_contrast || prefs_.reduce_motion ? tr("On") : tr("Off"),
@@ -418,8 +425,8 @@ void Launcher::draw_settings(Canvas &c)
         case kLanguage:
             about = tr("The language games use when they offer it.");
             break;
-        case kTheme:
-            about = tr(t.summary);
+        case kAppearance:
+            about = tr("Choose a theme or change the launcher layout.");
             break;
         default:
             break;
@@ -440,18 +447,18 @@ void Launcher::draw_settings(Canvas &c)
     if (t.top_nav)
     {
         static constexpr Hint kHints[] = {
-            {Pad::cross, TR("Select")}, {Pad::circle, TR("Home")}, {Pad::l1, TR("Sections"), Pad::r1}};
-        draw_footer(c, kHints, 3);
+            {Pad::cross, TR("Select")}, {Pad::options, TR("Launcher")}, {Pad::circle, TR("Home")}, {Pad::l1, TR("Sections"), Pad::r1}};
+        draw_footer(c, kHints, 4);
         return;
     }
     static constexpr Hint kHints[] = {
-        {Pad::cross, TR("Select")}, {Pad::circle, TR("Back")}, {Pad::l1, TR("Sections"), Pad::r1}};
-    draw_footer(c, kHints, 3, home_.system_status);
+        {Pad::cross, TR("Select")}, {Pad::options, TR("Launcher")}, {Pad::circle, TR("Back")}, {Pad::l1, TR("Sections"), Pad::r1}};
+    draw_footer(c, kHints, 4, home_.system_status);
 }
 
 const char *Launcher::performance_about(int row)
 {
-    static constexpr const char *kAbout[kPerformanceRows] = {
+    static constexpr const char *kAbout[kPerformanceSwitches] = {
         TR("Compiles the code a game used before as it starts, so new areas stutter less."),
         TR("Draws an effect once its shader is ready instead of pausing. Things can be missing "
            "for a moment."),
@@ -462,7 +469,11 @@ const char *Launcher::performance_about(int row)
            "break."),
         TR("Skips some checks when a game changes memory the GPU uses: faster, and textures "
            "can be stale.")};
-    return kAbout[std::clamp(row, 0, kPerformanceRows - 1)];
+    // The memory row has no line of its own: every language would need one, and its value says
+    // what it is (a size of memory) while the message after it changes says when it arrives.
+    if (row >= kPerformanceSwitches)
+        return "";
+    return kAbout[row];
 }
 
 // ---------------------------------------------------------------- dialogs
@@ -480,6 +491,8 @@ int Launcher::dialog_rows(Modal modal) const
     case Modal::audio:
     case Modal::accessibility:
         return 3;
+    case Modal::appearance:
+        return 2;
     case Modal::theme:
         return static_cast<int>(themes().size());
     case Modal::accent:
@@ -507,10 +520,11 @@ float Launcher::dialog_row_top(Modal modal, int row) const
     {
     case Modal::audio:
     case Modal::accessibility:
+    case Modal::appearance:
     case Modal::theme:
         return 370.0f + 102.0f * static_cast<float>(row);
     case Modal::accent:
-        return 274.0f + 80.0f * static_cast<float>(row);
+        return 340.0f + 50.0f * static_cast<float>(row);
     case Modal::performance: // four of its rows show; the list scrolls to the others
         return kVideoRowsTop + kVideoRowPitch * static_cast<float>(row) - performance_rows_.scroll();
     case Modal::video: // five of its rows show; the list scrolls to the others
@@ -534,7 +548,16 @@ void Launcher::press_dialog(Key key)
     const int step = key == Key::left ? -1 : 1;
     if (key == Key::circle)
     {
-        close_modal();
+        if (modal_ == Modal::theme)
+        {
+            modal_ = modal_shown_ = Modal::appearance;
+            option_ = 0;
+            option_cursor_.snap(dialog_row_top(Modal::appearance, option_));
+            message_.clear();
+            cue(Cue::back);
+        }
+        else
+            close_modal();
         return;
     }
     if ((key == Key::up || key == Key::down) &&
@@ -560,6 +583,23 @@ void Launcher::press_dialog(Key key)
     }
     if (!adjust && !activate)
         return;
+    if (modal_ == Modal::appearance)
+    {
+        if (!activate)
+            return;
+        if (option_ == 0)
+        {
+            open_modal(Modal::theme);
+            option_ = theme_index();
+            option_cursor_.snap(dialog_row_top(Modal::theme, option_));
+        }
+        else
+        {
+            launcher_picker_ = true;
+            cue(Cue::open);
+        }
+        return;
+    }
     if (modal_ == Modal::theme)
     {
         // The look changes on the spot, and is kept for the next start.
@@ -569,7 +609,7 @@ void Launcher::press_dialog(Key key)
         const std::string had = prefs_.theme;
         const std::string had_accent = prefs_.accent;
         prefs_.theme = chosen.id;
-        prefs_.accent.clear(); // a preset belongs to one theme
+        if (had != prefs_.theme) prefs_.accent.clear(); // keep the colour when reselecting this theme
         const bool saved = save_preferences(true);
         if (saved)
         {
@@ -577,7 +617,7 @@ void Launcher::press_dialog(Key key)
             settings_.visible = th().list_settings ? 10 : kCategoryCount;
             settings_.pitch = th().list_settings ? 84.0f : 88.0f;
             settings_.reset(kCategoryCount, settings_.selected);
-            use_accent("");
+            use_accent(prefs_.accent);
         }
         else
         {
@@ -677,10 +717,17 @@ void Launcher::press_dialog(Key key)
         break;
     case Modal::performance:
     {
-        bool *const switches[kPerformanceRows] = {
+        if (option_ == speed_memory_layout)
+        {
+            const int count = static_cast<int>(std::size(kMemoryLayouts));
+            prefs_.memory_layout =
+                (std::clamp(prefs_.memory_layout, 0, count - 1) + step + count) % count;
+            break;
+        }
+        bool *const switches[kPerformanceSwitches] = {
             &prefs_.block_list, &prefs_.async_shaders,     &prefs_.fast_gpu, &prefs_.unsafe_cpu,
             &prefs_.unsafe_dma, &prefs_.reactive_flushing, &prefs_.skip_invalidation};
-        bool &value = *switches[std::clamp(option_, 0, kPerformanceRows - 1)];
+        bool &value = *switches[std::clamp(option_, 0, kPerformanceSwitches - 1)];
         value = !value;
         break;
     }
@@ -748,6 +795,11 @@ void Launcher::press_dialog(Key key)
         say(tr("Saved. Full quality uses four times the graphics memory for these textures and can run out "
                "above 1x."));
     }
+    else if (modal_ == Modal::performance && option_ == speed_memory_layout)
+    {
+        // The guest's memory is taken as a game starts, so this says when the change arrives.
+        say(tr("Saved. Applies when a game starts."));
+    }
     apply_look();
     cue(sound);
 }
@@ -785,6 +837,10 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         title = tr("Accessibility");
         copy = tr("Make the menu easier to see and follow.");
         break;
+    case Modal::appearance:
+        title = tr("Appearance");
+        copy = tr("Theme and launcher settings.");
+        break;
     case Modal::theme:
         title = tr("Theme");
         copy = tr("The look of this menu.");
@@ -795,7 +851,8 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         break;
     default:
         title = tr("Diagnostics");
-        copy = tr("Detailed logs apply to the next game launch.");
+        copy = option_ == 0 ? tr("Detailed logs apply to the next game launch.") :
+                             tr("Keeps the last line before a crash, but games stutter. From the next start.");
         break;
     }
     text_shrink(c, title, 592.0f, baseline(218.0f, 62.0f, th().size_display), th().size_display,
@@ -819,7 +876,7 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
     const int last = scrolls ? rows_view.last_row() : rows - 1;
     if (scrolls)
         list.push_clip({window.x - 24.0f, window.y - 6.0f, window.w + 48.0f, window.h + 12.0f});
-    const float row_h = modal == Modal::accent ? 72.0f : 94.0f;
+    const float row_h = modal == Modal::accent ? 46.0f : 94.0f;
     for (int row = first; row <= last; ++row)
     {
         list.push_opacity(scrolls ? rows_view.row_alpha(row, kVideoRowHeight) : 1.0f);
@@ -994,10 +1051,20 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         static constexpr const char *kNames[kPerformanceRows] = {
             TR("Compile ahead"),        TR("Asynchronous shaders"), TR("Faster GPU emulation"),
             TR("Faster CPU emulation"), TR("Faster DMA"),           TR("Reactive flushing"),
-            TR("Skip CPU invalidation")};
+            TR("Skip CPU invalidation"), TR("Memory")};
         for (int row = first; row <= last; ++row)
         {
             list.push_opacity(rows_view.row_alpha(row, kVideoRowHeight));
+            if (row == speed_memory_layout)
+            {
+                // Not a switch: the memory the game's console is told it has. 4 GiB is what a
+                // Switch has; more is for a mod that keeps a heap of its own (docs/MODS.md).
+                label(row, tr(kNames[row]),
+                      choice(row, kMemoryLayouts[std::clamp(prefs_.memory_layout, 0,
+                                                            static_cast<int>(std::size(kMemoryLayouts)) - 1)]));
+                list.pop_opacity();
+                continue;
+            }
             // Asynchronous shaders act with Vulkan only: the OpenGL renderer compiles in its own
             // context here (graphics.cpp), and Eden then leaves them off.
             const std::string name =
@@ -1028,6 +1095,22 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         text_block(c, tr(kAbout[std::clamp(option_, 0, 2)]), 592.0f,
                    baseline(700.0f, 30.0f, th().size_small), th().size_small, 30.0f, th().meta, 736.0f,
                    2, kShrink);
+        break;
+    }
+    case Modal::appearance:
+    {
+        static constexpr const char *kNames[] = {TR("Theme"), TR("Launcher")};
+        for (int row = 0; row < rows; ++row)
+        {
+            const float shown = row == 0 ? text_shrink(c, th().name, 1292.0f,
+                                            baseline(dialog_row_top(modal, row), 94.0f, th().size_small),
+                                            th().size_small, th().meta, 320.0f, Align::right) : 0.0f;
+            label(row, tr(kNames[row]), shown);
+        }
+        const char* about = option_ == 0 ? tr("Choose the colours and appearance of this menu.") :
+                                         tr("Use another home screen, library and menu layout.");
+        text_block(c, about, 592.0f, baseline(700.0f, 30.0f, th().size_small), th().size_small,
+                   30.0f, th().meta, 736.0f, 2, kShrink);
         break;
     }
     case Modal::theme:
@@ -1083,10 +1166,12 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
             toggle(c, 1292.0f, row_centre(row),
                    tween::clamp01(switches_[static_cast<std::size_t>(row)].value));
         }
-        // What the highlighted switch does.
-        text_block(c, tr(kAbout[std::clamp(option_, 0, 1)]), 592.0f,
-                   baseline(716.0f, 30.0f, th().size_small), th().size_small, 30.0f, th().meta, 736.0f,
-                   2, kShrink);
+        // The folder stays available after the startup notice is gone.
+        const std::string reports = services_.crash_reports_folder();
+        text_block(c, reports.empty() ? std::string{tr(kAbout[std::clamp(option_, 0, 1)])} :
+                       fill(tr("Crash reports (FTP): {0}\nAttach crash-*.txt and its matching logs to your issue."), {reports}),
+                   592.0f, baseline(716.0f, 26.0f, th().size_small),
+                   th().size_small, 26.0f, th().body, 736.0f, 3, kShrink);
         break;
     }
     }
@@ -1096,7 +1181,7 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         list.pop_clip();
         scrollbar(c, rows_view, 1340.0f, window.y, window.h);
     }
-    if (modal == Modal::performance)
+    if (modal == Modal::performance && option_ < kPerformanceSwitches)
     {
         // What the highlighted switch does, under the window.
         text_block(c, tr(performance_about(option_)), 592.0f,
@@ -1130,6 +1215,18 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         static constexpr Hint kOpen[] = {
             {Pad::updown, TR("Select")}, {Pad::cross, TR("Open")}, {Pad::circle, TR("Back")}};
         draw_menu_hints(c, kOpen, 3, 592.0f, foot, th().copy, 736.0f);
+    }
+    else if (modal == Modal::appearance)
+    {
+        static constexpr Hint kOpen[] = {
+            {Pad::updown, TR("Select")}, {Pad::cross, TR("Open")}, {Pad::circle, TR("Back")}};
+        draw_hints(c, kOpen, 3, 592.0f, foot, th().copy, 736.0f);
+    }
+    else if (modal == Modal::theme)
+    {
+        static constexpr Hint kApply[] = {
+            {Pad::updown, TR("Select")}, {Pad::cross, TR("Apply")}, {Pad::circle, TR("Back")}};
+        draw_hints(c, kApply, 3, 592.0f, foot, th().copy, 736.0f);
     }
     else if (rows > 1)
     {
@@ -1245,7 +1342,7 @@ void Launcher::draw_hud(Canvas &c, float open)
     static constexpr const char *kNames[kHudRows] = {
         TR("Enable colors"), TR("Size"), TR("Corner"), TR("Backend"), TR("FPS"),
         TR("Frame time"), TR("Speed"), TR("CPU"), TR("GPU"), TR("Memory"), TR("Ping"),
-        TR("CPU by core")};
+        TR("CPU by core"), TR("Resolution")};
     for (int row = hud_rows_.first_row(); row <= hud_rows_.last_row(); ++row)
     {
         list.push_opacity(hud_rows_.row_alpha(row, kVideoRowHeight));

@@ -12,6 +12,7 @@
 #include <future>
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace pe::ui
 {
@@ -28,6 +29,8 @@ class Launcher
     Launcher(const Launcher &) = delete;
     Launcher &operator=(const Launcher &) = delete;
 
+    void accept_update_offer(const UpdateOffer& offer) { update_=offer; update_version_=offer.version; notes_laid_out_=false; update_waiting_=offer.installable; }
+    bool take_launcher_picker() { return std::exchange(launcher_picker_, false); }
     void press(Key key);
     void update(float dt);
     void draw(gfx::DrawList &list);
@@ -60,6 +63,7 @@ class Launcher
     }
 
   private:
+    bool launcher_picker_ = false;
     enum class Screen : std::uint8_t
     {
         home,
@@ -93,8 +97,9 @@ class Launcher
         save_sync,    // a game's save data synced before it starts, or a conflict after (save_sync.cpp)
         sync_setup,   // Settings > Save sync: the profiles and their servers (pairing.cpp)
         pairing,      // a profile paired with a server by a QR code (pairing.cpp)
-        theme,        // Settings > Theme: the launcher's look
-        accent,       // Settings > Theme > Colour: the accent preset
+        appearance,   // Settings > Appearance: theme and launcher settings
+        theme,        // Settings > Appearance > Theme: the launcher's look
+        accent,       // Settings > Colour: the accent preset
     };
     // The update dialog's steps: the offer, installing, stopping it, closing for the helper to
     // finish, and a failure.

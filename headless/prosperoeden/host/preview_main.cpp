@@ -1,3 +1,4 @@
+#ifndef PE_RUNTIME_PREVIEW
 // ProsperoEden - Launcher preview on a PC: draws the real screens to PNG files.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -562,6 +563,33 @@ void pictures(Stage &s)
         if (!reached)
         {
             std::fprintf(stderr, "error: the Performance switches did not reach the settings\n");
+            s.ok = false;
+        }
+        // The row after the switches: the memory a game's console is told it has. Left and right
+        // move over the layouts, and the choice reaches the settings file the launcher writes.
+        s.press({Key::down});
+        s.wait(0.4f);
+        s.press({Key::right});
+        s.wait(0.4f);
+        s.shoot("49-performance-memory");
+        if (s.services.preferences().memory_layout != 1)
+        {
+            std::fprintf(stderr, "error: the console memory did not reach the settings\n");
+            s.ok = false;
+        }
+        s.press({Key::right});
+        s.wait(0.4f);
+        if (s.services.preferences().memory_layout != 2)
+        {
+            std::fprintf(stderr, "error: the console memory did not go past 6 GiB\n");
+            s.ok = false;
+        }
+        // The last of them wraps to the first, which is what a game's console really has.
+        s.press({Key::right});
+        s.wait(0.4f);
+        if (s.services.preferences().memory_layout != 0)
+        {
+            std::fprintf(stderr, "error: the console memory did not wrap to 4 GiB\n");
             s.ok = false;
         }
     }
@@ -1331,3 +1359,5 @@ int main(int argc, char **argv)
         std::fprintf(stderr, "%s %.2f: %s\n", fit.second ? "cut" : "shrunk", fit.first, text.c_str());
     return stage.ok ? 0 : 1;
 }
+
+#endif

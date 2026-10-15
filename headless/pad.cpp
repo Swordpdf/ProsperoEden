@@ -172,6 +172,9 @@ void Pad::OpenSlot(std::size_t player, int user) {
         return;
     }
     slots[player] = {user, handle};
+    ps5::pad::ControllerInformation info{};
+    if (scePadGetControllerInformation(handle, &info) == 0)
+        slots[player].touch_width = info.touchpad.resolution_x;
     slots[player].haptics = std::make_unique<HapticStream>();
     const bool haptics = slots[player].haptics->Ensure(user, handle);
     const auto haptic_stats = slots[player].haptics->GetStats();
@@ -340,21 +343,21 @@ void Pad::Consume(std::size_t player, std::span<const ps5::pad::Data> samples) {
     // presses it too while it has no game button of its own.
     const int touch_button = MappedTo(mapping, pad_touchpad);
     const bool create_free = MappedTo(mapping, pad_create) < 0;
-    const auto set_touch = [&](u32 pressed) {
-        if (touch_button < 0) return;
-        engine->SetButtonState(player, kGame[touch_button],
-            (create_free && (pressed & kButtonCreate) != 0) || slot.select_held || slot.select_pulse > 0);
-    };
-    // Whether the DualSense button mapped to a game button is down (the analog triggers count
-    // from the threshold; the touchpad as set_touch has it).
     const auto down = [&](int game, u32 buttons, bool left, bool right) {
         const int pad = mapping[game];
-        if (pad == pad_touchpad)
-            return (create_free && (buttons & kButtonCreate) != 0) || slot.select_held || slot.select_pulse > 0;
-        return (buttons & kPad[pad]) != 0 || (pad == pad_l2 && left) || (pad == pad_r2 && right);
+        const int clicked = slot.touch_right ? game_plus : touch_button;
+        const bool touch_down = game == clicked && (slot.select_held || slot.select_pulse > 0);
+        const bool create_down = game == touch_button && create_free && (buttons & kButtonCreate) != 0;
+        return touch_down || create_down || (pad != pad_touchpad &&
+            ((buttons & kPad[pad]) != 0 || (pad == pad_l2 && left) || (pad == pad_r2 && right)));
+    };
+    const auto set_touch = [&](u32 pressed, bool left, bool right) {
+        if (touch_button >= 0)
+            engine->SetButtonState(player, kGame[touch_button], down(touch_button, pressed, left, right));
+        engine->SetButtonState(player, kGame[game_plus], down(game_plus, pressed, left, right));
     };
     // A single Joy-Con held upright has Minus or Plus, not both: what presses either presses
-    // the one it has. Applied after every set_touch, which sets the touchpad's button alone.
+    // the one it has. Applied after every set_touch, which also updates the right-click Plus.
     const auto set_menu = [&](u32 buttons, bool left, bool right) {
         if (grip != Grip::upright_left && grip != Grip::upright_right) return;
         engine->SetButtonState(player, grip == Grip::upright_left ? Button::ButtonMinus : Button::ButtonPlus,
@@ -373,26 +376,30 @@ void Pad::Consume(std::size_t player, std::span<const ps5::pad::Data> samples) {
     for (const auto& raw : samples) {
         if (recording) GameplayTest::Record(raw);
         auto sample = is_usable(raw) ? raw : neutral_data(raw.timestamp_us);
-        // The shortcuts work from every controller.
-        constexpr ButtonMask menu_chord = kButtonTouchPad | kButtonL1;
-        constexpr ButtonMask hud_chord = kButtonTouchPad | kButtonR1;
         const auto pressed = sample.buttons;
-        if ((pressed & menu_chord) == menu_chord &&
-            (last_buttons & menu_chord) != menu_chord)
-            return_to_menu = true;
-        if ((pressed & hud_chord) == hud_chord &&
-            (last_buttons & hud_chord) != hud_chord)
-            hud_toggle = true;
-        if ((pressed & menu_chord) == menu_chord || (pressed & hud_chord) == hud_chord)
-            sample.buttons &= ~(kButtonTouchPad | kButtonL1 | kButtonR1);
-        // The touchpad on its own: see kSelectTapPolls.
+        // Latch the click side before checking shortcuts, including simultaneous presses.
         const bool touch = (pressed & kButtonTouchPad) != 0;
         const bool touched = (last_buttons & kButtonTouchPad) != 0;
         if (touch && !touched) {
             slot.touch_chord = false;
             slot.touch_polls = 0;
+            slot.select_pulse = 0;
+            slot.touch_right = slot.touch_width > 0 && sample.touch.count == 1 &&
+                sample.touch.points[0].x < slot.touch_width &&
+                sample.touch.points[0].x >= slot.touch_width / 2;
         }
-        if (touch && (pressed & (kButtonL1 | kButtonR1)) != 0) {
+        // Only the Select (left) side owns shortcuts; the right side remains game input.
+        constexpr ButtonMask menu_chord = kButtonTouchPad | kButtonL1;
+        constexpr ButtonMask hud_chord = kButtonTouchPad | kButtonR1;
+        const bool menu = !slot.touch_right && (pressed & menu_chord) == menu_chord;
+        const bool hud = !slot.touch_right && (pressed & hud_chord) == hud_chord;
+        if (menu && (last_buttons & menu_chord) != menu_chord)
+            return_to_menu = true;
+        if (hud && (last_buttons & hud_chord) != hud_chord)
+            hud_toggle = true;
+        if (menu || hud)
+            sample.buttons &= ~(kButtonTouchPad | kButtonL1 | kButtonR1);
+        if (menu || hud) {
             slot.touch_chord = true;
             slot.select_held = false;
         }
@@ -406,18 +413,21 @@ void Pad::Consume(std::size_t player, std::span<const ps5::pad::Data> samples) {
             slot.select_held = false;
         }
         last_buttons = pressed;
-        for (const auto [mask, button] : fixed)
+        // Do not emit a D-pad edge before remapping it: callbacks can observe transient presses.
+        for (const auto [mask, button] : fixed) {
+            if (grip == Grip::upright_left &&
+                (mask & (kButtonLeft | kButtonUp | kButtonRight | kButtonDown))) continue;
             engine->SetButtonState(player, button, (sample.buttons & mask) != 0);
+        }
         // The game's buttons are digital: the analog triggers count from the threshold.
         const bool left = sample.triggers.l2 / 255.0f >= trigger_threshold;
         const bool right = sample.triggers.r2 / 255.0f >= trigger_threshold;
         for (int game = 0; game < kGameButtons; ++game) {
             const int pad = mapping[game];
             if (pad == pad_touchpad) continue;  // set_touch
-            engine->SetButtonState(player, kGame[game], (sample.buttons & kPad[pad]) != 0 ||
-                                                        (pad == pad_l2 && left) || (pad == pad_r2 && right));
+            engine->SetButtonState(player, kGame[game], down(game, sample.buttons, left, right));
         }
-        set_touch(sample.buttons);
+        set_touch(sample.buttons, left, right);
         last_left = left;
         last_right = right;
         float left_x = axis(sample.left_stick.x), left_y = -axis(sample.left_stick.y);
@@ -516,7 +526,7 @@ void Pad::Consume(std::size_t player, std::span<const ps5::pad::Data> samples) {
         ++slot.touch_polls >= kSelectHoldPolls)
         slot.select_held = true;
     if (slot.select_pulse > 0) --slot.select_pulse;
-    set_touch(last_buttons);
+    set_touch(last_buttons, last_left, last_right);
     set_menu(last_buttons, last_left, last_right);
 }
 }

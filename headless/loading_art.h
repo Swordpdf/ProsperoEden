@@ -166,8 +166,18 @@ inline void SetArt(Art next) {
                    std::memory_order_relaxed);
     ArtStore() = std::move(next);
 }
+// A runtime launcher may prepare an owned atlas before its GL resources disappear.
+inline Art& RuntimeArtStore() { static Art art; return art; }
+inline void SetRuntimeArt(Art next, bool enabled) {
+    const std::scoped_lock held{ArtLock()}; RuntimeArtStore()=std::move(next);
+    runtime_scene_active.store(enabled,std::memory_order_relaxed);
+}
 // From the cover the launcher keeps of a game; a game without one has no picture.
 inline void SetArtFromCover(const std::string& cover_path) {
+    if(runtime_scene_active.load(std::memory_order_relaxed)) {
+        Art runtime; { const std::scoped_lock held{ArtLock()}; runtime=RuntimeArtStore(); }
+        SetArt(std::move(runtime)); return;
+    }
     int width = 0;
     int height = 0;
     std::vector<uint8_t> rgba;

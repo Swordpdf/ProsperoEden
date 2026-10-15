@@ -42,6 +42,8 @@ struct Environment
     unsigned exit_wait_ms = 120000;
     // Left alone for this long after the app is gone, before its files are touched.
     unsigned settle_ms = 1500;
+    // Persistent launcher installation root, separate from the app being replaced.
+    std::string launcher_data;
 };
 
 // The console's drives ("/data", "/mnt/ext0", "/mnt/ext1", "/mnt/usb0" to "/mnt/usb7") and
@@ -58,6 +60,8 @@ int title_running(const std::string &sandboxes, const std::string &title);
 // Puts every top-level entry of staged in target's place, moving target's own
 // entries to backup first. On failure target is as it was. Both folders must be
 // on target's filesystem; backup must not exist.
+bool launcher_update_compatible(const std::string& data_root, const std::string& staged, std::string& reason);
+
 bool swap_entries(const std::string &target, const std::string &staged, const std::string &backup);
 
 // One whole conversation (kit/self_update_protocol.h). 0: the app was updated.

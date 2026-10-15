@@ -199,6 +199,12 @@ FakeServices::FakeServices(const std::string &covers_directory)
             game.cover.clear();
         remote_.push_back(game);
     }
+    // Runtime preview: exercise the complete scrolling library without shipping game payloads.
+    for(int extra=static_cast<int>(games_.size());extra<64;++extra) {
+        ui::Game game=games_[static_cast<std::size_t>(extra)%games_.size()];
+        game.name="Sample Software "+std::to_string(extra+1); game.file=game.name+".nsp";
+        game.title_id=0x0100C00000000000ull+static_cast<std::uint64_t>(extra); games_.push_back(std::move(game));
+    }
     std::sort(games_.begin(), games_.end(),
               [](const ui::Game &a, const ui::Game &b) { return a.name < b.name; });
 }

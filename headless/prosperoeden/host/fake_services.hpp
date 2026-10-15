@@ -16,7 +16,7 @@ namespace pe::host
 {
 
 // A made-up library: invented titles with drawn covers, settings kept in memory.
-class FakeServices final : public ui::Services
+class FakeServices : public ui::Services
 {
   public:
     // covers_directory receives one drawn cover per sample game.
@@ -270,6 +270,7 @@ class FakeServices final : public ui::Services
     const std::vector<std::string> &language_labels() override;
     std::string language_region(int language) override;
     std::string setup_details() override;
+    std::string crash_reports_folder() override { return "/data/prosperoeden/logs"; }
     bool folders(const std::string &directory, std::vector<std::string> *names) override;
     ui::FolderInfo folder_info(const std::string &directory) override;
     std::string files_folder() override
