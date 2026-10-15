@@ -43,6 +43,10 @@ msgstr "Không đọc được một tệp NCA của firmware. Hãy cài đặt 
 msgid "A pairing is running already."
 msgstr "Đang có một lượt ghép đôi."
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "GIỚI THIỆU"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "Tròn"
 msgid "Close"
 msgstr "Đóng"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "Màu"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "Ghi công và thiết lập"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "Chéo"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "Mặc định"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "Phép tính dấu phẩy động kém chính xác hơn: nhanh hơn, như
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "Truyền bộ nhớ tới GPU kém chính xác hơn: nhanh hơn, nhưng một vài trò chơi hiển thị đồ họa sai."
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "THƯ VIỆN"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "Thư viện"
@@ -959,6 +975,10 @@ msgstr "Vừa"
 #: pe/ui/settings.cpp
 msgid "Memory"
 msgstr "Bộ nhớ"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Menu keybinds"
+msgstr "Nút menu"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1011,6 +1031,10 @@ msgstr "Gần nhất"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "Cần chú ý"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "Kính trung tính, gọn gàng và tĩnh lặng."
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1294,6 +1318,10 @@ msgstr "Nhấn lần nữa để thay bản lưu của trò chơi này. Bản l�
 msgid "Private room"
 msgstr "Phòng riêng"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "PHÒNG RIÊNG"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1359,6 +1387,10 @@ msgstr "PHIÊN BẢN PS5"
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
 msgstr "Phòng công khai"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
+msgstr "PHÒNG CÔNG KHAI"
 
 #: pe/ui/remote.cpp
 msgid "Queued"
@@ -1564,6 +1596,10 @@ msgstr "Quét mã bằng điện thoại hoặc mở địa chỉ bên dưới."
 msgid "Scroll"
 msgstr "Cuộn"
 
+#: pe/ui/game_options.cpp
+msgid "Secondary"
+msgstr "Phụ"
+
 #. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
 #: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Sections"
@@ -1591,6 +1627,10 @@ msgstr "Máy chủ quá cũ để đồng bộ dữ liệu lưu"
 #: pe/ui/home.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Settings"
 msgstr "Cài đặt"
+
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
+msgstr "CÀI ĐẶT"
 
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
@@ -1730,6 +1770,10 @@ msgstr "LỜI CẢM ƠN"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "Cảm ơn toàn thể cộng đồng homebrew PS5 và mọi nhà phát triển có driver, công cụ và thư viện giúp ProsperoEden thành hiện thực."
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "Màu nhấn của chủ đề hiện tại."
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"
@@ -2035,6 +2079,10 @@ msgstr "Có gì mới"
 #: pe/ui/update.cpp
 msgid "What's new in version {0}"
 msgstr "Có gì mới trong phiên bản {0}"
+
+#: pe/ui/game_options.cpp
+msgid "Which face button does what in the menu."
+msgstr "Nút hành động nào làm gì trong menu."
 
 #: pe/ui/settings.cpp
 msgid "Who is playing. Each profile keeps its own save data and settings."

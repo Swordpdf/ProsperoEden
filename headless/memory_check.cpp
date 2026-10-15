@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include <algorithm>
 #include <map>
+#include <span>
 #include <bit>
 #include <chrono>
 #include <cstdio>
@@ -1302,6 +1303,95 @@ static void CheckLinks() {
     std::puts("Linked loops PASS: block link, call/return and indirect branch without per-iteration lookups");
 }
 
+extern "C" bool eden_fcmp_adc, eden_light_dmb, eden_checkbit_flags;  // headless/dynarmic/fast_paths.cmake
+extern "C" unsigned long long eden_dmb_dropped, eden_checkbit_fused;
+
+// FCMP flags, DMB variants and CBZ/CBNZ/TBZ/TBNZ with each fast path on and off (fast_paths.cmake).
+static void CheckFastPaths() {
+    struct Program : Memory<false> {
+        std::map<uint64_t, uint32_t> code;
+        std::optional<uint32_t> MemoryReadCode(uint64_t pc) override {
+            const auto it = code.find(pc);
+            require(it != code.end());
+            return it->second;
+        }
+    };
+    const auto run = [](const std::map<uint64_t, uint32_t>& code, const auto& setup) {
+        Program memory;
+        memory.code = code;
+        A64::UserConfig config{};
+        config.callbacks = &memory;
+        config.enable_cycle_counting = false;
+        config.code_cache_size = 16 * 1024 * 1024;
+        A64::Jit jit{config};
+        memory.jit = &jit;
+        setup(jit);
+        jit.SetPC(0x1000);
+        require(jit.Run() == HaltReason::UserDefined1);
+        return std::pair{jit.GetPstate() & 0xF0000000u, jit.GetRegister(1)};
+    };
+    unsigned cases = 0;
+    struct Compare { uint64_t a, b; uint32_t nzcv; };
+    const Compare singles[] = {{0x40000000, 0x3f800000, 0x20000000}, {0x3f800000, 0x40000000, 0x80000000},
+                               {0x3f800000, 0x3f800000, 0x60000000}, {0x7fc00000, 0x3f800000, 0x30000000},
+                               {0x80000000, 0x00000000, 0x60000000}};
+    const Compare doubles[] = {{0x4000000000000000, 0x3ff0000000000000, 0x20000000},
+                               {0x3ff0000000000000, 0x4000000000000000, 0x80000000},
+                               {0x3ff0000000000000, 0x3ff0000000000000, 0x60000000},
+                               {0x3ff0000000000000, 0x7ff8000000000000, 0x30000000}};
+    for (const bool on : {true, false}) {
+        eden_fcmp_adc = on;
+        for (const bool is_double : {false, true}) {
+            for (const auto& c : is_double ? std::span<const Compare>(doubles) : std::span<const Compare>(singles)) {
+                const auto [nzcv, x1] = run({{0x1000, is_double ? 0x1e612000u : 0x1e212000u}, {0x1004, 0xd4000001u}},
+                                            [&](A64::Jit& jit) {  // FCMP S0,S1 / FCMP D0,D1; SVC
+                                                jit.SetVector(0, {c.a, 0});
+                                                jit.SetVector(1, {c.b, 0});
+                                                jit.SetPstate(0);
+                                            });
+                require(nzcv == c.nzcv);
+                ++cases;
+            }
+        }
+    }
+    eden_fcmp_adc = true;
+    // ADD X1,X1,#1 around DMB ISHLD, ISHST, ISH; SVC.
+    for (const bool on : {true, false}) {
+        eden_light_dmb = on;
+        const auto dropped = eden_dmb_dropped;
+        const auto [nzcv, x1] = run({{0x1000, 0x91000421u}, {0x1004, 0xd50339bfu}, {0x1008, 0x91000421u},
+                                     {0x100c, 0xd5033abfu}, {0x1010, 0x91000421u}, {0x1014, 0xd5033bbfu},
+                                     {0x1018, 0x91000421u}, {0x101c, 0xd4000001u}},
+                                    [](A64::Jit& jit) { jit.SetRegister(1, 5); });
+        require(x1 == 9);
+        require(eden_dmb_dropped - dropped == (on ? 2u : 0u));
+        ++cases;
+    }
+    eden_light_dmb = true;
+    // CBZ/CBNZ/TBZ/TBNZ X0 to 0x100c; X1 = 2 when taken, 1 otherwise.
+    struct Branch { uint32_t word; bool (*taken)(uint64_t); };
+    const Branch branches[] = {{0xb4000060u, [](uint64_t x) { return x == 0; }},
+                               {0xb5000060u, [](uint64_t x) { return x != 0; }},
+                               {0x36180060u, [](uint64_t x) { return !(x & 8); }},
+                               {0x37180060u, [](uint64_t x) { return (x & 8) != 0; }}};
+    for (const bool on : {true, false}) {
+        eden_checkbit_flags = on;
+        const auto fused = eden_checkbit_fused;
+        for (const auto& branch : branches) {
+            for (const uint64_t x0 : {0ULL, 8ULL, 1ULL, 0xfffffffffffffff7ULL}) {
+                const auto [nzcv, x1] = run({{0x1000, branch.word}, {0x1004, 0xd2800021u}, {0x1008, 0xd4000001u},
+                                             {0x100c, 0xd2800041u}, {0x1010, 0xd4000001u}},
+                                            [&](A64::Jit& jit) { jit.SetRegister(0, x0); });
+                require(x1 == (branch.taken(x0) ? 2u : 1u));
+                ++cases;
+            }
+        }
+        require(on ? eden_checkbit_fused - fused >= 16 : eden_checkbit_fused == fused);
+    }
+    eden_checkbit_flags = true;
+    std::printf("Fast paths PASS: %u cases (FCMP flags, DMB variants, CBZ/TBZ terminals)\n", cases);
+}
+
 // Eden's large tables (src/memory_pages.cpp): zero wherever nothing was written, memory only for
 // the 2 MiB slots that were, and a fault for a write that was not announced.
 static void CheckSparseTables() {
@@ -1439,6 +1529,10 @@ int main(int argc, char** argv) {
         require(munmap(backing, 8192) == 0);
         return 0;
     }
+    if (argc == 2 && std::strcmp(argv[1], "--fast-paths") == 0) {
+        CheckFastPaths();
+        return 0;
+    }
     require(argc == 1);
     const auto a64 = Check<false>(backing), a32 = Check<true>(backing);
     CheckPressure(backing, false);
@@ -1451,6 +1545,7 @@ int main(int argc, char** argv) {
     CheckBlockList();
     CheckBlockListFile();
     CheckLinks();
+    CheckFastPaths();
     CheckFastmemA32();
     StressFastmemA32();
     require(munmap(backing, 8192) == 0);

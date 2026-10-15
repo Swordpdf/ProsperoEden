@@ -45,12 +45,15 @@ class Textures
 
     std::uint32_t backdrop() const
     {
-        return backdrop_;
+        return game_backdrop_ ? game_backdrop_ : backdrop_;
     }
     std::uint32_t backdrop_blur() const
     {
-        return backdrop_blur_;
+        return game_backdrop_blur_ ? game_backdrop_blur_ : backdrop_blur_;
     }
+
+    void load_game_backdrop(const std::string &cover_path);
+    void clear_game_backdrop();
     std::uint32_t brand() const
     {
         return brand_;
@@ -93,6 +96,9 @@ class Textures
     Services &services_;
     std::uint32_t backdrop_ = 0;
     std::uint32_t backdrop_blur_ = 0;
+    std::uint32_t game_backdrop_ = 0;
+    std::uint32_t game_backdrop_blur_ = 0;
+    std::string game_backdrop_path_;
     std::uint32_t brand_ = 0;
     std::uint32_t controller_ = 0;
     std::uint32_t splash_ = 0;

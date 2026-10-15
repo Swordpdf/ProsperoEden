@@ -43,6 +43,10 @@ msgstr "Impossibile leggere un NCA del firmware. Reinstalla il dump del firmware
 msgid "A pairing is running already."
 msgstr "Un'associazione è già in corso."
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "INFORMAZIONI"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "Cerchio"
 msgid "Close"
 msgstr "Chiudi"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "Colore"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "Crediti e configurazione"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "Croce"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "Predefinito"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "Calcolo in virgola mobile meno esatto: più veloce, ma alcuni giochi si 
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "Trasferimenti di memoria alla GPU meno esatti: più veloce, ma alcuni giochi mostrano grafica errata."
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "RACCOLTA"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "Raccolta"
@@ -959,6 +975,10 @@ msgstr "Medio"
 #: pe/ui/settings.cpp
 msgid "Memory"
 msgstr "Memoria"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Menu keybinds"
+msgstr "Tasti del menu"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1011,6 +1031,10 @@ msgstr "Più vicino"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "Richiede attenzione"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "Vetro neutro, pulito e calmo."
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1294,6 +1318,10 @@ msgstr "Premi di nuovo per sostituire il salvataggio di questo gioco. Viene crea
 msgid "Private room"
 msgstr "Stanza privata"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "STANZA PRIVATA"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1359,6 +1387,10 @@ msgstr "EDIZIONE PS5"
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
 msgstr "Stanze pubbliche"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
+msgstr "STANZE PUBBLICHE"
 
 #: pe/ui/remote.cpp
 msgid "Queued"
@@ -1564,6 +1596,10 @@ msgstr "Scansiona il codice con il telefono oppure apri l'indirizzo qui sotto."
 msgid "Scroll"
 msgstr "Scorri"
 
+#: pe/ui/game_options.cpp
+msgid "Secondary"
+msgstr "Secondario"
+
 #. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
 #: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Sections"
@@ -1591,6 +1627,10 @@ msgstr "Server troppo vecchio per la sincronizzazione"
 #: pe/ui/home.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Settings"
 msgstr "Impostazioni"
+
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
+msgstr "IMPOSTAZIONI"
 
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
@@ -1730,6 +1770,10 @@ msgstr "RINGRAZIAMENTI"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "Grazie a tutta la community homebrew di PS5 e a tutti gli sviluppatori i cui driver, strumenti e librerie rendono possibile ProsperoEden."
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "Il colore d'accento del tema attuale."
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"
@@ -2035,6 +2079,10 @@ msgstr "Novità"
 #: pe/ui/update.cpp
 msgid "What's new in version {0}"
 msgstr "Novità della versione {0}"
+
+#: pe/ui/game_options.cpp
+msgid "Which face button does what in the menu."
+msgstr "Quale tasto azione fa cosa nel menu."
 
 #: pe/ui/settings.cpp
 msgid "Who is playing. Each profile keeps its own save data and settings."

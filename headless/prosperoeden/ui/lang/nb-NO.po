@@ -43,6 +43,10 @@ msgstr "En fastvare-NCA kan ikke leses. Installer fastvaredumpen på nytt."
 msgid "A pairing is running already."
 msgstr "En paring pågår allerede."
 
+#: pe/ui/browse.cpp
+msgid "ABOUT"
+msgstr "OM"
+
 #. The menu's last section: about this app (its credits, where its files go). One short word.
 #: pe/ui/shell.cpp
 msgid "About"
@@ -265,6 +269,10 @@ msgstr "Sirkel"
 msgid "Close"
 msgstr "Lukk"
 
+#: pe/ui/settings.cpp
+msgid "Colour"
+msgstr "Farge"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -394,6 +402,10 @@ msgstr "Medvirkende og oppsett"
 #: pe/ui/game_options.cpp
 msgid "Cross"
 msgstr "Kryss"
+
+#: pe/ui/settings.cpp
+msgid "Default"
+msgstr "Standard"
 
 #. A per-game setting that follows the general setting; {0} is its value.
 #: pe/ui/game_options.cpp
@@ -932,6 +944,10 @@ msgstr "Mindre nøyaktig flyttallsregning: raskere, men noen få spill oppfører
 msgid "Less exact memory transfers to the GPU: faster, and a few games show wrong graphics."
 msgstr "Mindre nøyaktige minneoverføringer til GPU-en: raskere, men noen få spill viser feil grafikk."
 
+#: pe/ui/library.cpp
+msgid "LIBRARY"
+msgstr "BIBLIOTEK"
+
 #: pe/ui/library.cpp, pe/ui/shell.cpp
 msgid "Library"
 msgstr "Bibliotek"
@@ -959,6 +975,10 @@ msgstr "Middels"
 #: pe/ui/settings.cpp
 msgid "Memory"
 msgstr "Minne"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Menu keybinds"
+msgstr "Menyknapper"
 
 #: pe/ui/browse.cpp
 msgid "Menu sound effects made with ElevenLabs."
@@ -1011,6 +1031,10 @@ msgstr "Nærmeste"
 #: pe/ui/pairing.cpp, pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "Krever handling"
+
+#: pe/ui/theme.cpp
+msgid "Neutral glass, clean and still."
+msgstr "Nøytralt glass, rent og rolig."
 
 #: pe/ui/profiles.cpp
 msgid "New profile"
@@ -1294,6 +1318,10 @@ msgstr "Trykk igjen for å erstatte spillets lagrede data. De nåværende sikker
 msgid "Private room"
 msgstr "Privat rom"
 
+#: pe/ui/multiplayer.cpp
+msgid "PRIVATE ROOM"
+msgstr "PRIVAT ROM"
+
 #: pe/ui/game_options.cpp
 msgid "Pro Controller"
 msgstr "Pro Controller"
@@ -1359,6 +1387,10 @@ msgstr "PS5-UTGAVE"
 #: pe/ui/multiplayer.cpp
 msgid "Public rooms"
 msgstr "Offentlige rom"
+
+#: pe/ui/multiplayer.cpp
+msgid "PUBLIC ROOMS"
+msgstr "OFFENTLIGE ROM"
 
 #: pe/ui/remote.cpp
 msgid "Queued"
@@ -1564,6 +1596,10 @@ msgstr "Skann koden med telefonen, eller åpne adressen nedenfor."
 msgid "Scroll"
 msgstr "Rull"
 
+#: pe/ui/game_options.cpp
+msgid "Secondary"
+msgstr "Sekundær"
+
 #. Button hint beside L1 and R1: they move between the menu's sections (Home, Library, Multiplayer, Settings, About).
 #: pe/ui/browse.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/multiplayer.cpp, pe/ui/settings.cpp
 msgid "Sections"
@@ -1591,6 +1627,10 @@ msgstr "Serveren er for gammel for synkronisering"
 #: pe/ui/home.cpp, pe/ui/settings.cpp, pe/ui/shell.cpp
 msgid "Settings"
 msgstr "Innstillinger"
+
+#: pe/ui/settings.cpp
+msgid "SETTINGS"
+msgstr "INNSTILLINGER"
 
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Setup required"
@@ -1730,6 +1770,10 @@ msgstr "TAKK"
 #: pe/ui/browse.cpp
 msgid "Thanks to the whole PS5 homebrew community and to every developer whose drivers, tools and libraries make ProsperoEden possible."
 msgstr "Takk til hele PS5-homebrew-miljøet og til alle utviklere som gjør ProsperoEden mulig med drivere, verktøy og biblioteker."
+
+#: pe/ui/settings.cpp
+msgid "The accent colour of the current theme."
+msgstr "Aksentfargen i gjeldende tema."
 
 #: pe/ui/remote.cpp
 msgid "The download stopped"
@@ -2035,6 +2079,10 @@ msgstr "Nyheter"
 #: pe/ui/update.cpp
 msgid "What's new in version {0}"
 msgstr "Nyheter i versjon {0}"
+
+#: pe/ui/game_options.cpp
+msgid "Which face button does what in the menu."
+msgstr "Hvilken handlingsknapp gjør hva i menyen."
 
 #: pe/ui/settings.cpp
 msgid "Who is playing. Each profile keeps its own save data and settings."
