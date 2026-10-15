@@ -360,8 +360,8 @@ struct Preferences
     int hud_corner = 0; // 0 top left, 1 top right, 2 bottom left, 3 bottom right
     bool hud_colors = true;  // the line in its inks rather than one
     // What the overlay's line may say, bit by bit (hud.h's kHudField*): the pieces the user has
-    // chosen to show. All of them by default.
-    int hud_fields = 0xff;
+    // chosen to show. All of them by default, the game's own resolution (bit 9) with the rest.
+    int hud_fields = 0x2ff;
     // Which face button presses each core menu action (Settings > Controls > Menu keybinds).
     MenuBinding menu_bind = kDefaultMenuBinding;
 };

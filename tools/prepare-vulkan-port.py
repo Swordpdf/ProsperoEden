@@ -636,6 +636,12 @@ adapt('src/video_core/renderer_vulkan/renderer_vulkan.cpp', 'vulkan_renderer.cpp
     ('#include "video_core/renderer_vulkan/renderer_vulkan.h"',
      '#include "video_core/renderer_vulkan/renderer_vulkan.h"\n#include "display_refresh.h"\n'
      '#include "diagnostics.h"\n#include "hud.h"'),
+    # The overlay's resolution piece (hud.h): the guest's own picture, taken as it is handed to the
+    # display. The OpenGL renderer does not say, so the piece stays off there (vulkan_loading.inc
+    # does the same for the loading screen).
+    ('void RendererVulkan::Composite(std::span<const Tegra::FramebufferConfig> framebuffers) {',
+     'void RendererVulkan::Composite(std::span<const Tegra::FramebufferConfig> framebuffers) {\n'
+     + (port / 'vulkan_guest_resolution.inc').read_text()),
     # The HUD counted the guest rate only: OnFrameDisplayed() runs once per Composite(), while the
     # frames frame generation adds are presented through PresentManager::Present() (hud.h). Count
     # every frame handed to the present manager.

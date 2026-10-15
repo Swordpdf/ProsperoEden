@@ -88,6 +88,7 @@ enum HudRow : int
     hud_mem_row,
     hud_ping_row,
     hud_cores_row, // the CPU piece as each of the four cores (its bit clear), or only the busiest
+    hud_resolution_row, // the game's own picture, as it renders it (bit 9; last, so no earlier bit moves)
     kHudRows,
 };
 constexpr int kFrameGenTargets = 6;     // Auto, 60, 90, 120, 144, 240 Hz (settings_store.h)
@@ -1119,7 +1120,7 @@ void Launcher::draw_hud(Canvas &c, float open)
     static constexpr const char *kNames[kHudRows] = {
         TR("Enable colors"), TR("Size"), TR("Corner"), TR("Backend"), TR("FPS"),
         TR("Frame time"), TR("Speed"), TR("CPU"), TR("GPU"), TR("Memory"), TR("Ping"),
-        TR("CPU by core")};
+        TR("CPU by core"), TR("Resolution")};
     for (int row = hud_rows_.first_row(); row <= hud_rows_.last_row(); ++row)
     {
         list.push_opacity(hud_rows_.row_alpha(row, kVideoRowHeight));
