@@ -83,6 +83,7 @@ RoomDirectory ParseRoomDirectory(std::string_view body, unsigned protocol) {
                 if (!room.port || !room.capacity) throw std::runtime_error("invalid room limits");
                 room.password = row.at("hasPassword").get<bool>();
                 room.compatible = Number(row.at("netVersion"), UINT32_MAX) == protocol;
+                room.featured = FeaturedRoom(room.name, room.port);
                 if (row.contains("players")) {
                     if (!row.at("players").is_array() || row.at("players").size() > 65535)
                         throw std::runtime_error("invalid player list");
@@ -93,6 +94,9 @@ RoomDirectory ParseRoomDirectory(std::string_view body, unsigned protocol) {
         }
         if (!rows.empty() && result.rooms.empty()) result.error = "No usable rooms were returned.";
         std::stable_sort(result.rooms.begin(), result.rooms.end(), [](const auto& a, const auto& b) {
+            // The project's own rooms first, in the order of their ports.
+            if (a.featured != b.featured) return a.featured > b.featured;
+            if (a.featured && a.port != b.port) return a.port < b.port;
             if (a.compatible != b.compatible) return a.compatible > b.compatible;
             if (a.players != b.players) return a.players > b.players; // where people are, first
             return a.name < b.name;

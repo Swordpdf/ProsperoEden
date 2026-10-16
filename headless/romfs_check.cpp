@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <atomic>
 #include <new>
+#include <pthread.h>
 #include "common/fiber.h"
 #include "core/file_sys/romfs.h"
 #include "core/file_sys/vfs/vfs_vector.h"
@@ -18,6 +19,48 @@ void operator delete(void* p, std::size_t) noexcept { ::operator delete(p); }
 
 int main() {
     using namespace FileSys;
+    // A mod rebuild can have tens of thousands of siblings on the FS service's small stack.
+    int wide_result = 0;
+    pthread_attr_t attributes;
+    if (pthread_attr_init(&attributes) != 0) return 2;
+    if (pthread_attr_setstacksize(&attributes, 256 * 1024) != 0) return 2;
+    pthread_t thread;
+    const auto wide_tree = +[](void* result) -> void* {
+        for (bool directory_case : {false, true}) {
+            const auto before = live_allocations.load();
+            {
+                std::vector<VirtualFile> files;
+                std::vector<VirtualDir> dirs;
+                for (unsigned i = 0; i < 32768; ++i) {
+                    const auto name = "entry" + std::to_string(i);
+                    if (directory_case)
+                        dirs.push_back(std::make_shared<VectorVfsDirectory>(
+                            std::vector<VirtualFile>{}, std::vector<VirtualDir>{}, name));
+                    else
+                        files.push_back(std::make_shared<VectorVfsFile>(std::vector<u8>{42}, name));
+                }
+                auto root = std::make_shared<VectorVfsDirectory>(std::move(files), std::move(dirs));
+                auto image = CreateRomFS(root);
+                auto restored = image ? ExtractRomFS(image) : nullptr;
+                if (!restored || (directory_case
+                        ? !restored->GetSubdirectory("entry32767")
+                        : !restored->GetFile("entry32767") ||
+                          restored->GetFile("entry32767")->ReadAllBytes() != std::vector<u8>{42})) {
+                    *static_cast<int*>(result) = 2;
+                    return nullptr;
+                }
+            }
+            if (live_allocations != before) {
+                *static_cast<int*>(result) = 1;
+                return nullptr;
+            }
+        }
+        return nullptr;
+    };
+    if (pthread_create(&thread, &attributes, wide_tree, &wide_result) != 0) return 2;
+    pthread_attr_destroy(&attributes);
+    if (pthread_join(thread, nullptr) != 0 || wide_result != 0) return 2;
+    std::puts("RomFS 32768 file/directory siblings on 256 KiB stack, round-trip and cleanup PASS");
     for (unsigned cycle = 0; cycle < 4; ++cycle) {
         const auto before = live_allocations.load();
         std::weak_ptr<VfsFile> source_lifetime;

@@ -372,6 +372,25 @@ void Launcher::draw_controllers(Canvas &c)
     }
 }
 
+void Launcher::draw_home_status(Canvas &c)
+{
+    if (home_.status.empty())
+        return;
+    const Theme &t = th();
+    const bool over_library = t.top_nav && (screen_ == Screen::home || screen_ == Screen::library);
+    const float sx = over_library ? layout::kPanelLeft : layout::kLeft;
+    const float sy = over_library ?
+                         layout::kPanelTop + (layout::kPanelBottom - layout::kPanelTop - 164.0f) * 0.5f :
+                         (t.minimal_home ? 960.0f : kShelfTop + 12.0f);
+    const float sw = over_library ? layout::kPanelWidth :
+                                    (t.minimal_home ? 520.0f : layout::kWidth);
+    const Rect scard{sx, sy, sw, 164.0f};
+    const Color accent = home_.launch_failed ? t.warning : t.accent;
+    glass(c, scard, t.radius_card, t.panel.with_alpha(0.78f), accent.with_alpha(0.45f), 0.6f);
+    notice_block(c, home_.status, scard.x + 32.0f, baseline(scard.y + 26.0f, 36.0f, t.size_text), t.size_text, 36.0f,
+                 t.text, scard.w - 64.0f, 3, home_.launch_failed);
+}
+
 void Launcher::draw_home(Canvas &c)
 {
     gfx::DrawList &list = c.list;
@@ -621,14 +640,8 @@ void Launcher::draw_home(Canvas &c)
     begin_part(5, 26.0f);
     if (!home_.status.empty())
     {
-        const float sw = minimal ? 864.0f : layout::kWidth;
-        const float sx = minimal ? 960.0f : left;
-        const float sy = minimal ? 820.0f : kShelfTop + 12.0f;
-        const Rect scard{sx, sy, sw, 164.0f};
-        const Color accent = home_.launch_failed ? t.warning : t.accent;
-        glass(c, scard, t.radius_card, t.panel.with_alpha(0.78f), accent.with_alpha(0.45f), 0.6f);
-        notice_block(c, home_.status, sx + 32.0f, baseline(scard.y + 26.0f, 36.0f, t.size_text), t.size_text, 36.0f,
-                     t.text, sw - 64.0f, 3, home_.launch_failed);
+        if (!th().top_nav)
+            draw_home_status(c);
     }
     else if (!minimal)
     {

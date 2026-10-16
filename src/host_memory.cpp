@@ -61,6 +61,7 @@ void* AllocateMemoryPages(size_t size) noexcept;
 void* AllocateGuestMemory(size_t size) noexcept;  // above the guest's address space (memory_pages.cpp)
 // The same block backed where the guest's kernel uses it, and what goes with it (memory_pages.cpp).
 void* AllocateGuestMemoryWhereUsed(size_t size) noexcept;
+void ClearGuestMemory(std::uint8_t* at, std::uint64_t offset, std::size_t bytes, int fill) noexcept;
 void CommitGuestMemory(std::uint64_t offset, size_t bytes) noexcept;
 void FreeGuestMemory(void* base, size_t size) noexcept;
 void FreeMemoryPages(void* base, size_t size) noexcept;
@@ -619,10 +620,8 @@ HostMemory& HostMemory::operator=(HostMemory&& other) noexcept {
 void HostMemory::ClearBackingRegion(size_t offset, size_t length, u32 fill) {
     if (offset > backing_size || length > backing_size - offset)
         throw std::out_of_range("Backing clear range");
-    if (length) {
-        CommitGuestMemory(offset, length);
-        std::memset(backing_base + offset, fill, length);
-    }
+    // A fill with zeroes leaves a slot that shows the zero block alone (memory_pages.cpp).
+    if (length) ClearGuestMemory(backing_base + offset, offset, length, static_cast<int>(fill));
 }
 // Eden calls these only while a page table uses VirtualBasePointer() as its fastmem
 // arena. Without a window they are rejected rather than presented as no-ops.

@@ -120,6 +120,7 @@ enum PerformanceRow : int
     speed_unsafe_dma,
     speed_reactive_flushing,
     speed_skip_invalidation,
+    speed_compact_memory,
     speed_memory_layout, // the memory a game's console is told it has; last, so no row moves
     kPerformanceRows,
 };
@@ -132,6 +133,13 @@ constexpr float kControlsRowsTop = 510.0f;
 constexpr int kControlsRowsShown = 3;
 constexpr Rect kControlsWindow{592.0f, kControlsRowsTop, 736.0f,
                                kVideoRowPitch * (kControlsRowsShown - 1) + kVideoRowHeight};
+// The Colour dialog's rows (Default and the theme's presets): shorter than the other dialogs'
+// rows, six of the nine show and the list scrolls.
+constexpr float kAccentRowPitch = 80.0f;
+constexpr float kAccentRowHeight = 72.0f;
+constexpr int kAccentRowsShown = 6;
+constexpr Rect kAccentWindow{592.0f, kVideoRowsTop, 736.0f,
+                             kAccentRowPitch * (kAccentRowsShown - 1) + kAccentRowHeight};
 // The Controls rows, in order.
 enum ControlRow : int
 {
@@ -292,7 +300,9 @@ void Launcher::press_settings(Key key)
         case kColour:
             open_modal(Modal::accent);
             option_ = accent_index() + 1;
-            option_cursor_.snap(dialog_row_top(Modal::accent, option_));
+            accent_rows_.visible = kAccentRowsShown;
+            accent_rows_.pitch = kAccentRowPitch;
+            accent_rows_.reset(dialog_rows(Modal::accent), option_);
             break;
         default:
             open_modal(Modal::diagnostics);
@@ -319,7 +329,8 @@ void Launcher::draw_settings(Canvas &c)
 
     // What each category is set to, in a few words.
     const int switches = prefs_.block_list + prefs_.async_shaders + prefs_.fast_gpu + prefs_.unsafe_cpu +
-                         prefs_.unsafe_dma + prefs_.reactive_flushing + prefs_.skip_invalidation;
+                         prefs_.unsafe_dma + prefs_.reactive_flushing + prefs_.skip_invalidation +
+                         prefs_.compact_memory;
     const std::string summaries[kCategoryCount] = {
         playing_,
         pick(services_.resolution_keys(), prefs_.resolution) + "  /  " + pick(services_.filter_labels(), prefs_.filter) +
@@ -503,7 +514,9 @@ const char *Launcher::performance_about(int row)
         TR("Keeps what a game reads back from the GPU exact. Off is faster, and some effects "
            "break."),
         TR("Skips some checks when a game changes memory the GPU uses: faster, and textures "
-           "can be stale.")};
+           "can be stale."),
+        TR("Gives back memory a game left empty, 16 KiB at a time. More free memory; a game that "
+           "writes there again can stutter for a moment.")};
     // The memory row has no line of its own: every language would need one, and its value says
     // what it is (a size of memory) while the message after it changes says when it arrives.
     if (row >= kPerformanceSwitches)
@@ -560,8 +573,8 @@ float Launcher::dialog_row_top(Modal modal, int row) const
     case Modal::appearance:
     case Modal::theme:
         return 370.0f + 102.0f * static_cast<float>(row);
-    case Modal::accent:
-        return 340.0f + 50.0f * static_cast<float>(row);
+    case Modal::accent: // six of its rows show; the list scrolls to the others
+        return kVideoRowsTop + kAccentRowPitch * static_cast<float>(row) - accent_rows_.scroll();
     case Modal::performance: // four of its rows show; the list scrolls to the others
         return kVideoRowsTop + kVideoRowPitch * static_cast<float>(row) - performance_rows_.scroll();
     case Modal::video: // five of its rows show; the list scrolls to the others
@@ -603,10 +616,11 @@ void Launcher::press_dialog(Key key)
     }
     if ((key == Key::up || key == Key::down) &&
         (modal_ == Modal::video || modal_ == Modal::performance || modal_ == Modal::controls ||
-         modal_ == Modal::wallpaper))
+         modal_ == Modal::accent || modal_ == Modal::wallpaper))
     {
-        ListView &rows_view = modal_ == Modal::video      ? video_rows_
-                              : modal_ == Modal::controls ? controls_rows_
+        ListView &rows_view = modal_ == Modal::video       ? video_rows_
+                              : modal_ == Modal::controls  ? controls_rows_
+                              : modal_ == Modal::accent    ? accent_rows_
                               : modal_ == Modal::wallpaper ? wallpaper_rows_
                                                            : performance_rows_;
         if (rows_view.move(key == Key::down ? 1 : -1))
@@ -787,7 +801,8 @@ void Launcher::press_dialog(Key key)
         }
         bool *const switches[kPerformanceSwitches] = {
             &prefs_.block_list, &prefs_.async_shaders,     &prefs_.fast_gpu, &prefs_.unsafe_cpu,
-            &prefs_.unsafe_dma, &prefs_.reactive_flushing, &prefs_.skip_invalidation};
+            &prefs_.unsafe_dma, &prefs_.reactive_flushing, &prefs_.skip_invalidation,
+            &prefs_.compact_memory};
         bool &value = *switches[std::clamp(option_, 0, kPerformanceSwitches - 1)];
         value = !value;
         break;
@@ -940,16 +955,19 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
 
     const int rows = dialog_rows(modal);
     // Video's rows scroll in a window of five, Performance's in one of four, Controls' in one
-    // of three under its shortcuts and Wallpaper's in one of four; the other dialogs show all
-    // of theirs.
+    // of three under its shortcuts, Colour's in one of six and Wallpaper's in one of four; the
+    // other dialogs show all of theirs.
     const bool scrolls = modal == Modal::video || modal == Modal::performance ||
-                         modal == Modal::controls || modal == Modal::wallpaper;
+                         modal == Modal::controls || modal == Modal::accent ||
+                         modal == Modal::wallpaper;
     const ListView &rows_view = modal == Modal::performance    ? performance_rows_
                                 : modal == Modal::controls     ? controls_rows_
+                                : modal == Modal::accent       ? accent_rows_
                                 : modal == Modal::wallpaper    ? wallpaper_rows_
                                                                : video_rows_;
     const Rect &window = modal == Modal::performance    ? kPerformanceWindow
                          : modal == Modal::controls     ? kControlsWindow
+                         : modal == Modal::accent       ? kAccentWindow
                          : modal == Modal::wallpaper    ? kWallpaperWindow
                                                         : kVideoWindow;
     const float rows_top = modal == Modal::controls ? kControlsRowsTop : kVideoRowsTop;
@@ -957,10 +975,10 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
     const int last = scrolls ? rows_view.last_row() : rows - 1;
     if (scrolls)
         list.push_clip({window.x - 24.0f, window.y - 6.0f, window.w + 48.0f, window.h + 12.0f});
-    const float row_h = modal == Modal::accent ? 46.0f : 94.0f;
+    const float row_h = modal == Modal::accent ? kAccentRowHeight : 94.0f;
     for (int row = first; row <= last; ++row)
     {
-        list.push_opacity(scrolls ? rows_view.row_alpha(row, kVideoRowHeight) : 1.0f);
+        list.push_opacity(scrolls ? rows_view.row_alpha(row, row_h) : 1.0f);
         plate_rest(c, row_plate(), {592.0f, dialog_row_top(modal, row), 736.0f, row_h});
         list.pop_opacity();
     }
@@ -1132,7 +1150,7 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         static constexpr const char *kNames[kPerformanceRows] = {
             TR("Compile ahead"),        TR("Asynchronous shaders"), TR("Faster GPU emulation"),
             TR("Faster CPU emulation"), TR("Faster DMA"),           TR("Reactive flushing"),
-            TR("Skip CPU invalidation"), TR("Memory")};
+            TR("Skip CPU invalidation"), TR("Compact memory"), TR("Memory")};
         for (int row = first; row <= last; ++row)
         {
             list.push_opacity(rows_view.row_alpha(row, kVideoRowHeight));
@@ -1254,18 +1272,21 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
     {
         const auto presets = accent_presets();
         const int active = accent_index();
-        for (int row = 0; row < rows; ++row)
+        for (int row = first; row <= last; ++row)
         {
+            list.push_opacity(rows_view.row_alpha(row, row_h));
             const char *name = row == 0 ? tr("Default") : presets[static_cast<std::size_t>(row - 1)].name;
             label(row, name, 64.0f);
             const bool current = (row == 0 && active < 0) || (row > 0 && row - 1 == active);
-            if (!current)
-                continue;
-            list.circle(1268.0f, row_centre(row), 17.0f, th().accent);
-            const bool contrast = look().high_contrast;
-            look().high_contrast = false;
-            icon(c, Icon::check, 1268.0f, row_centre(row), 22.0f, th().on_accent);
-            look().high_contrast = contrast;
+            if (current)
+            {
+                list.circle(1268.0f, row_centre(row), 17.0f, th().accent);
+                const bool contrast = look().high_contrast;
+                look().high_contrast = false;
+                icon(c, Icon::check, 1268.0f, row_centre(row), 22.0f, th().on_accent);
+                look().high_contrast = contrast;
+            }
+            list.pop_opacity();
         }
         break;
     }

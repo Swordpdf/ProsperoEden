@@ -273,6 +273,10 @@ msgstr "Sulje"
 msgid "Colour"
 msgstr "Väri"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Compact memory"
+msgstr "Tiivis muisti"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -749,6 +753,10 @@ msgstr "Saksa"
 #: pe/ui/browse.cpp
 msgid "GETTING STARTED"
 msgstr "NÄIN ALOITAT"
+
+#: pe/ui/settings.cpp
+msgid "Gives back memory a game left empty, 16 KiB at a time. More free memory; a game that writes there again can stutter for a moment."
+msgstr "Palauttaa muistin, jonka peli jätti tyhjäksi, 16 KiB kerrallaan. Enemmän vapaata muistia; peli, joka kirjoittaa sinne uudelleen, voi nykäistä hetken."
 
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"

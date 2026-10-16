@@ -485,13 +485,13 @@ void Launcher::draw_library(Canvas &c)
 
     if (t.top_nav)
     {
-        constexpr float kPanelLeft = 960.0f;
-        constexpr float kPanelWidth = 864.0f;
+        constexpr float kPanelLeft = layout::kPanelLeft;
+        constexpr float kPanelWidth = layout::kPanelWidth;
         constexpr float kPanelCover = 176.0f;
         constexpr float kPanelCellX = (kPanelWidth - kPanelCover) / 3.0f;
         constexpr float kPanelRowPitch = 248.0f;
-        constexpr float kPanelTop = 110.0f;
-        const float kPanelBottom = home_.status.empty() ? 980.0f : 804.0f;
+        constexpr float kPanelTop = layout::kPanelTop;
+        constexpr float kPanelBottom = layout::kPanelBottom;
         kicker(c, tr("LIBRARY"), kPanelLeft, baseline(80.0f, 30.0f, t.size_small), t.accent_pale, kPanelWidth);
         if (count == 0)
         {

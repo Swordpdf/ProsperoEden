@@ -74,6 +74,11 @@ extern "C" std::size_t eden_heap_large_held(unsigned* blocks) {
     *blocks = 3;
     return std::size_t{96} << 20;
 }
+extern "C" std::size_t eden_heap_last_failure(unsigned* why, std::size_t* count) {
+    *why = 2;
+    *count = 1;
+    return std::size_t{134217728};
+}
 #endif
 
 #define CHECK(condition) \
@@ -273,6 +278,8 @@ def check(binary, console):
     assert f'thread=CPUCore_1 report={reports[0]} restart=1' in err, err[-400:]
     assert ('memory: largest free block 1234 MiB of 12288 MiB, heap 256 MiB and 96 MiB in 3 large blocks\n' in report) \
         == console, report
+    assert ('heap refused: 1 request, the last of 134217728 bytes: the console had no memory for a new piece\n'
+            in report) == console, report
 
     # The functions, named from the report.
     named = subprocess.run([sys.executable, str(root / 'tools/symbolize-crash.py'), str(reports[0]), str(binary)],

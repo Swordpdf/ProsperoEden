@@ -273,6 +273,10 @@ msgstr "닫기"
 msgid "Colour"
 msgstr "색상"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Compact memory"
+msgstr "메모리 압축"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -749,6 +753,10 @@ msgstr "독일어"
 #: pe/ui/browse.cpp
 msgid "GETTING STARTED"
 msgstr "시작하기"
+
+#: pe/ui/settings.cpp
+msgid "Gives back memory a game left empty, 16 KiB at a time. More free memory; a game that writes there again can stutter for a moment."
+msgstr "게임이 비워 둔 메모리를 16KiB 단위로 반환합니다. 여유 메모리가 늘어나며, 그곳에 다시 쓰는 게임은 잠깐 끊길 수 있습니다."
 
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"

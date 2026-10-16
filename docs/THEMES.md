@@ -11,6 +11,12 @@ app; see [Runtime launcher packs](RUNTIME_LAUNCHERS.md). The built-in color them
 described here remain compiled into the app. Runtime packs are not loaded into this
 color-theme table.
 
+The two show the range: Canopy keeps the rail, the hero and the artwork-driven glass as the
+launcher was first drawn. Slate turns on every layout variant — `list_settings`,
+`minimal_home` and `top_nav` (the two-column dashboard), a flat near-opaque scrim
+(`scrim_opacity` 0.92) over a backdrop with no motes or drift, and `game_page_offset` 60
+under its taller header.
+
 A theme is data. It says what the screens are painted with, and nothing about where things are.
 
 ## What a theme sets
@@ -39,12 +45,35 @@ four of these colours with it: `accent`, `accent_pale`, `accent_deep` and `base`
 ## What a theme does not set
 
 - **Where things are.** A theme can choose between predefined layout variants
-  (`list_settings`, `game_backdrop`, `top_nav`) but not invent new ones. `top_nav` is the
-  largest: a two-column dashboard where the detail card and Library grid share the home screen,
-  and the other sections draw as right-side panels.
+  (`list_settings`, `game_backdrop`, `minimal_home`, `top_nav`, `scrim_opacity`,
+  `game_page_offset`) but not invent new ones. `top_nav` is the largest: a two-column
+  dashboard where the detail card and Library grid share the home screen, and the other
+  sections draw as right-side panels.
 - **Text.** The words and their translations are the launcher's.
 - **Accessibility.** Larger text, High contrast and Reduce motion lie over whatever theme is in
   use (`pe::ui::Look`). A theme cannot turn them off.
+
+## Accent colour presets
+
+Surfaces and text belong to the theme; the accent is the one colour set the player may swap.
+Each theme carries its own table of presets (`AccentPreset` in `theme.hpp`): an `id` for the
+settings file, a `name` as Settings shows it, and the five accent roles — `accent`,
+`accent_deep`, `accent_pale`, `on_accent` and `highlight`. Nothing else changes.
+
+The tables sit beside the themes in `theme.cpp` (`kCanopyAccents`, `kSlateAccents`), and
+`presets_for` names the table of each theme. The first preset is the theme's own accent
+colours — Lime for Canopy, Silver for Slate — so it matches what the theme already draws.
+"Default" in Settings is the theme itself, with no preset.
+
+**Settings > Colour** lists Default and the theme's presets; six of the nine rows show at a
+time and the list scrolls. The dialog opens on the choice in use. Cross applies a preset at
+once, over the running launcher, and saves it as `"launcher": { "accent": "ice" }`; an id
+the theme does not have reads as Default. **Settings > Theme** clears the accent: a new
+theme brings its own.
+
+The preset tables are written with hex colours (`Color::rgb(0xa9db63)`). `theme.cpp` and
+`theme_kit.cpp` are the only files where the build allows a colour as a number
+(`tools/check-launcher-theme.py`); a screen that named one would fail the build.
 
 ## Three rules
 
@@ -75,8 +104,8 @@ theme:
 - glass panels when the kit theme's surfaces are glass;
 - the springs from the kit's.
 
-Canopy starts from the kit's **Acrylic** (frosted glass, soft shadows, a ring of light as the
-focus) and then sets its own colours, corners and artwork over it.
+Canopy and Slate both start from the kit's **Acrylic** (frosted glass, soft shadows, a ring of
+light as the focus) and then set their own colours, corners and artwork over it.
 
 ## Adding a theme
 
@@ -84,13 +113,16 @@ focus) and then sets its own colours, corners and artwork over it.
    `theme_from_kit`, then set what the theme wants of its own. Give it an `id` of lower-case
    letters, digits and hyphens (the settings file takes nothing else).
 2. Add it to the table in `Store` there (its size is the number of themes).
-3. Put its artwork in `headless/prosperoeden/ui/art`: a backdrop of 2048 by 1152 (the screen plus
+3. Give it a table of accent presets beside the others in `theme.cpp` and name it in
+   `presets_for`; the first preset is the theme's own accent colours. A theme without a
+   table offers only Default in Settings > Colour.
+4. Put its artwork in `headless/prosperoeden/ui/art`: a backdrop of 2048 by 1152 (the screen plus
    room to drift), the same picture blurred at a quarter of that size, and a square mark. Name the
-   files in the theme.
-4. Look at it: `tools/launcher/preview.sh` draws every screen on a PC. Run it once more with
+   files in the theme. (Slate's backdrop is drawn by `tools/launcher/render-art.py`, no photo.)
+5. Look at it: `tools/launcher/preview.sh` draws every screen on a PC. Run it once more with
    `PE_LOOK=large,contrast,calm` (the accessibility settings) and in a language with long words
    (`PE_LANG=de-DE`).
-5. Text on a surface needs a contrast of 4.5 to 1 (3 to 1 from 24 pixels up); check `text`,
+6. Text on a surface needs a contrast of 4.5 to 1 (3 to 1 from 24 pixels up); check `text`,
    `copy` and `meta` on `panel` and `row`, and `on_accent` on `accent`.
 
 Changing the theme in Settings shows in the next frame for colours, corners and motion; artwork

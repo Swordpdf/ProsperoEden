@@ -30,6 +30,7 @@ std::int64_t sceKernelGetDirectMemorySize();
 std::int32_t sceKernelAvailableDirectMemorySize(std::int64_t, std::int64_t, std::size_t, std::int64_t*, std::size_t*);
 std::size_t eden_heap_committed(void);
 std::size_t eden_heap_large_held(unsigned* blocks);
+std::size_t eden_heap_last_failure(unsigned* why, std::size_t* count);
 #endif
 // The app's code, from the link (tools/unwind.ld).
 extern const char __eden_text_start[];
@@ -361,6 +362,25 @@ void Compose(const Kind* kind, int code, std::uint64_t address, const Registers&
         t.Put(" MiB in ");
         t.Dec(blocks);
         t.Put(" large blocks\n");
+        // A std::bad_alloc names no size: the heap keeps the last request it refused and why.
+        unsigned why = 0;
+        std::size_t refused = 0;
+        const std::size_t failed = eden_heap_last_failure(&why, &refused);
+        if (refused != 0) {
+            static constexpr const char* kWhy[] = {
+                "", ": no allocator for a new piece", ": the console had no memory for a new piece",
+                ": the heap was at its limit", ": its size does not fit in memory"};
+            t.Put("heap refused: ");
+            t.Dec(refused);
+            t.Put(refused == 1 ? " request, the last of " : " requests, the last of ");
+            if (failed == static_cast<std::size_t>(-1)) t.Put("an impossible size");
+            else {
+                t.Dec(failed);
+                t.Put(" bytes");
+            }
+            t.Put(why < sizeof(kWhy) / sizeof(kWhy[0]) ? kWhy[why] : "");
+            t.Put('\n');
+        }
     }
 #endif
     t.Put("registers:");

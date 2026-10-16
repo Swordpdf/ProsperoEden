@@ -273,6 +273,10 @@ msgstr "關閉"
 msgid "Colour"
 msgstr "顏色"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Compact memory"
+msgstr "緊湊記憶體"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -749,6 +753,10 @@ msgstr "德文"
 #: pe/ui/browse.cpp
 msgid "GETTING STARTED"
 msgstr "開始使用"
+
+#: pe/ui/settings.cpp
+msgid "Gives back memory a game left empty, 16 KiB at a time. More free memory; a game that writes there again can stutter for a moment."
+msgstr "以 16 KiB 為單位歸還遊戲留空的記憶體。可用記憶體更多；遊戲再次寫入該處時可能會短暫卡頓。"
 
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"

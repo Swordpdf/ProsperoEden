@@ -339,6 +339,40 @@ static void eden_heap_grow_refused(const char *line) {
     sceKernelDebugOutText(0, line);
 }
 
+/* The last allocation the heap could not make, for the crash report (headless/crash_report.cpp):
+ * a std::bad_alloc names neither the size nor the reason, and the report's memory line is read
+ * after the failure, when other threads may have given memory back. `why` is the last reason the
+ * heap gave for not growing (EDEN_HEAP_WHY_*), on whichever thread asked last. */
+enum {
+  EDEN_HEAP_WHY_NONE = 0,     /* it did not need to grow, or it grew */
+  EDEN_HEAP_WHY_NO_SPACE = 1, /* memory, but no allocator over it */
+  EDEN_HEAP_WHY_NO_MEMORY = 2,
+  EDEN_HEAP_WHY_AT_LIMIT = 3,
+  EDEN_HEAP_WHY_OVERFLOW = 4  /* calloc's count * size does not fit */
+};
+static atomic_uint eden_heap_grow_why;
+static atomic_size_t eden_heap_failed_bytes;
+static atomic_uint eden_heap_failed_why;
+
+static void eden_heap_note_failure(size_t bytes, unsigned why) {
+  atomic_store_explicit(&eden_heap_failed_bytes, bytes, memory_order_relaxed);
+  atomic_store_explicit(&eden_heap_failed_why, why, memory_order_relaxed);
+}
+
+static void eden_heap_failed(size_t bytes, unsigned why) {
+  eden_heap_note_failure(bytes, why);
+  atomic_fetch_add_explicit(&ps5_heap_failures, 1, memory_order_relaxed);
+}
+
+/* How many allocations failed, and the size and reason of the last one (0: none). */
+size_t eden_heap_last_failure(unsigned *why, size_t *count) {
+  if (why)
+    *why = atomic_load_explicit(&eden_heap_failed_why, memory_order_relaxed);
+  if (count)
+    *count = atomic_load_explicit(&ps5_heap_failures, memory_order_relaxed);
+  return atomic_load_explicit(&eden_heap_failed_bytes, memory_order_relaxed);
+}
+
 /* Adds a space with room for `bytes`: memory for the next pieces of the range and an mspace
  * over them. `seen` is how many spaces the caller tried: when another thread added one
  * meanwhile, that one is tried first. Returns 0 when the heap is at its limit or the console
@@ -351,6 +385,7 @@ static int eden_heap_grow(size_t bytes, unsigned seen) {
       sceKernelUsleep(50);
   }
   int grown = 0;
+  atomic_store_explicit(&eden_heap_grow_why, EDEN_HEAP_WHY_NONE, memory_order_relaxed);
   const unsigned count = atomic_load_explicit(&eden_heap_space_count, memory_order_relaxed);
   const unsigned used = atomic_load_explicit(&eden_heap_pieces_used, memory_order_relaxed);
   /* Room for the request and for the mspace's own records. */
@@ -372,12 +407,15 @@ static int eden_heap_grow(size_t bytes, unsigned seen) {
         atomic_store_explicit(&eden_heap_space_count, count + 1, memory_order_release);
         grown = 1;
       } else {
+        atomic_store_explicit(&eden_heap_grow_why, EDEN_HEAP_WHY_NO_SPACE, memory_order_relaxed);
         eden_heap_grow_refused("EDEN_HEAP_GROW refused: no allocator for a new piece\n");
       }
     } else {
+      atomic_store_explicit(&eden_heap_grow_why, EDEN_HEAP_WHY_NO_MEMORY, memory_order_relaxed);
       eden_heap_grow_refused("EDEN_HEAP_GROW refused: the console has no memory for a new piece\n");
     }
   } else {
+    atomic_store_explicit(&eden_heap_grow_why, EDEN_HEAP_WHY_AT_LIMIT, memory_order_relaxed);
     eden_heap_grow_refused("EDEN_HEAP_GROW refused: the heap is at its limit\n");
   }
   atomic_flag_clear_explicit(&eden_heap_grow_lock, memory_order_release);
@@ -471,9 +509,12 @@ static void eden_heap_account(long bytes, long blocks) {
     eden_heap_charge(self, bytes, blocks);
 }
 
-static void *eden_heap_record(void *address, int nonzero) {
-  if (address == NULL)
-    return ps5_heap_record_allocation(address, nonzero); /* counts the failure */
+static void *eden_heap_record(void *address, size_t bytes) {
+  if (address == NULL) {
+    if (bytes != 0)
+      eden_heap_note_failure(bytes, atomic_load_explicit(&eden_heap_grow_why, memory_order_relaxed));
+    return ps5_heap_record_allocation(address, bytes != 0); /* counts the failure */
+  }
   eden_heap_account((long)eden_heap_usable(address), 1);
   return address;
 }
@@ -553,21 +594,20 @@ void *__wrap_malloc(size_t size) {
   if (!ps5_heap_ready())
     return __real_malloc(size);
   void *cached = eden_tcache_take(size);
-  return cached != NULL ? cached : eden_heap_record(eden_heap_allocate(1, size, 0), size != 0);
+  return cached != NULL ? cached : eden_heap_record(eden_heap_allocate(1, size, 0), size);
 }
 
 void *__wrap_calloc(size_t count, size_t size) {
   if (!ps5_heap_ready())
     return __real_calloc(count, size);
   if (size != 0 && count > (size_t)-1 / size) {
-    atomic_fetch_add_explicit(&ps5_heap_failures, 1, memory_order_relaxed);
+    eden_heap_failed((size_t)-1, EDEN_HEAP_WHY_OVERFLOW);
     return NULL;
   }
   void *cached = eden_tcache_take(count * size);
   if (cached != NULL)
     return memset(cached, 0, count * size);
-  return eden_heap_record(eden_heap_allocate(count, size, 1),
-                                    count != 0 && size != 0);
+  return eden_heap_record(eden_heap_allocate(count, size, 1), count * size);
 }
 
 void *__wrap_realloc(void *address, size_t size) {
@@ -605,7 +645,7 @@ void *__wrap_realloc(void *address, size_t size) {
    * crosses the size at which blocks get memory of their own): move it. */
   void *moved = eden_heap_allocate(1, size, 0);
   if (moved == NULL) {
-    atomic_fetch_add_explicit(&ps5_heap_failures, 1, memory_order_relaxed);
+    eden_heap_failed(size, atomic_load_explicit(&eden_heap_grow_why, memory_order_relaxed));
     return NULL;
   }
   memcpy(moved, address, before < size ? before : size);
@@ -661,9 +701,9 @@ int __wrap_posix_memalign(void **address, size_t alignment, size_t size) {
     }
   }
   if (result == 0)
-    eden_heap_record(*address, size != 0);
+    eden_heap_record(*address, size);
   else
-    atomic_fetch_add_explicit(&ps5_heap_failures, 1, memory_order_relaxed);
+    eden_heap_failed(size, atomic_load_explicit(&eden_heap_grow_why, memory_order_relaxed));
   return result;
 }
 

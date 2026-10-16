@@ -167,10 +167,13 @@ class Launcher
     // The notification of a newer release the app cannot install itself, at the top right for ten
     // seconds.
     void draw_update_notice(Canvas &c);
+    // A result the player must see over whatever the screen shows ("Could not save settings"): a
+    // card at the middle that any button closes.
+    void draw_message_popup(Canvas &c);
     // quiet: a change that shows at once needs no "Saved" line.
     bool save_preferences(bool quiet = false);
     // The switches of a dialog as the preferences have them, in the order of its rows.
-    std::array<bool, 7> switch_states(Modal modal) const;
+    std::array<bool, 8> switch_states(Modal modal) const;
     // Shows the launcher as the preferences' accessibility switches say.
     void apply_look();
 
@@ -178,6 +181,7 @@ class Launcher
     void press_home(Key key);
     void update_controllers(float dt);
     void draw_home(Canvas &c);
+    void draw_home_status(Canvas &c);
     void draw_controllers(Canvas &c);
     // A game's settings from the home screen (the game to continue, or a recent one): its page
     // opens over the Library at that game, and closing it comes back to the home screen.
@@ -430,6 +434,8 @@ class Launcher
     std::string message_; // the last result ("Saved..."), shown where the screen has room
     bool message_warning_ = false;
     float message_age_ = 0.0f;
+    // A warning's result ("Could not save settings"), a card at the middle any button closes.
+    std::string popup_;
 
     // launching a game
     std::string selected_game_;
@@ -496,11 +502,12 @@ class Launcher
     tween::Spring section_;
     int option_ = 0;
     tween::Spring option_cursor_; // highlight position in pixels
-    std::array<tween::Spring, 7> switches_{};
+    std::array<tween::Spring, 8> switches_{};
     ListView video_rows_; // the Video dialog's rows (more than it shows)
     ListView hud_rows_;   // the overlay's options (Modal::hud, more than it shows)
     ListView performance_rows_; // the Performance dialog's rows (more than it shows)
     ListView controls_rows_;    // the Controls dialog's rows (more than it shows)
+    ListView accent_rows_;      // the Colour dialog's rows (more than it shows)
     ListView wallpaper_rows_;   // the Wallpaper dialog's rows (more than it shows)
     // The images in the wallpapers folder, as the Wallpaper dialog lists them (settings.cpp).
     std::vector<std::string> wallpaper_files_;
@@ -526,6 +533,7 @@ class Launcher
     bool mapping_for_game_ = false; // the mapping dialog edits the game's own mapping
     ListView mapping_rows_;
     ListView menu_mapping_rows_; // the menu keybinds dialog's rows
+    ListView room_rows_;         // Multiplayer > Public rooms: the rooms (room_row_ - 1 is the one chosen)
     std::vector<Profile> profiles_; // the people who play on this console
     std::string playing_;           // the one games start as
     ListView profile_rows_;

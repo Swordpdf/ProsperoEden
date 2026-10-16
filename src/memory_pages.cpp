@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include <algorithm>
 #include <array>
 #include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <csignal>
 #include <cerrno>
 #include <cstdint>
 #include <cstdio>
@@ -10,8 +14,15 @@
 #include <limits>
 #include <mutex>
 #include <new>
+#include <sched.h>
+#include <signal.h>
 #include <sys/mman.h>
+#include <thread>
 #include <unistd.h>
+#include <utility>
+#include <vector>
+
+#include "fastmem.h"
 
 #ifdef PS5_NATIVE
 // Keep CPU heaps/tables and JIT views out of RADV's high-word-2 GPU window.
@@ -261,6 +272,10 @@ struct SparseRange {
     std::atomic<bool>* owned = nullptr; // per slot: it has a block of its own
     bool guest = false;                 // the guest's memory, not a table (counted apart)
     std::int64_t* physical = nullptr;   // that block (PS5)
+    std::atomic<std::uint8_t>* state = nullptr; // per slot, when the range is a service (guest_memory_service.inc)
+    bool promote = false;               // writes to shared slots are promoted (the service runs)
+    std::uint16_t* fine = nullptr;      // per slot: 16 KiB pages a Fine slot keeps (low 8 bits), times made whole (bits 8-11)
+    std::uint32_t* fine_after = nullptr; // per slot: the scan pass from which it may be made Fine again
 };
 std::array<SparseRange, 64> sparse_ranges;
 std::mutex sparse_mutex;
@@ -348,7 +363,14 @@ bool OwnSlot(std::uintptr_t at, std::int64_t* physical) {
 #endif
 }
 
+// The service's side of a range (guest_memory_service.inc).
+void ReleaseServiceBlocks(SparseRange& range) noexcept;
+bool ServiceCommit(SparseRange& range, std::size_t slot) noexcept;
+void ServiceStart(SparseRange& range) noexcept;
+void ServiceStop(SparseRange& range) noexcept;
+
 void ReleaseSparse(SparseRange& range) {
+    if (range.state != nullptr) ReleaseServiceBlocks(range); // its blocks, shared ones once
     const auto begin = range.begin.load(std::memory_order_relaxed);
     const std::size_t span = range.end - begin;
     if (munmap(reinterpret_cast<void*>(begin), span) != 0) std::abort();
@@ -363,6 +385,13 @@ void ReleaseSparse(SparseRange& range) {
     (range.guest ? guest_reserved : sparse_reserved).fetch_sub(span, std::memory_order_relaxed);
     (range.guest ? guest_committed : sparse_committed).fetch_sub(owned * SparseSlot, std::memory_order_relaxed);
     range.guest = false;
+    range.promote = false;
+    delete[] range.state;
+    range.state = nullptr;
+    delete[] range.fine;
+    range.fine = nullptr;
+    delete[] range.fine_after;
+    range.fine_after = nullptr;
     range.begin.store(0, std::memory_order_release);
     delete[] range.owned;
     delete[] range.physical;
@@ -556,6 +585,7 @@ void* AllocateGuestMemoryWhereUsed(std::size_t size) noexcept {
     const int length = std::snprintf(line, sizeof(line), "EDEN_GUEST_MEMORY va=%p bytes=%zu above_guest=1 backed=where-used\n",
                                      base, size);
     if (length > 0) Report(line);
+    if (SparseRange* const range = guest_range.load(std::memory_order_acquire)) ServiceStart(*range);
     return base;
 }
 
@@ -581,6 +611,7 @@ void FreeGuestMemory(void* base, std::size_t size) noexcept {
         const int length = std::snprintf(line, sizeof(line), "EDEN_GUEST_MEMORY given back: held=%zu of=%zu\n",
                                          guest_committed.load(std::memory_order_relaxed), size);
         if (length > 0) Report(line);
+        ServiceStop(*range);
         guest_range.store(nullptr, std::memory_order_release);
     }
     FreeSparsePages(base, size);
@@ -598,6 +629,14 @@ void CommitSparsePage(std::uintptr_t page) noexcept {
     const auto begin = range->begin.load(std::memory_order_relaxed);
     const std::size_t slot = (page - begin) / SparseSlot;
     if (range->owned[slot].load(std::memory_order_acquire)) return;
+    if (range->state != nullptr) {
+        // A range with slot states commits under the slot's lock (guest_memory_service.inc).
+        if (!ServiceCommit(*range, slot)) {
+            Report("EDEN_SPARSE_TABLES commit failed: out of memory\n");
+            std::abort();
+        }
+        return;
+    }
     const std::lock_guard lock{sparse_mutex};
     if (range->owned[slot].load(std::memory_order_relaxed)) return;
     if (!OwnSlot(begin + slot * SparseSlot, &range->physical[slot])) {
@@ -622,6 +661,8 @@ void DecommitVectorPage(std::uintptr_t page) noexcept {
     }
     std::memset(reinterpret_cast<void*>(page), 0, static_cast<std::size_t>(size));
 }
+
+#include "guest_memory_service.inc"
 
 // Address space the sparse tables span, and the memory they hold (for the log).
 void SparseUsage(std::size_t* reserved, std::size_t* committed) noexcept {

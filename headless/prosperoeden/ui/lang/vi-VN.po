@@ -273,6 +273,10 @@ msgstr "Đóng"
 msgid "Colour"
 msgstr "Màu"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Compact memory"
+msgstr "Bộ nhớ gọn"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -749,6 +753,10 @@ msgstr "Tiếng Đức"
 #: pe/ui/browse.cpp
 msgid "GETTING STARTED"
 msgstr "BẮT ĐẦU"
+
+#: pe/ui/settings.cpp
+msgid "Gives back memory a game left empty, 16 KiB at a time. More free memory; a game that writes there again can stutter for a moment."
+msgstr "Trả lại bộ nhớ mà trò chơi để trống, mỗi lần 16 KiB. Nhiều bộ nhớ trống hơn; trò chơi ghi lại vào đó có thể khựng một chút."
 
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"

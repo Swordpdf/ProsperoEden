@@ -993,6 +993,7 @@ pe::ui::Preferences EdenServices::preferences() {
     result.unsafe_dma = speed.unsafe_dma;
     result.reactive_flushing = speed.reactive_flushing;
     result.skip_invalidation = speed.skip_invalidation;
+    result.compact_memory = speed.compact_memory;
     result.memory_layout = speed.memory_layout;
     result.mapping = saved.mapping;
     result.menu_bind = saved.menu_bind;
@@ -1039,6 +1040,7 @@ bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     speed.unsafe_dma = preferences.unsafe_dma;
     speed.reactive_flushing = preferences.reactive_flushing;
     speed.skip_invalidation = preferences.skip_invalidation;
+    speed.compact_memory = preferences.compact_memory;
     // One of the layouts, whatever reached the launcher: a value outside them would make the whole
     // save fail, and with it every other setting on the page (settings_store.h's SavePerformance).
     speed.memory_layout = std::clamp(preferences.memory_layout, 0,

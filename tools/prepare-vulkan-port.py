@@ -1484,6 +1484,121 @@ for old, new in shader_costs:
     if shader_source.count(old) != 1:
         raise RuntimeError(f'Shader pipeline anchor changed: {old[:60]}')
     shader_source = shader_source.replace(old, new)
+# The driver's pipeline cache file (vulkan_pipelines.bin). Eden rewrote it in place: opening it
+# emptied it, and a large game's cache takes seconds to write, so a session that ended during the
+# write (the ten-second limit on leaving a game, a crash, rest mode) left it empty or cut off, and
+# every pipeline was compiled again at the next start (#170). It is now written beside the old
+# file and renamed over it once whole, and leaving a game rewrites it only when pipelines were
+# added since it was last written.
+# The anchors include the timer the cost patches above add to the function.
+pipeline_cache_writes = [
+    ('PipelineCache::~PipelineCache() {\n'
+     '    if (use_vulkan_pipeline_cache && !vulkan_pipeline_cache_filename.empty()) {\n'
+     '        SerializeVulkanPipelineCache(vulkan_pipeline_cache_filename, vulkan_pipeline_cache,\n'
+     '                                     CACHE_VERSION);\n'
+     '    }\n'
+     '}\n',
+     'PipelineCache::~PipelineCache() {\n'
+     '    if (use_vulkan_pipeline_cache && !vulkan_pipeline_cache_filename.empty()) {\n'
+     '        // A flush still being written would race this one for the same file.\n'
+     '        serialization_thread.WaitForRequests();\n'
+     '        // Written after the game loaded and at each flush: with no pipeline added since,\n'
+     '        // the file already holds everything, and writing it again only delays leaving.\n'
+     '        const bool written = last_flush.time_since_epoch().count() != 0;\n'
+     '        if (!written || pipelines_since_flush != 0) {\n'
+     '            SerializeVulkanPipelineCache(vulkan_pipeline_cache_filename, vulkan_pipeline_cache,\n'
+     '                                         CACHE_VERSION);\n'
+     '        }\n'
+     '    }\n'
+     '}\n'),
+    ('''void PipelineCache::SerializeVulkanPipelineCache(const std::filesystem::path& filename,
+                                                 const vk::PipelineCache& pipeline_cache,
+                                                 u32 cache_version) try {
+    auto timer = Eden::Performance::VulkanTimer(18);
+    std::ofstream file(filename, std::ios::binary);
+    file.exceptions(std::ifstream::failbit);
+    if (!file.is_open()) {
+        LOG_ERROR(Common_Filesystem, "Failed to open Vulkan driver pipeline cache file {}",
+                  Common::FS::PathToUTF8String(filename));
+        return;
+    }
+    file.write(VULKAN_CACHE_MAGIC_NUMBER.data(), VULKAN_CACHE_MAGIC_NUMBER.size())
+        .write(reinterpret_cast<const char*>(&cache_version), sizeof(cache_version));
+
+    size_t cache_size = 0;
+    std::vector<char> cache_data;
+    if (pipeline_cache) {
+        pipeline_cache.Read(&cache_size, nullptr);
+        cache_data.resize(cache_size);
+        pipeline_cache.Read(&cache_size, cache_data.data());
+    }
+    file.write(cache_data.data(), cache_size);
+
+    LOG_INFO(Render_Vulkan, "Vulkan driver pipelines cached at: {}",
+             Common::FS::PathToUTF8String(filename));
+
+} catch (const std::ios_base::failure& e) {
+    LOG_ERROR(Common_Filesystem, "{}", e.what());
+    if (!Common::FS::RemoveFile(filename)) {
+        LOG_ERROR(Common_Filesystem, "Failed to delete Vulkan driver pipeline cache file {}",
+                  Common::FS::PathToUTF8String(filename));
+    }
+}
+''',
+'''void PipelineCache::SerializeVulkanPipelineCache(const std::filesystem::path& filename,
+                                                 const vk::PipelineCache& pipeline_cache,
+                                                 u32 cache_version) {
+    auto timer = Eden::Performance::VulkanTimer(18);  // as the port times the write it replaces
+    // Written whole beside the cache, then renamed over it: until the rename the previous cache
+    // stays as it was, and a write that fails or is cut short leaves it alone.
+    auto partial = filename;
+    partial += ".part";
+    std::error_code error;
+    try {
+        size_t cache_size = 0;
+        std::vector<char> cache_data;
+        if (pipeline_cache) {
+            pipeline_cache.Read(&cache_size, nullptr);
+            cache_data.resize(cache_size);
+            pipeline_cache.Read(&cache_size, cache_data.data());
+        }
+        {
+            std::ofstream file(partial, std::ios::binary | std::ios::trunc);
+            if (!file.is_open()) {
+                LOG_ERROR(Common_Filesystem, "Failed to open Vulkan driver pipeline cache file {}",
+                          Common::FS::PathToUTF8String(partial));
+                return;
+            }
+            file.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+            file.write(VULKAN_CACHE_MAGIC_NUMBER.data(), VULKAN_CACHE_MAGIC_NUMBER.size())
+                .write(reinterpret_cast<const char*>(&cache_version), sizeof(cache_version))
+                .write(cache_data.data(), static_cast<std::streamsize>(cache_size));
+            file.flush();
+        }
+        std::filesystem::rename(partial, filename, error);
+        if (error) {
+            LOG_ERROR(Common_Filesystem, "Failed to replace Vulkan driver pipeline cache file {}: {}",
+                      Common::FS::PathToUTF8String(filename), error.message());
+            std::filesystem::remove(partial, error);
+            return;
+        }
+        LOG_INFO(Render_Vulkan, "Vulkan driver pipelines cached at: {}",
+                 Common::FS::PathToUTF8String(filename));
+    } catch (const std::ios_base::failure& e) {
+        LOG_ERROR(Common_Filesystem, "{}", e.what());
+        std::filesystem::remove(partial, error);
+    } catch (const std::bad_alloc&) {
+        // A copy of a large cache did not fit in memory: keep the one on disk.
+        LOG_ERROR(Render_Vulkan, "No memory to copy the Vulkan driver pipeline cache; kept the previous file");
+        std::filesystem::remove(partial, error);
+    }
+}
+'''),
+]
+for old, new in pipeline_cache_writes:
+    if shader_source.count(old) != 1:
+        raise RuntimeError(f'Pipeline cache write anchor changed: {old[:60]}')
+    shader_source = shader_source.replace(old, new)
 shader_output = output / 'vk_pipeline_cache_cost.cpp'
 if not shader_output.exists() or shader_output.read_text() != shader_source:
     shader_output.write_text(shader_source)

@@ -51,6 +51,26 @@ if(texture_util_derived STREQUAL texture_util_header OR NOT texture_util_header 
 endif()
 write_derived("${PORT_BUILD_DIR}/small-vector/video_core/texture_cache/util.h" "${texture_util_derived}")
 target_include_directories(video_core BEFORE PRIVATE "${PORT_BUILD_DIR}/small-vector")
+# Each Vulkan pipeline locks its own std::mutex and signals its own std::condition_variable once,
+# when its build ends, and keeps both while it is cached. On the PS5 those are thread library
+# objects, of which a process has only so many: a game with thousands of pipelines used them up
+# and the next lock failed with "mutex lock failed: Cannot allocate memory" (#204). The pipelines
+# share a fixed set of them instead (headless/striped_wait.h).
+foreach(pipeline_header IN ITEMS vk_graphics_pipeline.h vk_compute_pipeline.h)
+    file(READ "${PROJECT_SOURCE_DIR}/src/video_core/renderer_vulkan/${pipeline_header}" pipeline_source)
+    set(pipeline_wait_old "    std::condition_variable build_condvar;\n    std::mutex build_mutex;\n")
+    string(FIND "${pipeline_source}" "${pipeline_wait_old}" pipeline_wait_at)
+    if(pipeline_wait_at LESS 0)
+        message(FATAL_ERROR "Pinned ${pipeline_header} build wait changed")
+    endif()
+    string(REPLACE "${pipeline_wait_old}"
+        "    ::Eden::StripedCondition build_condvar;\n    ::Eden::StripedMutex build_mutex;\n"
+        pipeline_source "${pipeline_source}")
+    string(PREPEND pipeline_source "#include \"${EDEN_PORT_DIR}/striped_wait.h\"\n")
+    write_derived("${PORT_BUILD_DIR}/pipeline-wait/video_core/renderer_vulkan/${pipeline_header}"
+        "${pipeline_source}")
+endforeach()
+target_include_directories(video_core BEFORE PRIVATE "${PORT_BUILD_DIR}/pipeline-wait")
 set(MULTIPLAYER_SOURCE "${PROJECT_SOURCE_DIR}")
 set(MULTIPLAYER_OUTPUT "${PORT_BUILD_DIR}/multiplayer")
 include("${EDEN_PORT_DIR}/multiplayer_packets.cmake")
@@ -962,6 +982,22 @@ string(REPLACE "${spin_old}" "void KSpinLock::Lock() {\n    ::Eden::Performance:
 write_derived("${PORT_BUILD_DIR}/k_spin_lock.cpp" "#include \"${EDEN_PORT_DIR}/performance.h\"\n${spin_source}")
 list(REMOVE_ITEM core_sources "hle/kernel/k_spin_lock.cpp")
 list(APPEND core_sources "${PORT_BUILD_DIR}/k_spin_lock.cpp")
+# Eden keeps up to 8,192 host files open and closes the least recently used one only past that.
+# Each open file is a stdio FILE, and on the PS5 (as on FreeBSD) a FILE has its own thread library
+# lock, made at its first read and kept until it is closed. Every NSP and XCI in the updates folder
+# is opened when a game starts (ExternalContentProvider) and stays open for the session, so a full
+# folder held hundreds of them on top of the game's own (#169). A file closed here is opened again
+# when it is next read.
+file(READ "${PROJECT_SOURCE_DIR}/src/core/file_sys/vfs/vfs_real.cpp" vfs_real_source)
+set(open_files_old "constexpr size_t MaxOpenFiles = 8192;")
+string(FIND "${vfs_real_source}" "${open_files_old}" open_files_at)
+if(open_files_at LESS 0)
+    message(FATAL_ERROR "Pinned vfs_real.cpp MaxOpenFiles changed")
+endif()
+string(REPLACE "${open_files_old}" "constexpr size_t MaxOpenFiles = 512;" vfs_real_source "${vfs_real_source}")
+write_derived("${PORT_BUILD_DIR}/vfs_real.cpp" "${vfs_real_source}")
+list(REMOVE_ITEM core_sources "file_sys/vfs/vfs_real.cpp")
+list(APPEND core_sources "${PORT_BUILD_DIR}/vfs_real.cpp")
 if(EDEN_DEV_PROFILE)
     # Guest-visible waits: syncpoint event registration to signal (GPU-pipeline latency
     # the game waits on) and buffer-queue dequeue waits (presentation back-pressure).
@@ -1396,6 +1432,17 @@ file(READ "${PROJECT_SOURCE_DIR}/src/core/file_sys/fsmitm_romfsbuild.cpp" romfs_
 string(REPLACE "    std::shared_ptr<RomFSBuildDirectoryContext> parent;"
     "    RomFSBuildDirectoryContext* parent = nullptr;" romfs_source "${romfs_source}")
 string(REPLACE "parent = std::move(parent_dir_ctx);" "parent = parent_dir_ctx.get();" romfs_source "${romfs_source}")
+# Break sibling/child chains while the vectors still own every node. Otherwise
+# releasing a wide directory recursively destroys its siblings on the FS stack.
+string(REPLACE "RomFSBuildContext::~RomFSBuildContext() = default;"
+    "RomFSBuildContext::~RomFSBuildContext() {
+    for (auto& file : files) file->sibling.reset();
+    for (auto& dir : directories) {
+        dir->child.reset();
+        dir->sibling.reset();
+        dir->file.reset();
+    }
+}" romfs_source "${romfs_source}")
 write_derived("${PORT_BUILD_DIR}/fsmitm_romfsbuild.cpp" "${romfs_source}")
 get_target_property(core_sources core SOURCES)
 list(REMOVE_ITEM core_sources file_sys/fsmitm_romfsbuild.cpp)
@@ -1754,7 +1801,7 @@ string(REPLACE "${guest_backing_site}"
     kernel_source "${kernel_source}")
 string(PREPEND kernel_source "#include <algorithm>\n#include <cstddef>\n#include <cstdint>\n#include \"core/device_memory.h\"\nnamespace Common { void CommitGuestMemory(std::uint64_t offset, std::size_t bytes) noexcept; }\n")
 file(READ "${PROJECT_SOURCE_DIR}/src/core/hle/kernel/k_memory_manager.cpp" pool_source)
-string(PREPEND pool_source "#include <cstddef>\n#include <cstdint>\nnamespace Common { void CommitGuestMemory(std::uint64_t offset, std::size_t bytes) noexcept; }\n")
+string(PREPEND pool_source "#include <cstddef>\n#include <cstdint>\nnamespace Common { void CommitGuestMemoryOnHandOut(std::uint64_t offset, std::size_t bytes) noexcept; void FillGuestMemory(std::uint8_t* at, int fill, std::size_t bytes) noexcept; }\n")
 # Its two places: a run of pages in one piece, and the blocks of a page group.
 set(continuous_site "    // If we failed to allocate, quit now.\n    if (allocated_block == 0) {\n        return 0;\n    }\n")
 set(group_site "                KPhysicalAddress allocated_block = cur_manager->AllocateBlock(index, random);\n                if (allocated_block == 0) {\n                    break;\n                }\n")
@@ -1764,15 +1811,37 @@ if(continuous_at LESS 0 OR group_at LESS 0)
     message(FATAL_ERROR "Pinned guest page allocation changed; review where the guest's memory is backed.")
 endif()
 string(REPLACE "${continuous_site}"
-    "${continuous_site}    ::Common::CommitGuestMemory(GetInteger(allocated_block) - Core::DramMemoryMap::Base, num_pages * PageSize);\n"
+    "${continuous_site}    ::Common::CommitGuestMemoryOnHandOut(GetInteger(allocated_block) - Core::DramMemoryMap::Base, num_pages * PageSize);\n"
     pool_source "${pool_source}")
 string(REPLACE "${group_site}"
-    "${group_site}                ::Common::CommitGuestMemory(GetInteger(allocated_block) - Core::DramMemoryMap::Base, pages_per_alloc * PageSize);\n"
+    "${group_site}                ::Common::CommitGuestMemoryOnHandOut(GetInteger(allocated_block) - Core::DramMemoryMap::Base, pages_per_alloc * PageSize);\n"
+    pool_source "${pool_source}")
+# With the guest's memory as a service (src/guest_memory_service.inc), a page filled with zeroes
+# where the slot still shows the zero block is left alone, and pages the guest's kernel frees
+# give whole slots back.
+set(optimized_fill_site "            std::memset(ptr + offset * PageSize, fill_pattern, PageSize);")
+string(FIND "${pool_source}" "${optimized_fill_site}" optimized_fill_at)
+if(optimized_fill_at LESS 0)
+    message(FATAL_ERROR "Pinned optimized allocation fill changed; review the guest memory service.")
+endif()
+string(REPLACE "${optimized_fill_site}"
+    "            ::Common::FillGuestMemory(ptr + offset * PageSize, fill_pattern, PageSize);"
     pool_source "${pool_source}")
 write_derived("${PORT_BUILD_DIR}/k_memory_manager.cpp" "${pool_source}")
+file(READ "${PROJECT_SOURCE_DIR}/src/core/hle/kernel/k_page_heap.cpp" page_heap_source)
+set(page_heap_free_site "void KPageHeap::Free(KPhysicalAddress addr, size_t num_pages) {\n    // Freeing no pages is a no-op.\n    if (num_pages == 0) {\n        return;\n    }\n")
+string(FIND "${page_heap_source}" "${page_heap_free_site}" page_heap_free_at)
+if(page_heap_free_at LESS 0)
+    message(FATAL_ERROR "Pinned page heap free changed; review the guest memory service.")
+endif()
+string(REPLACE "${page_heap_free_site}"
+    "${page_heap_free_site}    ::Common::GuestMemoryFreed(GetInteger(addr) - Core::DramMemoryMap::Base, num_pages * PageSize);\n"
+    page_heap_source "${page_heap_source}")
+string(PREPEND page_heap_source "#include <cstddef>\n#include <cstdint>\n#include \"core/device_memory.h\"\nnamespace Common { void GuestMemoryFreed(std::uint64_t offset, std::size_t bytes) noexcept; }\n")
+write_derived("${PORT_BUILD_DIR}/k_page_heap.cpp" "${page_heap_source}")
 get_target_property(pool_core_sources core SOURCES)
-list(REMOVE_ITEM pool_core_sources hle/kernel/k_memory_manager.cpp)
-list(APPEND pool_core_sources "${PORT_BUILD_DIR}/k_memory_manager.cpp")
+list(REMOVE_ITEM pool_core_sources hle/kernel/k_memory_manager.cpp hle/kernel/k_page_heap.cpp)
+list(APPEND pool_core_sources "${PORT_BUILD_DIR}/k_memory_manager.cpp" "${PORT_BUILD_DIR}/k_page_heap.cpp")
 set_property(TARGET core PROPERTY SOURCES "${pool_core_sources}")
 string(REPLACE "    void Shutdown(KernelCore& kernel) {" "    void Shutdown(KernelCore& kernel) {\n        worker_task_manager.WaitForRequests();" kernel_source "${kernel_source}")
 string(REPLACE "    ASSERT(R_SUCCEEDED(thread->Run(*this)));\n}"

@@ -273,6 +273,10 @@ msgstr "Sluiten"
 msgid "Colour"
 msgstr "Kleur"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Compact memory"
+msgstr "Compact geheugen"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -749,6 +753,10 @@ msgstr "Duits"
 #: pe/ui/browse.cpp
 msgid "GETTING STARTED"
 msgstr "AAN DE SLAG"
+
+#: pe/ui/settings.cpp
+msgid "Gives back memory a game left empty, 16 KiB at a time. More free memory; a game that writes there again can stutter for a moment."
+msgstr "Geeft geheugen terug dat een game leeg liet, 16 KiB per keer. Meer vrij geheugen; een game die daar opnieuw schrijft, kan even haperen."
 
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"

@@ -450,6 +450,29 @@ int main() {
         assert(Eden::LoadPreferences(by_hand).menu_bind == Eden::kDefaultMenuBinding);  // Circle twice
     }
 
+    // Settings > Theme > Colour: the accent preset within a theme (settings_store.h, THEMES.md).
+    // "" is the theme's own colours and nothing is written for it; a preset id is kept as chosen;
+    // an id written by hand is read only when it is lowercase letters, digits or '-' and short.
+    {
+        auto prefs = Eden::LoadPreferences(file);
+        assert(prefs.accent.empty());
+        prefs.accent = "ice";
+        assert(Eden::SavePreferences(prefs, file));
+        assert(Eden::LoadPreferences(file).accent == "ice");
+        assert(Read(file).find("\"accent\": \"ice\"") != std::string::npos);
+        // The theme's own colours: nothing is written.
+        prefs.accent.clear();
+        assert(Eden::SavePreferences(prefs, file) && Read(file).find("\"accent\"") == std::string::npos);
+        // A file written by hand: a preset id, an id that is not lowercase, one with other characters.
+        const std::string by_hand = std::string(directory) + "/accent.json";
+        std::ofstream(by_hand) << R"({"launcher": {"theme": "slate", "accent": "ember"}})";
+        assert(Eden::LoadPreferences(by_hand).accent == "ember");
+        std::ofstream(by_hand) << R"({"launcher": {"accent": "ICE"}})";
+        assert(Eden::LoadPreferences(by_hand).accent.empty());  // not lowercase
+        std::ofstream(by_hand) << R"({"launcher": {"accent": "../../secret"}})";
+        assert(Eden::LoadPreferences(by_hand).accent.empty());  // not an id's shape
+    }
+
     // A game's own settings over Settings: video, audio, controls, language and Performance,
     // each one on its own, and back to Settings.
     {

@@ -22,6 +22,7 @@ if sys.argv[1:2] == ['--check']:
 root = Path(__file__).resolve().parents[1]
 src = Path(sys.argv[1]) if len(sys.argv) > 1 else root.parent / 'mihawk-vulkan-review/.deps/work/radv-src'
 vulkan = src / 'src/amd/vulkan'
+changed = False
 
 cmd = vulkan / 'radv_cmd_buffer.c'
 text = cmd.read_text()
@@ -41,6 +42,7 @@ sink = '''
 if 'const uint64_t null_sink = radv_gs_compute_upload' not in text:
     assert text.count(anchor) == 1, 'radv_gs_compute_prepare changed'
     cmd.write_text(text.replace(anchor, anchor + sink))
+    changed = True
 
 cl = vulkan / 'cl/radv_gs_compute.cl'
 text = cl.read_text()
@@ -56,4 +58,11 @@ sink = '''      /* ProsperoEden: nothing must read through a null pointer when t
 if sink not in text:
     assert text.count(anchor) == 1, 'radv_gs_compute_setup changed'
     cl.write_text(text.replace(anchor, anchor + sink))
+    changed = True
+if changed:
+    # Upstream skips the whole build while its receipt names the pinned revision: set the receipt
+    # aside so the next build compiles the changed files (Ninja keeps every other object).
+    provenance = src.parents[1] / 'native/radv-release/PROVENANCE.txt'
+    if provenance.exists():
+        provenance.replace(provenance.with_suffix('.base.txt'))
 print('RADV geometry-shader compute: dropped draws use the sinks')

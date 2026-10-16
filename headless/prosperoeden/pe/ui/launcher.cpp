@@ -80,7 +80,15 @@ std::vector<Cue> Launcher::take_cues()
 
 void Launcher::say(const std::string &text, bool warning)
 {
-    message_ = text;
+    // A warning goes over whatever the menu shows as a card any button closes
+    // (draw_message_popup); "Saved..." and status lines stay where the screen has room for them.
+    if (warning)
+    {
+        popup_ = text;
+        message_.clear();
+    }
+    else
+        message_ = text;
     message_warning_ = warning;
     message_age_ = 0.0f;
 }
@@ -94,6 +102,7 @@ void Launcher::open(Screen screen, bool forward)
     screen_time_ = 0.0f;
     transition_.start(th().screen_seconds);
     message_.clear();
+    popup_.clear();
     cue(forward ? Cue::open : Cue::back);
 }
 
@@ -103,14 +112,15 @@ void Launcher::open_modal(Modal modal)
     option_ = 0;
     option_cursor_.snap(dialog_row_top(modal, 0));
     message_.clear();
+    popup_.clear();
     // Switches show their state at once; they only animate when changed.
-    const std::array<bool, 7> states = switch_states(modal);
+    const std::array<bool, 8> states = switch_states(modal);
     for (std::size_t i = 0; i < states.size(); ++i)
         switches_[i].snap(states[i] ? 1.0f : 0.0f);
     cue(Cue::modal_open);
 }
 
-std::array<bool, 7> Launcher::switch_states(Modal modal) const
+std::array<bool, 8> Launcher::switch_states(Modal modal) const
 {
     switch (modal)
     {
@@ -118,7 +128,8 @@ std::array<bool, 7> Launcher::switch_states(Modal modal) const
         return {prefs_.hud, false, false};
     case Modal::performance:
         return {prefs_.block_list,  prefs_.async_shaders,     prefs_.fast_gpu, prefs_.unsafe_cpu,
-                prefs_.unsafe_dma,  prefs_.reactive_flushing, prefs_.skip_invalidation};
+                prefs_.unsafe_dma,  prefs_.reactive_flushing, prefs_.skip_invalidation,
+                prefs_.compact_memory};
     case Modal::audio:
         return {prefs_.mute, false, false};
     case Modal::controls:
@@ -136,6 +147,7 @@ void Launcher::close_modal()
 {
     modal_ = Modal::none;
     message_.clear();
+    popup_.clear();
     cue(Cue::modal_close);
 }
 
@@ -213,6 +225,9 @@ void Launcher::press(Key key)
         return;
     }
     key = menu_key_for(key, prefs_.menu_bind); // the core menu buttons the user has chosen
+    // Any button closes a warning's card, and the press still does its own work: "press again"
+    // stays one press, and a change that fails again says so in the same frame.
+    popup_.clear();
     if (modal_ == Modal::game)
         return press_game(key);
     if (modal_ == Modal::mods)
@@ -367,12 +382,14 @@ void Launcher::update(float dt)
     video_rows_.update(dt);
     performance_rows_.update(dt);
     controls_rows_.update(dt);
+    accent_rows_.update(dt);
     wallpaper_rows_.update(dt);
     game_rows_.update(dt);
     mod_rows_.update(dt);
     option_rows_.update(dt);
     mapping_rows_.update(dt);
     menu_mapping_rows_.update(dt);
+    room_rows_.update(dt);
     hud_rows_.update(dt);
     profile_rows_.update(dt);
     source_rows_.update(dt);
@@ -395,7 +412,7 @@ void Launcher::update(float dt)
     if (modal_ != Modal::none)
         option_cursor_.target = dialog_row_top(modal_, option_);
     option_cursor_.update(dt, t.cursor_spring);
-    const std::array<bool, 7> states = switch_states(modal_shown_);
+    const std::array<bool, 8> states = switch_states(modal_shown_);
     for (std::size_t i = 0; i < states.size(); ++i)
     {
         switches_[i].target = states[i] ? 1.0f : 0.0f;
@@ -561,6 +578,29 @@ void Launcher::draw_update_notice(Canvas &c)
     list.pop_opacity();
 }
 
+void Launcher::draw_message_popup(Canvas &c)
+{
+    if (popup_.empty())
+        return;
+    gfx::DrawList &list = c.list;
+    const Theme &t = th();
+    // At the middle, over whatever the menu shows: it fades in and settles in place.
+    const Rect card{480.0f, 400.0f, 960.0f, 240.0f};
+    const float shown = tween::clamp01(message_age_ * 4.0f);
+    list.push_opacity(shown);
+    list.push_transform(1.0f - 0.03f * (1.0f - shown) * motion(), 960.0f, 520.0f, 0.0f,
+                        (1.0f - shown) * 18.0f * motion());
+    glass(c, card, t.radius_card, t.panel.with_alpha(0.97f), t.warning.with_alpha(0.7f), 1.6f);
+    // The result with the warning's mark, as a dialog's own line draws it.
+    notice_block(c, popup_, card.x + 44.0f, baseline(card.y + 44.0f, 36.0f, t.size_text),
+                 t.size_text, 36.0f, t.warning, card.w - 88.0f, 3, true);
+    // Any button closes it.
+    static constexpr Hint kClose[] = {{Pad::cross, TR("Close")}};
+    draw_menu_hints(c, kClose, 1, card.x + 44.0f, card.y + card.h - 44.0f, t.copy, card.w - 88.0f);
+    list.pop_transform();
+    list.pop_opacity();
+}
+
 void Launcher::draw_launch(Canvas &c)
 {
     const Theme &t = th();
@@ -716,6 +756,8 @@ void Launcher::draw(gfx::DrawList &list)
     if (!page || opened < 0.99f)
         draw_rail(c);
     draw_clock(c);
+    if (th().top_nav && (screen_ == Screen::home || screen_ == Screen::library))
+        draw_home_status(c);
     if (modal_shown_ != Modal::none && (!page || mapping_of_game))
     {
         list.rounded_rect(kScreen, 0.0f, th().scrim.with_alpha(0.72f * opened));
@@ -747,6 +789,7 @@ void Launcher::draw(gfx::DrawList &list)
     list.pop_transform();
     draw_update_notice(c);
     draw_save_sync_notice(c);
+    draw_message_popup(c);
     if (launching)
         draw_launch(c);
     // Closing for the update: the screen goes dark over the last moments.

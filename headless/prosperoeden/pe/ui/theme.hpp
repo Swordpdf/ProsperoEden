@@ -192,6 +192,10 @@ constexpr float kRight = 1824.0f;  // ... to here
 constexpr float kWidth = kRight - kLeft;
 constexpr float kTop = 44.0f;      // the top bar's line box: 64 high
 constexpr float kFooter = 1026.0f; // the hints' centre line
+constexpr float kPanelLeft = 960.0f;
+constexpr float kPanelWidth = 864.0f;
+constexpr float kPanelTop = 110.0f;
+constexpr float kPanelBottom = 980.0f;
 // A list of settings beside others (a game's page): its rows, and how many show.
 constexpr float kPaneRow = 84.0f;
 constexpr float kPanePitch = 94.0f;
