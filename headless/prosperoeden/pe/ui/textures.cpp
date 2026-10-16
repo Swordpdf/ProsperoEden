@@ -126,6 +126,8 @@ void Textures::load_wallpaper(const std::string &path)
         WallpaperImage done = wallpaper_task_.get();
         if (done.path == path)
         {
+            // The textures of the wallpaper shown until now go first: each one is up to 16 MiB.
+            clear_wallpaper();
             wallpaper_ = create(done.image);
             wallpaper_blur_ = create(done.frosted);
             wallpaper_w_ = done.image.width;
