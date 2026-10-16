@@ -166,6 +166,9 @@ class Launcher
     // The notification of a newer release the app cannot install itself, at the top right for ten
     // seconds.
     void draw_update_notice(Canvas &c);
+    // A result the player must see over whatever the screen shows ("Could not save settings"): a
+    // card at the middle that any button closes.
+    void draw_message_popup(Canvas &c);
     // quiet: a change that shows at once needs no "Saved" line.
     bool save_preferences(bool quiet = false);
     // The switches of a dialog as the preferences have them, in the order of its rows.
@@ -177,6 +180,7 @@ class Launcher
     void press_home(Key key);
     void update_controllers(float dt);
     void draw_home(Canvas &c);
+    void draw_home_status(Canvas &c);
     void draw_controllers(Canvas &c);
     // A game's settings from the home screen (the game to continue, or a recent one): its page
     // opens over the Library at that game, and closing it comes back to the home screen.
@@ -429,6 +433,8 @@ class Launcher
     std::string message_; // the last result ("Saved..."), shown where the screen has room
     bool message_warning_ = false;
     float message_age_ = 0.0f;
+    // A warning's result ("Could not save settings"), a card at the middle any button closes.
+    std::string popup_;
 
     // launching a game
     std::string selected_game_;
@@ -500,6 +506,7 @@ class Launcher
     ListView hud_rows_;   // the overlay's options (Modal::hud, more than it shows)
     ListView performance_rows_; // the Performance dialog's rows (more than it shows)
     ListView controls_rows_;    // the Controls dialog's rows (more than it shows)
+    ListView accent_rows_;      // the Colour dialog's rows (more than it shows)
     GameSettings game_settings_;
     bool game_docked_ = true;
     SaveSource import_source_ = SaveSource::none; // what Save data could import for the game
