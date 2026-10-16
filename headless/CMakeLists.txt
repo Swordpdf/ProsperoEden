@@ -1396,6 +1396,17 @@ file(READ "${PROJECT_SOURCE_DIR}/src/core/file_sys/fsmitm_romfsbuild.cpp" romfs_
 string(REPLACE "    std::shared_ptr<RomFSBuildDirectoryContext> parent;"
     "    RomFSBuildDirectoryContext* parent = nullptr;" romfs_source "${romfs_source}")
 string(REPLACE "parent = std::move(parent_dir_ctx);" "parent = parent_dir_ctx.get();" romfs_source "${romfs_source}")
+# Break sibling/child chains while the vectors still own every node. Otherwise
+# releasing a wide directory recursively destroys its siblings on the FS stack.
+string(REPLACE "RomFSBuildContext::~RomFSBuildContext() = default;"
+    "RomFSBuildContext::~RomFSBuildContext() {
+    for (auto& file : files) file->sibling.reset();
+    for (auto& dir : directories) {
+        dir->child.reset();
+        dir->sibling.reset();
+        dir->file.reset();
+    }
+}" romfs_source "${romfs_source}")
 write_derived("${PORT_BUILD_DIR}/fsmitm_romfsbuild.cpp" "${romfs_source}")
 get_target_property(core_sources core SOURCES)
 list(REMOVE_ITEM core_sources file_sys/fsmitm_romfsbuild.cpp)
