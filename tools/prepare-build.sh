@@ -96,7 +96,8 @@ if [[ -f $radv_release/lib/libvulkan_radeon.ps5.a ]]; then
         bash tools/build-radv-dependencies.sh
         rm -f build/radv-isolated/libvulkan_radeon.ps5.a
     elif ! python3 -B tools/patch-radv-wsi.py --check "$radv_release/EDEN_WSI_SHA256" ||
-         ! python3 -B tools/patch-radv-gs-compute.py --check "$radv_release/EDEN_GS_SHA256"; then
+         ! python3 -B tools/patch-radv-gs-compute.py --check "$radv_release/EDEN_GS_SHA256" ||
+         ! python3 -B tools/patch-radv-disk-cache.py --check "$radv_release/EDEN_DISK_CACHE_SHA256"; then
         step "RADV: this repository's adaptation of the driver changed"
         bash tools/build-radv-dependencies.sh
         rm -f build/radv-isolated/libvulkan_radeon.ps5.a

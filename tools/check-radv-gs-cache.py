@@ -22,6 +22,8 @@ build=(root/'tools/build-radv-dependencies.sh').read_text()
 assert 'patch-radv-gs-compute.py --check "$radv_release/EDEN_GS_SHA256"' in prepare
 assert 'patch-radv-gs-compute.py" --digest > "$vulkan/.deps/native/radv-release/EDEN_GS_SHA256"' in build
 assert build.index('EDEN_GS_SHA256') > build.index('build-radv')
+assert 'patch-radv-disk-cache.py --check "$radv_release/EDEN_DISK_CACHE_SHA256"' in prepare
+assert 'patch-radv-disk-cache.py" --digest > "$vulkan/.deps/native/radv-release/EDEN_DISK_CACHE_SHA256"' in build
 # Execute the actual prepare-build conditional with a cached driver and a stub builder.
 start=prepare.index('if [[ -f $radv_release/lib/libvulkan_radeon.ps5.a ]]')
 end=prepare.index('\nif [[ ! -f build/radv-isolated/',start)
@@ -31,6 +33,9 @@ with tempfile.TemporaryDirectory() as folder:
     (work/'release/PROVENANCE.txt').write_text('revision: pinned\n')
     (work/'tools/patch-radv-wsi.py').write_text('raise SystemExit(0)\n')
     shutil.copyfile(script,work/'tools/patch-radv-gs-compute.py')
+    disk=root/'tools/patch-radv-disk-cache.py'
+    shutil.copyfile(disk,work/'tools/patch-radv-disk-cache.py')
+    (work/'release/EDEN_DISK_CACHE_SHA256').write_bytes(subprocess.check_output([sys.executable,str(disk),'--digest']))
     (work/'tools/build-radv-dependencies.sh').write_text('echo rebuilt >> calls\n')
     body='set -euo pipefail\nradv_release=release\nmesa_pin=pinned\nstep() { :; }\n'+prepare[start:end]
     def rebuilt():

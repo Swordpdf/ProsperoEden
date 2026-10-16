@@ -371,7 +371,8 @@ int main(int argc, char** argv) {
             Eden::Crash::Fail(detail);
         });
         {
-            // The ids too: Mesa's disk cache turns itself off when the effective and real ids differ.
+            // The ids too: Mesa's disk cache turned itself off when the effective and real ids differed
+            // (no longer: tools/patch-radv-disk-cache.py).
             const std::string access = "status=" + std::to_string(Eden::FilesystemAccessStatus()) +
                 " elevation=" + elevation::path() +
                 " app=" + Eden::AppDir() + " data=" + Eden::UserDir() + " game_files=" + Eden::AssetsDir() +
@@ -393,6 +394,23 @@ int main(int argc, char** argv) {
                     Eden::Report("cache", "The driver's shader cache could not move to the data folder; it starts empty");
                 (void)mkdir(cache.c_str(), 0777);
                 setenv("MESA_SHADER_CACHE_DIR", cache.c_str(), 1);
+            }
+            // Where the driver keeps compiled shaders between starts. Without a folder it can write,
+            // every start compiles all of a game's pipelines again (minutes for a large game). The
+            // driver no longer turns the cache off for differing ids (tools/patch-radv-disk-cache.py).
+            {
+                const char* folder = std::getenv("MESA_SHADER_CACHE_DIR");
+                std::string line = folder ? folder : "none: no access to the data folder, so shaders are compiled at every start";
+                if (folder) {
+                    const std::string probe = std::string{folder} + "/.write-check";
+                    FILE* file = std::fopen(probe.c_str(), "wb");
+                    line += file ? ", writable" : ", NOT writable: shaders are compiled at every start";
+                    if (file) {
+                        std::fclose(file);
+                        (void)std::remove(probe.c_str());
+                    }
+                }
+                Eden::Report("driver shader cache", line.c_str());
             }
         }
         // Whether Eden's large tables can be sparse on this console (src/memory_pages.cpp),
