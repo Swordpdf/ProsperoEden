@@ -38,6 +38,11 @@ kept = '''   /* ProsperoEden: the console app's ids may differ after elevation; 
 if kept not in text:
     assert text.count(check) == 1, 'disk_cache_enabled changed'
     os_file.write_text(text.replace(check, kept))
+    # Upstream skips the whole build while its receipt names the pinned revision: set the receipt
+    # aside so the next build compiles the changed file (Ninja keeps every other object).
+    provenance = root.parent / 'mihawk-vulkan-review/.deps/native/radv-release/PROVENANCE.txt'
+    if provenance.exists():
+        provenance.replace(provenance.with_suffix('.base.txt'))
 enabled = os_file.read_text().split('disk_cache_enabled()', 1)[1].split('\n}\n', 1)[0]
 assert '__normal_user' not in enabled, 'disk_cache_enabled still checks the user'
 print('RADV disk cache: on for an elevated app')
