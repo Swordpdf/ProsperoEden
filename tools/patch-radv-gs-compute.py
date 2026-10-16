@@ -24,7 +24,7 @@ src = Path(sys.argv[1]) if len(sys.argv) > 1 else root.parent / 'mihawk-vulkan-r
 vulkan = src / 'src/amd/vulkan'
 changed = False
 
-cmd =vulkan / 'radv_cmd_buffer.c'
+cmd = vulkan / 'radv_cmd_buffer.c'
 text = cmd.read_text()
 anchor = '''   poly_vertex_params_init(vp, gsc->vs_outputs, wg_size);
    poly_geometry_params_init(gp, mode, wg_size);
