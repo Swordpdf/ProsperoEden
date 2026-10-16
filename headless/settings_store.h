@@ -162,9 +162,8 @@ struct Preferences {
     // Which face button presses each core menu action (Settings > Controls > Menu keybinds).
     MenuBinding menu_bind = kDefaultMenuBinding;
     // Settings > Appearance > Wallpaper: the image file's name in the wallpapers folder ("" when
-    // the theme's own art shows), and whether the image itself is shown blurred.
+    // the theme's own art shows).
     std::string wallpaper;
-    bool wallpaper_blur = false;
 };
 
 inline int KeyIndex(const std::string& value, const char* const* keys, int count, int fallback) {
@@ -423,8 +422,6 @@ inline Preferences LoadPreferences(const std::string& file = SettingsFile()) {
         result.accent = accent;
     const std::string wallpaper = Settings::String(document, Json::json_pointer("/launcher/wallpaper"));
     if (ValidWallpaperName(wallpaper)) result.wallpaper = wallpaper;
-    result.wallpaper_blur =
-        Settings::Bool(document, Json::json_pointer("/launcher/wallpaper_blur"), result.wallpaper_blur);
     result.detailed_logging = Settings::Bool(document, Json::json_pointer("/diagnostics/detailed_logging"),
                                              result.detailed_logging);
     result.immediate_logs = Settings::Bool(document, Json::json_pointer("/diagnostics/immediate_logs"),
@@ -509,7 +506,8 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
     document["accessibility"]["reduce_motion"] = value.reduce_motion;
     document["launcher"]["theme"] = value.theme;
     document["launcher"]["wallpaper"] = value.wallpaper;
-    document["launcher"]["wallpaper_blur"] = value.wallpaper_blur;
+    if (document["launcher"].contains("wallpaper_blur"))
+        document["launcher"].erase("wallpaper_blur"); // a switch this build no longer has
     if (!value.accent.empty())
         document["launcher"]["accent"] = value.accent;
     else if (document["launcher"].contains("accent"))

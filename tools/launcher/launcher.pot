@@ -170,10 +170,6 @@ msgstr ""
 msgid "Bilinear"
 msgstr ""
 
-#: pe/ui/settings.cpp
-msgid "Blur image"
-msgstr ""
-
 #: pe/ui/game_options.cpp
 msgid "Bottom left"
 msgstr ""

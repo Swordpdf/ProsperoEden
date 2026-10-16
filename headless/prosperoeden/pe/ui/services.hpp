@@ -369,9 +369,8 @@ struct Preferences
     // Which face button presses each core menu action (Settings > Controls > Menu keybinds).
     MenuBinding menu_bind = kDefaultMenuBinding;
     // Settings > Appearance > Wallpaper: the image file's name in the wallpapers folder ("" when
-    // the theme's own art shows), and whether the image itself is shown blurred.
+    // the theme's own art shows).
     std::string wallpaper;
-    bool wallpaper_blur = false;
 };
 
 // What one game does differently from Settings (Library > Game settings). Each value is -1 while

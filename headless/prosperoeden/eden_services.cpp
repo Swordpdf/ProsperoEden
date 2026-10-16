@@ -984,7 +984,6 @@ pe::ui::Preferences EdenServices::preferences() {
     result.theme = saved.theme;
     result.accent = saved.accent;
     result.wallpaper = saved.wallpaper;
-    result.wallpaper_blur = saved.wallpaper_blur;
     // Settings > Performance: the general values (settings_store.h).
     const Eden::PerformanceSettings speed = Eden::LoadPerformance(0);
     result.block_list = speed.block_list;
@@ -1030,7 +1029,6 @@ bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     value.theme = preferences.theme;
     value.accent = preferences.accent;
     value.wallpaper = preferences.wallpaper;
-    value.wallpaper_blur = preferences.wallpaper_blur;
     value.mapping = preferences.mapping;
     value.menu_bind = preferences.menu_bind;
     Eden::PerformanceSettings speed = Eden::LoadPerformance(0);

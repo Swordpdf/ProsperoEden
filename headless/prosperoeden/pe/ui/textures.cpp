@@ -109,9 +109,9 @@ void Textures::clear_game_backdrop()
     game_backdrop_path_.clear();
 }
 
-void Textures::load_wallpaper(const std::string &path, bool blurred)
+void Textures::load_wallpaper(const std::string &path)
 {
-    if (path == wallpaper_path_ && blurred == wallpaper_shown_blurred_)
+    if (path == wallpaper_path_)
         return;
     if (path.empty())
     {
@@ -124,25 +124,23 @@ void Textures::load_wallpaper(const std::string &path, bool blurred)
         wallpaper_task_.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
     {
         WallpaperImage done = wallpaper_task_.get();
-        if (done.path == path && done.blurred == blurred)
+        if (done.path == path)
         {
             wallpaper_ = create(done.image);
             wallpaper_blur_ = create(done.frosted);
             wallpaper_w_ = done.image.width;
             wallpaper_h_ = done.image.height;
             wallpaper_path_ = std::move(done.path);
-            wallpaper_shown_blurred_ = done.blurred;
             return;
         }
     }
     // One read at a time: a running one is replaced only after it finished and turned out
     // stale, so flipping through the list never queues up decodes.
     if (!wallpaper_task_.valid())
-        wallpaper_task_ = std::async(std::launch::async, [path, blurred]
+        wallpaper_task_ = std::async(std::launch::async, [path]
         {
             WallpaperImage done;
             done.path = path;
-            done.blurred = blurred;
             gfx::Image image;
             if (!gfx::load_image(path, &image))
             {
@@ -153,19 +151,9 @@ void Textures::load_wallpaper(const std::string &path, bool blurred)
             // it to the screen, so no part is cut.
             while (image.width > 2048 || image.height > 2048)
                 image = gfx::halve(image);
-            if (blurred)
-            {
-                // The blur hides the detail: a smaller copy reads the same and softens faster.
-                while (image.width > 1024)
-                    image = gfx::halve(image);
-                gfx::blur(image, std::max(4, image.width / 64));
-                done.frosted = gfx::halve(image);
-            }
-            else
-            {
-                done.frosted = gfx::halve(image);
-                gfx::blur(done.frosted, std::max(4, done.frosted.width / 12));
-            }
+            // The frosted panels' copy: softer and smaller, so it reads as glass over it.
+            done.frosted = gfx::halve(image);
+            gfx::blur(done.frosted, std::max(4, done.frosted.width / 12));
             done.image = std::move(image);
             return done;
         });
@@ -180,7 +168,6 @@ void Textures::clear_wallpaper()
     wallpaper_w_ = 0;
     wallpaper_h_ = 0;
     wallpaper_path_.clear();
-    wallpaper_shown_blurred_ = false;
 }
 
 void Textures::release()

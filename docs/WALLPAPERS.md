@@ -1,10 +1,9 @@
 # Wallpapers
 
 An image of your own behind the launcher's screens. **Settings > Appearance > Wallpaper**
-lists the images in the wallpapers folder, with a switch that blurs the picture itself. The
-choice is kept in the settings file as `"launcher": { "wallpaper": "beach.png",
-"wallpaper_blur": false }`; with no wallpaper (or one this build cannot read) the theme's own
-art shows, as before.
+lists the images in the wallpapers folder. The choice is kept in the settings file as
+`"launcher": { "wallpaper": "beach.png" }`; with no wallpaper (or one this build cannot
+read) the theme's own art shows, as before.
 
 ## The folder
 
@@ -26,12 +25,6 @@ PNG and JPEG are what a photo or a screenshot usually is; BMP, GIF (its first pi
 and BC7 DDS are read too. An image over 8192 pixels a side is halved until it fits, and the
 whole picture is resized to the screen: an image of another shape keeps its own proportions,
 with the theme showing behind what it leaves over, instead of being stretched or cut.
-
-## Blur image
-
-The first row of the dialog, **Blur image**, shows the wallpaper itself blurred — the
-frosted panels blur their part of it either way. The switch stays in the dialog, so the
-picture can be compared both ways before leaving; it applies at once, as the picture does.
 
 ## What shows where
 

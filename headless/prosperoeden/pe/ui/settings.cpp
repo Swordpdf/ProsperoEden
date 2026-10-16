@@ -172,8 +172,8 @@ std::string short_path(const std::string &path, std::size_t limit)
     return path.size() <= limit ? path : "..." + path.substr(path.size() - (limit - 3));
 }
 
-// The Wallpaper dialog's rows: the blur switch, "None" and four of the folder's images, which
-// scroll with the folder's name under them (docs/WALLPAPERS.md).
+// The Wallpaper dialog's rows: "None" and the folder's images, which scroll with the folder's
+// name under them (docs/WALLPAPERS.md).
 constexpr int kWallpaperRowsShown = 4;
 constexpr Rect kWallpaperWindow{592.0f, kVideoRowsTop, 736.0f,
                                 kVideoRowPitch * (kWallpaperRowsShown - 1) + kVideoRowHeight};
@@ -195,15 +195,15 @@ bool WallpaperImage(const std::string &name)
            extension == ".gif" || extension == ".tga" || extension == ".dds";
 }
 
-// The row what is in use sits on: the blur switch (0), "None" (1) or the folder's image (2+).
+// The row what is in use sits on: "None" (0) or the folder's image (1+).
 int WallpaperRow(const std::string &chosen, const std::vector<std::string> &files)
 {
     if (chosen.empty())
-        return 1;
+        return 0;
     for (std::size_t index = 0; index < files.size(); ++index)
         if (files[index] == chosen)
-            return 2 + static_cast<int>(index);
-    return 1;
+            return 1 + static_cast<int>(index);
+    return 0;
 }
 
 } // namespace
@@ -529,7 +529,7 @@ int Launcher::dialog_rows(Modal modal) const
     case Modal::appearance:
         return 3; // theme, launcher and wallpaper
     case Modal::wallpaper:
-        return 2 + static_cast<int>(wallpaper_files_.size()); // the blur switch, "None" and images
+        return 1 + static_cast<int>(wallpaper_files_.size()); // "None" and the images
     case Modal::theme:
         return static_cast<int>(themes().size());
     case Modal::accent:
@@ -644,7 +644,7 @@ void Launcher::press_dialog(Key key)
         else
         {
             // The wallpaper's own dialog (docs/WALLPAPERS.md): the folder's images, each on its
-            // own row, with the blur switch and "None" above them.
+            // own row, with "None" above them.
             std::vector<std::string> files = services_.wallpapers();
             std::vector<std::string> images;
             for (std::string &name : files)
@@ -839,14 +839,11 @@ void Launcher::press_dialog(Key key)
     case Modal::wallpaper:
         if (!activate)
             return;
-        if (option_ == 0)
-            prefs_.wallpaper_blur = !prefs_.wallpaper_blur;
-        else
         {
-            // "None" (row 1) shows the theme's own art again; a row below is that image. The
+            // "None" (row 0) shows the theme's own art again; a row below is that image. The
             // picture changing is the confirmation, as the theme's look changing is.
             const int chosen =
-                option_ >= 2 && option_ - 2 < static_cast<int>(wallpaper_files_.size()) ? option_ - 2 : -1;
+                option_ >= 1 && option_ - 1 < static_cast<int>(wallpaper_files_.size()) ? option_ - 1 : -1;
             prefs_.wallpaper =
                 chosen < 0 ? std::string{} : wallpaper_files_[static_cast<std::size_t>(chosen)];
             sound = Cue::saved;
@@ -1207,35 +1204,27 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
     }
     case Modal::wallpaper:
     {
-        // The blur switch, then "None" and every image the folder holds: what is in use carries
-        // the mark (as the theme and colour dialogs mark theirs).
+        // "None" and every image the folder holds: what is in use carries the mark (as the
+        // theme and colour dialogs mark theirs).
         const int current = WallpaperRow(prefs_.wallpaper, wallpaper_files_);
         const auto row_name = [&](int row) -> const char *
         {
-            if (row <= 1)
-                return row == 0 ? tr("Blur image") : tr("None");
-            const std::size_t index = static_cast<std::size_t>(row - 2);
+            if (row == 0)
+                return tr("None");
+            const std::size_t index = static_cast<std::size_t>(row - 1);
             return index < wallpaper_files_.size() ? wallpaper_files_[index].c_str() : "";
         };
         for (int row = first; row <= last; ++row)
         {
             list.push_opacity(rows_view.row_alpha(row, kVideoRowHeight));
-            if (row == 0)
+            label(row, row_name(row), 64.0f);
+            if (row == current)
             {
-                label(row, tr("Blur image"), kToggle);
-                toggle(c, 1292.0f, row_centre(row), tween::clamp01(switches_[0].value));
-            }
-            else
-            {
-                label(row, row_name(row), 64.0f);
-                if (row == current)
-                {
-                    list.circle(1268.0f, row_centre(row), 17.0f, th().accent);
-                    const bool contrast = look().high_contrast;
-                    look().high_contrast = false;
-                    icon(c, Icon::check, 1268.0f, row_centre(row), 22.0f, th().on_accent);
-                    look().high_contrast = contrast;
-                }
+                list.circle(1268.0f, row_centre(row), 17.0f, th().accent);
+                const bool contrast = look().high_contrast;
+                look().high_contrast = false;
+                icon(c, Icon::check, 1268.0f, row_centre(row), 22.0f, th().on_accent);
+                look().high_contrast = contrast;
             }
             list.pop_opacity();
         }

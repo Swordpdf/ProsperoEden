@@ -126,7 +126,7 @@ std::array<bool, 7> Launcher::switch_states(Modal modal) const
     case Modal::accessibility:
         return {prefs_.large_text, prefs_.high_contrast, prefs_.reduce_motion};
     case Modal::wallpaper:
-        return {prefs_.wallpaper_blur, false, false};
+        return {}; // no switches: the dialog only lists the folder's images
     default:
         return {prefs_.detailed_logging, prefs_.immediate_logs, false};
     }
@@ -301,8 +301,7 @@ void Launcher::update(float dt)
     {
         const std::string folder = services_.wallpapers_folder();
         textures_.load_wallpaper(
-            prefs_.wallpaper.empty() || folder.empty() ? std::string{} : folder + "/" + prefs_.wallpaper,
-            prefs_.wallpaper_blur);
+            prefs_.wallpaper.empty() || folder.empty() ? std::string{} : folder + "/" + prefs_.wallpaper);
     }
     if (th().game_backdrop)
     {

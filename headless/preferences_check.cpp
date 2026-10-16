@@ -58,14 +58,14 @@ int main() {
     {
         Eden::Preferences value;
         value.wallpaper = "Sky Pond.png";
-        value.wallpaper_blur = true;
         assert(Eden::SavePreferences(value, file));
         assert(Eden::LoadPreferences(file).wallpaper == "Sky Pond.png");
-        assert(Eden::LoadPreferences(file).wallpaper_blur);
         const std::string by_name = std::string(directory) + "/wallpaper.json";
         std::ofstream(by_name) << R"({"launcher": {"wallpaper": "beach.png", "wallpaper_blur": true}})";
+        // A "wallpaper_blur" an older build wrote reads as nothing and leaves on the next save.
         assert(Eden::LoadPreferences(by_name).wallpaper == "beach.png");
-        assert(Eden::LoadPreferences(by_name).wallpaper_blur);
+        assert(Eden::SavePreferences(Eden::LoadPreferences(by_name), by_name));
+        assert(Read(by_name).find("wallpaper_blur") == std::string::npos);
         std::ofstream(by_name) << R"({"launcher": {"wallpaper": "../secrets.png"}})";
         assert(Eden::LoadPreferences(by_name).wallpaper.empty());
         Eden::Preferences named;
