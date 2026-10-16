@@ -363,6 +363,7 @@ void Launcher::update(float dt)
     option_rows_.update(dt);
     mapping_rows_.update(dt);
     menu_mapping_rows_.update(dt);
+    room_rows_.update(dt);
     hud_rows_.update(dt);
     profile_rows_.update(dt);
     source_rows_.update(dt);

@@ -47,6 +47,19 @@ int main(int argc, char** argv) {
         assert(sorted.rooms.size() == 3 && sorted.rooms[0].name == "Z busy" && sorted.rooms[0].players == 2);
         assert(sorted.rooms[1].name == "A quiet" && sorted.rooms[2].name == "A other protocol");
     }
+    // The project's own rooms first, in port order, ahead of busier and earlier-named rooms; its name
+    // on another port is an ordinary room.
+    {
+        auto own_two = room, own_one = room, busy = room, copy = room;
+        own_two["name"] = "BlackBearReloaded 2 (NA)"; own_two["port"] = 24002;
+        own_one["name"] = "BlackBearReloaded 1 (NA)"; own_one["port"] = 24001;
+        busy["name"] = "A busy"; busy["players"] = json::array({json::object(), json::object()});
+        copy["name"] = "BlackBearReloaded 0 (NA)"; copy["port"] = 30000;
+        const auto listed = ParseRoomDirectory(json{{"rooms", json::array({busy, own_two, copy, own_one})}}.dump(), 1);
+        assert(listed.rooms.size() == 4 && listed.rooms[0].port == 24001 && listed.rooms[1].port == 24002);
+        assert(listed.rooms[0].featured && listed.rooms[1].featured && !listed.rooms[2].featured);
+        assert(listed.rooms[2].name == "A busy" && listed.rooms[3].port == 30000 && !listed.rooms[3].featured);
+    }
     wrong = room; wrong["players"] = "bad"; assert(parse(wrong).rooms.empty());
     wrong = room; wrong["hasPassword"] = "false"; assert(parse(wrong).rooms.empty());
     assert(!ParseRoomDirectory("{", 1).error.empty());

@@ -522,6 +522,7 @@ class Launcher
     bool mapping_for_game_ = false; // the mapping dialog edits the game's own mapping
     ListView mapping_rows_;
     ListView menu_mapping_rows_; // the menu keybinds dialog's rows
+    ListView room_rows_;         // Multiplayer > Public rooms: the rooms (room_row_ - 1 is the one chosen)
     std::vector<Profile> profiles_; // the people who play on this console
     std::string playing_;           // the one games start as
     ListView profile_rows_;
