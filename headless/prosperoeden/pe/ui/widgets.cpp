@@ -88,9 +88,26 @@ Rect Backdrop::art() const
     return {-64.0f + dx, -36.0f + dy, 2048.0f, 1152.0f};
 }
 
-Rect Backdrop::uv(const Rect &r) const
+Rect Backdrop::picture(const Textures &textures) const
 {
-    const Rect a = art();
+    // A wallpaper is resized to the screen, whole: whatever its shape leaves over shows the
+    // theme behind, and it keeps its own place instead of drifting (the drift would push a part
+    // of it past the edge), so no part of it is cut.
+    const int width = textures.wallpaper_width();
+    if (width > 0)
+    {
+        const int height = textures.wallpaper_height();
+        const float scale = std::min(1920.0f / width, 1080.0f / height);
+        const float w = width * scale;
+        const float h = height * scale;
+        return {(1920.0f - w) * 0.5f, (1080.0f - h) * 0.5f, w, h};
+    }
+    return art();
+}
+
+Rect Backdrop::uv(const Rect &r, const Textures &textures) const
+{
+    const Rect a = picture(textures);
     return {(r.x - a.x) / a.w, (r.y - a.y) / a.h, r.w / a.w, r.h / a.h};
 }
 
@@ -101,7 +118,7 @@ void Backdrop::draw(gfx::DrawList &list, const Textures &textures, float dim) co
     list.rounded_rect(screen, 0.0f, t.base);
     const Rect a = art();
     if (textures.backdrop() != 0)
-        list.image(textures.backdrop(), a, {0.0f, 0.0f, 1.0f, 1.0f}, kWhite);
+        list.image(textures.backdrop(), picture(textures), {0.0f, 0.0f, 1.0f, 1.0f}, kWhite);
 
     // The artwork's light breathes.
     const float sun_x = a.x + t.light_x * a.w;
@@ -291,7 +308,7 @@ void glass(Canvas &c, const Rect &r, float radius, Color tint, Color edge, float
         return;
     }
     if (t.glass_panels && c.textures.backdrop_blur() != 0)
-        c.list.rounded_image(c.textures.backdrop_blur(), r, c.backdrop.uv(r), radius, kWhite);
+        c.list.rounded_image(c.textures.backdrop_blur(), r, c.backdrop.uv(r, c.textures), radius, kWhite);
     else
         tint = tint.with_alpha(1.0f / std::max(tint.a, 0.01f)); // no glass: the tint is the panel
     c.list.bordered_rect(r, radius, tint, t.border, edge);

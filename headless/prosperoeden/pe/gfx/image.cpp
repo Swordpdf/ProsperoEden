@@ -1,12 +1,30 @@
-// ProsperoEden - RGBA images for textures: TGA files and box downsampling.
+// ProsperoEden - RGBA images for textures: image files, TGA files and box downsampling.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pe/gfx/image.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <cstring>
+
+// The wallpaper's image files (docs/WALLPAPERS.md). The loader's implementation stays local to
+// this translation unit: the shared library also ships stb_image, and its symbols stay global.
+// The third-party code is quiet under the build's -Werror.
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
+#define STB_IMAGE_STATIC
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_MAX_DIMENSIONS 16384
+#include "stb/stb_image.h"
+#define BCDEC_IMPLEMENTATION
+#include "bcdec/bcdec.h"
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 namespace pe::gfx
 {
@@ -95,6 +113,83 @@ bool load_tga(const std::string &path, Image *image)
     return true;
 }
 
+namespace
+{
+
+// The file's extension in lower case (".png"), or none.
+std::string Extension(const std::string &path)
+{
+    const std::size_t dot = path.find_last_of('.');
+    if (dot == std::string::npos || dot + 1 == path.size())
+        return {};
+    std::string extension = path.substr(dot);
+    for (char &c : extension)
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    return extension;
+}
+
+// A BC7 DDS through bcdec: the blocks the header reader took, one tile at a time.
+bool LoadDdsImage(const std::string &path, Image *image)
+{
+    Blocks blocks;
+    if (!load_dds_bc7(path, &blocks))
+        return false;
+    const int width = blocks.width;
+    const int height = blocks.height;
+    const int columns = (width + 3) / 4;
+    image->width = width;
+    image->height = height;
+    image->rgba.resize(static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * 4);
+    std::uint8_t tile[64];
+    for (int y = 0; y < height; y += 4)
+    {
+        for (int x = 0; x < width; x += 4)
+        {
+            const std::size_t block = (static_cast<std::size_t>(y / 4) * static_cast<std::size_t>(columns) +
+                                       static_cast<std::size_t>(x / 4)) *
+                                      16;
+            bcdec_bc7(blocks.bc7.data() + block, tile, 16);
+            for (int in_y = 0; in_y < 4 && y + in_y < height; ++in_y)
+                for (int in_x = 0; in_x < 4 && x + in_x < width; ++in_x)
+                {
+                    std::uint8_t *out =
+                        image->rgba.data() +
+                        (static_cast<std::size_t>(y + in_y) * static_cast<std::size_t>(width) +
+                         static_cast<std::size_t>(x + in_x)) *
+                            4;
+                    std::memcpy(out, tile + (in_y * 4 + in_x) * 4, 4);
+                }
+        }
+    }
+    return true;
+}
+
+} // namespace
+
+bool load_image(const std::string &path, Image *image)
+{
+    *image = Image{};
+    if (path.empty())
+        return false;
+    if (Extension(path) == ".dds")
+        return LoadDdsImage(path, image);
+    int width = 0;
+    int height = 0;
+    stbi_uc *pixels = stbi_load(path.c_str(), &width, &height, nullptr, 4);
+    if (pixels == nullptr || width <= 0 || height <= 0)
+    {
+        stbi_image_free(pixels);
+        return false;
+    }
+    image->width = width;
+    image->height = height;
+    image->rgba.assign(pixels, pixels + static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * 4);
+    stbi_image_free(pixels);
+    while (image->width > 8192 || image->height > 8192)
+        *image = halve(*image);
+    return !image->empty();
+}
+
 Image halve(const Image &image)
 {
     Image result;
@@ -133,21 +228,33 @@ Image halve(const Image &image)
     return result;
 }
 
-// Horizontal box blur: for each pixel, average the clamped [x-radius, x+radius] window.
+// Horizontal box blur: for each pixel, average the clamped [x-radius, x+radius] window. The
+// window's sum slides along the row, so a big radius costs no more than a small one.
 static void blur_row(const std::uint8_t *in, std::uint8_t *out, int width, int radius)
 {
+    if (width <= 0)
+        return;
+    int lo = 0;
+    int hi = std::min(width - 1, radius);
+    unsigned sum[3] = {0, 0, 0};
+    for (int k = lo; k <= hi; ++k)
+        for (int ch = 0; ch < 3; ++ch)
+            sum[ch] += in[k * 4 + ch];
     for (int x = 0; x < width; ++x)
     {
-        const int lo = std::max(0, x - radius);
-        const int hi = std::min(width - 1, x + radius);
         const int count = hi - lo + 1;
-        unsigned sum[3] = {0, 0, 0};
-        for (int k = lo; k <= hi; ++k)
-            for (int ch = 0; ch < 3; ++ch)
-                sum[ch] += in[k * 4 + ch];
         for (int ch = 0; ch < 3; ++ch)
             out[x * 4 + ch] = static_cast<std::uint8_t>(sum[ch] / static_cast<unsigned>(count));
         out[x * 4 + 3] = in[x * 4 + 3];
+        const int next_lo = std::max(0, x + 1 - radius);
+        const int next_hi = std::min(width - 1, x + 1 + radius);
+        for (; lo < next_lo; ++lo)
+            for (int ch = 0; ch < 3; ++ch)
+                sum[ch] -= in[lo * 4 + ch];
+        for (int k = hi + 1; k <= next_hi; ++k)
+            for (int ch = 0; ch < 3; ++ch)
+                sum[ch] += in[k * 4 + ch];
+        hi = next_hi;
     }
 }
 

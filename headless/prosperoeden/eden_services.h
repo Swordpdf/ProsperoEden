@@ -54,6 +54,9 @@ public:
     std::string setup_details() override;
     std::string crash_reports_folder() override;
 
+    std::vector<std::string> wallpapers() override;
+    std::string wallpapers_folder() override;
+
     bool folders(const std::string& directory, std::vector<std::string>* names) override;
     pe::ui::FolderInfo folder_info(const std::string& directory) override;
     std::string files_folder() override;

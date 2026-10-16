@@ -42,6 +42,9 @@ builds on the following projects, each under its own license.
 - **[ps5-opengl](https://github.com/blackbearreloaded/ps5-opengl)**,
   GPL-3.0-or-later, which includes Mesa components under their own licenses.
   `third_party/app_heap.c` comes from it.
+- **[bcdec](https://github.com/iOrange/bcdec)** by Sergii "iOrange" Kudlai, MIT or public
+  domain, unmodified in `third_party/bcdec` with its `LICENSE`. Decodes the BC7 blocks of a
+  DDS wallpaper into pixels (docs/WALLPAPERS.md).
 
 ## Platform and interface
 
@@ -74,9 +77,10 @@ builds on the following projects, each under its own license.
   `COPYING` file). Shapes the launcher's text in the scripts that need it, such
   as Thai and Arabic. Fetched at the release pinned in `tools/deps.json`.
 - **[stb](https://github.com/nothings/stb)** by Sean Barrett, MIT or public
-  domain (`tools/launcher/stb`). `stb_truetype` bakes the launcher's font and,
+  domain (`tools/launcher/stb` and `third_party/stb`). `stb_truetype` bakes the launcher's font and,
   in the app, reads the console's system fonts for the scripts Montserrat does
-  not have. `stb_image_write` saves the PC previews and is not part of the app.
+  not have. `stb_image` (`third_party/stb`) reads the wallpaper images in the app.
+  `stb_image_write` saves the PC previews and is not part of the app.
 - The launcher's sound effects were generated with
   [ElevenLabs](https://elevenlabs.io) and edited for this project.
 - `third_party/ps5_pad.hpp` and `third_party/native_audio.hpp` are this

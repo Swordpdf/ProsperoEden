@@ -529,6 +529,8 @@ std::optional<std::int64_t> EdenServices::ask_seed(std::int64_t current, const s
 EdenServices::EdenServices(std::string launch_error, Eden::Multiplayer::RoomClient& rooms)
     : rooms_(rooms), launch_error_(std::move(launch_error)) {
     (void)mkdir(Eden::ConfigDir().c_str(), 0777);
+    // The folder the wallpapers are put in (docs/WALLPAPERS.md), so it exists to be filled.
+    (void)mkdir(Eden::WallpapersDir().c_str(), 0777);
     // Who is playing (profiles.h): the profile this PS5 user chose last, else the one chosen last.
     (void)sceUserServiceInitialize(nullptr); // already done by the controller code: refused, harmless
     if (sceUserServiceGetForegroundUser(&user_) < 0) user_ = -1;
@@ -981,6 +983,8 @@ pe::ui::Preferences EdenServices::preferences() {
     result.reduce_motion = saved.reduce_motion;
     result.theme = saved.theme;
     result.accent = saved.accent;
+    result.wallpaper = saved.wallpaper;
+    result.wallpaper_blur = saved.wallpaper_blur;
     // Settings > Performance: the general values (settings_store.h).
     const Eden::PerformanceSettings speed = Eden::LoadPerformance(0);
     result.block_list = speed.block_list;
@@ -1025,6 +1029,8 @@ bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     value.reduce_motion = preferences.reduce_motion;
     value.theme = preferences.theme;
     value.accent = preferences.accent;
+    value.wallpaper = preferences.wallpaper;
+    value.wallpaper_blur = preferences.wallpaper_blur;
     value.mapping = preferences.mapping;
     value.menu_bind = preferences.menu_bind;
     Eden::PerformanceSettings speed = Eden::LoadPerformance(0);
@@ -1099,6 +1105,13 @@ bool EdenServices::folders(const std::string& directory, std::vector<std::string
     *names = ListEntries(directory, true, ok);
     return ok;
 }
+
+std::vector<std::string> EdenServices::wallpapers() {
+    bool ok = false;
+    return ListEntries(Eden::WallpapersDir(), false, ok);
+}
+
+std::string EdenServices::wallpapers_folder() { return Eden::WallpapersDir(); }
 
 pe::ui::FolderInfo EdenServices::folder_info(const std::string& directory) {
     pe::ui::FolderInfo info;

@@ -967,7 +967,7 @@ void Launcher::draw_game_page(Canvas &c, float open)
     // Its own ground over the Library: the artwork again, further back.
     list.rounded_rect({0.0f, 0.0f, 1920.0f, 1080.0f}, 0.0f, t.base);
     if (!look().high_contrast && textures_.backdrop() != 0)
-        list.image(textures_.backdrop(), c.backdrop.art(), {0.0f, 0.0f, 1.0f, 1.0f}, Color{1.0f, 1.0f, 1.0f, 0.22f});
+        list.image(textures_.backdrop(), c.backdrop.picture(textures_), {0.0f, 0.0f, 1.0f, 1.0f}, Color{1.0f, 1.0f, 1.0f, 0.22f});
     list.hgradient_rect({0.0f, 0.0f, 1920.0f, 1080.0f}, 0.0f, t.base.with_alpha(0.55f), t.base.with_alpha(0.25f));
     list.push_transform(1.0f, 0.0f, 0.0f, (1.0f - open) * 48.0f * motion(), 0.0f);
 

@@ -271,6 +271,11 @@ class FakeServices : public ui::Services
     std::string language_region(int language) override;
     std::string setup_details() override;
     std::string crash_reports_folder() override { return "/data/prosperoeden/logs"; }
+    std::vector<std::string> wallpapers() override;
+    std::string wallpapers_folder() override
+    {
+        return wallpapers_directory_;
+    }
     bool folders(const std::string &directory, std::vector<std::string> *names) override;
     ui::FolderInfo folder_info(const std::string &directory) override;
     std::string files_folder() override
@@ -421,6 +426,7 @@ class FakeServices : public ui::Services
     ui::GameSettings game_settings_;
     ui::Preferences preferences_;
     std::string saved_folder_;
+    std::string wallpapers_directory_; // <covers_directory>/wallpapers, read like the console's
     std::vector<std::uint64_t> modded_; // the games that have the sample mods
     std::vector<std::string> mods_off_{"Sharper textures"};
     std::vector<std::string> cheats_on_{"60 FPS"};

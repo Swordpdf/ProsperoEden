@@ -183,27 +183,46 @@ void Launcher::draw_scrims(Canvas &c)
     gfx::DrawList &list = c.list;
     const Color shade = th().base;
     const float away = tween::clamp01(dim_.value);
-    const float home = 1.0f - away;
-    if (home > 0.01f)
+    // A picture of the user's own stays visible through a lighter shade; the theme's own art keeps
+    // the full one it was drawn for.
+    const bool picture = textures_.custom_backdrop();
+    const float away_left = picture ? 0.70f : 0.92f;
+    const float away_right = picture ? 0.50f : 0.76f;
+    // One scrim whose two ends are the home look and the away look, moved by `away`. The home
+    // shade used to be stacked over the away one while a section change slid, and their alphas
+    // compounded: the middle showed the artwork brighter at both ends than either side settles
+    // to, which read as a flash. Drawn once, the middle can only lie between the ends.
+    if (th().scrim_opacity > 0.0f)
     {
-        if (th().scrim_opacity > 0.0f)
-        {
-            list.rounded_rect({0.0f, 0.0f, 1920.0f, 1080.0f}, 0.0f, shade.with_alpha(th().scrim_opacity * home));
-        }
-        else
-        {
-            list.hgradient_rect({0.0f, 0.0f, 653.0f, 1080.0f}, 0.0f, shade.with_alpha(0.94f * home),
-                                shade.with_alpha(0.78f * home));
-            list.hgradient_rect({653.0f, 0.0f, 538.0f, 1080.0f}, 0.0f, shade.with_alpha(0.78f * home),
-                                shade.with_alpha(0.16f * home));
-            list.hgradient_rect({1191.0f, 0.0f, 729.0f, 1080.0f}, 0.0f, shade.with_alpha(0.16f * home),
-                                shade.with_alpha(0.30f * home));
-            list.gradient_rect({0.0f, 640.0f, 1920.0f, 440.0f}, 0.0f, shade.with_alpha(0.0f),
-                               shade.with_alpha(0.90f * home));
-        }
+        const float flat = th().scrim_opacity;
+        const float home = picture ? std::min(flat, 0.58f) : flat;
+        list.hgradient_rect(kScreen, 0.0f,
+                            shade.with_alpha(home + (away_left - home) * away),
+                            shade.with_alpha(home + (away_right - home) * away));
     }
-    if (away > 0.01f)
-        list.hgradient_rect(kScreen, 0.0f, shade.with_alpha(0.92f * away), shade.with_alpha(0.76f * away));
+    else
+    {
+        // The gradient's stops at the rail and past the middle, each eased toward what the away
+        // shade has at that place, so the whole shape glides between the two looks.
+        constexpr float kHome[] = {0.94f, 0.78f, 0.16f, 0.30f};
+        constexpr float kX[] = {0.0f, 653.0f, 1191.0f, 1920.0f};
+        float stop[4];
+        for (int i = 0; i < 4; ++i)
+        {
+            const float end = away_left + (away_right - away_left) * (kX[i] / 1920.0f);
+            stop[i] = kHome[i] + (end - kHome[i]) * away;
+        }
+        list.hgradient_rect({0.0f, 0.0f, 653.0f, 1080.0f}, 0.0f, shade.with_alpha(stop[0]),
+                            shade.with_alpha(stop[1]));
+        list.hgradient_rect({653.0f, 0.0f, 538.0f, 1080.0f}, 0.0f, shade.with_alpha(stop[1]),
+                            shade.with_alpha(stop[2]));
+        list.hgradient_rect({1191.0f, 0.0f, 729.0f, 1080.0f}, 0.0f, shade.with_alpha(stop[2]),
+                            shade.with_alpha(stop[3]));
+        const float bottom = 0.90f * (1.0f - away);
+        if (bottom > 0.004f)
+            list.gradient_rect({0.0f, 640.0f, 1920.0f, 440.0f}, 0.0f, shade.with_alpha(0.0f),
+                               shade.with_alpha(bottom));
+    }
 }
 
 void Launcher::draw_rail(Canvas &c)

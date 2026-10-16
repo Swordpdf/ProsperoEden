@@ -161,6 +161,10 @@ struct Preferences {
     int hud_fields = 0x2ff;
     // Which face button presses each core menu action (Settings > Controls > Menu keybinds).
     MenuBinding menu_bind = kDefaultMenuBinding;
+    // Settings > Appearance > Wallpaper: the image file's name in the wallpapers folder ("" when
+    // the theme's own art shows), and whether the image itself is shown blurred.
+    std::string wallpaper;
+    bool wallpaper_blur = false;
 };
 
 inline int KeyIndex(const std::string& value, const char* const* keys, int count, int fallback) {
@@ -176,6 +180,16 @@ inline bool ValidRomFilename(std::string_view name) {
     std::string extension(name.substr(name.size() - 4));
     for (char& c : extension) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     return extension == ".nsp" || extension == ".xci";
+}
+
+// A wallpaper's file name: the name alone (the image lives in the wallpapers folder), readable
+// characters, at most 128 bytes. Empty means no wallpaper; "." and ".." are never a file.
+inline bool ValidWallpaperName(std::string_view name) {
+    if (name.empty()) return true;
+    if (name.size() > 128 || name == "." || name == "..") return false;
+    for (unsigned char c : name)
+        if (c < 32 || c == 127 || c == '/' || c == '\\') return false;
+    return true;
 }
 
 inline std::string SettingsFile() { return ConfigFile("prosperoeden.json"); }
@@ -407,6 +421,10 @@ inline Preferences LoadPreferences(const std::string& file = SettingsFile()) {
     if (accent.size() <= 32 &&
         std::all_of(accent.begin(), accent.end(), [](char c) { return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-'; }))
         result.accent = accent;
+    const std::string wallpaper = Settings::String(document, Json::json_pointer("/launcher/wallpaper"));
+    if (ValidWallpaperName(wallpaper)) result.wallpaper = wallpaper;
+    result.wallpaper_blur =
+        Settings::Bool(document, Json::json_pointer("/launcher/wallpaper_blur"), result.wallpaper_blur);
     result.detailed_logging = Settings::Bool(document, Json::json_pointer("/diagnostics/detailed_logging"),
                                              result.detailed_logging);
     result.immediate_logs = Settings::Bool(document, Json::json_pointer("/diagnostics/immediate_logs"),
@@ -457,7 +475,7 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
         value.hud_size < 0 || value.hud_size >= int(std::size(kHudSizeKeys)) ||
         value.hud_corner < 0 || value.hud_corner >= int(std::size(kHudCornerKeys)) ||
         !ValidHudFields(value.hud_fields) || !ValidMapping(value.mapping) ||
-        !ValidMenuBinding(value.menu_bind)) return false;
+        !ValidMenuBinding(value.menu_bind) || !ValidWallpaperName(value.wallpaper)) return false;
     Settings::Json document = Settings::Load(file);
     document["version"] = 1;
     document["video"]["renderer"] = value.backend == GraphicsBackend::Vulkan ? "vulkan" : "opengl";
@@ -490,6 +508,8 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
     document["accessibility"]["high_contrast"] = value.high_contrast;
     document["accessibility"]["reduce_motion"] = value.reduce_motion;
     document["launcher"]["theme"] = value.theme;
+    document["launcher"]["wallpaper"] = value.wallpaper;
+    document["launcher"]["wallpaper_blur"] = value.wallpaper_blur;
     if (!value.accent.empty())
         document["launcher"]["accent"] = value.accent;
     else if (document["launcher"].contains("accent"))

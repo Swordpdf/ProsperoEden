@@ -51,6 +51,7 @@ Local-wireless multiplayer through Eden rooms is new in v1.000.110 and experimen
 - **Library** - your games as covers, with the selected game's details beside them. The home screen has **Continue Playing** and **Recently Played**, which keep working after you move your files.
 - **Launcher** - an animated interface drawn with OpenGL, with sound effects (their level is in **Settings > Audio**) and a loading screen that shows the game's cover while it starts. It opens from the console's own launch picture without a cut: the mark appears over the picture and goes to its place as the menu arrives (any button skips it). Its five sections (Home, Library, Multiplayer, Settings, About) are on a rail at the left: L1 and R1 go from one to the next, and Left from a screen's edge opens the rail. The home screen shows which controllers are connected.
 - **Themes** - the launcher's look is a theme, chosen in **Settings > Theme**. It comes with one, Canopy; [docs/THEMES.md](docs/THEMES.md) says what a theme is made of.
+- **Wallpapers** - an image of your own behind the menu instead of the theme's artwork: PNG or JPEG files (also BMP, GIF, TGA and DDS) in `/data/prosperoeden/wallpapers`, chosen in **Settings > Appearance > Wallpaper**, with **Blur image** to show the picture itself blurred; see [docs/WALLPAPERS.md](docs/WALLPAPERS.md).
 - **Profiles** - everyone who plays has their own save data, settings and recently played games: **Settings > Profiles**; see [Profiles](docs/SETTINGS.md#profiles).
 - **Settings per game** - a game can differ from Settings in its video, performance, audio, controls and language, and has its own Handheld / Docked mode (Triangle in the Library); see [Settings per game](docs/SETTINGS.md#settings-per-game).
 - **Button mapping** - choose which DualSense button presses each of the game's buttons, for every controller, in **Settings > Controls**, or for one game in its settings; see [Button mapping](docs/SETTINGS.md#button-mapping).
@@ -97,6 +98,7 @@ Local-wireless multiplayer through Eden rooms is new in v1.000.110 and experimen
 | [Multiplayer](docs/MULTIPLAYER.md) | Local wireless play through Eden rooms: setup and current limits |
 | [Forwarders](docs/FORWARDER.md) | Starting a game from its own tile on the PS5's home screen |
 | [Themes](docs/THEMES.md) | What a launcher theme is made of |
+| [Wallpapers](docs/WALLPAPERS.md) | Your own image behind the launcher's screens, the folder it reads and the formats it supports |
 | [Building](docs/BUILDING.md) | Building from source, and how releases are made |
 | [Changelog](docs/CHANGELOG.md) | What changed in each release |
 | [Roadmap](docs/ROADMAP.md) | What is planned |

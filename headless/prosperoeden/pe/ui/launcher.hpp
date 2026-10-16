@@ -99,6 +99,7 @@ class Launcher
         pairing,      // a profile paired with a server by a QR code (pairing.cpp)
         appearance,   // Settings > Appearance: theme and launcher settings
         theme,        // Settings > Appearance > Theme: the launcher's look
+        wallpaper,    // Settings > Appearance > Wallpaper: the image behind the screens
         accent,       // Settings > Colour: the accent preset
     };
     // The update dialog's steps: the offer, installing, stopping it, closing for the helper to
@@ -500,6 +501,9 @@ class Launcher
     ListView hud_rows_;   // the overlay's options (Modal::hud, more than it shows)
     ListView performance_rows_; // the Performance dialog's rows (more than it shows)
     ListView controls_rows_;    // the Controls dialog's rows (more than it shows)
+    ListView wallpaper_rows_;   // the Wallpaper dialog's rows (more than it shows)
+    // The images in the wallpapers folder, as the Wallpaper dialog lists them (settings.cpp).
+    std::vector<std::string> wallpaper_files_;
     GameSettings game_settings_;
     bool game_docked_ = true;
     SaveSource import_source_ = SaveSource::none; // what Save data could import for the game

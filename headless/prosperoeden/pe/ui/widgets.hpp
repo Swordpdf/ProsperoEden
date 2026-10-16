@@ -34,8 +34,11 @@ class Backdrop
     void draw(gfx::DrawList &list, const Textures &textures, float dim) const;
     // Where the art lies in virtual pixels this frame.
     Rect art() const;
-    // The part of the (blurred) art behind r, as a UV rectangle.
-    Rect uv(const Rect &r) const;
+    // Where the backdrop's picture lies: a wallpaper resized whole to the screen when one
+    // shows, else the art.
+    Rect picture(const Textures &textures) const;
+    // The part of the (blurred) picture behind r, as a UV rectangle.
+    Rect uv(const Rect &r, const Textures &textures) const;
 
   private:
     float time_ = 0.0f;

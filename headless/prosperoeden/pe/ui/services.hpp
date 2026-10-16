@@ -368,6 +368,10 @@ struct Preferences
     int hud_fields = 0x2ff;
     // Which face button presses each core menu action (Settings > Controls > Menu keybinds).
     MenuBinding menu_bind = kDefaultMenuBinding;
+    // Settings > Appearance > Wallpaper: the image file's name in the wallpapers folder ("" when
+    // the theme's own art shows), and whether the image itself is shown blurred.
+    std::string wallpaper;
+    bool wallpaper_blur = false;
 };
 
 // What one game does differently from Settings (Library > Game settings). Each value is -1 while
@@ -510,6 +514,18 @@ class Services
     virtual std::string language_region(int language) = 0;
     virtual std::string setup_details() = 0;
     virtual std::string crash_reports_folder() { return {}; }
+
+    // ---- wallpaper: an image behind the launcher's screens (Settings > Appearance) ----
+    // The image file names in the wallpapers folder, sorted; and the folder itself (empty when
+    // this build has no folder to put wallpapers in).
+    virtual std::vector<std::string> wallpapers()
+    {
+        return {};
+    }
+    virtual std::string wallpapers_folder()
+    {
+        return {};
+    }
 
     // ---- game files ----
     // The subfolder names of a folder; false when it cannot be opened.

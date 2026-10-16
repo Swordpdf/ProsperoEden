@@ -8,7 +8,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cctype>
 #include <cstdio>
+#include <filesystem>
 
 namespace pe::host
 {
@@ -146,6 +148,7 @@ constexpr int kLanguageRegions[] = {1, 2, 2, 1, 2, 2, 2, 1, 2, 1, 2, 2, 2, 0, 5,
 
 FakeServices::FakeServices(const std::string &covers_directory)
 {
+    wallpapers_directory_ = covers_directory + "/wallpapers";
     int index = 0;
     for (const Sample &sample : kSamples)
     {
@@ -323,6 +326,26 @@ std::string FakeServices::setup_details()
                tr("Keys and firmware: startup checks passed. Game-specific compatibility is checked at "
                   "launch.") :
                fill(tr("Missing or empty keys/prod.keys in {0}."), {"/data/prosperoeden"});
+}
+
+std::vector<std::string> FakeServices::wallpapers()
+{
+    std::vector<std::string> names;
+    std::error_code error;
+    for (std::filesystem::directory_iterator it{wallpapers_directory_, error}, end; !error && it != end;
+         it.increment(error))
+        if (it->is_regular_file())
+            names.push_back(it->path().filename().string());
+    // Sorted without regard to case, as the console lists a folder (eden_services.cpp).
+    const auto lower = [](std::string text)
+    {
+        for (char &c : text)
+            c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        return text;
+    };
+    std::sort(names.begin(), names.end(),
+              [&](const std::string &a, const std::string &b) { return lower(a) < lower(b); });
+    return names;
 }
 
 bool FakeServices::folders(const std::string &directory, std::vector<std::string> *names)
