@@ -273,6 +273,10 @@ msgstr "Lukk"
 msgid "Colour"
 msgstr "Farge"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Compact memory"
+msgstr "Kompakt minne"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -749,6 +753,10 @@ msgstr "Tysk"
 #: pe/ui/browse.cpp
 msgid "GETTING STARTED"
 msgstr "KOM I GANG"
+
+#: pe/ui/settings.cpp
+msgid "Gives back memory a game left empty, 16 KiB at a time. More free memory; a game that writes there again can stutter for a moment."
+msgstr "Gir tilbake minne et spill lot stå tomt, 16 KiB om gangen. Mer ledig minne; et spill som skriver der igjen, kan hakke et øyeblikk."
 
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"

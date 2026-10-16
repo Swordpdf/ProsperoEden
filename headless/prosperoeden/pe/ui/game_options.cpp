@@ -97,8 +97,8 @@ bool *performance_switch(Preferences &prefs, int index)
 {
     bool *const switches[] = {&prefs.block_list, &prefs.async_shaders,     &prefs.fast_gpu,
                               &prefs.unsafe_cpu, &prefs.unsafe_dma,        &prefs.reactive_flushing,
-                              &prefs.skip_invalidation};
-    return switches[std::clamp(index, 0, 6)];
+                              &prefs.skip_invalidation, &prefs.compact_memory};
+    return switches[std::clamp(index, 0, 7)];
 }
 
 // rates: the refresh rates as the launcher writes them (Launcher::hertz).
@@ -157,8 +157,8 @@ std::vector<Option> options(int category, const GameSettings &game, Preferences 
         static constexpr const char *kNames[] = {
             TR("Compile ahead"),        TR("Asynchronous shaders"), TR("Faster GPU emulation"),
             TR("Faster CPU emulation"), TR("Faster DMA"),           TR("Reactive flushing"),
-            TR("Skip CPU invalidation")};
-        for (int i = 0; i < 7; ++i)
+            TR("Skip CPU invalidation"), TR("Compact memory")};
+        for (int i = 0; i < 8; ++i)
         {
             // Asynchronous shaders act with Vulkan only (settings.cpp).
             rows.push_back({std::string(tr(kNames[i])) + (i == 1 ? " (Vulkan)" : ""), off_on,
@@ -215,7 +215,7 @@ GameSettings with_option(GameSettings game, int category, int row, int value, co
          game.frame_gen_multiplier) = value;
         break;
     case category_performance:
-        game.performance[static_cast<std::size_t>(std::clamp(row, 0, 6))] = value;
+        game.performance[static_cast<std::size_t>(std::clamp(row, 0, 7))] = value;
         break;
     case category_audio:
         if (row == 0)

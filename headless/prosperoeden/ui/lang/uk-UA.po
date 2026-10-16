@@ -273,6 +273,10 @@ msgstr "Закрити"
 msgid "Colour"
 msgstr "Колір"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Compact memory"
+msgstr "Компактна пам'ять"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -749,6 +753,10 @@ msgstr "Німецька"
 #: pe/ui/browse.cpp
 msgid "GETTING STARTED"
 msgstr "ПОЧАТОК РОБОТИ"
+
+#: pe/ui/settings.cpp
+msgid "Gives back memory a game left empty, 16 KiB at a time. More free memory; a game that writes there again can stutter for a moment."
+msgstr "Повертає пам'ять, яку гра залишила порожньою, по 16 КіБ. Більше вільної пам'яті; гра, що знову туди запише, може на мить пригальмувати."
 
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"

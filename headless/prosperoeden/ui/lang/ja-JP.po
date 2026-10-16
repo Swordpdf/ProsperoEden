@@ -273,6 +273,10 @@ msgstr "閉じる"
 msgid "Colour"
 msgstr "カラー"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Compact memory"
+msgstr "メモリの圧縮"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -749,6 +753,10 @@ msgstr "ドイツ語"
 #: pe/ui/browse.cpp
 msgid "GETTING STARTED"
 msgstr "はじめに"
+
+#: pe/ui/settings.cpp
+msgid "Gives back memory a game left empty, 16 KiB at a time. More free memory; a game that writes there again can stutter for a moment."
+msgstr "ゲームが空のまま残したメモリを16 KiB単位で返します。空きメモリが増えます。そこに再び書き込むゲームは一瞬カクつくことがあります。"
 
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"

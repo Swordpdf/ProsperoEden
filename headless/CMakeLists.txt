@@ -1765,7 +1765,7 @@ string(REPLACE "${guest_backing_site}"
     kernel_source "${kernel_source}")
 string(PREPEND kernel_source "#include <algorithm>\n#include <cstddef>\n#include <cstdint>\n#include \"core/device_memory.h\"\nnamespace Common { void CommitGuestMemory(std::uint64_t offset, std::size_t bytes) noexcept; }\n")
 file(READ "${PROJECT_SOURCE_DIR}/src/core/hle/kernel/k_memory_manager.cpp" pool_source)
-string(PREPEND pool_source "#include <cstddef>\n#include <cstdint>\nnamespace Common { void CommitGuestMemory(std::uint64_t offset, std::size_t bytes) noexcept; }\n")
+string(PREPEND pool_source "#include <cstddef>\n#include <cstdint>\nnamespace Common { void CommitGuestMemoryOnHandOut(std::uint64_t offset, std::size_t bytes) noexcept; void FillGuestMemory(std::uint8_t* at, int fill, std::size_t bytes) noexcept; }\n")
 # Its two places: a run of pages in one piece, and the blocks of a page group.
 set(continuous_site "    // If we failed to allocate, quit now.\n    if (allocated_block == 0) {\n        return 0;\n    }\n")
 set(group_site "                KPhysicalAddress allocated_block = cur_manager->AllocateBlock(index, random);\n                if (allocated_block == 0) {\n                    break;\n                }\n")
@@ -1775,15 +1775,37 @@ if(continuous_at LESS 0 OR group_at LESS 0)
     message(FATAL_ERROR "Pinned guest page allocation changed; review where the guest's memory is backed.")
 endif()
 string(REPLACE "${continuous_site}"
-    "${continuous_site}    ::Common::CommitGuestMemory(GetInteger(allocated_block) - Core::DramMemoryMap::Base, num_pages * PageSize);\n"
+    "${continuous_site}    ::Common::CommitGuestMemoryOnHandOut(GetInteger(allocated_block) - Core::DramMemoryMap::Base, num_pages * PageSize);\n"
     pool_source "${pool_source}")
 string(REPLACE "${group_site}"
-    "${group_site}                ::Common::CommitGuestMemory(GetInteger(allocated_block) - Core::DramMemoryMap::Base, pages_per_alloc * PageSize);\n"
+    "${group_site}                ::Common::CommitGuestMemoryOnHandOut(GetInteger(allocated_block) - Core::DramMemoryMap::Base, pages_per_alloc * PageSize);\n"
+    pool_source "${pool_source}")
+# With the guest's memory as a service (src/guest_memory_service.inc), a page filled with zeroes
+# where the slot still shows the zero block is left alone, and pages the guest's kernel frees
+# give whole slots back.
+set(optimized_fill_site "            std::memset(ptr + offset * PageSize, fill_pattern, PageSize);")
+string(FIND "${pool_source}" "${optimized_fill_site}" optimized_fill_at)
+if(optimized_fill_at LESS 0)
+    message(FATAL_ERROR "Pinned optimized allocation fill changed; review the guest memory service.")
+endif()
+string(REPLACE "${optimized_fill_site}"
+    "            ::Common::FillGuestMemory(ptr + offset * PageSize, fill_pattern, PageSize);"
     pool_source "${pool_source}")
 write_derived("${PORT_BUILD_DIR}/k_memory_manager.cpp" "${pool_source}")
+file(READ "${PROJECT_SOURCE_DIR}/src/core/hle/kernel/k_page_heap.cpp" page_heap_source)
+set(page_heap_free_site "void KPageHeap::Free(KPhysicalAddress addr, size_t num_pages) {\n    // Freeing no pages is a no-op.\n    if (num_pages == 0) {\n        return;\n    }\n")
+string(FIND "${page_heap_source}" "${page_heap_free_site}" page_heap_free_at)
+if(page_heap_free_at LESS 0)
+    message(FATAL_ERROR "Pinned page heap free changed; review the guest memory service.")
+endif()
+string(REPLACE "${page_heap_free_site}"
+    "${page_heap_free_site}    ::Common::GuestMemoryFreed(GetInteger(addr) - Core::DramMemoryMap::Base, num_pages * PageSize);\n"
+    page_heap_source "${page_heap_source}")
+string(PREPEND page_heap_source "#include <cstddef>\n#include <cstdint>\n#include \"core/device_memory.h\"\nnamespace Common { void GuestMemoryFreed(std::uint64_t offset, std::size_t bytes) noexcept; }\n")
+write_derived("${PORT_BUILD_DIR}/k_page_heap.cpp" "${page_heap_source}")
 get_target_property(pool_core_sources core SOURCES)
-list(REMOVE_ITEM pool_core_sources hle/kernel/k_memory_manager.cpp)
-list(APPEND pool_core_sources "${PORT_BUILD_DIR}/k_memory_manager.cpp")
+list(REMOVE_ITEM pool_core_sources hle/kernel/k_memory_manager.cpp hle/kernel/k_page_heap.cpp)
+list(APPEND pool_core_sources "${PORT_BUILD_DIR}/k_memory_manager.cpp" "${PORT_BUILD_DIR}/k_page_heap.cpp")
 set_property(TARGET core PROPERTY SOURCES "${pool_core_sources}")
 string(REPLACE "    void Shutdown(KernelCore& kernel) {" "    void Shutdown(KernelCore& kernel) {\n        worker_task_manager.WaitForRequests();" kernel_source "${kernel_source}")
 string(REPLACE "    ASSERT(R_SUCCEEDED(thread->Run(*this)));\n}"

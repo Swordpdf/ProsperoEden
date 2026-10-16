@@ -273,6 +273,10 @@ msgstr "Zavřít"
 msgid "Colour"
 msgstr "Barva"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Compact memory"
+msgstr "Úsporná paměť"
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -749,6 +753,10 @@ msgstr "Němčina"
 #: pe/ui/browse.cpp
 msgid "GETTING STARTED"
 msgstr "ZAČÍNÁME"
+
+#: pe/ui/settings.cpp
+msgid "Gives back memory a game left empty, 16 KiB at a time. More free memory; a game that writes there again can stutter for a moment."
+msgstr "Vrací paměť, kterou hra nechala prázdnou, po 16 KiB. Více volné paměti; hra, která tam znovu zapíše, se může na okamžik zaseknout."
 
 #: pe/ui/multiplayer.cpp
 msgid "Go offline"

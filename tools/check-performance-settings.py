@@ -24,6 +24,7 @@ for statement in (
     'Settings::values.dma_accuracy.SetValue(Settings::DmaAccuracy::Unsafe);',
     'Settings::values.use_reactive_flushing.SetValue(speed.reactive_flushing);',
     'Settings::values.skip_cpu_inner_invalidation.SetValue(speed.skip_invalidation);',
+    'Common::SetGuestMemoryFine(speed.compact_memory || dev_cram_fine);',
 ):
     assert statement in release, statement
 for guard in ('if (speed.fast_gpu) {', 'if (speed.unsafe_cpu)', 'if (speed.unsafe_dma)'):
@@ -47,13 +48,13 @@ store = (root / 'headless/settings_store.h').read_text()
 assert 'bool block_list = false;' in store and 'bool block_list = true;' not in store
 assert 'if (std::filesystem::exists(Eden::AppFile("block-list.txt"))) Eden::JitList::enabled = true;' in release
 
-# Settings > Performance in the launcher: its seven switches are the general values.
+# Settings > Performance in the launcher: its eight switches are the general values.
 services = (root / 'headless/prosperoeden/eden_services.cpp').read_text()
 load = services.split('pe::ui::Preferences EdenServices::preferences() {', 1)[1].split('\n}\n', 1)[0]
 save = services.split('bool EdenServices::set_preferences(', 1)[1].split('\n}\n', 1)[0]
 assert 'const Eden::PerformanceSettings speed = Eden::LoadPerformance(0);' in load
 for name in ('block_list', 'async_shaders', 'fast_gpu', 'unsafe_cpu', 'unsafe_dma', 'reactive_flushing',
-             'skip_invalidation'):
+             'skip_invalidation', 'compact_memory'):
     assert f'result.{name} = speed.{name};' in load, name
     assert f'speed.{name} = preferences.{name};' in save, name
 assert 'Eden::PerformanceSettings speed = Eden::LoadPerformance(0);' in save

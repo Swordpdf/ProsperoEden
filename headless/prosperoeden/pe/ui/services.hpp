@@ -355,6 +355,7 @@ struct Preferences
     bool unsafe_dma = false;    // unsafe DMA accuracy
     bool reactive_flushing = true;  // off is faster; some effects break
     bool skip_invalidation = false; // fewer invalidations of what the GPU caches hold
+    bool compact_memory = false;    // the game's memory given back 16 KiB at a time where it is empty
     // How much memory a game's console is told it has (settings_store.h's kMemoryLayoutKeys): an
     // index into them, and the memory a mod that keeps a heap of its own asks the kernel for.
     int memory_layout = 0;
@@ -393,8 +394,8 @@ struct GameSettings
     bool own_mapping = false; // the game has a button mapping of its own
     ButtonMapping mapping = kDefaultMapping;
     // The Performance switches, in the order of Preferences: block list, async shaders, fast GPU,
-    // unsafe CPU, unsafe DMA, reactive flushing, skip invalidation.
-    std::array<int, 7> performance{-1, -1, -1, -1, -1, -1, -1};
+    // unsafe CPU, unsafe DMA, reactive flushing, skip invalidation, compact memory.
+    std::array<int, 8> performance{-1, -1, -1, -1, -1, -1, -1, -1};
     int64_t rng_seed = -1;
 };
 

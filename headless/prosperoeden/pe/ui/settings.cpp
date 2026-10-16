@@ -119,6 +119,7 @@ enum PerformanceRow : int
     speed_unsafe_dma,
     speed_reactive_flushing,
     speed_skip_invalidation,
+    speed_compact_memory,
     speed_memory_layout, // the memory a game's console is told it has; last, so no row moves
     kPerformanceRows,
 };
@@ -284,7 +285,8 @@ void Launcher::draw_settings(Canvas &c)
 
     // What each category is set to, in a few words.
     const int switches = prefs_.block_list + prefs_.async_shaders + prefs_.fast_gpu + prefs_.unsafe_cpu +
-                         prefs_.unsafe_dma + prefs_.reactive_flushing + prefs_.skip_invalidation;
+                         prefs_.unsafe_dma + prefs_.reactive_flushing + prefs_.skip_invalidation +
+                         prefs_.compact_memory;
     const std::string summaries[kCategoryCount] = {
         playing_,
         pick(services_.resolution_keys(), prefs_.resolution) + "  /  " + pick(services_.filter_labels(), prefs_.filter) +
@@ -468,7 +470,9 @@ const char *Launcher::performance_about(int row)
         TR("Keeps what a game reads back from the GPU exact. Off is faster, and some effects "
            "break."),
         TR("Skips some checks when a game changes memory the GPU uses: faster, and textures "
-           "can be stale.")};
+           "can be stale."),
+        TR("Gives back memory a game left empty, 16 KiB at a time. More free memory; a game that "
+           "writes there again can stutter for a moment.")};
     // The memory row has no line of its own: every language would need one, and its value says
     // what it is (a size of memory) while the message after it changes says when it arrives.
     if (row >= kPerformanceSwitches)
@@ -726,7 +730,8 @@ void Launcher::press_dialog(Key key)
         }
         bool *const switches[kPerformanceSwitches] = {
             &prefs_.block_list, &prefs_.async_shaders,     &prefs_.fast_gpu, &prefs_.unsafe_cpu,
-            &prefs_.unsafe_dma, &prefs_.reactive_flushing, &prefs_.skip_invalidation};
+            &prefs_.unsafe_dma, &prefs_.reactive_flushing, &prefs_.skip_invalidation,
+            &prefs_.compact_memory};
         bool &value = *switches[std::clamp(option_, 0, kPerformanceSwitches - 1)];
         value = !value;
         break;
@@ -1051,7 +1056,7 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         static constexpr const char *kNames[kPerformanceRows] = {
             TR("Compile ahead"),        TR("Asynchronous shaders"), TR("Faster GPU emulation"),
             TR("Faster CPU emulation"), TR("Faster DMA"),           TR("Reactive flushing"),
-            TR("Skip CPU invalidation"), TR("Memory")};
+            TR("Skip CPU invalidation"), TR("Compact memory"), TR("Memory")};
         for (int row = first; row <= last; ++row)
         {
             list.push_opacity(rows_view.row_alpha(row, kVideoRowHeight));

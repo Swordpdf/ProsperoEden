@@ -104,13 +104,13 @@ void Launcher::open_modal(Modal modal)
     option_cursor_.snap(dialog_row_top(modal, 0));
     message_.clear();
     // Switches show their state at once; they only animate when changed.
-    const std::array<bool, 7> states = switch_states(modal);
+    const std::array<bool, 8> states = switch_states(modal);
     for (std::size_t i = 0; i < states.size(); ++i)
         switches_[i].snap(states[i] ? 1.0f : 0.0f);
     cue(Cue::modal_open);
 }
 
-std::array<bool, 7> Launcher::switch_states(Modal modal) const
+std::array<bool, 8> Launcher::switch_states(Modal modal) const
 {
     switch (modal)
     {
@@ -118,7 +118,8 @@ std::array<bool, 7> Launcher::switch_states(Modal modal) const
         return {prefs_.hud, false, false};
     case Modal::performance:
         return {prefs_.block_list,  prefs_.async_shaders,     prefs_.fast_gpu, prefs_.unsafe_cpu,
-                prefs_.unsafe_dma,  prefs_.reactive_flushing, prefs_.skip_invalidation};
+                prefs_.unsafe_dma,  prefs_.reactive_flushing, prefs_.skip_invalidation,
+                prefs_.compact_memory};
     case Modal::audio:
         return {prefs_.mute, false, false};
     case Modal::controls:
@@ -385,7 +386,7 @@ void Launcher::update(float dt)
     if (modal_ != Modal::none)
         option_cursor_.target = dialog_row_top(modal_, option_);
     option_cursor_.update(dt, t.cursor_spring);
-    const std::array<bool, 7> states = switch_states(modal_shown_);
+    const std::array<bool, 8> states = switch_states(modal_shown_);
     for (std::size_t i = 0; i < states.size(); ++i)
     {
         switches_[i].target = states[i] ? 1.0f : 0.0f;

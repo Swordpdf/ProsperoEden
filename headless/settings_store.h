@@ -17,7 +17,7 @@
 //     "diagnostics": { "detailed_logging": false, "immediate_logs": false },
 //     "performance": { "block_list": false, "async_shaders": false, "fast_gpu": false,
 //                      "unsafe_cpu": false, "unsafe_dma": false, "reactive_flushing": true,
-//                      "skip_invalidation": false, "memory_layout": "4Gb" },
+//                      "skip_invalidation": false, "compact_memory": false, "memory_layout": "4Gb" },
 //     "game_files": "/mnt/ext1/eden",
 //     "library": { "last_game": "Game [id].nsp", "recent": ["Game [id].nsp"] },
 //     "games": { "0100000000010000": { "console_mode": "handheld", "renderer": "opengl",
@@ -521,7 +521,8 @@ inline bool SaveGameDocked(uint64_t title_id, bool docked, const std::string& fi
 
 // The Performance switches by name, in the order of PerformanceSettings and of the launcher.
 inline constexpr const char* kPerformanceKeys[] = {"block_list", "async_shaders", "fast_gpu", "unsafe_cpu",
-                                                   "unsafe_dma", "reactive_flushing", "skip_invalidation"};
+                                                   "unsafe_dma", "reactive_flushing", "skip_invalidation",
+                                                   "compact_memory"};
 inline constexpr int kPerformanceSwitches = int(std::size(kPerformanceKeys));
 // Settings > Performance > Memory: how much memory the guest's console is told it has. Eden calls
 // this the memory layout, and it is what a mod that keeps a heap of its own (an HD camera pack)
@@ -557,7 +558,7 @@ struct GameSettings {
     int controller = -1;        // index into kControllerKeys
     bool own_mapping = false;   // the game has a button mapping of its own: mapping
     ButtonMapping mapping = kDefaultMapping;
-    std::array<int, kPerformanceSwitches> performance{-1, -1, -1, -1, -1, -1, -1};  // kPerformanceKeys
+    std::array<int, kPerformanceSwitches> performance{-1, -1, -1, -1, -1, -1, -1, -1};  // kPerformanceKeys
     int64_t rng_seed = -1;      // 0 to 4294967295, or -1: no seed (load_address.h)
 };
 // The seed a typed text names: digits and nothing else, 0 to 4294967295. -1 for any other text.
@@ -723,6 +724,7 @@ struct PerformanceSettings {
     bool unsafe_dma = false;     // Eden's unsafe DMA accuracy
     bool reactive_flushing = true;   // Eden's reactive flushing: off is faster, some effects break
     bool skip_invalidation = false;  // Eden's skip_cpu_inner_invalidation: fewer cache invalidations
+    bool compact_memory = false;     // the guest's memory in 16 KiB pages where it is mostly zeroes
     int memory_layout = 0;           // index into kMemoryLayoutKeys (0 is the Switch's own 4 GiB)
 };
 
@@ -741,6 +743,7 @@ inline PerformanceSettings LoadPerformance(uint64_t title_id, const std::string&
         value("unsafe_dma", result.unsafe_dma);
         value("reactive_flushing", result.reactive_flushing);
         value("skip_invalidation", result.skip_invalidation);
+        value("compact_memory", result.compact_memory);
         // A name that is not one of the layouts leaves the value the general settings gave.
         result.memory_layout = KeyIndex(Settings::String(document,
                                                          Json::json_pointer(base + "/performance/memory_layout")),
@@ -763,6 +766,7 @@ inline bool SavePerformance(uint64_t title_id, const PerformanceSettings& value,
                             {"fast_gpu", value.fast_gpu}, {"unsafe_cpu", value.unsafe_cpu},
                             {"unsafe_dma", value.unsafe_dma}, {"reactive_flushing", value.reactive_flushing},
                             {"skip_invalidation", value.skip_invalidation},
+                            {"compact_memory", value.compact_memory},
                             {"memory_layout", kMemoryLayoutKeys[value.memory_layout]}};
     return Settings::Write(document, file);
 }

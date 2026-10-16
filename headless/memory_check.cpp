@@ -11,6 +11,7 @@
 #include <memory>
 #include <source_location>
 #include <type_traits>
+#include <array>
 #include <atomic>
 #include <thread>
 #include <vector>
@@ -26,7 +27,19 @@
 #include <sys/wait.h>
 namespace Common {
 void SparseUsage(std::size_t* reserved, std::size_t* committed) noexcept;
+// The guest's memory as a service (src/guest_memory_service.inc).
+void* AllocateGuestMemoryWhereUsed(std::size_t size) noexcept;
+void FreeGuestMemory(void* base, std::size_t size) noexcept;
+void GuestMemoryUsage(std::size_t* span, std::size_t* held) noexcept;
+void SetGuestMemoryService(bool on, bool scan, bool dedup) noexcept;
+void SetGuestMemoryFine(bool on) noexcept;
+void CommitGuestMemoryOnHandOut(std::uint64_t offset, std::size_t bytes) noexcept;
+void ClearGuestMemory(std::uint8_t* at, std::uint64_t offset, std::size_t bytes, int fill) noexcept;
+void GuestMemoryFreed(std::uint64_t offset, std::size_t bytes) noexcept;
+void GuestMemoryScanNow() noexcept;
+int GuestMemorySlotState(std::uint64_t offset) noexcept;
 }
+#include <random>
 #define EDEN_JIT_LIST_FORMAT_ONLY
 #include "jit_list.h"
 #include <unistd.h>
@@ -1772,8 +1785,108 @@ static void CheckPageReuse() {
                 eden_page_reuse_groups - groups_before, eden_page_reuse_accesses);
 }
 
+// The guest's memory as a service: a write promotes a slot that shows the zero block, a clear or a
+// free with whole slots gives them back, the scanner gives back slots that hold only zeroes, and
+// no write is lost while the scanner fences slots under writers.
+static void CheckGuestMemoryService() {
+    constexpr std::size_t slot = std::size_t{2} << 20, slots = 32, size = slots * slot;
+    Common::SetGuestMemoryService(true, true, true);
+    Common::SetGuestMemoryFine(true); // Settings > Performance > Compact memory
+    auto* base = static_cast<std::uint8_t*>(Common::AllocateGuestMemoryWhereUsed(size));
+    require(base != nullptr);
+    std::size_t span = 0, held = 0;
+    const auto usage = [&] { Common::GuestMemoryUsage(&span, &held); return held; };
+    require(usage() == 0 && span == size);
+    require(Common::GuestMemorySlotState(0) == 0);
+    // Reads see zeroes and take nothing; handing pages out takes nothing either.
+    std::uint64_t seen = 0;
+    for (std::size_t at = 0; at < size; at += 4093) seen |= base[at];
+    Common::CommitGuestMemoryOnHandOut(0, size);
+    require(seen == 0 && usage() == 0);
+    // A write from C++ promotes its slot, and only its slot.
+    base[5 * slot + 100] = 7;
+    require(base[5 * slot + 100] == 7 && Common::GuestMemorySlotState(5 * slot) == 1 && usage() == slot);
+    require(Common::GuestMemorySlotState(4 * slot) == 0 && Common::GuestMemorySlotState(6 * slot) == 0);
+    // Threads writing the same few slots at once: every write lands, each slot is promoted once.
+    {
+        std::vector<std::thread> threads;
+        for (unsigned thread = 0; thread < 8; ++thread)
+            threads.emplace_back([=] {
+                for (unsigned i = 0; i < 4000; ++i) {
+                    const std::size_t at = 8 * slot + (std::size_t{i} * 8 + thread) * 524287 % (4 * slot);
+                    base[at] = static_cast<std::uint8_t>(thread + 1);
+                }
+            });
+        for (auto& thread : threads) thread.join();
+        for (unsigned thread = 0; thread < 8; ++thread)
+            for (unsigned i = 0; i < 4000; ++i) {
+                const std::size_t at = 8 * slot + (std::size_t{i} * 8 + thread) * 524287 % (4 * slot);
+                require(base[at] != 0);
+            }
+        require(usage() == 5 * slot);
+    }
+    // A fill with zeroes: whole slots go back, a part of a slot is zeroed and the rest kept.
+    base[10 * slot + 8192] = 9;
+    Common::ClearGuestMemory(base + 8 * slot, 8 * slot, 2 * slot, 0);
+    require(Common::GuestMemorySlotState(8 * slot) == 0 && Common::GuestMemorySlotState(9 * slot) == 0);
+    require(base[8 * slot + 131] == 0 && usage() == 3 * slot);
+    Common::ClearGuestMemory(base + 10 * slot, 10 * slot, 4096, 0);
+    require(Common::GuestMemorySlotState(10 * slot) == 1 && base[10 * slot + 8192] == 9);
+    // A fill of a slot that shows the zero block with zeroes takes nothing.
+    Common::ClearGuestMemory(base + 12 * slot, 12 * slot, 3 * slot, 0);
+    require(usage() == 3 * slot);
+    // Freed pages give back the slots they cover whole, not the ones they touch.
+    Common::GuestMemoryFreed(11 * slot - 4096, slot + 8192);
+    require(Common::GuestMemorySlotState(11 * slot) == 0 && Common::GuestMemorySlotState(10 * slot) == 1);
+    require(usage() == 2 * slot);
+    // The scanner: an Own slot of zeroes goes back, one with a byte set stays.
+    base[20 * slot + 64] = 1;
+    base[20 * slot + 64] = 0;
+    base[21 * slot + 9] = 3;
+    const std::size_t before_scan = usage();
+    Common::GuestMemoryScanNow();
+    require(Common::GuestMemorySlotState(20 * slot) == 0);
+    // The slot with one byte set has 127 pages of zeroes: it becomes Fine and keeps one 16 KiB page,
+    // read where it lies; a write makes it whole again with its bytes in place.
+    require(Common::GuestMemorySlotState(21 * slot) == 3 && base[21 * slot + 9] == 3 && base[21 * slot + 70000] == 0);
+    require(usage() <= before_scan - 2 * slot + 16384);
+    base[21 * slot + 100000] = 4;
+    require(Common::GuestMemorySlotState(21 * slot) == 1 && base[21 * slot + 9] == 3 && base[21 * slot + 100000] == 4);
+    // Writers against the scanner: every location ends with what its thread wrote last, though
+    // slots are fenced, given back and promoted again under them.
+    {
+        std::atomic<bool> stop{false};
+        constexpr unsigned writers = 4, places = 512;
+        std::vector<std::array<std::uint8_t, places>> last(writers);
+        std::vector<std::thread> threads;
+        for (unsigned thread = 0; thread < writers; ++thread)
+            threads.emplace_back([&, thread] {
+                std::mt19937 random(thread + 1);
+                for (unsigned round = 0; !stop.load(std::memory_order_relaxed) || round < 2000; ++round) {
+                    const unsigned place = random() % places;
+                    // Zero half the time, so whole slots hold only zeroes now and then.
+                    const auto value = static_cast<std::uint8_t>(random() % 2 ? 0 : 1 + random() % 255);
+                    base[22 * slot + (std::size_t{place} * writers + thread) * 8192] = value;
+                    last[thread][place] = value;
+                }
+            });
+        for (unsigned pass = 0; pass < 40; ++pass) Common::GuestMemoryScanNow();
+        stop = true;
+        for (auto& thread : threads) thread.join();
+        for (unsigned thread = 0; thread < writers; ++thread)
+            for (unsigned place = 0; place < places; ++place)
+                require(base[22 * slot + (std::size_t{place} * writers + thread) * 8192] ==
+                        last[thread][place]);
+    }
+    Common::FreeGuestMemory(base, size);
+    require(usage() == 0 && span == 0);
+    std::puts("Guest memory service PASS: writes promote, clears and frees give whole slots back, the scanner "
+              "gives back zero slots, no write lost under the scanner");
+}
+
 int main(int argc, char** argv) {
     CheckSparseTables();
+    CheckGuestMemoryService();
     if (argc == 2 && std::strcmp(argv[1], "--link-check") == 0) {
         CheckLinks();
         return 0;

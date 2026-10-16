@@ -126,6 +126,8 @@ extern "C" unsigned long long eden_dmb_dropped, eden_checkbit_fused;
 #include "stop_limit.h"
 namespace Common {
 bool SparseTablesAvailable() noexcept; // src/memory_pages.cpp
+void SetGuestMemoryService(bool on, bool scan, bool dedup) noexcept; // src/guest_memory_service.inc
+void SetGuestMemoryFine(bool on) noexcept;
 }
 #if defined(EDEN_DEV_PROFILE) || defined(EDEN_DEV_ROM_ID)
 static bool dev_stop_hang = false; // dev-settings stop_hang=on
@@ -803,6 +805,7 @@ int main(int argc, char** argv) {
         // A development run that names jit_list in dev-settings decides the block list by itself.
         [[maybe_unused]] bool dev_block_list = false;  // read where a session applies its settings
         [[maybe_unused]] int dev_vertex_input = -1;  // likewise: dev-settings vertex_input_dynamic=off/on
+        [[maybe_unused]] bool dev_cram_on = true, dev_cram_scan = true, dev_cram_dedup = false, dev_cram_fine = false;
 #ifdef EDEN_DEV_PROFILE
         // One-run A/B switches written by the development runner; absent = defaults.
         {
@@ -810,6 +813,13 @@ int main(int argc, char** argv) {
             for (std::string entry; dev_settings >> entry;) {
                 if (entry == "dma_accuracy=unsafe") {
                     Settings::values.dma_accuracy.SetValue(Settings::DmaAccuracy::Unsafe);
+                } else if (entry == "cram=off" || entry == "cram_scan=off" || entry == "cram_dedup=on" ||
+                           entry == "cram_fine=on") {
+                    // The guest's memory as a service (src/guest_memory_service.inc).
+                    if (entry == "cram=off") dev_cram_on = false;
+                    if (entry == "cram_scan=off") dev_cram_scan = false;
+                    if (entry == "cram_dedup=on") dev_cram_dedup = true;
+                    if (entry == "cram_fine=on") dev_cram_fine = true;
                 } else if (entry == "placement=off") {
                     Eden::Performance::SetSecondaryPlacement(false);
                 } else if (entry == "fastmem=off" || entry == "fastmem=on") {
@@ -1046,6 +1056,8 @@ int main(int argc, char** argv) {
         Eden::Report("launch", docked ? "Console mode: Docked" : "Console mode: Handheld");
 #endif
 #endif
+        // The guest's memory as a service, before the session takes it (dev-settings cram=off ...).
+        Common::SetGuestMemoryService(dev_cram_on, dev_cram_scan, dev_cram_dedup);
 #if defined(PS5_NATIVE) && defined(EDEN_PS5_OPENGL)
         {
             // Settings > Video: internal resolution and the filter scaling it to the output.
@@ -1186,6 +1198,9 @@ int main(int argc, char** argv) {
             if (speed.unsafe_dma) Settings::values.dma_accuracy.SetValue(Settings::DmaAccuracy::Unsafe);
             Settings::values.use_reactive_flushing.SetValue(speed.reactive_flushing);
             Settings::values.skip_cpu_inner_invalidation.SetValue(speed.skip_invalidation);
+            // Settings > Performance > Compact memory: the guest's memory in 16 KiB pages where a
+            // written slot is mostly zeroes (src/guest_memory_service.inc), before the session takes it.
+            Common::SetGuestMemoryFine(speed.compact_memory || dev_cram_fine);
             // Settings > Performance > Memory: the memory the guest's console is told it has
             // (Eden's memory layout). A mod that keeps a heap of its own asks the kernel how much
             // memory there is and reserves what it wants from it; on the Switch's own 4 GiB it finds

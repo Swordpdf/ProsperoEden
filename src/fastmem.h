@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
+#include <atomic>
 #include <cstdint>
 #ifdef __linux__
 #include <ucontext.h>
@@ -11,6 +12,11 @@
 // window directly, or take the page-table path for blocked pages (unaliased, read-only or
 // GPU-tracked) without faulting. The fault handler only covers races with remapping.
 namespace Eden::Fastmem {
+
+// The guest's memory as a service (src/guest_memory_service.inc): a write to a slot that is read
+// where it lies faults and is promoted. Asked first by every fault handler, so a JIT write that
+// faults for that reason is never taken for a fastmem miss. Null until the service runs.
+inline std::atomic<bool (*)(void*) noexcept> guest_write_fault{nullptr};
 
 // Select before Core::System (and so HostMemory) is constructed.
 void Request(bool enabled) noexcept;

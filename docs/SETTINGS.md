@@ -15,13 +15,15 @@ The settings that take more than a line to explain: the Performance switches, fr
 | Faster DMA | `unsafe_dma` | off | Less exact memory transfers to the GPU. A few games show wrong graphics. |
 | Reactive flushing | `reactive_flushing` | on | Keeps what a game reads back from the GPU exact. Off is faster; some effects break. |
 | Skip CPU invalidation | `skip_invalidation` | off | Skips some checks when a game changes memory the GPU uses. Textures can be stale. |
+| Compact memory | `compact_memory` | off | Gives back memory a game wrote but left mostly empty, 16 KiB at a time instead of 2 MiB (see [Memory](#memory)). More free memory; a game that writes there again waits about 0.3 ms for it, so a game that keeps rewriting such memory can stutter. Measured: 100 to 300 MiB more free in two games, at the same frame rate. |
 
 A game can have its own values: in its settings, **Performance** (see [Settings per game](#settings-per-game)). In the settings file, `"performance"` at the top level is what the switches set, and one inside a game's entry under `"games"` is that game's, whose values go first:
 
 ```json
 {
   "performance": { "block_list": false, "async_shaders": false, "fast_gpu": false, "unsafe_cpu": false,
-                   "unsafe_dma": false, "reactive_flushing": true, "skip_invalidation": false },
+                   "unsafe_dma": false, "reactive_flushing": true, "skip_invalidation": false,
+                   "compact_memory": false },
   "games": { "0100000000010000": { "performance": { "fast_gpu": true } } }
 }
 ```
@@ -50,6 +52,19 @@ A mod that keeps memory of its own asks the kernel how much there is and takes w
 ```
 
 The menu is `"performance" / "memory_layout"` in the settings file, so the two are the same thing and either can be changed with the other. A game can still be given one of its own in the file, inside its entry under `"games"`, which comes first: the menu's value is for every game. Above 4 GiB the guest's memory is backed where the game's kernel uses it, so a 6 GiB layout holds only what a session touches; the memory pool the processor shares with the graphics still has to take that much, so a demanding game at a high resolution can go from running out of graphics memory to running out of the pool. Give the larger memory to the game that needs it rather than to every game. A line at launch says which one a game got (`Memory layout:` in `stderr.log`).
+
+## Memory
+
+A game's console has 4 GiB of memory (or the larger layout chosen under **Memory**), and a game is
+handed most of it. ProsperoEden takes the console's memory for it only where the game writes: a part
+that was never written, or that the game's console cleared or freed whole, reads as zeroes from one
+shared block and takes nothing, and a part that holds only zeroes again is given back now and then.
+A 64-bit game holds 600 MiB to 2 GiB less of the console's memory this way, measured at the same
+frame rate; a 32-bit game keeps the whole block. **Compact memory** does the same in 16 KiB pieces
+inside memory the game wrote.
+
+The launch log says it (`EDEN_CRAM on` in `stderr.log`, and every 30 s what is held), and
+development builds can switch it off with `cram=off` in `dev-settings.txt`.
 
 ## Frame generation
 

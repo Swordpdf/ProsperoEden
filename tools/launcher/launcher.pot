@@ -289,6 +289,10 @@ msgstr ""
 msgid "Colour"
 msgstr ""
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Compact memory"
+msgstr ""
+
 #. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Compile ahead"
@@ -772,6 +776,10 @@ msgstr ""
 
 #: pe/ui/browse.cpp
 msgid "GETTING STARTED"
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "Gives back memory a game left empty, 16 KiB at a time. More free memory; a game that writes there again can stutter for a moment."
 msgstr ""
 
 #: pe/ui/multiplayer.cpp
