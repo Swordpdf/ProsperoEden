@@ -5,9 +5,8 @@ default and recovery interface. A pack supplies Lua presentation code, images, f
 recordings and a loading-screen description. It does not replace the emulator or load
 native plugins.
 
-This implementation incorporates upstream changes through commit `e9f30ae` after
-ProsperoEden v1.002.000, including menu keybindings. It is an experimental upstream
-contribution, not a feature of an unmodified official release.
+Runtime launcher packs are included in ProsperoEden v1.003.000 as an experimental feature.
+The built-in launcher remains available as the recovery interface.
 
 ## Installation and selection
 
