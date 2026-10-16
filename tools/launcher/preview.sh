@@ -38,12 +38,12 @@ for source in "${sources[@]}"; do
     objects+=("$object")
     # Rebuild when the source or any launcher header is newer than the object.
     if [[ ! -e $object || $source -nt $object ]] ||
-        [[ $relative != pe/gfx/harfbuzz.cpp && -n $(find "$source_dir/pe" "$source_dir/host" -name '*.hpp' -newer "$object" -print -quit) ]]; then
+        [[ $relative != pe/gfx/harfbuzz.cpp && -n $(find "$source_dir/pe" "$source_dir/host" \( -name '*.hpp' -o -name '*.inc' \) -newer "$object" -print -quit) ]]; then
         # HarfBuzz is not ours to tidy: its warnings are off.
         warnings=(-Wall -Wextra)
         [[ $relative == pe/gfx/harfbuzz.cpp ]] && warnings=(-w)
         "$cxx" -std=c++20 -O2 "${warnings[@]}" -DGL_GLEXT_PROTOTYPES=1 -I"$source_dir" \
-            -I"$source_dir/host" -I"$root/third_party/lua" -I"$root/tools/launcher/stb" -I"$root/third_party" -I"$harfbuzz" -I"$kit" -I"$json" \
+            -I"$source_dir/host" -I"$root/third_party/lua" -I"$root/tools/launcher/stb" -I"$root/third_party" -I"$root/third_party/miniz" -I"$harfbuzz" -I"$kit" -I"$json" \
             -c "$source" -o "$object" &
         pids+=($!)
         if [[ ${#pids[@]} -ge ${HOST_BUILD_JOBS:-2} ]]; then
@@ -69,7 +69,8 @@ for source in "$source_dir"/pe/audio/*.cpp; do
     fi
     objects+=("$object")
 done
-"$cxx" "${objects[@]}" -lEGL -lGL -lm -pthread -o "$build/pe_preview"
+source "$root/tools/launcher/update-deps.sh"
+"$cxx" "${objects[@]}" -lEGL -lGL -lm -lcrypto -lcurl -pthread -o "$build/pe_preview"
 
 run() {
     EGL_PLATFORM=surfaceless LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe MESA_GL_VERSION_OVERRIDE=4.6 MESA_GLSL_VERSION_OVERRIDE=460 "$build/pe_preview" "$@"

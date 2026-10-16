@@ -177,8 +177,9 @@ compatible app update replaces engine files without replacing them.
 
 This does **not** make an unmodified official release support runtime packs. Automatic
 updates preserve a selected pack only when the destination release includes this
-runtime and declares its compatible contract. Pack updates themselves are manual in
-this first implementation. Maintainers must preserve an existing contract or introduce
+runtime and declares its compatible contract, API and capabilities. Optional
+[launcher pack updates](LAUNCHER_UPDATES.md) provide separate HTTPS feeds, automatic
+checks and confirmed installation without replacing the application. Maintainers must preserve an existing contract or introduce
 a new contract with a migration; adding unrelated engine features does not require
 recompiling packs.
 
@@ -203,10 +204,11 @@ frontend lifecycle and updater, adapt the bridge, and run the renderer and workf
 checks. Existing packs can remain unchanged when `launcher-v1.0` keeps its behavior.
 New host settings do not automatically appear in old packs. Breaking changes need a new
 contract or an adapter, rather than declaring an incompatible implementation compatible.
-Pack updates are manual; the application updater does not download launcher updates.
+The application updater does not download launcher updates; the separate native pack
+updater handles packs that opt into the [update-feed format](LAUNCHER_UPDATES.md).
 
 The host build needs a C++20 compiler, EGL/OpenGL development libraries and
-nlohmann/json development headers (3.11 or newer). The existing dependency tool fetches
+nlohmann/json development headers (3.11 or newer), OpenSSL and libcurl development files. The existing dependency tool fetches
 the pinned HarfBuzz and UI kit; Lua is vendored in the source tree.
 
 `tools/launcher/runtime-preview.sh <output-dir> <width> <height>` builds an interactive

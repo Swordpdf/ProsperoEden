@@ -110,6 +110,14 @@ extern "C"
     int update_check_json_string(const char *json, size_t length, const char *key, char *out,
                                  size_t size);
 
+    /* Bounded views of top-level values, unsigned integers and string-array elements.
+     * 1: found, 0: absent/end, -1: malformed or unsupported. Views borrow the input. */
+    int update_check_json_value(const char *json, size_t length, const char *key,
+                                const char **value, size_t *value_length);
+    int update_check_json_uint(const char *json, size_t length, const char *key, unsigned *out);
+    int update_check_json_array_string(const char *json, size_t length, size_t index,
+                                       char *out, size_t size);
+
     /* Decides from an app's API file and the installed content version. Never fails: every
      * problem is a result with state UPDATE_CHECK_UNKNOWN and a reason. */
     void update_check_evaluate(const char *json, size_t length, const char *installed,

@@ -472,6 +472,41 @@ bool launcher_update_compatible(const std::string& data_root, const std::string&
        update_check_json_string(descriptor.data(),descriptor.size(),"supports",supports,sizeof(supports))!=1) {
         reason="This release cannot preserve the selected launcher. Select the built-in launcher before updating.";return false;
     }
+    // Sharing a contract name does not imply support for every additive API/capability.
+    const auto fail_api=[&] { reason="The selected launcher needs APIs or capabilities missing from this release. Select the built-in launcher before updating.";return false; };
+    const char* api=nullptr; std::size_t api_size=0;
+    const int has_api=update_check_json_value(manifest.data(),manifest.size(),"api",&api,&api_size);
+    if(has_api<0) return fail_api();
+    if(has_api==1) {
+        unsigned major=0,minor=0,host_major=0,host_minor=0;
+        const int has_minor=update_check_json_uint(api,api_size,"min_minor",&minor);
+        if(update_check_json_uint(api,api_size,"major",&major)!=1 || has_minor<0 ||
+           update_check_json_uint(descriptor.data(),descriptor.size(),"api_major",&host_major)!=1 ||
+           update_check_json_uint(descriptor.data(),descriptor.size(),"api_minor",&host_minor)!=1 ||
+           major!=host_major || minor>host_minor) return fail_api();
+    }
+    const char* required=nullptr; std::size_t required_size=0;
+    const int has_required=update_check_json_value(manifest.data(),manifest.size(),"required_capabilities",&required,&required_size);
+    if(has_required<0) return fail_api();
+    if(has_required==1) {
+        const char* available=nullptr; std::size_t available_size=0;
+        const int has_available=update_check_json_value(descriptor.data(),descriptor.size(),"capabilities",&available,&available_size);
+        for(std::size_t index=0;index<=64;++index) {
+            char capability[128]{};
+            const int found=update_check_json_array_string(required,required_size,index,capability,sizeof(capability));
+            if(found==0) break;
+            if(found<0 || index==64 || has_available!=1) return fail_api();
+            bool supported=false;
+            for(std::size_t item=0;item<=64;++item) {
+                char candidate[128]{};
+                const int present=update_check_json_array_string(available,available_size,item,candidate,sizeof(candidate));
+                if(present==0) break;
+                if(present<0 || item==64) return fail_api();
+                if(std::string{candidate}==capability) supported=true;
+            }
+            if(!supported) return fail_api();
+        }
+    }
     const std::string supported=supports;
     for(std::size_t at=0;at<=supported.size();) {
         const auto end=supported.find(',',at);

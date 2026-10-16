@@ -3115,7 +3115,7 @@ endif()
             list(APPEND launcher_sources "${ui_kit}/ui/theme.cpp")
             set_source_files_properties("${ui_kit}/ui/theme.cpp" "${launcher_dir}/pe/ui/theme_kit.cpp"
                 PROPERTIES INCLUDE_DIRECTORIES "${ui_kit}")
-            list(APPEND launcher_sources "${launcher_dir}/pe/ui/runtime_launcher.cpp")
+            list(APPEND launcher_sources "${launcher_dir}/pe/ui/runtime_launcher.cpp" "${launcher_dir}/pe/ui/launcher_updates.cpp")
             set(launcher_lua_dir "${PORT_ROOT}/third_party/lua")
             file(GLOB launcher_lua_sources "${launcher_lua_dir}/*.c")
             list(FILTER launcher_lua_sources EXCLUDE REGEX "/(lua|luac|linit|liolib|loslib|loadlib|ldblib)\\.c$")
@@ -3148,7 +3148,7 @@ endif()
             # Their MD5 is OpenSSL's (linked below for the update check), as is the SHA-256 a
             # download's contents are checked with (remote/stream_check.h). Its include folder, for
             # these files only: the prefix it is in has older FFmpeg headers as well.
-            set_source_files_properties("${EDEN_PORT_DIR}/remote/save_archive.cpp"
+            set_source_files_properties("${launcher_dir}/pe/ui/launcher_updates.cpp" "${EDEN_PORT_DIR}/remote/save_archive.cpp"
                 "${EDEN_PORT_DIR}/remote/stream_check.cpp"
                 PROPERTIES INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}")
             # The update check (update_notice.h). Its network side is the boilerplate's

@@ -2,6 +2,7 @@
   "schema": 1,
   "id": "grid-example",
   "name": "Grid Example",
+  "version": "1.0.0",
   "host_contract": "launcher-v1.0",
   "api": { "major": 1, "min_minor": 0 },
   "entry": "main.lua",
