@@ -102,6 +102,7 @@ void Launcher::open(Screen screen, bool forward)
     screen_time_ = 0.0f;
     transition_.start(th().screen_seconds);
     message_.clear();
+    popup_.clear();
     cue(forward ? Cue::open : Cue::back);
 }
 
@@ -111,6 +112,7 @@ void Launcher::open_modal(Modal modal)
     option_ = 0;
     option_cursor_.snap(dialog_row_top(modal, 0));
     message_.clear();
+    popup_.clear();
     // Switches show their state at once; they only animate when changed.
     const std::array<bool, 7> states = switch_states(modal);
     for (std::size_t i = 0; i < states.size(); ++i)
@@ -142,6 +144,7 @@ void Launcher::close_modal()
 {
     modal_ = Modal::none;
     message_.clear();
+    popup_.clear();
     cue(Cue::modal_close);
 }
 
