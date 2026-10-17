@@ -524,6 +524,12 @@ class Services
         static const std::vector<std::string> off{"Off"};
         return off;
     }
+    // How many of those the general settings offer: "Off" and the shared presets. A game's own
+    // presets (its game folder's reshade/) come after them, in its settings only.
+    virtual int post_processing_shared()
+    {
+        return static_cast<int>(post_processing_labels().size());
+    }
     // Frame generation: 0 this build has none (its settings are not shown), 1 the user's
     // Lossless.dll is missing (they are shown greyed out), 2 ready.
     virtual int frame_gen_state()

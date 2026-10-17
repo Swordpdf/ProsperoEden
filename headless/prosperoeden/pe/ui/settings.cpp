@@ -751,7 +751,9 @@ void Launcher::press_dialog(Key key)
             prefs_.refresh = prefs_.refresh != 0 ? 0 : 1;
         else if (option_ == video_post_processing)
         {
-            const int count = static_cast<int>(services_.post_processing_labels().size());
+            // The shared presets only: a game's own are in its settings (Services::post_processing_shared).
+            const int count = std::clamp(services_.post_processing_shared(), 1,
+                                         static_cast<int>(services_.post_processing_labels().size()));
             prefs_.post_processing = (std::clamp(prefs_.post_processing, 0, count - 1) + step + count) % count;
         }
         else if (option_ == video_overlay_options)

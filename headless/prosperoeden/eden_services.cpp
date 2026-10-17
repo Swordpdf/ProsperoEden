@@ -1130,17 +1130,34 @@ const std::vector<std::string>& EdenServices::filter_labels() {
     return labels;
 }
 
-void EdenServices::ReadPostPresets(std::uint64_t title_id) {
-    // Eden writes its bundled presets into post_presets the first time, then lists that folder. A
-    // game in its own folder lists that folder's reshade/ presets first (reshade_folder.h); the
-    // general settings list the app's own only. A name is offered once: the game's own first.
-    (void)Eden::Reshade::SetGameFolder(title_id ? ModPlaces(title_id).game_folder : std::string{});
+void EdenServices::ReadPostPresets(std::optional<std::uint64_t> title_id) {
+    // Eden writes its bundled presets into post_presets the first time, then lists that folder:
+    // "Off", then those. A game in its own folder adds the presets of that folder's reshade/
+    // (reshade_folder.h) after them. So an index means the same preset in the general settings and
+    // in a game's (the general settings read again while a game's are open keep the game's list),
+    // and the general settings offer the shared ones only (post_processing_shared).
+    if (title_id) post_title_ = *title_id;
+    const auto names = [](std::vector<std::string>& list) {
+        for (const auto& preset : VideoCore::GetFxPresetCatalog())
+            if (!preset.name.empty() && Eden::ValidPostProcessing(preset.name) &&
+                std::find(list.begin() + 1, list.end(), preset.name) == list.end())
+                list.push_back(preset.name);
+    };
+    (void)Eden::Reshade::SetGameFolder({});
     VideoCore::ReloadFxPresetCatalog();
     post_presets_ = {tr("Off")};
-    for (const auto& preset : VideoCore::GetFxPresetCatalog())
-        if (!preset.name.empty() && Eden::ValidPostProcessing(preset.name) &&
-            std::find(post_presets_.begin() + 1, post_presets_.end(), preset.name) == post_presets_.end())
-            post_presets_.push_back(preset.name);
+    names(post_presets_);
+    post_shared_ = static_cast<int>(post_presets_.size());
+    const std::string folder = post_title_ ? ModPlaces(post_title_).game_folder : std::string{};
+    if (Eden::Reshade::SetGameFolder(folder)) {
+        VideoCore::ReloadFxPresetCatalog();
+        names(post_presets_);
+    }
+}
+
+int EdenServices::post_processing_shared() {
+    if (post_presets_.empty()) ReadPostPresets();
+    return post_shared_;
 }
 
 // "" (off) is 0; a name the console has no preset of any more reads as off.
