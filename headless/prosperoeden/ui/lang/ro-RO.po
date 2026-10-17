@@ -96,9 +96,21 @@ msgstr "Tot meritul pentru emulatorul Eden le revine dezvoltatorilor și contrib
 msgid "AMD FSR"
 msgstr "AMD FSR"
 
+#: pe/ui/settings.cpp
+msgid "An image of your own behind this menu."
+msgstr "O imagine proprie în spatele acestui meniu."
+
 #: eden_services.cpp
 msgid "Another language"
 msgstr "Altă limbă"
+
+#: pe/ui/settings.cpp
+msgid "Appearance"
+msgstr "Aspect"
+
+#: pe/ui/settings.cpp
+msgid "Apply"
+msgstr "Aplică"
 
 #. The button mapping has not been changed.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -251,6 +263,14 @@ msgstr "Alegere"
 #: pe/ui/home.cpp
 msgid "Choose a game from your library."
 msgstr "Alege un joc din biblioteca ta."
+
+#: pe/ui/settings.cpp
+msgid "Choose a theme or change the launcher layout."
+msgstr "Alege o temă sau schimbă aspectul lansatorului."
+
+#: pe/ui/settings.cpp
+msgid "Choose the colours and appearance of this menu."
+msgstr "Alege culorile și aspectul acestui meniu."
 
 #: pe/ui/browse.cpp
 msgid "Choose the folder that holds your keys, firmware and games"
@@ -705,6 +725,10 @@ msgstr "Calitate completă"
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "Sunetul jocurilor; muzica din meniul PS5 nu se schimbă."
 
+#: pe/ui/launcher.cpp
+msgid "Game cannot start now."
+msgstr "Jocul nu poate porni acum."
+
 #. {0} is the reason, a sentence in English; {1} is a file.
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
@@ -792,6 +816,10 @@ msgstr "Acasă"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "Cum sunt redate și scalate jocurile pe televizorul tău."
+
+#: pe/ui/settings.cpp
+msgid "Images in this folder: {0}"
+msgstr "Imagini în acest dosar: {0}"
 
 #. Button hint: copy a save in.
 #: pe/ui/library.cpp
@@ -914,6 +942,10 @@ msgstr "Text mai mare"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "Ultimul joc deschis"
+
+#: pe/ui/settings.cpp
+msgid "Launcher"
+msgstr "Lansator"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1404,6 +1436,10 @@ msgstr "Camere publice"
 msgid "PUBLIC ROOMS"
 msgstr "CAMERE PUBLICE"
 
+#: pe/ui/settings.cpp
+msgid "Put images in the wallpapers folder to show them here."
+msgstr "Pune imagini în dosarul wallpapers ca să apară aici."
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "În așteptare"
@@ -1673,6 +1709,10 @@ msgid "Several sources have this game. Which one should it come from?"
 msgstr "Mai multe surse au acest joc. De la care să vină?"
 
 #: pe/ui/settings.cpp
+msgid "Show an image of your own behind the menu."
+msgstr "Arată o imagine proprie în spatele meniului."
+
+#: pe/ui/settings.cpp
 msgid "Show or hide the FPS overlay"
 msgstr "Afișează sau ascunde contorul FPS"
 
@@ -1883,6 +1923,10 @@ msgstr "Actualizarea nu a putut fi finalizată"
 msgid "Theme"
 msgstr "Temă"
 
+#: pe/ui/settings.cpp
+msgid "Theme and launcher settings."
+msgstr "Setări pentru temă și lansator."
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "Consola și serverul au fiecare salvări pe care celălalt nu le cunoaște. Care să rămână? Celelalte se păstrează ca o copie de rezervă."
@@ -2014,6 +2058,10 @@ msgstr "Filtru de scalare"
 msgid "USA"
 msgstr "SUA"
 
+#: pe/ui/settings.cpp
+msgid "Use another home screen, library and menu layout."
+msgstr "Folosește alt aspect pentru ecranul principal, bibliotecă și meniu."
+
 #: pe/ui/browse.cpp
 msgid "Use extracted firmware NCA files. Choose the folder in Settings, Game files; restart the app after changing it."
 msgstr "Folosește fișiere NCA extrase din firmware. Alege folderul în Setări, Fișiere de joc; repornește aplicația după ce îl schimbi."
@@ -2081,6 +2129,10 @@ msgstr "Se așteaptă {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "Așteaptă descărcarea"
+
+#: pe/ui/settings.cpp
+msgid "Wallpaper"
+msgstr "Imagine de fundal"
 
 #: pe/ui/settings.cpp
 msgid "What the FPS overlay's line says, and how the chip is drawn."

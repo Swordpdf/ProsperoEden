@@ -96,9 +96,21 @@ msgstr "เครดิต​ทั้งหมด​ของ​อีมูเ
 msgid "AMD FSR"
 msgstr "AMD FSR"
 
+#: pe/ui/settings.cpp
+msgid "An image of your own behind this menu."
+msgstr "รูปภาพของคุณเองด้านหลังเมนูนี้"
+
 #: eden_services.cpp
 msgid "Another language"
 msgstr "ภาษาอื่น"
+
+#: pe/ui/settings.cpp
+msgid "Appearance"
+msgstr "รูปลักษณ์"
+
+#: pe/ui/settings.cpp
+msgid "Apply"
+msgstr "ใช้"
 
 #. The button mapping has not been changed.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -251,6 +263,14 @@ msgstr "เลือก"
 #: pe/ui/home.cpp
 msgid "Choose a game from your library."
 msgstr "เลือกเกม​จาก​คลังเกม​ของคุณ"
+
+#: pe/ui/settings.cpp
+msgid "Choose a theme or change the launcher layout."
+msgstr "เลือกธีมหรือเปลี่ยนเลย์เอาต์ของตัวเปิดเกม"
+
+#: pe/ui/settings.cpp
+msgid "Choose the colours and appearance of this menu."
+msgstr "เลือกสีและรูปลักษณ์ของเมนูนี้"
 
 #: pe/ui/browse.cpp
 msgid "Choose the folder that holds your keys, firmware and games"
@@ -705,6 +725,10 @@ msgstr "คุณภาพเต็ม"
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "เสียง​ของ​เกม เพลง​ใน​เมนู​ระบบ​ของ PS5 ​ไม่​เปลี่ยน"
 
+#: pe/ui/launcher.cpp
+msgid "Game cannot start now."
+msgstr "ไม่สามารถเริ่มเกมได้ในขณะนี้"
+
 #. {0} is the reason, a sentence in English; {1} is a file.
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
@@ -792,6 +816,10 @@ msgstr "หน้าหลัก"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "วิธี​วาด​ภาพ​เกม​และ​ปรับ​ขนาด​ให้​เข้ากับ​ทีวี"
+
+#: pe/ui/settings.cpp
+msgid "Images in this folder: {0}"
+msgstr "รูปภาพในโฟลเดอร์นี้: {0}"
 
 #. Button hint: copy a save in.
 #: pe/ui/library.cpp
@@ -914,6 +942,10 @@ msgstr "ตัวอักษรใหญ่ขึ้น"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "เกมที่เปิดล่าสุด"
+
+#: pe/ui/settings.cpp
+msgid "Launcher"
+msgstr "ตัวเปิดเกม"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1404,6 +1436,10 @@ msgstr "ห้อง​สาธารณะ"
 msgid "PUBLIC ROOMS"
 msgstr "ห้อง​สาธารณะ"
 
+#: pe/ui/settings.cpp
+msgid "Put images in the wallpapers folder to show them here."
+msgstr "ใส่รูปภาพในโฟลเดอร์ wallpapers เพื่อแสดงที่นี่"
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "อยู่ในคิว"
@@ -1673,6 +1709,10 @@ msgid "Several sources have this game. Which one should it come from?"
 msgstr "มี​หลาย​แหล่ง​ที่​มี​เกม​นี้ ต้องการ​ดาวน์โหลด​จาก​แหล่ง​ใด"
 
 #: pe/ui/settings.cpp
+msgid "Show an image of your own behind the menu."
+msgstr "แสดงรูปภาพของคุณเองด้านหลังเมนู"
+
+#: pe/ui/settings.cpp
 msgid "Show or hide the FPS overlay"
 msgstr "แสดง​หรือ​ซ่อน​ตัวแสดง FPS"
 
@@ -1883,6 +1923,10 @@ msgstr "ไม่สามารถอัปเดตให้เสร็จไ
 msgid "Theme"
 msgstr "ธีม"
 
+#: pe/ui/settings.cpp
+msgid "Theme and launcher settings."
+msgstr "การตั้งค่าธีมและตัวเปิดเกม"
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "เครื่อง​นี้​และ​เซิร์ฟเวอร์​ต่าง​มี​ข้อมูล​เซฟ​ที่​อีก​ฝั่ง​ไม่​รู้จัก ต้องการ​เก็บ​ของ​ฝั่ง​ใด อีก​ฝั่ง​จะ​เก็บ​ไว้​เป็น​ข้อมูล​สำรอง"
@@ -2014,6 +2058,10 @@ msgstr "ฟิลเตอร์ขยายภาพ"
 msgid "USA"
 msgstr "สหรัฐฯ"
 
+#: pe/ui/settings.cpp
+msgid "Use another home screen, library and menu layout."
+msgstr "ใช้เลย์เอาต์อื่นสำหรับหน้าหลัก คลัง และเมนู"
+
 #: pe/ui/browse.cpp
 msgid "Use extracted firmware NCA files. Choose the folder in Settings, Game files; restart the app after changing it."
 msgstr "ใช้​ไฟล์ NCA ​ของ​เฟิร์มแวร์​ที่​แตกไฟล์​แล้ว เลือก​โฟลเดอร์​ใน​การตั้งค่า > ไฟล์เกม ​แล้ว​เปิด​แอป​ใหม่​หลัง​เปลี่ยน"
@@ -2081,6 +2129,10 @@ msgstr "กำลังรอ {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "กำลังรอดาวน์โหลด"
+
+#: pe/ui/settings.cpp
+msgid "Wallpaper"
+msgstr "วอลเปเปอร์"
 
 #: pe/ui/settings.cpp
 msgid "What the FPS overlay's line says, and how the chip is drawn."

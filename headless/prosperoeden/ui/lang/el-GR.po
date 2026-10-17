@@ -96,9 +96,21 @@ msgstr "Όλα τα εύσημα για τον εξομοιωτή Eden ανήκ�
 msgid "AMD FSR"
 msgstr "AMD FSR"
 
+#: pe/ui/settings.cpp
+msgid "An image of your own behind this menu."
+msgstr "Μια δική σας εικόνα πίσω από αυτό το μενού."
+
 #: eden_services.cpp
 msgid "Another language"
 msgstr "Άλλη γλώσσα"
+
+#: pe/ui/settings.cpp
+msgid "Appearance"
+msgstr "Εμφάνιση"
+
+#: pe/ui/settings.cpp
+msgid "Apply"
+msgstr "Εφαρμογή"
 
 #. The button mapping has not been changed.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -251,6 +263,14 @@ msgstr "Επιλογή"
 #: pe/ui/home.cpp
 msgid "Choose a game from your library."
 msgstr "Επιλέξτε ένα παιχνίδι από τη βιβλιοθήκη σας."
+
+#: pe/ui/settings.cpp
+msgid "Choose a theme or change the launcher layout."
+msgstr "Επιλέξτε θέμα ή αλλάξτε τη διάταξη της εκκίνησης."
+
+#: pe/ui/settings.cpp
+msgid "Choose the colours and appearance of this menu."
+msgstr "Επιλέξτε τα χρώματα και την εμφάνιση αυτού του μενού."
 
 #: pe/ui/browse.cpp
 msgid "Choose the folder that holds your keys, firmware and games"
@@ -705,6 +725,10 @@ msgstr "Πλήρης ποιότητα"
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "Ήχος παιχνιδιού. Η μουσική του μενού συστήματος του PS5 δεν αλλάζει."
 
+#: pe/ui/launcher.cpp
+msgid "Game cannot start now."
+msgstr "Το παιχνίδι δεν μπορεί να ξεκινήσει τώρα."
+
 #. {0} is the reason, a sentence in English; {1} is a file.
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
@@ -792,6 +816,10 @@ msgstr "Αρχική"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "Πώς σχεδιάζονται και κλιμακώνονται τα παιχνίδια στην τηλεόρασή σας."
+
+#: pe/ui/settings.cpp
+msgid "Images in this folder: {0}"
+msgstr "Εικόνες σε αυτόν τον φάκελο: {0}"
 
 #. Button hint: copy a save in.
 #: pe/ui/library.cpp
@@ -914,6 +942,10 @@ msgstr "Μεγαλύτερο κείμενο"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "Τελευταίο παιχνίδι"
+
+#: pe/ui/settings.cpp
+msgid "Launcher"
+msgstr "Εκκίνηση"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1404,6 +1436,10 @@ msgstr "Δημόσια δωμάτια"
 msgid "PUBLIC ROOMS"
 msgstr "ΔΗΜΟΣΙΑ ΔΩΜΑΤΙΑ"
 
+#: pe/ui/settings.cpp
+msgid "Put images in the wallpapers folder to show them here."
+msgstr "Βάλτε εικόνες στον φάκελο wallpapers για να εμφανιστούν εδώ."
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "Σε αναμονή"
@@ -1673,6 +1709,10 @@ msgid "Several sources have this game. Which one should it come from?"
 msgstr "Αρκετές πηγές έχουν αυτό το παιχνίδι. Από ποια να ληφθεί;"
 
 #: pe/ui/settings.cpp
+msgid "Show an image of your own behind the menu."
+msgstr "Δείξτε μια δική σας εικόνα πίσω από το μενού."
+
+#: pe/ui/settings.cpp
 msgid "Show or hide the FPS overlay"
 msgstr "Εμφάνιση ή απόκρυψη της ένδειξης FPS"
 
@@ -1883,6 +1923,10 @@ msgstr "Η ενημέρωση δεν ολοκληρώθηκε"
 msgid "Theme"
 msgstr "Θέμα"
 
+#: pe/ui/settings.cpp
+msgid "Theme and launcher settings."
+msgstr "Ρυθμίσεις θέματος και εκκίνησης."
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "Η κονσόλα και ο διακομιστής έχουν αποθηκευμένα δεδομένα που η άλλη πλευρά δεν γνωρίζει. Ποια να μείνουν; Τα άλλα φυλάσσονται ως αντίγραφο ασφαλείας."
@@ -2014,6 +2058,10 @@ msgstr "Φίλτρο κλιμάκωσης"
 msgid "USA"
 msgstr "ΗΠΑ"
 
+#: pe/ui/settings.cpp
+msgid "Use another home screen, library and menu layout."
+msgstr "Χρησιμοποιήστε άλλη διάταξη για αρχική οθόνη, βιβλιοθήκη και μενού."
+
 #: pe/ui/browse.cpp
 msgid "Use extracted firmware NCA files. Choose the folder in Settings, Game files; restart the app after changing it."
 msgstr "Χρησιμοποιήστε εξαγμένα αρχεία NCA του firmware. Επιλέξτε τον φάκελο στις Ρυθμίσεις, Αρχεία παιχνιδιών και επανεκκινήστε την εφαρμογή μετά την αλλαγή."
@@ -2081,6 +2129,10 @@ msgstr "Αναμονή για {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "Αναμονή για λήψη"
+
+#: pe/ui/settings.cpp
+msgid "Wallpaper"
+msgstr "Ταπετσαρία"
 
 #: pe/ui/settings.cpp
 msgid "What the FPS overlay's line says, and how the chip is drawn."

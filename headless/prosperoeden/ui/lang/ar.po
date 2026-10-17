@@ -96,9 +96,21 @@ msgstr "كل الفضل في محاكي Eden يعود إلى مطوّريه وا
 msgid "AMD FSR"
 msgstr "AMD FSR"
 
+#: pe/ui/settings.cpp
+msgid "An image of your own behind this menu."
+msgstr "صورة من اختيارك خلف هذه القائمة."
+
 #: eden_services.cpp
 msgid "Another language"
 msgstr "لغة أخرى"
+
+#: pe/ui/settings.cpp
+msgid "Appearance"
+msgstr "المظهر"
+
+#: pe/ui/settings.cpp
+msgid "Apply"
+msgstr "تطبيق"
 
 #. The button mapping has not been changed.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -251,6 +263,14 @@ msgstr "اختيار"
 #: pe/ui/home.cpp
 msgid "Choose a game from your library."
 msgstr "اختر لعبة من مكتبتك."
+
+#: pe/ui/settings.cpp
+msgid "Choose a theme or change the launcher layout."
+msgstr "اختر مظهرًا أو غيّر تخطيط المشغّل."
+
+#: pe/ui/settings.cpp
+msgid "Choose the colours and appearance of this menu."
+msgstr "اختر ألوان هذه القائمة ومظهرها."
 
 #: pe/ui/browse.cpp
 msgid "Choose the folder that holds your keys, firmware and games"
@@ -705,6 +725,10 @@ msgstr "جودة كاملة"
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "صوت اللعبة؛ موسيقى قائمة نظام PS5 لا تتغير."
 
+#: pe/ui/launcher.cpp
+msgid "Game cannot start now."
+msgstr "لا يمكن بدء اللعبة الآن."
+
 #. {0} is the reason, a sentence in English; {1} is a file.
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
@@ -792,6 +816,10 @@ msgstr "الرئيسية"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "كيف تُرسم الألعاب وتُكبَّر لتناسب تلفازك."
+
+#: pe/ui/settings.cpp
+msgid "Images in this folder: {0}"
+msgstr "الصور في هذا المجلد: {0}"
 
 #. Button hint: copy a save in.
 #: pe/ui/library.cpp
@@ -914,6 +942,10 @@ msgstr "نص أكبر"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "آخر لعبة فُتحت"
+
+#: pe/ui/settings.cpp
+msgid "Launcher"
+msgstr "المشغّل"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1404,6 +1436,10 @@ msgstr "الغرف العامة"
 msgid "PUBLIC ROOMS"
 msgstr "الغرف العامة"
 
+#: pe/ui/settings.cpp
+msgid "Put images in the wallpapers folder to show them here."
+msgstr "ضع صورًا في مجلد الخلفيات لتظهر هنا."
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "في قائمة الانتظار"
@@ -1673,6 +1709,10 @@ msgid "Several sources have this game. Which one should it come from?"
 msgstr "هذه اللعبة متوفرة في عدة مصادر. من أيّها تُنزَّل؟"
 
 #: pe/ui/settings.cpp
+msgid "Show an image of your own behind the menu."
+msgstr "اعرض صورة من اختيارك خلف القائمة."
+
+#: pe/ui/settings.cpp
 msgid "Show or hide the FPS overlay"
 msgstr "إظهار عدّاد FPS أو إخفاؤه"
 
@@ -1883,6 +1923,10 @@ msgstr "تعذر إكمال التحديث"
 msgid "Theme"
 msgstr "السمة"
 
+#: pe/ui/settings.cpp
+msgid "Theme and launcher settings."
+msgstr "إعدادات المظهر والمشغّل."
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "لدى هذا الجهاز والخادم بيانات حفظ لا يعرفها الطرف الآخر. أيّها يبقى؟ تُحفَظ الأخرى كنسخة احتياطية."
@@ -2014,6 +2058,10 @@ msgstr "فلتر التكبير"
 msgid "USA"
 msgstr "أمريكا"
 
+#: pe/ui/settings.cpp
+msgid "Use another home screen, library and menu layout."
+msgstr "استخدم تخطيطًا آخر للشاشة الرئيسية والمكتبة والقائمة."
+
 #: pe/ui/browse.cpp
 msgid "Use extracted firmware NCA files. Choose the folder in Settings, Game files; restart the app after changing it."
 msgstr "استخدم ملفات NCA المستخرجة للبرنامج الثابت. اختر المجلد من الإعدادات ثم ملفات الألعاب؛ أعد تشغيل التطبيق بعد تغييره."
@@ -2081,6 +2129,10 @@ msgstr "في انتظار {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "في انتظار التنزيل"
+
+#: pe/ui/settings.cpp
+msgid "Wallpaper"
+msgstr "الخلفية"
 
 #: pe/ui/settings.cpp
 msgid "What the FPS overlay's line says, and how the chip is drawn."

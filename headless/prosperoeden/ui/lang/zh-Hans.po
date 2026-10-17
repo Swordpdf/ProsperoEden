@@ -96,9 +96,21 @@ msgstr "Eden 模拟器的全部功劳归于其开发者和贡献者。"
 msgid "AMD FSR"
 msgstr "AMD FSR"
 
+#: pe/ui/settings.cpp
+msgid "An image of your own behind this menu."
+msgstr "在此菜单后方显示你自己的图片。"
+
 #: eden_services.cpp
 msgid "Another language"
 msgstr "其他语言"
+
+#: pe/ui/settings.cpp
+msgid "Appearance"
+msgstr "外观"
+
+#: pe/ui/settings.cpp
+msgid "Apply"
+msgstr "应用"
 
 #. The button mapping has not been changed.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -251,6 +263,14 @@ msgstr "选择"
 #: pe/ui/home.cpp
 msgid "Choose a game from your library."
 msgstr "请从游戏库中选择一个游戏。"
+
+#: pe/ui/settings.cpp
+msgid "Choose a theme or change the launcher layout."
+msgstr "选择主题或更改启动器布局。"
+
+#: pe/ui/settings.cpp
+msgid "Choose the colours and appearance of this menu."
+msgstr "选择此菜单的颜色和外观。"
 
 #: pe/ui/browse.cpp
 msgid "Choose the folder that holds your keys, firmware and games"
@@ -705,6 +725,10 @@ msgstr "完整画质"
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "游戏声音；PS5 系统菜单的音乐不受影响。"
 
+#: pe/ui/launcher.cpp
+msgid "Game cannot start now."
+msgstr "游戏现在无法启动。"
+
 #. {0} is the reason, a sentence in English; {1} is a file.
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
@@ -792,6 +816,10 @@ msgstr "主页"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "游戏的绘制方式，以及如何缩放到电视。"
+
+#: pe/ui/settings.cpp
+msgid "Images in this folder: {0}"
+msgstr "此文件夹中的图片：{0}"
 
 #. Button hint: copy a save in.
 #: pe/ui/library.cpp
@@ -914,6 +942,10 @@ msgstr "放大文字"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "上次打开的游戏"
+
+#: pe/ui/settings.cpp
+msgid "Launcher"
+msgstr "启动器"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1404,6 +1436,10 @@ msgstr "公开房间"
 msgid "PUBLIC ROOMS"
 msgstr "公开房间"
 
+#: pe/ui/settings.cpp
+msgid "Put images in the wallpapers folder to show them here."
+msgstr "将图片放入 wallpapers 文件夹即可在此显示。"
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "排队中"
@@ -1673,6 +1709,10 @@ msgid "Several sources have this game. Which one should it come from?"
 msgstr "多个来源都有此游戏。要从哪一个下载？"
 
 #: pe/ui/settings.cpp
+msgid "Show an image of your own behind the menu."
+msgstr "在菜单后方显示你自己的图片。"
+
+#: pe/ui/settings.cpp
 msgid "Show or hide the FPS overlay"
 msgstr "显示或隐藏帧率"
 
@@ -1883,6 +1923,10 @@ msgstr "无法完成更新"
 msgid "Theme"
 msgstr "主题"
 
+#: pe/ui/settings.cpp
+msgid "Theme and launcher settings."
+msgstr "主题与启动器设置。"
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "此主机和服务器上都有对方没有的存档数据。要保留哪一个？另一个会保留为备份。"
@@ -2014,6 +2058,10 @@ msgstr "缩放滤镜"
 msgid "USA"
 msgstr "美国"
 
+#: pe/ui/settings.cpp
+msgid "Use another home screen, library and menu layout."
+msgstr "使用其他主屏幕、游戏库和菜单布局。"
+
 #: pe/ui/browse.cpp
 msgid "Use extracted firmware NCA files. Choose the folder in Settings, Game files; restart the app after changing it."
 msgstr "请使用解包后的固件 NCA 文件。在“设置”的“游戏文件”中选择文件夹；更改后请重新启动应用。"
@@ -2081,6 +2129,10 @@ msgstr "正在等待 {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "等待下载"
+
+#: pe/ui/settings.cpp
+msgid "Wallpaper"
+msgstr "壁纸"
 
 #: pe/ui/settings.cpp
 msgid "What the FPS overlay's line says, and how the chip is drawn."

@@ -96,9 +96,21 @@ msgstr "Kaikki kunnia Eden-emulaattorista kuuluu sen kehittäjille ja avustajill
 msgid "AMD FSR"
 msgstr "AMD FSR"
 
+#: pe/ui/settings.cpp
+msgid "An image of your own behind this menu."
+msgstr "Oma kuva tämän valikon taustalla."
+
 #: eden_services.cpp
 msgid "Another language"
 msgstr "Muu kieli"
+
+#: pe/ui/settings.cpp
+msgid "Appearance"
+msgstr "Ulkoasu"
+
+#: pe/ui/settings.cpp
+msgid "Apply"
+msgstr "Käytä"
 
 #. The button mapping has not been changed.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -251,6 +263,14 @@ msgstr "Valitse"
 #: pe/ui/home.cpp
 msgid "Choose a game from your library."
 msgstr "Valitse peli kirjastostasi."
+
+#: pe/ui/settings.cpp
+msgid "Choose a theme or change the launcher layout."
+msgstr "Valitse teema tai vaihda käynnistimen asettelua."
+
+#: pe/ui/settings.cpp
+msgid "Choose the colours and appearance of this menu."
+msgstr "Valitse tämän valikon värit ja ulkoasu."
 
 #: pe/ui/browse.cpp
 msgid "Choose the folder that holds your keys, firmware and games"
@@ -705,6 +725,10 @@ msgstr "Täysi laatu"
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "Pelien ääni; PS5:n järjestelmävalikon musiikki ei muutu."
 
+#: pe/ui/launcher.cpp
+msgid "Game cannot start now."
+msgstr "Peliä ei voi käynnistää nyt."
+
 #. {0} is the reason, a sentence in English; {1} is a file.
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
@@ -792,6 +816,10 @@ msgstr "Koti"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "Miten pelit piirretään ja skaalataan televisioosi."
+
+#: pe/ui/settings.cpp
+msgid "Images in this folder: {0}"
+msgstr "Kuvia tässä kansiossa: {0}"
 
 #. Button hint: copy a save in.
 #: pe/ui/library.cpp
@@ -914,6 +942,10 @@ msgstr "Suurempi teksti"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "Viimeksi avattu peli"
+
+#: pe/ui/settings.cpp
+msgid "Launcher"
+msgstr "Käynnistin"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1404,6 +1436,10 @@ msgstr "Julkiset huoneet"
 msgid "PUBLIC ROOMS"
 msgstr "JULKISET HUONEET"
 
+#: pe/ui/settings.cpp
+msgid "Put images in the wallpapers folder to show them here."
+msgstr "Laita kuvia wallpapers-kansioon, niin ne näkyvät tässä."
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "Jonossa"
@@ -1673,6 +1709,10 @@ msgid "Several sources have this game. Which one should it come from?"
 msgstr "Tämä peli on usealla lähteellä. Mistä se ladataan?"
 
 #: pe/ui/settings.cpp
+msgid "Show an image of your own behind the menu."
+msgstr "Näytä oma kuva valikon taustalla."
+
+#: pe/ui/settings.cpp
 msgid "Show or hide the FPS overlay"
 msgstr "Näytä tai piilota FPS-laskuri"
 
@@ -1883,6 +1923,10 @@ msgstr "Päivitystä ei voitu viedä loppuun"
 msgid "Theme"
 msgstr "Teema"
 
+#: pe/ui/settings.cpp
+msgid "Theme and launcher settings."
+msgstr "Teeman ja käynnistimen asetukset."
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "Sekä konsolissa että palvelimella on tallennuksia, joita toinen ei tunne. Kummat säilytetään? Toiset jäävät varmuuskopioksi."
@@ -2014,6 +2058,10 @@ msgstr "Skaalaussuodatin"
 msgid "USA"
 msgstr "USA"
 
+#: pe/ui/settings.cpp
+msgid "Use another home screen, library and menu layout."
+msgstr "Käytä toista aloitusnäkymän, kirjaston ja valikon asettelua."
+
 #: pe/ui/browse.cpp
 msgid "Use extracted firmware NCA files. Choose the folder in Settings, Game files; restart the app after changing it."
 msgstr "Käytä purettuja laiteohjelmiston NCA-tiedostoja. Valitse kansio kohdasta Asetukset, Pelitiedostot; käynnistä sovellus uudelleen muutoksen jälkeen."
@@ -2081,6 +2129,10 @@ msgstr "Odottaa: {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "Odottaa latausta"
+
+#: pe/ui/settings.cpp
+msgid "Wallpaper"
+msgstr "Taustakuva"
 
 #: pe/ui/settings.cpp
 msgid "What the FPS overlay's line says, and how the chip is drawn."

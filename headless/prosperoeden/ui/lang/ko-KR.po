@@ -96,9 +96,21 @@ msgstr "Eden 에뮬레이터의 모든 공로는 개발자와 기여자에게 �
 msgid "AMD FSR"
 msgstr "AMD FSR"
 
+#: pe/ui/settings.cpp
+msgid "An image of your own behind this menu."
+msgstr "이 메뉴 뒤에 원하는 이미지를 표시합니다."
+
 #: eden_services.cpp
 msgid "Another language"
 msgstr "다른 언어"
+
+#: pe/ui/settings.cpp
+msgid "Appearance"
+msgstr "모양"
+
+#: pe/ui/settings.cpp
+msgid "Apply"
+msgstr "적용"
 
 #. The button mapping has not been changed.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -251,6 +263,14 @@ msgstr "선택"
 #: pe/ui/home.cpp
 msgid "Choose a game from your library."
 msgstr "라이브러리에서 게임을 선택하세요."
+
+#: pe/ui/settings.cpp
+msgid "Choose a theme or change the launcher layout."
+msgstr "테마를 고르거나 런처 레이아웃을 바꿉니다."
+
+#: pe/ui/settings.cpp
+msgid "Choose the colours and appearance of this menu."
+msgstr "이 메뉴의 색상과 모양을 고릅니다."
 
 #: pe/ui/browse.cpp
 msgid "Choose the folder that holds your keys, firmware and games"
@@ -705,6 +725,10 @@ msgstr "전체 품질"
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "게임 소리입니다. PS5 시스템 메뉴 음악은 바뀌지 않습니다."
 
+#: pe/ui/launcher.cpp
+msgid "Game cannot start now."
+msgstr "지금은 게임을 시작할 수 없습니다."
+
 #. {0} is the reason, a sentence in English; {1} is a file.
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
@@ -792,6 +816,10 @@ msgstr "홈"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "게임을 그리는 방식과 TV에 맞춘 확대 방식."
+
+#: pe/ui/settings.cpp
+msgid "Images in this folder: {0}"
+msgstr "이 폴더의 이미지: {0}"
 
 #. Button hint: copy a save in.
 #: pe/ui/library.cpp
@@ -914,6 +942,10 @@ msgstr "큰 글자"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "마지막으로 연 게임"
+
+#: pe/ui/settings.cpp
+msgid "Launcher"
+msgstr "런처"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1404,6 +1436,10 @@ msgstr "공개 방"
 msgid "PUBLIC ROOMS"
 msgstr "공개 방"
 
+#: pe/ui/settings.cpp
+msgid "Put images in the wallpapers folder to show them here."
+msgstr "wallpapers 폴더에 이미지를 넣으면 여기에 표시됩니다."
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "대기 중"
@@ -1673,6 +1709,10 @@ msgid "Several sources have this game. Which one should it come from?"
 msgstr "이 게임이 여러 소스에 있습니다. 어디에서 받을까요?"
 
 #: pe/ui/settings.cpp
+msgid "Show an image of your own behind the menu."
+msgstr "메뉴 뒤에 원하는 이미지를 표시합니다."
+
+#: pe/ui/settings.cpp
 msgid "Show or hide the FPS overlay"
 msgstr "FPS 표시 켜기/끄기"
 
@@ -1883,6 +1923,10 @@ msgstr "업데이트를 완료할 수 없습니다"
 msgid "Theme"
 msgstr "테마"
 
+#: pe/ui/settings.cpp
+msgid "Theme and launcher settings."
+msgstr "테마 및 런처 설정."
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "이 본체와 서버에 서로 모르는 세이브 데이터가 각각 있습니다. 어느 쪽을 남길까요? 다른 쪽은 백업으로 보관됩니다."
@@ -2014,6 +2058,10 @@ msgstr "확대 필터"
 msgid "USA"
 msgstr "미국"
 
+#: pe/ui/settings.cpp
+msgid "Use another home screen, library and menu layout."
+msgstr "다른 홈 화면, 라이브러리, 메뉴 레이아웃을 사용합니다."
+
 #: pe/ui/browse.cpp
 msgid "Use extracted firmware NCA files. Choose the folder in Settings, Game files; restart the app after changing it."
 msgstr "추출한 펌웨어 NCA 파일을 사용하세요. 폴더는 설정의 게임 파일에서 선택하고, 변경한 뒤에는 앱을 다시 시작하세요."
@@ -2081,6 +2129,10 @@ msgstr "{0} 대기 중"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "다운로드 대기 중"
+
+#: pe/ui/settings.cpp
+msgid "Wallpaper"
+msgstr "배경화면"
 
 #: pe/ui/settings.cpp
 msgid "What the FPS overlay's line says, and how the chip is drawn."

@@ -96,9 +96,21 @@ msgstr "Semua kredit untuk emulator Eden adalah milik pembangun dan penyumbangny
 msgid "AMD FSR"
 msgstr "AMD FSR"
 
+#: pe/ui/settings.cpp
+msgid "An image of your own behind this menu."
+msgstr "Imej pilihan anda di belakang menu ini."
+
 #: eden_services.cpp
 msgid "Another language"
 msgstr "Bahasa lain"
+
+#: pe/ui/settings.cpp
+msgid "Appearance"
+msgstr "Penampilan"
+
+#: pe/ui/settings.cpp
+msgid "Apply"
+msgstr "Guna"
 
 #. The button mapping has not been changed.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -251,6 +263,14 @@ msgstr "Pilih"
 #: pe/ui/home.cpp
 msgid "Choose a game from your library."
 msgstr "Pilih game daripada perpustakaan anda."
+
+#: pe/ui/settings.cpp
+msgid "Choose a theme or change the launcher layout."
+msgstr "Pilih tema atau tukar susun atur pelancar."
+
+#: pe/ui/settings.cpp
+msgid "Choose the colours and appearance of this menu."
+msgstr "Pilih warna dan penampilan menu ini."
 
 #: pe/ui/browse.cpp
 msgid "Choose the folder that holds your keys, firmware and games"
@@ -705,6 +725,10 @@ msgstr "Kualiti penuh"
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "Audio game; muzik menu sistem PS5 tidak berubah."
 
+#: pe/ui/launcher.cpp
+msgid "Game cannot start now."
+msgstr "Permainan tidak dapat dimulakan sekarang."
+
 #. {0} is the reason, a sentence in English; {1} is a file.
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
@@ -792,6 +816,10 @@ msgstr "Utama"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "Cara game dilukis dan diskalakan ke TV anda."
+
+#: pe/ui/settings.cpp
+msgid "Images in this folder: {0}"
+msgstr "Imej dalam folder ini: {0}"
 
 #. Button hint: copy a save in.
 #: pe/ui/library.cpp
@@ -914,6 +942,10 @@ msgstr "Teks lebih besar"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "Game terakhir dibuka"
+
+#: pe/ui/settings.cpp
+msgid "Launcher"
+msgstr "Pelancar"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1404,6 +1436,10 @@ msgstr "Bilik awam"
 msgid "PUBLIC ROOMS"
 msgstr "BILIK AWAM"
 
+#: pe/ui/settings.cpp
+msgid "Put images in the wallpapers folder to show them here."
+msgstr "Letakkan imej dalam folder wallpapers untuk memaparkannya di sini."
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "Dalam giliran"
@@ -1673,6 +1709,10 @@ msgid "Several sources have this game. Which one should it come from?"
 msgstr "Beberapa sumber mempunyai game ini. Yang mana patut dimuat turun?"
 
 #: pe/ui/settings.cpp
+msgid "Show an image of your own behind the menu."
+msgstr "Paparkan imej pilihan anda di belakang menu."
+
+#: pe/ui/settings.cpp
 msgid "Show or hide the FPS overlay"
 msgstr "Papar atau sembunyikan lapisan FPS"
 
@@ -1883,6 +1923,10 @@ msgstr "Kemas kini tidak dapat diselesaikan"
 msgid "Theme"
 msgstr "Tema"
 
+#: pe/ui/settings.cpp
+msgid "Theme and launcher settings."
+msgstr "Tetapan tema dan pelancar."
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "Konsol ini dan pelayan kedua-duanya mempunyai data simpanan yang tidak diketahui oleh pihak satu lagi. Yang mana patut kekal? Yang satu lagi disimpan sebagai sandaran."
@@ -2014,6 +2058,10 @@ msgstr "Penapis Upscaling"
 msgid "USA"
 msgstr "AS"
 
+#: pe/ui/settings.cpp
+msgid "Use another home screen, library and menu layout."
+msgstr "Gunakan susun atur lain untuk skrin utama, pustaka dan menu."
+
 #: pe/ui/browse.cpp
 msgid "Use extracted firmware NCA files. Choose the folder in Settings, Game files; restart the app after changing it."
 msgstr "Gunakan fail NCA firmware yang telah diekstrak. Pilih folder dalam Tetapan, Fail game; mulakan semula aplikasi selepas menukarnya."
@@ -2081,6 +2129,10 @@ msgstr "Menunggu {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "Menunggu untuk dimuat turun"
+
+#: pe/ui/settings.cpp
+msgid "Wallpaper"
+msgstr "Kertas dinding"
 
 #: pe/ui/settings.cpp
 msgid "What the FPS overlay's line says, and how the chip is drawn."

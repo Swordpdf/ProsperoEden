@@ -96,9 +96,21 @@ msgstr "Al ære for Eden-emulatoren går til dens udviklere og bidragydere."
 msgid "AMD FSR"
 msgstr "AMD FSR"
 
+#: pe/ui/settings.cpp
+msgid "An image of your own behind this menu."
+msgstr "Et billede efter eget valg bag denne menu."
+
 #: eden_services.cpp
 msgid "Another language"
 msgstr "Andet sprog"
+
+#: pe/ui/settings.cpp
+msgid "Appearance"
+msgstr "Udseende"
+
+#: pe/ui/settings.cpp
+msgid "Apply"
+msgstr "Anvend"
 
 #. The button mapping has not been changed.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -251,6 +263,14 @@ msgstr "Vælg"
 #: pe/ui/home.cpp
 msgid "Choose a game from your library."
 msgstr "Vælg et spil fra dit bibliotek."
+
+#: pe/ui/settings.cpp
+msgid "Choose a theme or change the launcher layout."
+msgstr "Vælg et tema, eller skift launcherens layout."
+
+#: pe/ui/settings.cpp
+msgid "Choose the colours and appearance of this menu."
+msgstr "Vælg farverne og udseendet for denne menu."
 
 #: pe/ui/browse.cpp
 msgid "Choose the folder that holds your keys, firmware and games"
@@ -705,6 +725,10 @@ msgstr "Fuld kvalitet"
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "Spillyd; musikken i PS5-systemmenuen ændres ikke."
 
+#: pe/ui/launcher.cpp
+msgid "Game cannot start now."
+msgstr "Spillet kan ikke starte nu."
+
 #. {0} is the reason, a sentence in English; {1} is a file.
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
@@ -792,6 +816,10 @@ msgstr "Hjem"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "Hvordan spil tegnes og skaleres til dit tv."
+
+#: pe/ui/settings.cpp
+msgid "Images in this folder: {0}"
+msgstr "Billeder i denne mappe: {0}"
 
 #. Button hint: copy a save in.
 #: pe/ui/library.cpp
@@ -914,6 +942,10 @@ msgstr "Større tekst"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "Senest åbnede spil"
+
+#: pe/ui/settings.cpp
+msgid "Launcher"
+msgstr "Launcher"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1404,6 +1436,10 @@ msgstr "Offentlige rum"
 msgid "PUBLIC ROOMS"
 msgstr "OFFENTLIGE RUM"
 
+#: pe/ui/settings.cpp
+msgid "Put images in the wallpapers folder to show them here."
+msgstr "Læg billeder i mappen wallpapers for at vise dem her."
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "I kø"
@@ -1673,6 +1709,10 @@ msgid "Several sources have this game. Which one should it come from?"
 msgstr "Flere kilder har dette spil. Hvilken skal det komme fra?"
 
 #: pe/ui/settings.cpp
+msgid "Show an image of your own behind the menu."
+msgstr "Vis et billede efter eget valg bag menuen."
+
+#: pe/ui/settings.cpp
 msgid "Show or hide the FPS overlay"
 msgstr "Vis eller skjul FPS-tælleren"
 
@@ -1883,6 +1923,10 @@ msgstr "Opdateringen kunne ikke gennemføres"
 msgid "Theme"
 msgstr "Tema"
 
+#: pe/ui/settings.cpp
+msgid "Theme and launcher settings."
+msgstr "Tema- og launcherindstillinger."
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "Både denne konsol og serveren har gemte data, som den anden ikke kender. Hvilke skal blive? De andre gemmes som sikkerhedskopi."
@@ -2014,6 +2058,10 @@ msgstr "Opskaleringsfilter"
 msgid "USA"
 msgstr "USA"
 
+#: pe/ui/settings.cpp
+msgid "Use another home screen, library and menu layout."
+msgstr "Brug et andet layout til startskærm, bibliotek og menu."
+
 #: pe/ui/browse.cpp
 msgid "Use extracted firmware NCA files. Choose the folder in Settings, Game files; restart the app after changing it."
 msgstr "Brug udpakkede firmware-NCA-filer. Vælg mappen i Indstillinger, Spilfiler; genstart appen efter ændringen."
@@ -2081,6 +2129,10 @@ msgstr "Venter på {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "Venter på download"
+
+#: pe/ui/settings.cpp
+msgid "Wallpaper"
+msgstr "Baggrund"
 
 #: pe/ui/settings.cpp
 msgid "What the FPS overlay's line says, and how the chip is drawn."

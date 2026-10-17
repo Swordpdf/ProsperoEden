@@ -96,9 +96,21 @@ msgstr "Edenエミュレーターの功績は、すべてその開発者と貢�
 msgid "AMD FSR"
 msgstr "AMD FSR"
 
+#: pe/ui/settings.cpp
+msgid "An image of your own behind this menu."
+msgstr "このメニューの背景に好きな画像を表示します。"
+
 #: eden_services.cpp
 msgid "Another language"
 msgstr "別の言語"
+
+#: pe/ui/settings.cpp
+msgid "Appearance"
+msgstr "外観"
+
+#: pe/ui/settings.cpp
+msgid "Apply"
+msgstr "適用"
 
 #. The button mapping has not been changed.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -251,6 +263,14 @@ msgstr "選択"
 #: pe/ui/home.cpp
 msgid "Choose a game from your library."
 msgstr "ライブラリからゲームを選んでください。"
+
+#: pe/ui/settings.cpp
+msgid "Choose a theme or change the launcher layout."
+msgstr "テーマを選ぶか、ランチャーのレイアウトを変更します。"
+
+#: pe/ui/settings.cpp
+msgid "Choose the colours and appearance of this menu."
+msgstr "このメニューの色と外観を選びます。"
 
 #: pe/ui/browse.cpp
 msgid "Choose the folder that holds your keys, firmware and games"
@@ -705,6 +725,10 @@ msgstr "フル品質"
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "ゲームの音量です。PS5のシステムメニューの音楽は変わりません。"
 
+#: pe/ui/launcher.cpp
+msgid "Game cannot start now."
+msgstr "今はゲームを開始できません。"
+
 #. {0} is the reason, a sentence in English; {1} is a file.
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
@@ -792,6 +816,10 @@ msgstr "ホーム"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "ゲームの描画方法と、テレビへの拡大方法。"
+
+#: pe/ui/settings.cpp
+msgid "Images in this folder: {0}"
+msgstr "このフォルダーの画像: {0}"
 
 #. Button hint: copy a save in.
 #: pe/ui/library.cpp
@@ -914,6 +942,10 @@ msgstr "文字を大きく"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "最後に開いたゲーム"
+
+#: pe/ui/settings.cpp
+msgid "Launcher"
+msgstr "ランチャー"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1404,6 +1436,10 @@ msgstr "公開ルーム"
 msgid "PUBLIC ROOMS"
 msgstr "公開ルーム"
 
+#: pe/ui/settings.cpp
+msgid "Put images in the wallpapers folder to show them here."
+msgstr "wallpapers フォルダーに画像を入れると、ここに表示されます。"
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "待機中"
@@ -1673,6 +1709,10 @@ msgid "Several sources have this game. Which one should it come from?"
 msgstr "このゲームは複数のダウンロード元にあります。どこからダウンロードしますか？"
 
 #: pe/ui/settings.cpp
+msgid "Show an image of your own behind the menu."
+msgstr "メニューの背景に好きな画像を表示します。"
+
+#: pe/ui/settings.cpp
 msgid "Show or hide the FPS overlay"
 msgstr "FPS表示の表示／非表示"
 
@@ -1883,6 +1923,10 @@ msgstr "アップデートを完了できませんでした"
 msgid "Theme"
 msgstr "テーマ"
 
+#: pe/ui/settings.cpp
+msgid "Theme and launcher settings."
+msgstr "テーマとランチャーの設定。"
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "この本体とサーバーの両方に、相手側にないセーブデータがあります。どちらを残しますか？もう一方はバックアップとして保管されます。"
@@ -2014,6 +2058,10 @@ msgstr "拡大フィルター"
 msgid "USA"
 msgstr "アメリカ"
 
+#: pe/ui/settings.cpp
+msgid "Use another home screen, library and menu layout."
+msgstr "別のホーム画面、ライブラリー、メニューのレイアウトを使います。"
+
 #: pe/ui/browse.cpp
 msgid "Use extracted firmware NCA files. Choose the folder in Settings, Game files; restart the app after changing it."
 msgstr "展開したファームウェアのNCAファイルを使ってください。フォルダーは設定の「ゲームファイル」で選び、変更後はアプリを開き直してください。"
@@ -2081,6 +2129,10 @@ msgstr "{0}を待機中"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "ダウンロード待機中"
+
+#: pe/ui/settings.cpp
+msgid "Wallpaper"
+msgstr "壁紙"
 
 #: pe/ui/settings.cpp
 msgid "What the FPS overlay's line says, and how the chip is drawn."

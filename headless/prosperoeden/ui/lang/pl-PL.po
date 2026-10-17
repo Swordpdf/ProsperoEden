@@ -96,9 +96,21 @@ msgstr "Całe uznanie za emulator Eden należy się jego twórcom i współtwór
 msgid "AMD FSR"
 msgstr "AMD FSR"
 
+#: pe/ui/settings.cpp
+msgid "An image of your own behind this menu."
+msgstr "Własny obraz za tym menu."
+
 #: eden_services.cpp
 msgid "Another language"
 msgstr "Inny język"
+
+#: pe/ui/settings.cpp
+msgid "Appearance"
+msgstr "Wygląd"
+
+#: pe/ui/settings.cpp
+msgid "Apply"
+msgstr "Zastosuj"
 
 #. The button mapping has not been changed.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -251,6 +263,14 @@ msgstr "Wybierz"
 #: pe/ui/home.cpp
 msgid "Choose a game from your library."
 msgstr "Wybierz grę z biblioteki."
+
+#: pe/ui/settings.cpp
+msgid "Choose a theme or change the launcher layout."
+msgstr "Wybierz motyw lub zmień układ launchera."
+
+#: pe/ui/settings.cpp
+msgid "Choose the colours and appearance of this menu."
+msgstr "Wybierz kolory i wygląd tego menu."
 
 #: pe/ui/browse.cpp
 msgid "Choose the folder that holds your keys, firmware and games"
@@ -705,6 +725,10 @@ msgstr "Pełna jakość"
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "Dźwięk gier; muzyka menu systemowego PS5 pozostaje bez zmian."
 
+#: pe/ui/launcher.cpp
+msgid "Game cannot start now."
+msgstr "Nie można teraz uruchomić gry."
+
 #. {0} is the reason, a sentence in English; {1} is a file.
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
@@ -792,6 +816,10 @@ msgstr "Start"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "Jak gry są renderowane i skalowane na telewizorze."
+
+#: pe/ui/settings.cpp
+msgid "Images in this folder: {0}"
+msgstr "Obrazy w tym folderze: {0}"
 
 #. Button hint: copy a save in.
 #: pe/ui/library.cpp
@@ -914,6 +942,10 @@ msgstr "Większy tekst"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "Ostatnio uruchomiona gra"
+
+#: pe/ui/settings.cpp
+msgid "Launcher"
+msgstr "Launcher"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1404,6 +1436,10 @@ msgstr "Publiczne pokoje"
 msgid "PUBLIC ROOMS"
 msgstr "PUBLICZNE POKOJE"
 
+#: pe/ui/settings.cpp
+msgid "Put images in the wallpapers folder to show them here."
+msgstr "Umieść obrazy w folderze wallpapers, aby pokazać je tutaj."
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "W kolejce"
@@ -1673,6 +1709,10 @@ msgid "Several sources have this game. Which one should it come from?"
 msgstr "Tę grę ma kilka źródeł. Z którego ma pochodzić?"
 
 #: pe/ui/settings.cpp
+msgid "Show an image of your own behind the menu."
+msgstr "Pokaż własny obraz za menu."
+
+#: pe/ui/settings.cpp
 msgid "Show or hide the FPS overlay"
 msgstr "Pokaż lub ukryj licznik FPS"
 
@@ -1883,6 +1923,10 @@ msgstr "Nie udało się dokończyć aktualizacji"
 msgid "Theme"
 msgstr "Motyw"
 
+#: pe/ui/settings.cpp
+msgid "Theme and launcher settings."
+msgstr "Ustawienia motywu i launchera."
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "Konsola i serwer mają zapisy, których druga strona nie zna. Które mają zostać? Pozostałe zostaną zachowane jako kopia zapasowa."
@@ -2014,6 +2058,10 @@ msgstr "Filtr skalowania"
 msgid "USA"
 msgstr "USA"
 
+#: pe/ui/settings.cpp
+msgid "Use another home screen, library and menu layout."
+msgstr "Użyj innego układu ekranu głównego, biblioteki i menu."
+
 #: pe/ui/browse.cpp
 msgid "Use extracted firmware NCA files. Choose the folder in Settings, Game files; restart the app after changing it."
 msgstr "Użyj wypakowanych plików NCA firmware'u. Folder wybierz w menu Ustawienia, Pliki gier; po zmianie uruchom aplikację ponownie."
@@ -2081,6 +2129,10 @@ msgstr "Oczekuje na {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "Oczekuje na pobranie"
+
+#: pe/ui/settings.cpp
+msgid "Wallpaper"
+msgstr "Tapeta"
 
 #: pe/ui/settings.cpp
 msgid "What the FPS overlay's line says, and how the chip is drawn."

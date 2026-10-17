@@ -96,9 +96,21 @@ msgstr "Veškeré uznání za emulátor Eden patří jeho vývojářům a přisp
 msgid "AMD FSR"
 msgstr "AMD FSR"
 
+#: pe/ui/settings.cpp
+msgid "An image of your own behind this menu."
+msgstr "Vlastní obrázek za touto nabídkou."
+
 #: eden_services.cpp
 msgid "Another language"
 msgstr "Jiný jazyk"
+
+#: pe/ui/settings.cpp
+msgid "Appearance"
+msgstr "Vzhled"
+
+#: pe/ui/settings.cpp
+msgid "Apply"
+msgstr "Použít"
 
 #. The button mapping has not been changed.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -251,6 +263,14 @@ msgstr "Zvolit"
 #: pe/ui/home.cpp
 msgid "Choose a game from your library."
 msgstr "Vyber si hru z knihovny."
+
+#: pe/ui/settings.cpp
+msgid "Choose a theme or change the launcher layout."
+msgstr "Vyberte motiv nebo změňte rozvržení spouštěče."
+
+#: pe/ui/settings.cpp
+msgid "Choose the colours and appearance of this menu."
+msgstr "Vyberte barvy a vzhled této nabídky."
 
 #: pe/ui/browse.cpp
 msgid "Choose the folder that holds your keys, firmware and games"
@@ -705,6 +725,10 @@ msgstr "Plná kvalita"
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "Zvuk her; hudba v systémové nabídce PS5 se nemění."
 
+#: pe/ui/launcher.cpp
+msgid "Game cannot start now."
+msgstr "Hru teď nelze spustit."
+
 #. {0} is the reason, a sentence in English; {1} is a file.
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
@@ -792,6 +816,10 @@ msgstr "Domů"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "Jak se hry vykreslují a škálují na televizi."
+
+#: pe/ui/settings.cpp
+msgid "Images in this folder: {0}"
+msgstr "Obrázky v této složce: {0}"
 
 #. Button hint: copy a save in.
 #: pe/ui/library.cpp
@@ -914,6 +942,10 @@ msgstr "Větší písmo"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "Naposledy spuštěná hra"
+
+#: pe/ui/settings.cpp
+msgid "Launcher"
+msgstr "Spouštěč"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1404,6 +1436,10 @@ msgstr "Veřejné místnosti"
 msgid "PUBLIC ROOMS"
 msgstr "VEŘEJNÉ MÍSTNOSTI"
 
+#: pe/ui/settings.cpp
+msgid "Put images in the wallpapers folder to show them here."
+msgstr "Vložte obrázky do složky wallpapers a zobrazí se zde."
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "Ve frontě"
@@ -1673,6 +1709,10 @@ msgid "Several sources have this game. Which one should it come from?"
 msgstr "Tuto hru má několik zdrojů. Ze kterého ji stáhnout?"
 
 #: pe/ui/settings.cpp
+msgid "Show an image of your own behind the menu."
+msgstr "Zobrazit za nabídkou vlastní obrázek."
+
+#: pe/ui/settings.cpp
 msgid "Show or hide the FPS overlay"
 msgstr "Zobrazit nebo skrýt počítadlo FPS"
 
@@ -1883,6 +1923,10 @@ msgstr "Aktualizaci nelze dokončit"
 msgid "Theme"
 msgstr "Motiv"
 
+#: pe/ui/settings.cpp
+msgid "Theme and launcher settings."
+msgstr "Nastavení motivu a spouštěče."
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "Konzole i server mají uložená data, která druhá strana nezná. Která mají zůstat? Ta druhá se uchovají jako záloha."
@@ -2014,6 +2058,10 @@ msgstr "Filtr škálování"
 msgid "USA"
 msgstr "USA"
 
+#: pe/ui/settings.cpp
+msgid "Use another home screen, library and menu layout."
+msgstr "Použít jiné rozvržení domovské obrazovky, knihovny a nabídky."
+
 #: pe/ui/browse.cpp
 msgid "Use extracted firmware NCA files. Choose the folder in Settings, Game files; restart the app after changing it."
 msgstr "Použij rozbalené soubory NCA firmwaru. Složku vyber v Nastavení, Herní soubory; po změně aplikaci restartuj."
@@ -2081,6 +2129,10 @@ msgstr "Čeká na {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "Čeká na stažení"
+
+#: pe/ui/settings.cpp
+msgid "Wallpaper"
+msgstr "Tapeta"
 
 #: pe/ui/settings.cpp
 msgid "What the FPS overlay's line says, and how the chip is drawn."

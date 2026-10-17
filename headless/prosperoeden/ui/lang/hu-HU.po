@@ -96,9 +96,21 @@ msgstr "Az Eden emulátorért minden elismerés a fejlesztőit és közreműköd
 msgid "AMD FSR"
 msgstr "AMD FSR"
 
+#: pe/ui/settings.cpp
+msgid "An image of your own behind this menu."
+msgstr "Saját kép a menü mögött."
+
 #: eden_services.cpp
 msgid "Another language"
 msgstr "Másik nyelv"
+
+#: pe/ui/settings.cpp
+msgid "Appearance"
+msgstr "Megjelenés"
+
+#: pe/ui/settings.cpp
+msgid "Apply"
+msgstr "Alkalmaz"
 
 #. The button mapping has not been changed.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
@@ -251,6 +263,14 @@ msgstr "Kiválasztás"
 #: pe/ui/home.cpp
 msgid "Choose a game from your library."
 msgstr "Válassz egy játékot a játéktárból."
+
+#: pe/ui/settings.cpp
+msgid "Choose a theme or change the launcher layout."
+msgstr "Válassz témát, vagy módosítsd az indító elrendezését."
+
+#: pe/ui/settings.cpp
+msgid "Choose the colours and appearance of this menu."
+msgstr "Válaszd ki a menü színeit és megjelenését."
 
 #: pe/ui/browse.cpp
 msgid "Choose the folder that holds your keys, firmware and games"
@@ -705,6 +725,10 @@ msgstr "Teljes minőség"
 msgid "Game audio; PS5 system-menu music is unchanged."
 msgstr "A játékok hangja; a PS5 rendszermenüjének zenéje nem változik."
 
+#: pe/ui/launcher.cpp
+msgid "Game cannot start now."
+msgstr "A játék most nem indítható."
+
 #. {0} is the reason, a sentence in English; {1} is a file.
 #: eden_services.cpp, host/fake_services.cpp
 msgid "Game could not start: {0} Details: {1}"
@@ -792,6 +816,10 @@ msgstr "Kezdőlap"
 #: pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "How games are drawn and scaled to your TV."
 msgstr "A játékok megjelenítése és skálázása a TV-re."
+
+#: pe/ui/settings.cpp
+msgid "Images in this folder: {0}"
+msgstr "Képek ebben a mappában: {0}"
 
 #. Button hint: copy a save in.
 #: pe/ui/library.cpp
@@ -914,6 +942,10 @@ msgstr "Nagyobb szöveg"
 #: eden_services.cpp
 msgid "Last game opened"
 msgstr "Legutóbb megnyitott játék"
+
+#: pe/ui/settings.cpp
+msgid "Launcher"
+msgstr "Indító"
 
 #: pe/ui/multiplayer.cpp
 msgid "Leave / cancel"
@@ -1404,6 +1436,10 @@ msgstr "Nyilvános szobák"
 msgid "PUBLIC ROOMS"
 msgstr "NYILVÁNOS SZOBÁK"
 
+#: pe/ui/settings.cpp
+msgid "Put images in the wallpapers folder to show them here."
+msgstr "Tegyél képeket a wallpapers mappába, hogy itt megjelenjenek."
+
 #: pe/ui/remote.cpp
 msgid "Queued"
 msgstr "Sorban áll"
@@ -1673,6 +1709,10 @@ msgid "Several sources have this game. Which one should it come from?"
 msgstr "Több forrásban is megvan ez a játék. Melyikből töltsük le?"
 
 #: pe/ui/settings.cpp
+msgid "Show an image of your own behind the menu."
+msgstr "Saját kép megjelenítése a menü mögött."
+
+#: pe/ui/settings.cpp
 msgid "Show or hide the FPS overlay"
 msgstr "FPS-kijelző be- vagy kikapcsolása"
 
@@ -1883,6 +1923,10 @@ msgstr "A frissítést nem sikerült befejezni"
 msgid "Theme"
 msgstr "Téma"
 
+#: pe/ui/settings.cpp
+msgid "Theme and launcher settings."
+msgstr "Téma- és indítóbeállítások."
+
 #: pe/ui/save_sync.cpp
 msgid "This console and the server both have save data the other does not know. Which one should stay? The other is kept as a backup."
 msgstr "A konzolon és a szerveren is van olyan mentés, amelyről a másik nem tud. Melyik maradjon? A másik biztonsági másolatként megmarad."
@@ -2014,6 +2058,10 @@ msgstr "Felskálázó szűrő"
 msgid "USA"
 msgstr "USA"
 
+#: pe/ui/settings.cpp
+msgid "Use another home screen, library and menu layout."
+msgstr "Másik kezdőképernyő-, könyvtár- és menüelrendezés használata."
+
 #: pe/ui/browse.cpp
 msgid "Use extracted firmware NCA files. Choose the folder in Settings, Game files; restart the app after changing it."
 msgstr "Kicsomagolt firmware NCA-fájlokat használj. A mappát a Beállítások, Játékfájlok menüben választhatod ki; módosítás után indítsd újra az alkalmazást."
@@ -2081,6 +2129,10 @@ msgstr "Várakozás: {0}"
 #: pe/ui/remote.cpp
 msgid "Waiting to download"
 msgstr "Letöltésre vár"
+
+#: pe/ui/settings.cpp
+msgid "Wallpaper"
+msgstr "Háttérkép"
 
 #: pe/ui/settings.cpp
 msgid "What the FPS overlay's line says, and how the chip is drawn."
