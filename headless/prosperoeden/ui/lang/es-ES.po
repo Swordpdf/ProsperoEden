@@ -1639,6 +1639,10 @@ msgstr "Guardado: {0}. Sustituyen a los de esta consola."
 msgid "Saved. A display that cannot show 120 Hz stays at 60 Hz."
 msgstr "Guardado. Una pantalla que no admite 120 Hz se queda en 60 Hz."
 
+#: pe/ui/settings.cpp
+msgid "Saved. Applies the next time ProsperoEden opens."
+msgstr "Guardado. Se aplica la próxima vez que abras ProsperoEden."
+
 #: pe/ui/browse.cpp, pe/ui/launcher.cpp
 msgid "Saved. Applies when a game starts."
 msgstr "Guardado. Se aplica al iniciar un juego."
@@ -1655,6 +1659,11 @@ msgstr "Guardado. El posprocesado necesita el renderizador Vulkan."
 #: pe/ui/browse.cpp
 msgid "Saved. Reopen ProsperoEden to use this folder."
 msgstr "Guardado. Vuelve a abrir ProsperoEden para usar esta carpeta."
+
+#. About the Update notices switch; homebrew.page is a site's name and stays as it is; About is the menu's last section (use its translation).
+#: pe/ui/settings.cpp
+msgid "Says when homebrew.page has a newer version. Off, only About names it."
+msgstr "Avisa cuando homebrew.page tiene una versión más reciente. Desactivado, solo Acerca de la muestra."
 
 #: pe/ui/pairing.cpp
 msgid "Scan the code with your phone, or open the address below."
@@ -2049,6 +2058,11 @@ msgstr "SUBIR"
 msgid "Update available"
 msgstr "Actualización disponible"
 
+#. Settings switch: whether the app says at its start that a newer release of this app is listed (not game updates).
+#: pe/ui/settings.cpp
+msgid "Update notices"
+msgstr "Avisos de actualización"
+
 #. Button: download and install the newer release of this app now.
 #: pe/ui/update.cpp
 msgid "Update now"
@@ -2093,7 +2107,7 @@ msgid "Version {0}"
 msgstr "Versión {0}"
 
 #. {0}: the newer release's number, for example 1.000.050; homebrew.page is a site's name and stays as it is.
-#: pe/ui/launcher.cpp
+#: pe/ui/browse.cpp, pe/ui/launcher.cpp
 msgid "Version {0} is on homebrew.page"
 msgstr "La versión {0} está en homebrew.page"
 

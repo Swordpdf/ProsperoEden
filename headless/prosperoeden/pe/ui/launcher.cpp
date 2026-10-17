@@ -139,7 +139,7 @@ std::array<bool, 8> Launcher::switch_states(Modal modal) const
     case Modal::wallpaper:
         return {}; // no switches: the dialog only lists the folder's images
     default:
-        return {prefs_.detailed_logging, prefs_.immediate_logs, false};
+        return {prefs_.detailed_logging, prefs_.immediate_logs, prefs_.update_notices};
     }
 }
 
@@ -465,6 +465,10 @@ void Launcher::update_offer(float dt)
             // "v1.000.050" and "1.000.050" both read as the number.
             const std::string &newer = offer.version;
             update_version_ = newer.size() > 1 && (newer[0] == 'v' || newer[0] == 'V') ? newer.substr(1) : newer;
+            // Update notices off (Settings > Diagnostics): neither the dialog nor the notification.
+            // The version stays known, and About names it.
+            if (!prefs_.update_notices)
+                return;
             if (offer.installable && first_start_)
             {
                 // Asked each time the app opens (not on returning from a game).

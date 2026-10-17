@@ -1639,6 +1639,10 @@ msgstr "저장 시각: {0}. 이 본체의 데이터를 대체합니다."
 msgid "Saved. A display that cannot show 120 Hz stays at 60 Hz."
 msgstr "저장했습니다. 120Hz를 지원하지 않는 디스플레이는 60Hz로 유지됩니다."
 
+#: pe/ui/settings.cpp
+msgid "Saved. Applies the next time ProsperoEden opens."
+msgstr "저장했습니다. 다음에 ProsperoEden을 열 때 적용됩니다."
+
 #: pe/ui/browse.cpp, pe/ui/launcher.cpp
 msgid "Saved. Applies when a game starts."
 msgstr "저장했습니다. 게임을 시작할 때 적용됩니다."
@@ -1655,6 +1659,11 @@ msgstr "저장했습니다. 후처리에는 Vulkan 렌더러가 필요합니다.
 #: pe/ui/browse.cpp
 msgid "Saved. Reopen ProsperoEden to use this folder."
 msgstr "저장했습니다. ProsperoEden을 다시 열면 이 폴더를 사용합니다."
+
+#. About the Update notices switch; homebrew.page is a site's name and stays as it is; About is the menu's last section (use its translation).
+#: pe/ui/settings.cpp
+msgid "Says when homebrew.page has a newer version. Off, only About names it."
+msgstr "homebrew.page에 새 버전이 있으면 알려 줍니다. 끄면 정보에만 표시됩니다."
 
 #: pe/ui/pairing.cpp
 msgid "Scan the code with your phone, or open the address below."
@@ -2049,6 +2058,11 @@ msgstr "위로"
 msgid "Update available"
 msgstr "업데이트가 있습니다"
 
+#. Settings switch: whether the app says at its start that a newer release of this app is listed (not game updates).
+#: pe/ui/settings.cpp
+msgid "Update notices"
+msgstr "업데이트 알림"
+
 #. Button: download and install the newer release of this app now.
 #: pe/ui/update.cpp
 msgid "Update now"
@@ -2093,7 +2107,7 @@ msgid "Version {0}"
 msgstr "버전 {0}"
 
 #. {0}: the newer release's number, for example 1.000.050; homebrew.page is a site's name and stays as it is.
-#: pe/ui/launcher.cpp
+#: pe/ui/browse.cpp, pe/ui/launcher.cpp
 msgid "Version {0} is on homebrew.page"
 msgstr "버전 {0}이(가) homebrew.page에 있습니다"
 

@@ -11,7 +11,7 @@
 //     "audio": { "volume": 100, "mute": false, "menu_volume": 70 },
 //     "controls": { "vibration": true, "vibration_strength": 100,
 //                   "mapping": { "a": "cross", "b": "circle" } },
-//     "system": { "language": "en-US" },
+//     "system": { "language": "en-US", "update_notices": true },
 //     "accessibility": { "large_text": false, "high_contrast": false, "reduce_motion": false },
 //     "launcher": { "theme": "canopy" },
 //     "diagnostics": { "detailed_logging": false, "immediate_logs": false },
@@ -167,6 +167,9 @@ struct Preferences {
     // Settings > Appearance > Wallpaper: the image file's name in the wallpapers folder ("" when
     // the theme's own art shows).
     std::string wallpaper;
+    // Settings > Diagnostics > Update notices: off, the launcher keeps a newer release to itself at
+    // its start (About still names it).
+    bool update_notices = true;
 };
 
 inline int KeyIndex(const std::string& value, const char* const* keys, int count, int fallback) {
@@ -475,6 +478,8 @@ inline Preferences LoadPreferences(const std::string& file = SettingsFile()) {
         100) / 25 * 25;
     result.language = KeyIndex(Settings::String(document, Json::json_pointer("/system/language")),
                                kLanguageKeys, int(std::size(kLanguageKeys)), result.language);
+    result.update_notices = Settings::Bool(document, Json::json_pointer("/system/update_notices"),
+                                           result.update_notices);
     result.large_text = Settings::Bool(document, Json::json_pointer("/accessibility/large_text"), false);
     result.high_contrast = Settings::Bool(document, Json::json_pointer("/accessibility/high_contrast"), false);
     result.reduce_motion = Settings::Bool(document, Json::json_pointer("/accessibility/reduce_motion"), false);
@@ -526,6 +531,7 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
     if (value.menu_bind == kDefaultMenuBinding) document["controls"].erase("menu_mapping");
     else document["controls"]["menu_mapping"] = Settings::MenuMappingJson(value.menu_bind);
     document["system"]["language"] = kLanguageKeys[value.language];
+    document["system"]["update_notices"] = value.update_notices;
     document["diagnostics"]["detailed_logging"] = value.detailed_logging;
     document["diagnostics"]["immediate_logs"] = value.immediate_logs;
     document["accessibility"]["large_text"] = value.large_text;

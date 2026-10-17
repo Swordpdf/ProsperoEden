@@ -468,6 +468,31 @@ void pictures(Stage &s)
     s.shoot("89-update-notes-truncated-end");
     s.services.update_notes_truncated = false;
 
+    // Update notices off (Settings > Diagnostics): the check runs, but the app opens without the
+    // offer; About names the newer version.
+    {
+        pe::ui::Preferences quiet = s.services.preferences();
+        quiet.update_notices = false;
+        s.services.set_preferences(quiet);
+        s.services.update_version = "v1.000.060";
+        s.restart(true);
+        s.heard.clear();
+        s.wait(2.6f);
+        s.shoot("70b-update-notices-off");
+        const bool offered =
+            std::find(s.heard.begin(), s.heard.end(), pe::audio::Cue::notify) != s.heard.end();
+        if (offered || !s.services.update_version.empty())
+        {
+            std::fprintf(stderr, "error: the update offer showed with Update notices off\n");
+            s.ok = false;
+        }
+        s.press({Key::l1}); // About, the last section
+        s.wait(1.0f);
+        s.shoot("70c-update-notices-off-about");
+        quiet.update_notices = true;
+        s.services.set_preferences(quiet);
+    }
+
     // A game's file taken away while the menu shows it: within a moment it leaves the home screen
     // (another recent game takes its place) and the Library.
     s.restart();
@@ -661,6 +686,21 @@ void pictures(Stage &s)
     s.press({Key::down});
     s.wait(0.6f);
     s.shoot("18b-diagnostics-logs-at-once");
+    // Update notices: off and back on, saved each time.
+    s.press({Key::down});
+    s.wait(0.6f);
+    s.shoot("18c-diagnostics-update-notices");
+    s.press({Key::right});
+    s.wait(0.4f);
+    s.shoot("18d-diagnostics-update-notices-off");
+    const bool notices_off = !s.services.preferences().update_notices;
+    s.press({Key::right});
+    s.wait(0.4f);
+    if (!notices_off || !s.services.preferences().update_notices)
+    {
+        std::fprintf(stderr, "error: the Update notices switch did not reach the settings\n");
+        s.ok = false;
+    }
     s.press({Key::circle});
     s.walk(6, 7);
     s.press({Key::cross});

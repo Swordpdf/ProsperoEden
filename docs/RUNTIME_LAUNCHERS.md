@@ -77,6 +77,12 @@ launcher picker follows the native menu bindings, including its Select and Back 
 `preferences.set` accepts a `menu_bind` array containing each of those four integers
 exactly once. Partial preference patches retain the current menu bindings.
 
+`status.update` holds the newer application release the start-up check found, whatever
+the user chose. `preferences.update_notices` is **Settings > Diagnostics > Update
+notices** (true by default): when it is false, a pack should not offer the release when
+it opens, only name it where it shows the running version. The built-in launcher that a
+pack falls back to follows it.
+
 Three functions cross the host boundary:
 
 ```lua

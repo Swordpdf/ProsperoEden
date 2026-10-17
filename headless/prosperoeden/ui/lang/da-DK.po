@@ -1639,6 +1639,10 @@ msgstr "Gemt {0}. De erstatter konsollens."
 msgid "Saved. A display that cannot show 120 Hz stays at 60 Hz."
 msgstr "Gemt. En skærm, der ikke kan vise 120 Hz, bliver ved 60 Hz."
 
+#: pe/ui/settings.cpp
+msgid "Saved. Applies the next time ProsperoEden opens."
+msgstr "Gemt. Gælder næste gang ProsperoEden åbnes."
+
 #: pe/ui/browse.cpp, pe/ui/launcher.cpp
 msgid "Saved. Applies when a game starts."
 msgstr "Gemt. Gælder, når et spil starter."
@@ -1655,6 +1659,11 @@ msgstr "Gemt. Efterbehandling kræver Vulkan-rendereren."
 #: pe/ui/browse.cpp
 msgid "Saved. Reopen ProsperoEden to use this folder."
 msgstr "Gemt. Genåbn ProsperoEden for at bruge denne mappe."
+
+#. About the Update notices switch; homebrew.page is a site's name and stays as it is; About is the menu's last section (use its translation).
+#: pe/ui/settings.cpp
+msgid "Says when homebrew.page has a newer version. Off, only About names it."
+msgstr "Siger til, når homebrew.page har en nyere version. Slået fra nævner kun Om den."
 
 #: pe/ui/pairing.cpp
 msgid "Scan the code with your phone, or open the address below."
@@ -2049,6 +2058,11 @@ msgstr "OP"
 msgid "Update available"
 msgstr "Opdatering tilgængelig"
 
+#. Settings switch: whether the app says at its start that a newer release of this app is listed (not game updates).
+#: pe/ui/settings.cpp
+msgid "Update notices"
+msgstr "Opdateringsbeskeder"
+
 #. Button: download and install the newer release of this app now.
 #: pe/ui/update.cpp
 msgid "Update now"
@@ -2093,7 +2107,7 @@ msgid "Version {0}"
 msgstr "Version {0}"
 
 #. {0}: the newer release's number, for example 1.000.050; homebrew.page is a site's name and stays as it is.
-#: pe/ui/launcher.cpp
+#: pe/ui/browse.cpp, pe/ui/launcher.cpp
 msgid "Version {0} is on homebrew.page"
 msgstr "Version {0} ligger på homebrew.page"
 

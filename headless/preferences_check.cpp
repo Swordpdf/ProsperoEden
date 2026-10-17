@@ -81,6 +81,13 @@ int main() {
     assert(!saved.immediate_logs);
     saved.immediate_logs = true;
     assert(Eden::SavePreferences(saved, file) && Eden::LoadPreferences(file).immediate_logs);
+    // Update notices (Settings > Diagnostics): on until switched off, and kept under "system".
+    assert(saved.update_notices);
+    saved.update_notices = false;
+    assert(Eden::SavePreferences(saved, file) && !Eden::LoadPreferences(file).update_notices);
+    assert(Read(file).find("\"update_notices\": false") != std::string::npos);
+    saved.update_notices = true;
+    assert(Eden::SavePreferences(saved, file) && Eden::LoadPreferences(file).update_notices);
     assert(!Eden::SavePreferences({true, 101, false, false}, file));
     assert(Eden::LoadPreferences(file).volume == 40);
     assert(Read(file).find("\"renderer\": \"opengl\"") != std::string::npos);

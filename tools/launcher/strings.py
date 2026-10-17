@@ -57,6 +57,8 @@ NOTES = {
     "What's new": "Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.",
     "What's new in version {0}": "Title of the release notes view; {0} is the new version, for example 1.000.080.",
     "Scroll": "Button hint: move through a long text (Up/Down).",
+    "Update notices": "Settings switch: whether the app says at its start that a newer release of this app is listed (not game updates).",
+    "Says when homebrew.page has a newer version. Off, only About names it.": "About the Update notices switch; homebrew.page is a site's name and stays as it is; About is the menu's last section (use its translation).",
     "The rest is on the app's page on homebrew.page.": "Shown at the end of release notes that were cut short; homebrew.page is a site's name and stays as it is.",
     "Select": "Button hint: choose the highlighted item (not the Select button).",
     "Back": "Button hint: go back one screen.",

@@ -1,6 +1,6 @@
 # Settings
 
-The settings that take more than a line to explain: the Performance switches, frame generation, profiles, settings per game, button mapping, language and accessibility.
+The settings that take more than a line to explain: the Performance switches, frame generation, profiles, settings per game, button mapping, language, accessibility and update notices.
 
 ## Performance settings
 
@@ -160,3 +160,7 @@ The D-pad, the sticks and the [in-game shortcuts](../README.md#in-game-shortcuts
 The launcher follows the language the PS5 is set to: Arabic, Chinese (simplified and traditional), Czech, Danish, Dutch, Finnish, French, German, Greek, Hungarian, Indonesian, Italian, Japanese, Korean, Norwegian, Polish, Portuguese, Romanian, Russian, Spanish, Swedish, Thai, Turkish, Ukrainian and Vietnamese (with the regional variants the PS5 has for French, Portuguese and Spanish), and English otherwise. Arabic, Chinese, Greek, Japanese, Korean and Thai are drawn with the PS5's own system fonts. Arabic text runs right to left; the screens themselves are not mirrored. To use another one, put a file named `language.txt` holding its tag (for example `en-US` or `pt-BR`) in `/data/homebrew/PPSA99008`. The language *games* use is a separate setting, **Settings > Language**.
 
 **Settings > Accessibility** has three switches. **Larger text** draws the menu's small text about a third larger. **High contrast** uses solid panels, brighter text and an outlined highlight. **Reduce motion** stops the background drifting and the screens sliding, in the menu and on the loading screen. There is no screen reader.
+
+## Update notices
+
+**Settings > Diagnostics > Update notices** (on by default) is the offer at the start when [homebrew.page](https://homebrew.page/ps5) lists a newer release of ProsperoEden: the update dialog, or the **Update available** notification when the app cannot install it itself (see [Updating](INSTALL.md#updating)). **Skip** answers one start; switched off, the app opens without the offer every time. It still asks homebrew.page, and the About screen names the newer version beside the one running. In the settings file it is `"system": { "update_notices": false }`, and it applies the next time ProsperoEden opens.

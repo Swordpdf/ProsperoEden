@@ -490,6 +490,10 @@ void Launcher::draw_about(Canvas &c)
                     baseline(880.0f, 26.0f, t.size_small), t.size_small, t.meta, w);
         text(c, version_, kPanelLeft + kPanelWidth - 32.0f, baseline(920.0f, 26.0f, t.size_small),
              t.size_small, t.accent_pale, Align::right);
+        // A newer release the check found (with Update notices off, the one place that says so).
+        if (!update_version_.empty())
+            text_shrink(c, fill(tr("Version {0} is on homebrew.page"), {update_version_}), x,
+                        baseline(920.0f, 26.0f, t.size_small), t.size_small, t.meta, w - 200.0f);
         static constexpr Hint kHints[] = {{Pad::circle, TR("Home")}, {Pad::l1, TR("Sections"), Pad::r1}};
         draw_footer(c, kHints, 2);
         return;
@@ -525,6 +529,10 @@ void Launcher::draw_about(Canvas &c)
                 baseline(788.0f, 30.0f, th().size_small), th().size_small, th().meta, 748.0f);
     text(c, version_, 892.0f, baseline(866.0f, 28.0f, th().size_small), th().size_small,
          th().accent_pale, Align::right);
+    // A newer release the check found (with Update notices off, the one place that says so).
+    if (!update_version_.empty())
+        text_shrink(c, fill(tr("Version {0} is on homebrew.page"), {update_version_}), 144.0f,
+                    baseline(866.0f, 28.0f, th().size_small), th().size_small, th().meta, 540.0f);
 
     glass(c, kDetailPanel, th().radius_panel, th().panel.with_alpha(0.80f),
           th().panel_edge.with_alpha(0.55f));

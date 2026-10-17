@@ -1639,6 +1639,10 @@ msgstr "Lưu lúc {0}. Dữ liệu sẽ thay cho của máy này."
 msgid "Saved. A display that cannot show 120 Hz stays at 60 Hz."
 msgstr "Đã lưu. Màn hình không hỗ trợ 120 Hz sẽ giữ ở 60 Hz."
 
+#: pe/ui/settings.cpp
+msgid "Saved. Applies the next time ProsperoEden opens."
+msgstr "Đã lưu. Có hiệu lực từ lần mở ProsperoEden tiếp theo."
+
 #: pe/ui/browse.cpp, pe/ui/launcher.cpp
 msgid "Saved. Applies when a game starts."
 msgstr "Đã lưu. Áp dụng khi mở trò chơi."
@@ -1655,6 +1659,11 @@ msgstr "Đã lưu. Hậu kỳ cần trình kết xuất Vulkan."
 #: pe/ui/browse.cpp
 msgid "Saved. Reopen ProsperoEden to use this folder."
 msgstr "Đã lưu. Hãy mở lại ProsperoEden để dùng thư mục này."
+
+#. About the Update notices switch; homebrew.page is a site's name and stays as it is; About is the menu's last section (use its translation).
+#: pe/ui/settings.cpp
+msgid "Says when homebrew.page has a newer version. Off, only About names it."
+msgstr "Báo khi homebrew.page có phiên bản mới hơn. Khi tắt, chỉ mục Giới thiệu nhắc đến."
 
 #: pe/ui/pairing.cpp
 msgid "Scan the code with your phone, or open the address below."
@@ -2049,6 +2058,11 @@ msgstr "LÊN"
 msgid "Update available"
 msgstr "Có bản cập nhật"
 
+#. Settings switch: whether the app says at its start that a newer release of this app is listed (not game updates).
+#: pe/ui/settings.cpp
+msgid "Update notices"
+msgstr "Thông báo cập nhật"
+
 #. Button: download and install the newer release of this app now.
 #: pe/ui/update.cpp
 msgid "Update now"
@@ -2093,7 +2107,7 @@ msgid "Version {0}"
 msgstr "Phiên bản {0}"
 
 #. {0}: the newer release's number, for example 1.000.050; homebrew.page is a site's name and stays as it is.
-#: pe/ui/launcher.cpp
+#: pe/ui/browse.cpp, pe/ui/launcher.cpp
 msgid "Version {0} is on homebrew.page"
 msgstr "Phiên bản {0} có trên homebrew.page"
 

@@ -373,6 +373,9 @@ struct Preferences
     // Settings > Appearance > Wallpaper: the image file's name in the wallpapers folder ("" when
     // the theme's own art shows).
     std::string wallpaper;
+    // Settings > Diagnostics: the dialog (or notification) at the start when homebrew.page lists a
+    // newer release. Off, the check still runs and About names the newer version.
+    bool update_notices = true;
 };
 
 // What one game does differently from Settings (Library > Game settings). Each value is -1 while

@@ -29,7 +29,9 @@ class Launcher
     Launcher(const Launcher &) = delete;
     Launcher &operator=(const Launcher &) = delete;
 
-    void accept_update_offer(const UpdateOffer& offer) { update_=offer; update_version_=offer.version; notes_laid_out_=false; update_waiting_=offer.installable; }
+    // An offer a launcher pack took before this launcher replaced it; with Update notices off it
+    // is only named in About.
+    void accept_update_offer(const UpdateOffer& offer) { update_=offer; update_version_=offer.version; notes_laid_out_=false; update_waiting_=offer.installable && prefs_.update_notices; }
     bool take_launcher_picker() { return std::exchange(launcher_picker_, false); }
     void press(Key key);
     void update(float dt);

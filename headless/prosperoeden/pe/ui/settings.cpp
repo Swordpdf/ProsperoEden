@@ -558,8 +558,8 @@ int Launcher::dialog_rows(Modal modal) const
                         !games_[static_cast<std::size_t>(library_.selected)].remote ? 1 : 0);
     case Modal::controls:     // vibration, its strength, the button mapping, the menu's own buttons
         return kControlRows;
-    case Modal::diagnostics:  // detailed logging, logs written at once
-        return 2;
+    case Modal::diagnostics:  // detailed logging, logs written at once, update notices
+        return 3;
     default:
         return 1;
     }
@@ -586,8 +586,8 @@ float Launcher::dialog_row_top(Modal modal, int row) const
         return 334.0f + 96.0f * static_cast<float>(row);
     case Modal::controls: // under the shortcuts; the list scrolls
         return kControlsRowsTop + kVideoRowPitch * static_cast<float>(row) - controls_rows_.scroll();
-    case Modal::diagnostics: // under the setup's state
-        return 500.0f + 102.0f * static_cast<float>(row);
+    case Modal::diagnostics: // under the setup's state, spaced as Video's rows so three fit
+        return 470.0f + kVideoRowPitch * static_cast<float>(row);
     default:
         return 670.0f;
     }
@@ -856,8 +856,10 @@ void Launcher::press_dialog(Key key)
     case Modal::diagnostics:
         if (option_ == 0)
             prefs_.detailed_logging = !prefs_.detailed_logging;
-        else
+        else if (option_ == 1)
             prefs_.immediate_logs = !prefs_.immediate_logs;
+        else
+            prefs_.update_notices = !prefs_.update_notices;
         break;
     case Modal::wallpaper:
         if (!activate)
@@ -902,6 +904,11 @@ void Launcher::press_dialog(Key key)
     {
         // The guest's memory is taken as a game starts, so this says when the change arrives.
         say(tr("Saved. Applies when a game starts."));
+    }
+    else if (modal_ == Modal::diagnostics && option_ == 2)
+    {
+        // Update notices: the check and its answer come as the app opens.
+        say(tr("Saved. Applies the next time ProsperoEden opens."));
     }
     apply_look();
     cue(sound);
@@ -959,7 +966,8 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
     default:
         title = tr("Diagnostics");
         copy = option_ == 0 ? tr("Detailed logs apply to the next game launch.") :
-                             tr("Keeps the last line before a crash, but games stutter. From the next start.");
+               option_ == 1 ? tr("Keeps the last line before a crash, but games stutter. From the next start.") :
+                              tr("Says when homebrew.page has a newer version. Off, only About names it.");
         break;
     }
     text_shrink(c, title, 592.0f, baseline(218.0f, 62.0f, th().size_display), th().size_display,
@@ -1307,13 +1315,15 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
     }
     default:
     {
-        text_block(c, services_.setup_details(), 592.0f, baseline(364.0f, 40.0f, th().size_text),
-                   th().size_text, 40.0f, th().body, 736.0f, 3, kShrink);
-        static constexpr const char *kNames[] = {TR("Detailed logging"), TR("Write logs at once")};
+        text_block(c, services_.setup_details(), 592.0f, baseline(350.0f, 38.0f, th().size_text),
+                   th().size_text, 38.0f, th().body, 736.0f, 3, kShrink);
+        static constexpr const char *kNames[] = {TR("Detailed logging"), TR("Write logs at once"),
+                                                 TR("Update notices")};
         static constexpr const char *kAbout[] = {
             TR("Eden's debug messages in the logs of a game."),
-            TR("Keeps the last line before a crash, but games stutter. From the next start.")};
-        for (int row = 0; row < 2; ++row)
+            TR("Keeps the last line before a crash, but games stutter. From the next start."),
+            TR("Says when homebrew.page has a newer version. Off, only About names it.")};
+        for (int row = 0; row < 3; ++row)
         {
             label(row, tr(kNames[row]), kToggle);
             toggle(c, 1292.0f, row_centre(row),
@@ -1321,9 +1331,9 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         }
         // The folder stays available after the startup notice is gone.
         const std::string reports = services_.crash_reports_folder();
-        text_block(c, reports.empty() ? std::string{tr(kAbout[std::clamp(option_, 0, 1)])} :
+        text_block(c, reports.empty() ? std::string{tr(kAbout[std::clamp(option_, 0, 2)])} :
                        fill(tr("Crash reports (FTP): {0}\nAttach crash-*.txt and its matching logs to your issue."), {reports}),
-                   592.0f, baseline(716.0f, 26.0f, th().size_small),
+                   592.0f, baseline(772.0f, 26.0f, th().size_small),
                    th().size_small, 26.0f, th().body, 736.0f, 3, kShrink);
         break;
     }
@@ -1352,9 +1362,10 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
                    30.0f, th().meta, 736.0f, 2, kShrink);
     }
 
-    // Under the rows: Video's five, Performance's four with their line of text, and Controls'
-    // that scroll under its shortcuts all end lower than the other dialogs' rows.
-    const float foot = scrolls ? 848.0f : 811.0f;
+    // Under the rows: Video's five, Performance's four with their line of text, Controls' that
+    // scroll under its shortcuts and Diagnostics' three over the crash reports' folder all end
+    // lower than the other dialogs' rows.
+    const float foot = scrolls || modal == Modal::diagnostics ? 848.0f : 811.0f;
     if (!message_.empty() && scrolls)
     {
         // Two lines, placed as a game's own settings place theirs: what a Video choice costs
