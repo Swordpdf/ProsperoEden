@@ -23,15 +23,18 @@ Only these subfolders matter; the folder itself can have any name and location.
 │       │       ├── exefs/              # code patches: *.pchtxt, *.ips
 │       │       ├── romfs/              # replacement game files
 │       │       └── romfs_ext/          # files added to the game's own
-│       └── cheats/                     # optional: its cheats
-│           └── <build ID>.txt          # one file per version of the game
+│       ├── cheats/                     # optional: its cheats
+│       │   └── <build ID>.txt          # one file per version of the game
+│       └── reshade/                    # optional: its post-processing presets and effects
+│           ├── <preset>.fxp            # offered in this game's settings
+│           └── <effect>.fx             # and the .fxh files and Textures/ they use
 ├── save-import/                        # optional: saves to import, one folder per title ID
 ├── ryujinx/                            # optional: a Ryujinx data folder to import saves from
 ├── save-export/                        # written by "Export a copy"
 └── .remote-downloads/                  # downloads that are not finished yet (see Download sources)
 ```
 
-Each game sits in a folder of its own in `roms/`, with everything that belongs to it: its update and DLC files, its mods and its cheats. ProsperoEden tells the game from its update and DLC by what each file holds, not by its name, so the files can have any names. Folders inside a game folder are not searched for games, and folders whose names start with a dot are skipped. **Delete from console** also deletes the update and DLC files in the game's folder, and the folder once it is empty.
+Each game sits in a folder of its own in `roms/`, with everything that belongs to it: its update and DLC files, its mods, its cheats and its post-processing presets. ProsperoEden tells the game from its update and DLC by what each file holds, not by its name, so the files can have any names. Folders inside a game folder are not searched for games, and folders whose names start with a dot are skipped. **Delete from console** also deletes the update and DLC files in the game's folder, and the folder once it is empty.
 
 The folder browser shows how many keys, firmware files, and games each folder holds, so you can check a folder before selecting it. Moving your files later only needs a new selection in Settings; saved settings, covers, and recently played games carry over.
 

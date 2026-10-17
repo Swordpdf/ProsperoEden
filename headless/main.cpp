@@ -121,7 +121,11 @@ extern "C" unsigned long long eden_dmb_dropped, eden_checkbit_fused;
 #include "video_core/gpu.h"
 #ifdef EDEN_PS5_FRAMEGEN
 #include "video_core/frame_gen/lossless_dll.h"
+#include "video_core/post_processing/fx_effect.h"
+#include "video_core/post_processing/fx_effect.h"
 #include "video_core/post_processing/fx_preset.h"
+#include "reshade_folder.h"
+#include "reshade_folder.h"
 #endif
 #include "profiles.h"
 #include "stop_limit.h"
@@ -1134,6 +1138,21 @@ int main(int argc, char** argv) {
             Settings::values.post_shader_enabled.SetValue(false);
             Settings::values.post_shader_chain.SetValue(std::string{});
             Settings::values.post_shader_preset.SetValue(std::string{});
+            // A game in its own folder in roms/ (issue 168) brings its update, DLC, mods, cheats
+            // and its own post-processing (reshade_folder.h): its presets and effects are read
+            // again when the folder is another than the last game's.
+            Eden::Mods::SessionGameFolder().clear();
+            if (guest) {
+                const std::string roms = Eden::AssetsPath("roms/");
+                const std::string_view path{guest};
+                if (path.starts_with(roms))
+                    if (const auto slash = path.find('/', roms.size()); slash != std::string_view::npos)
+                        Eden::Mods::SessionGameFolder() = std::string{path.substr(0, slash)};
+            }
+            if (Eden::Reshade::SetGameFolder(Eden::Mods::SessionGameFolder())) {
+                VideoCore::ReloadFxPresetCatalog();
+                VideoCore::ReloadFxCatalog();
+            }
             if (!video.post_processing.empty()) {
                 std::string line = "Post-processing: " + video.post_processing;
                 if (backend != Eden::GraphicsBackend::Vulkan) {
@@ -1287,15 +1306,7 @@ int main(int argc, char** argv) {
             // Mods and Cheats): Eden's patch manager skips the names in this list. The game's Mods
             // and Cheats switches add theirs (mods.h).
             const u64 title = eden_game_title_id(guest);
-            // A game in its own folder in roms/ (issue 168) brings its update, DLC, mods and cheats.
-            Eden::Mods::SessionGameFolder().clear();
-            {
-                const std::string roms = Eden::AssetsPath("roms/");
-                const std::string_view path{guest};
-                if (path.starts_with(roms))
-                    if (const auto slash = path.find('/', roms.size()); slash != std::string_view::npos)
-                        Eden::Mods::SessionGameFolder() = std::string{path.substr(0, slash)};
-            }
+            // The game's own folder (Mods::SessionGameFolder) was found with its post-processing.
             const auto all_mods = Eden::Mods::List(
                 {Eden::AssetsPath("mods"), Eden::AssetsPath("cheats"), Eden::Mods::SessionGameFolder()}, title);
             // Of a mod that lists several cheats, only the ones chosen there run (cheats.h).

@@ -87,6 +87,9 @@ The presets are files in `/data/prosperoeden/user/post_presets` (`.fxp`; the app
 |---|---|
 | `/data/prosperoeden/user/post_presets/` | Presets (`.fxp`): a name, a description and the chain of effects |
 | `/data/prosperoeden/user/post_shaders/` | ReShade FX effects (`.fx`) and the files they include (`.fxh`) |
+| `roms/<game>/reshade/` | One game's own presets and effects, in its game folder (see [Game files folder](INSTALL.md#game-files-folder)) |
+
+A game's own `reshade/` folder works like both folders at once: its presets (`.fxp`) are offered in that game's settings only, listed first, and the effects it holds (`.fx`, `.fxh`, and textures in `Textures/`) are used for that game, before an effect of the same name in `post_shaders/`. So a game folder can carry a preset made for it together with the effects it needs.
 
 Restart ProsperoEden after adding files: the list is read when the menu opens. A ReShade `.ini` preset does not load as it is; write its effects into a `.fxp` chain instead (below). A preset file of your own in that folder is listed beside them by its name: its `chain=` line names the effects in order, each with its technique and values (`Bloom.fx|Bloom|Radius=1.2,Amount=0.25;Sharpen.fx|Sharpen|Amount=0.75`). An effect it names that the console does not have is left out.
 

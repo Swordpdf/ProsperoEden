@@ -12,6 +12,7 @@
 #include "update_notice.h"
 #include "game_name.h"
 #include "native_directory.h"
+#include "reshade_folder.h"
 #include "pe/core/strings.hpp"
 #include "radio_input.h"
 #include "remote/backends.h"
@@ -959,7 +960,7 @@ pe::ui::GameSettings EdenServices::game_settings(std::uint64_t title_id) {
     result.frame_gen = saved.frame_gen;
     result.frame_gen_target = saved.frame_gen_target;
     result.frame_gen_multiplier = saved.frame_gen_multiplier;
-    ReadPostPresets();
+    ReadPostPresets(title_id);
     result.post_processing = saved.post_processing ? PostPresetIndex(*saved.post_processing) : -1;
     result.volume = saved.volume;
     result.mute = saved.mute;
@@ -986,7 +987,10 @@ bool EdenServices::set_game_settings(std::uint64_t title_id, const pe::ui::GameS
     value.frame_gen = settings.frame_gen;
     value.frame_gen_target = settings.frame_gen_target;
     value.frame_gen_multiplier = settings.frame_gen_multiplier;
-    if (settings.post_processing >= 0) value.post_processing = PostPresetName(settings.post_processing);
+    if (settings.post_processing >= 0) {
+        ReadPostPresets(title_id);
+        value.post_processing = PostPresetName(settings.post_processing);
+    }
     value.volume = settings.volume;
     value.mute = settings.mute;
     value.vibration = settings.vibration;
@@ -1126,12 +1130,17 @@ const std::vector<std::string>& EdenServices::filter_labels() {
     return labels;
 }
 
-void EdenServices::ReadPostPresets() {
-    // Eden writes its bundled presets into post_presets the first time, then lists that folder.
+void EdenServices::ReadPostPresets(std::uint64_t title_id) {
+    // Eden writes its bundled presets into post_presets the first time, then lists that folder. A
+    // game in its own folder lists that folder's reshade/ presets first (reshade_folder.h); the
+    // general settings list the app's own only. A name is offered once: the game's own first.
+    (void)Eden::Reshade::SetGameFolder(title_id ? ModPlaces(title_id).game_folder : std::string{});
     VideoCore::ReloadFxPresetCatalog();
     post_presets_ = {tr("Off")};
     for (const auto& preset : VideoCore::GetFxPresetCatalog())
-        if (!preset.name.empty() && Eden::ValidPostProcessing(preset.name)) post_presets_.push_back(preset.name);
+        if (!preset.name.empty() && Eden::ValidPostProcessing(preset.name) &&
+            std::find(post_presets_.begin() + 1, post_presets_.end(), preset.name) == post_presets_.end())
+            post_presets_.push_back(preset.name);
 }
 
 // "" (off) is 0; a name the console has no preset of any more reads as off.

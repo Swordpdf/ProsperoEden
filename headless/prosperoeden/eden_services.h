@@ -130,7 +130,7 @@ public:
     bool can_launch_game() override;
 private:
     // Post-processing: the presets as the menu lists them, and a name's place among them.
-    void ReadPostPresets();
+    void ReadPostPresets(std::uint64_t title_id = 0); // 0: the general settings
     int PostPresetIndex(const std::string& name) const;
     std::string PostPresetName(int index) const;
     std::vector<std::string> post_presets_;

@@ -2342,6 +2342,115 @@ else()
 endif()
 list(REMOVE_ITEM video_sources video_core.cpp gpu.cpp)
 list(APPEND video_sources "${PORT_BUILD_DIR}/video_core.cpp")
+# A game's own post-processing (headless/reshade_folder.h): its game folder's reshade/ is read
+# before post_presets/ and post_shaders/. Presets: listed first. Effects: listed first, and one of
+# the same name in post_shaders/ is left out; the renderer reads a chain's effect from the game's
+# folder when it has it, and includes and textures are looked for there too.
+file(READ "${PROJECT_SOURCE_DIR}/src/video_core/post_processing/fx_preset.cpp" fx_preset_source)
+eden_patch(fx_preset_source [=[    std::vector<std::filesystem::path> preset_files;
+    Common::FS::IterateDirEntriesRecursively(
+        root,]=] [=[    std::vector<std::filesystem::path> preset_files;
+    if (const auto own = Eden::Reshade::GameFolder(); !own.empty() && Common::FS::Exists(own))
+        Common::FS::IterateDirEntriesRecursively(
+            own,
+            [&](const std::filesystem::directory_entry& entry) {
+                if (entry.path().extension() == ".fxp") {
+                    preset_files.push_back(entry.path());
+                }
+                return true;
+            },
+            Common::FS::DirEntryFilter::File);
+    const auto own_presets = static_cast<std::ptrdiff_t>(preset_files.size());
+    Common::FS::IterateDirEntriesRecursively(
+        root,]=])
+eden_patch(fx_preset_source [=[    std::sort(preset_files.begin(), preset_files.end());
+
+    for (const auto& file : preset_files) {]=] [=[    std::sort(preset_files.begin(), preset_files.begin() + own_presets);
+    std::sort(preset_files.begin() + own_presets, preset_files.end());
+
+    for (const auto& file : preset_files) {]=])
+string(PREPEND fx_preset_source "#include \"${EDEN_PORT_DIR}/reshade_folder.h\"\n")
+write_derived("${PORT_BUILD_DIR}/fx_preset.cpp" "${fx_preset_source}")
+file(READ "${PROJECT_SOURCE_DIR}/src/video_core/post_processing/fx_effect.cpp" fx_effect_source)
+eden_patch(fx_effect_source [=[    std::vector<std::filesystem::path> paths;
+    paths.push_back(effect_path.parent_path());
+    paths.push_back(root);]=] [=[    std::vector<std::filesystem::path> paths;
+    paths.push_back(effect_path.parent_path());
+    if (const auto own = Eden::Reshade::GameFolder(); !own.empty()) {
+        paths.push_back(own);
+        paths.push_back(own / "Shaders");
+    }
+    paths.push_back(root);]=])
+eden_patch(fx_effect_source [=[    const std::array candidates{
+        effect_path.parent_path() / name,
+        root / "Textures" / name,
+        root / name,
+    };]=] [=[    const auto own = Eden::Reshade::GameFolder();
+    const std::array candidates{
+        effect_path.parent_path() / name,
+        own.empty() ? effect_path.parent_path() / name : own / "Textures" / name,
+        root / "Textures" / name,
+        root / name,
+    };]=])
+eden_patch(fx_effect_source [=[    std::vector<std::filesystem::path> effect_files;
+    Common::FS::IterateDirEntriesRecursively(
+        root,
+        [&](const std::filesystem::directory_entry& entry) {
+            if (entry.path().extension() == ".fx") {
+                effect_files.push_back(entry.path());
+            }
+            return true;
+        },
+        Common::FS::DirEntryFilter::File);
+
+    std::sort(effect_files.begin(), effect_files.end());
+
+    for (const auto& file : effect_files) {
+        FxEffectDesc desc = DescribeEffect(file, root);]=] [=[    // Each effect with the folder its name is relative to: the game's own first.
+    std::vector<std::pair<std::filesystem::path, std::filesystem::path>> effect_files;
+    std::set<std::string> own_names;
+    const auto own = Eden::Reshade::GameFolder();
+    for (const auto& folder : {own, root}) {
+        if (folder.empty() || !Common::FS::Exists(folder)) {
+            continue;
+        }
+        std::vector<std::filesystem::path> found;
+        Common::FS::IterateDirEntriesRecursively(
+            folder,
+            [&](const std::filesystem::directory_entry& entry) {
+                if (entry.path().extension() == ".fx") {
+                    found.push_back(entry.path());
+                }
+                return true;
+            },
+            Common::FS::DirEntryFilter::File);
+        std::sort(found.begin(), found.end());
+        for (auto& path : found) {
+            const auto name = Common::FS::PathToUTF8String(std::filesystem::relative(path, folder));
+            if (folder == own) {
+                own_names.insert(name);
+            } else if (own_names.contains(name)) {
+                continue;
+            }
+            effect_files.emplace_back(std::move(path), folder);
+        }
+    }
+
+    for (const auto& [file, folder] : effect_files) {
+        FxEffectDesc desc = DescribeEffect(file, folder);]=])
+string(PREPEND fx_effect_source "#include <set>\n#include <utility>\n#include \"${EDEN_PORT_DIR}/reshade_folder.h\"\n")
+write_derived("${PORT_BUILD_DIR}/fx_effect.cpp" "${fx_effect_source}")
+list(REMOVE_ITEM video_sources post_processing/fx_preset.cpp post_processing/fx_effect.cpp)
+list(APPEND video_sources "${PORT_BUILD_DIR}/fx_preset.cpp" "${PORT_BUILD_DIR}/fx_effect.cpp")
+if(EDEN_PS5_VULKAN)
+    file(READ "${PROJECT_SOURCE_DIR}/src/video_core/renderer_vulkan/present/post_process.cpp" post_process_source)
+    eden_patch(post_process_source "        const auto path = root / entry.file;\n"
+        "        const auto path = Eden::Reshade::EffectPath(root, entry.file);\n")
+    string(PREPEND post_process_source "#include \"${EDEN_PORT_DIR}/reshade_folder.h\"\n")
+    write_derived("${PORT_BUILD_DIR}/vulkan_post_process.cpp" "${post_process_source}")
+    list(REMOVE_ITEM video_sources renderer_vulkan/present/post_process.cpp)
+    list(APPEND video_sources "${PORT_BUILD_DIR}/vulkan_post_process.cpp")
+endif()
 # Remove a derived header left by the isolated classic-uniform experiment.
 file(REMOVE "${PORT_BUILD_DIR}/include/video_core/buffer_cache/buffer_cache_base.h")
 # Join the worker before its renderer/context and scheduler are destroyed.
