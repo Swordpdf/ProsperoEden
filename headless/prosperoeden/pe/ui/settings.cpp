@@ -69,6 +69,7 @@ enum VideoRow : int
     video_refresh,
     video_overlay,         // the FPS overlay's own switch
     video_overlay_options, // opens the overlay's options (Modal::hud)
+    video_post_processing, // one of Eden's ReShade FX presets, or off (Vulkan only)
     // Frame generation: not shown in a build without it (Services::frame_gen_state).
     video_frame_gen,
     video_frame_gen_target,
@@ -748,6 +749,11 @@ void Launcher::press_dialog(Key key)
             prefs_.astc = prefs_.astc != 0 ? 0 : 1;
         else if (option_ == video_refresh)
             prefs_.refresh = prefs_.refresh != 0 ? 0 : 1;
+        else if (option_ == video_post_processing)
+        {
+            const int count = static_cast<int>(services_.post_processing_labels().size());
+            prefs_.post_processing = (std::clamp(prefs_.post_processing, 0, count - 1) + step + count) % count;
+        }
         else if (option_ == video_overlay_options)
         {
             // The overlay's options have their own list (settings.cpp, Modal::hud).
@@ -877,6 +883,12 @@ void Launcher::press_dialog(Key key)
     {
         // 120 Hz is a request: the display has the last word.
         say(tr("Saved. A display that cannot show 120 Hz stays at 60 Hz."));
+    }
+    else if (modal_ == Modal::video && option_ == video_post_processing && prefs_.post_processing > 0)
+    {
+        // Eden's ReShade FX pass is drawn by the Vulkan renderer; OpenGL shows the game as it is.
+        say(prefs_.renderer != 0 ? tr("Saved. Applies when a game starts.")
+                                 : tr("Saved. Post-processing needs the Vulkan renderer."));
     }
     else if (modal_ == Modal::video && option_ == video_astc && prefs_.astc == 1)
     {
@@ -1018,6 +1030,7 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
             hertz(prefs_.refresh),
             std::string{}, // FPS overlay: a switch
             std::string{}, // Overlay options: an opener
+            pick(services_.post_processing_labels(), prefs_.post_processing),
             on_off(prefs_.frame_gen),
             prefs_.frame_gen_target <= 0 ? std::string{tr("Auto")} :
                 fill(tr("{0} Hz"), {kFrameGenTargetNames[std::clamp(prefs_.frame_gen_target, 1, kFrameGenTargets - 1)]}),
@@ -1027,7 +1040,7 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         static constexpr const char *kNames[kVideoRows] = {
             TR("Renderer"),         TR("Output resolution"), TR("Resolution"),
             TR("Upscaling filter"), TR("ASTC textures"),     TR("Refresh rate"),
-            TR("FPS overlay"),      TR("Overlay options"),
+            TR("FPS overlay"),      TR("Overlay options"),   TR("Post-processing"),
             TR("Frame generation"), TR("Frame gen target"),  TR("Frame gen multiplier")};
         for (int row = first; row <= last; ++row)
         {

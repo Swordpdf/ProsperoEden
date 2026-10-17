@@ -1303,6 +1303,10 @@ msgstr "葡萄牙文"
 msgid "Portuguese (Brazil)"
 msgstr "葡萄牙文（巴西）"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Post-processing"
+msgstr "後期處理"
+
 #. Eden is the emulator's name (unchanged).
 #: pe/ui/browse.cpp
 msgid "Powered by Eden"
@@ -1590,6 +1594,10 @@ msgstr "已儲存。啟動遊戲時生效。"
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Saved. Full quality uses four times the graphics memory for these textures and can run out above 1x."
 msgstr "已儲存。完整畫質會讓這些紋理佔用四倍的圖形記憶體，高於 1x 時可能耗盡記憶體。"
+
+#: pe/ui/settings.cpp
+msgid "Saved. Post-processing needs the Vulkan renderer."
+msgstr "已儲存。後期處理需要 Vulkan 繪圖器。"
 
 #: pe/ui/browse.cpp
 msgid "Saved. Reopen ProsperoEden to use this folder."

@@ -307,6 +307,13 @@ const std::vector<std::string> &FakeServices::astc_labels()
     static const std::vector<std::string> labels = translated(kAstcLabels);
     return labels;
 }
+// The bundled presets the preview shows, as a console with no presets of its own lists them.
+const std::vector<std::string> &FakeServices::post_processing_labels()
+{
+    static const std::vector<std::string> labels = {
+        tr("Off"), "Anime", "Cinematic", "Clean", "Dreamy", "Retro", "Vivid"};
+    return labels;
+}
 const std::vector<std::string> &FakeServices::language_labels()
 {
     static const std::vector<std::string> labels = translated(kLanguageLabels);

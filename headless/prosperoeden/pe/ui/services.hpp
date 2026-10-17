@@ -337,6 +337,7 @@ struct Preferences
     bool frame_gen = false;
     int frame_gen_target = 0;      // index into kFrameGenTargetKeys: 0 auto, then 60/90/120/144/240
     int frame_gen_multiplier = 0;  // index into kFrameGenMultiplierKeys: 2x, 3x, 4x
+    int post_processing = 0;       // index into Services::post_processing_labels: 0 off, then a preset
     bool vibration = true;
     int vibration_strength = 100; // percent of what a game asks for: 25, 50, 75 or 100
     int language = 0;
@@ -389,6 +390,7 @@ struct GameSettings
     int frame_gen = -1;  // Lossless Scaling frame generation (Vulkan only)
     int frame_gen_target = -1;      // index into kFrameGenTargetKeys
     int frame_gen_multiplier = -1;  // index into kFrameGenMultiplierKeys
+    int post_processing = -1;       // index into Services::post_processing_labels (0 off)
     int volume = -1;     // game volume, 0-100
     int mute = -1;
     int vibration = -1;
@@ -504,6 +506,13 @@ class Services
     virtual const std::vector<std::string> &resolution_keys() = 0;   // "1x"
     virtual const std::vector<std::string> &filter_labels() = 0;
     virtual const std::vector<std::string> &astc_labels() = 0; // "Compressed", "Full quality"
+    // Post-processing: "Off", then the presets the console has (Eden's bundled ones and the .fxp
+    // files in post_presets), by name. Read again each time the settings are read.
+    virtual const std::vector<std::string> &post_processing_labels()
+    {
+        static const std::vector<std::string> off{"Off"};
+        return off;
+    }
     // Frame generation: 0 this build has none (its settings are not shown), 1 the user's
     // Lossless.dll is missing (they are shown greyed out), 2 ready.
     virtual int frame_gen_state()

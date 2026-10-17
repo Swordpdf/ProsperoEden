@@ -7,7 +7,7 @@
 //                "upscaling_filter": "bilinear", "astc_textures": "compressed",
 //                "refresh_rate": "60",
 //                "output_resolution": "1080p", "frame_gen": false,
-//                "frame_gen_target": "auto", "frame_gen_multiplier": "2" },
+//                "frame_gen_target": "auto", "frame_gen_multiplier": "2", "post_processing": "Cinematic" },
 //     "audio": { "volume": 100, "mute": false, "menu_volume": 70 },
 //     "controls": { "vibration": true, "vibration_strength": 100,
 //                   "mapping": { "a": "cross", "b": "circle" } },
@@ -47,6 +47,7 @@
 #include <cinttypes>
 #include <cstdint>
 #include <cstdio>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -139,6 +140,7 @@ struct Preferences {
     bool frame_gen = false;              // Lossless Scaling frame generation (Vulkan only)
     int frame_gen_target = 0;            // index into kFrameGenTargetKeys (0 is "auto")
     int frame_gen_multiplier = 0;        // index into kFrameGenMultiplierKeys (0 is 2x)
+    std::string post_processing;         // Settings > Video > Post-processing: a preset's name ("": off)
     bool vibration = true;
     int vibration_strength = 100;        // percent of what a game asks for: 25, 50, 75 or 100
     int language = 0;                    // index into kLanguageKeys (English (US), Eden's default)
@@ -390,6 +392,15 @@ inline std::string String(const Json& document, const Json::json_pointer& at) {
 }
 } // namespace Settings
 
+// Post-processing: the name of one of Eden's ReShade FX presets (the ones it bundles and the
+// .fxp files in post_presets), as Eden names them; "" is off. Kept by name because the presets
+// a console has can change. A name that is not a preset any more leaves the picture as it is.
+inline bool ValidPostProcessing(std::string_view name) {
+    return name.size() <= 64 && std::all_of(name.begin(), name.end(), [](char c) {
+        return static_cast<unsigned char>(c) >= 32 && c != 127 && c != '/' && c != '\\';
+    });
+}
+
 inline Preferences LoadPreferences(const std::string& file = SettingsFile()) {
     using Settings::Json;
     const Json document = Settings::Load(file);
@@ -444,6 +455,9 @@ inline Preferences LoadPreferences(const std::string& file = SettingsFile()) {
     result.frame_gen_multiplier = KeyIndex(
         Settings::String(document, Json::json_pointer("/video/frame_gen_multiplier")),
         kFrameGenMultiplierKeys, int(std::size(kFrameGenMultiplierKeys)), result.frame_gen_multiplier);
+    if (const auto preset = Settings::String(document, Json::json_pointer("/video/post_processing"));
+        ValidPostProcessing(preset))
+        result.post_processing = preset;
     result.vibration = Settings::Bool(document, Json::json_pointer("/controls/vibration"), result.vibration);
     // A strength between the steps is read as the step below it; out of range as the nearest end.
     result.vibration_strength = std::clamp(
@@ -472,7 +486,8 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
         value.hud_size < 0 || value.hud_size >= int(std::size(kHudSizeKeys)) ||
         value.hud_corner < 0 || value.hud_corner >= int(std::size(kHudCornerKeys)) ||
         !ValidHudFields(value.hud_fields) || !ValidMapping(value.mapping) ||
-        !ValidMenuBinding(value.menu_bind) || !ValidWallpaperName(value.wallpaper)) return false;
+        !ValidMenuBinding(value.menu_bind) || !ValidWallpaperName(value.wallpaper) ||
+        !ValidPostProcessing(value.post_processing)) return false;
     Settings::Json document = Settings::Load(file);
     document["version"] = 1;
     document["video"]["renderer"] = value.backend == GraphicsBackend::Vulkan ? "vulkan" : "opengl";
@@ -489,6 +504,8 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
     document["video"]["frame_gen"] = value.frame_gen;
     document["video"]["frame_gen_target"] = kFrameGenTargetKeys[value.frame_gen_target];
     document["video"]["frame_gen_multiplier"] = kFrameGenMultiplierKeys[value.frame_gen_multiplier];
+    if (value.post_processing.empty()) document["video"].erase("post_processing");
+    else document["video"]["post_processing"] = value.post_processing;
     document["audio"]["volume"] = value.volume;
     document["audio"]["mute"] = value.mute;
     document["audio"]["menu_volume"] = value.menu_volume;
@@ -568,6 +585,7 @@ struct GameSettings {
     int frame_gen = -1;         // Lossless Scaling frame generation (Vulkan only)
     int frame_gen_target = -1;  // index into kFrameGenTargetKeys
     int frame_gen_multiplier = -1;  // index into kFrameGenMultiplierKeys
+    std::optional<std::string> post_processing;  // a preset's name, "" off; none: as Settings
     int astc_textures = -1;     // index into kAstcTextureKeys
     int volume = -1;            // game volume, 0 to 100
     int mute = -1;
@@ -607,6 +625,9 @@ inline GameSettings LoadGameSettings(uint64_t title_id, const std::string& file 
     result.upscaling_filter = KeyIndex(key("upscaling_filter"), kUpscalingFilterKeys,
                                        int(std::size(kUpscalingFilterKeys)), -1);
     result.astc_textures = KeyIndex(key("astc_textures"), kAstcTextureKeys, int(std::size(kAstcTextureKeys)), -1);
+    if (const Json::json_pointer at(base + "/post_processing");
+        document.contains(at) && document.at(at).is_string() && ValidPostProcessing(document.at(at).get<std::string>()))
+        result.post_processing = document.at(at).get<std::string>();
     result.refresh = KeyIndex(key("refresh_rate"), kRefreshKeys, int(std::size(kRefreshKeys)), -1);
     result.hud_size = KeyIndex(key("fps_overlay_size"), kHudSizeKeys, int(std::size(kHudSizeKeys)), -1);
     result.hud_corner = KeyIndex(key("fps_overlay_corner"), kHudCornerKeys,
@@ -660,6 +681,7 @@ inline bool SaveGameSettings(uint64_t title_id, const GameSettings& value, const
         !flag_ok(value.mute) ||
         !flag_ok(value.vibration) ||
         !std::all_of(value.performance.begin(), value.performance.end(), flag_ok) ||
+        (value.post_processing && !ValidPostProcessing(*value.post_processing)) ||
         (value.own_mapping && !ValidMapping(value.mapping))) return false;
     Settings::Json document = Settings::Load(file);
     document["version"] = 1;
@@ -678,6 +700,8 @@ inline bool SaveGameSettings(uint64_t title_id, const GameSettings& value, const
     store("fps_overlay_corner", value.hud_corner, kHudCornerKeys);
     store("frame_gen_target", value.frame_gen_target, kFrameGenTargetKeys);
     store("frame_gen_multiplier", value.frame_gen_multiplier, kFrameGenMultiplierKeys);
+    if (value.post_processing) game["post_processing"] = *value.post_processing;
+    else game.erase("post_processing");
     store("language", value.language, kLanguageKeys);
     store("controller", value.controller, kControllerKeys);
     const auto flag = [](Settings::Json& owner, const char* name, int value) {
@@ -717,6 +741,7 @@ inline Preferences PreferencesFor(uint64_t title_id, const std::string& file = S
     if (game.frame_gen >= 0) result.frame_gen = game.frame_gen == 1;
     if (game.frame_gen_target >= 0) result.frame_gen_target = game.frame_gen_target;
     if (game.frame_gen_multiplier >= 0) result.frame_gen_multiplier = game.frame_gen_multiplier;
+    if (game.post_processing) result.post_processing = *game.post_processing;
     if (game.volume >= 0) result.volume = game.volume;
     if (game.mute >= 0) result.mute = game.mute == 1;
     if (game.vibration >= 0) result.vibration = game.vibration == 1;

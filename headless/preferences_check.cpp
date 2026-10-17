@@ -413,6 +413,31 @@ int main() {
         assert(Eden::LoadPreferences(by_hand).mapping == Eden::kDefaultMapping);  // no such button
     }
 
+    // Post-processing (settings_store.h): a preset by name for every game, a game's own over it
+    // ("" is off for that game), and back to Settings; a name with a path in it is refused.
+    {
+        auto prefs = Eden::LoadPreferences(file);
+        assert(prefs.post_processing.empty());
+        prefs.post_processing = "Cinematic";
+        assert(Eden::SavePreferences(prefs, file) && Eden::LoadPreferences(file).post_processing == "Cinematic");
+        constexpr uint64_t pp_game = 0x0100000000077000;
+        auto game = Eden::LoadGameSettings(pp_game, file);
+        assert(!game.post_processing && Eden::PreferencesFor(pp_game, file).post_processing == "Cinematic");
+        game.post_processing = "";
+        assert(Eden::SaveGameSettings(pp_game, game, file));
+        assert(Eden::LoadGameSettings(pp_game, file).post_processing == std::string{});
+        assert(Eden::PreferencesFor(pp_game, file).post_processing.empty());
+        game.post_processing = "My look";
+        assert(Eden::SaveGameSettings(pp_game, game, file) && Eden::PreferencesFor(pp_game, file).post_processing == "My look");
+        game.post_processing.reset();
+        assert(Eden::SaveGameSettings(pp_game, game, file) && !Eden::LoadGameSettings(pp_game, file).post_processing);
+        assert(Eden::PreferencesFor(pp_game, file).post_processing == "Cinematic");
+        prefs.post_processing = "../escape";
+        assert(!Eden::SavePreferences(prefs, file));
+        prefs.post_processing = "";
+        assert(Eden::SavePreferences(prefs, file) && Read(file).find("post_processing") == std::string::npos);
+    }
+
     // Menu keybinds (button_mapping.h): the face button that presses each core menu action. A
     // binding names each of the four face buttons once; one that names one twice, or a button that
     // is not a face button, is refused or read as the default.

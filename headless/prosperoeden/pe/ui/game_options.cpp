@@ -44,9 +44,10 @@ constexpr int kRefreshRow = 4;
 constexpr int kHudRow = 5;
 constexpr int kHudSizeRow = 6;
 constexpr int kHudCornerRow = 7;
+constexpr int kPostProcessingRow = 8;
 // Frame generation follows the overlay's three rows wherever it is shown (with_option): the last
 // of them needs no row constant, because the chain there falls through to frame_gen_multiplier.
-constexpr int kFrameGenRow = 8, kFrameGenTargetRow = 9;
+constexpr int kFrameGenRow = 9, kFrameGenTargetRow = 10;
 // The Controls category's rows.
 constexpr int kVibrationRow = 0;
 constexpr int kMappingRow = 1;
@@ -130,6 +131,9 @@ std::vector<Option> options(int category, const GameSettings &game, Preferences 
         rows.push_back({tr("Overlay corner"), {tr("Top left"), tr("Top right"), tr("Bottom left"),
                                                tr("Bottom right")},
                         game.hud_corner, tr(kHudCornerNames[std::clamp(prefs.hud_corner, 0, 3)])});
+        // One of Eden's ReShade FX presets, or off (the Vulkan renderer draws it).
+        rows.push_back({tr("Post-processing"), services.post_processing_labels(), game.post_processing,
+                        pick(services.post_processing_labels(), prefs.post_processing)});
         // Frame generation comes last on purpose: the rows above keep the indexes with_option()
         // and the saved game settings use. Vulkan only -- the OpenGL renderer has no frame
         // generation. Not shown in a build without it; greyed out while the user's Lossless.dll
@@ -211,6 +215,7 @@ GameSettings with_option(GameSettings game, int category, int row, int value, co
         (row == 0 ? game.renderer : row == 1 ? game.resolution : row == 2 ? game.filter :
          row == kAstcRow ? game.astc : row == kRefreshRow ? game.refresh : row == kHudRow ? game.hud :
          row == kHudSizeRow ? game.hud_size : row == kHudCornerRow ? game.hud_corner :
+         row == kPostProcessingRow ? game.post_processing :
          row == kFrameGenRow ? game.frame_gen : row == kFrameGenTargetRow ? game.frame_gen_target :
          game.frame_gen_multiplier) = value;
         break;
@@ -256,7 +261,8 @@ int Launcher::game_overrides(int category) const
     case category_video:
         return (game.renderer >= 0) + (game.resolution >= 0) + (game.filter >= 0) + (game.astc >= 0) +
                (game.refresh >= 0) + (game.hud >= 0) + (game.hud_size >= 0) + (game.hud_corner >= 0) +
-               (game.frame_gen >= 0) + (game.frame_gen_target >= 0) + (game.frame_gen_multiplier >= 0);
+               (game.post_processing >= 0) + (game.frame_gen >= 0) + (game.frame_gen_target >= 0) +
+               (game.frame_gen_multiplier >= 0);
     case category_performance:
         return static_cast<int>(
             std::count_if(game.performance.begin(), game.performance.end(), [](int v) { return v >= 0; }));

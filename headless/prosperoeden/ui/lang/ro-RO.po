@@ -1303,6 +1303,10 @@ msgstr "Portugheză"
 msgid "Portuguese (Brazil)"
 msgstr "Portugheză (Brazilia)"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Post-processing"
+msgstr "Post-procesare"
+
 #. Eden is the emulator's name (unchanged).
 #: pe/ui/browse.cpp
 msgid "Powered by Eden"
@@ -1590,6 +1594,10 @@ msgstr "Salvat. Se aplică la pornirea unui joc."
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Saved. Full quality uses four times the graphics memory for these textures and can run out above 1x."
 msgstr "Salvat. Calitatea completă folosește de patru ori mai multă memorie grafică pentru aceste texturi și o poate epuiza peste 1x."
+
+#: pe/ui/settings.cpp
+msgid "Saved. Post-processing needs the Vulkan renderer."
+msgstr "Salvat. Post-procesarea necesită motorul de randare Vulkan."
 
 #: pe/ui/browse.cpp
 msgid "Saved. Reopen ProsperoEden to use this folder."

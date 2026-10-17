@@ -267,6 +267,7 @@ class FakeServices : public ui::Services
     const std::vector<std::string> &resolution_keys() override;
     const std::vector<std::string> &filter_labels() override;
     const std::vector<std::string> &astc_labels() override;
+    const std::vector<std::string> &post_processing_labels() override;
     const std::vector<std::string> &language_labels() override;
     std::string language_region(int language) override;
     std::string setup_details() override;

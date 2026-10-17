@@ -48,6 +48,7 @@ public:
     const std::vector<std::string>& resolution_keys() override;
     const std::vector<std::string>& filter_labels() override;
     const std::vector<std::string>& astc_labels() override;
+    const std::vector<std::string>& post_processing_labels() override;
     int frame_gen_state() override;
     const std::vector<std::string>& language_labels() override;
     std::string language_region(int language) override;
@@ -121,6 +122,11 @@ public:
     std::optional<std::int64_t> ask_seed(std::int64_t, const std::atomic<bool>&) override;
     bool can_launch_game() override;
 private:
+    // Post-processing: the presets as the menu lists them, and a name's place among them.
+    void ReadPostPresets();
+    int PostPresetIndex(const std::string& name) const;
+    std::string PostPresetName(int index) const;
+    std::vector<std::string> post_presets_;
     Eden::Multiplayer::RoomClient& rooms_;
     int user_ = -1; // the PS5 user in front when the menu opened (negative: unknown)
     std::string launch_error_;

@@ -121,6 +121,7 @@ extern "C" unsigned long long eden_dmb_dropped, eden_checkbit_fused;
 #include "video_core/gpu.h"
 #ifdef EDEN_PS5_FRAMEGEN
 #include "video_core/frame_gen/lossless_dll.h"
+#include "video_core/post_processing/fx_preset.h"
 #endif
 #include "profiles.h"
 #include "stop_limit.h"
@@ -1126,6 +1127,24 @@ int main(int argc, char** argv) {
                                                           : Settings::AstcDecodeMode::Gpu);
             Settings::values.scaling_filter.SetValue(filters[filter]);
             Settings::UpdateRescalingInfo();
+            // Settings > Video > Post-processing, or the game's own: one of Eden's ReShade FX presets
+            // (the bundled ones and the .fxp files in post_presets), applied by Eden's own preset code
+            // before the renderer reads the chain. Every session starts with none: one app run starts
+            // many games. The pass is drawn by the Vulkan renderer only.
+            Settings::values.post_shader_enabled.SetValue(false);
+            Settings::values.post_shader_chain.SetValue(std::string{});
+            Settings::values.post_shader_preset.SetValue(std::string{});
+            if (!video.post_processing.empty()) {
+                std::string line = "Post-processing: " + video.post_processing;
+                if (backend != Eden::GraphicsBackend::Vulkan) {
+                    line += " (off: it needs the Vulkan renderer)";
+                } else if (VideoCore::ApplyFxPreset(video.post_processing)) {
+                    Settings::values.post_shader_enabled.SetValue(true);
+                } else {
+                    line += " (off: no preset of that name)";
+                }
+                Eden::Report("launch", line.c_str());
+            }
 #ifdef EDEN_PS5_FRAMEGEN
             // Lossless Scaling frame generation (EDEN_PS5_FRAMEGEN, headless/vulkan.cmake).
             // Settings > Video's switch, or the game's own in Library > Triangle > Video, asks

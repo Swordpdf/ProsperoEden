@@ -1303,6 +1303,10 @@ msgstr "Portugali"
 msgid "Portuguese (Brazil)"
 msgstr "Portugali (Brasilia)"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Post-processing"
+msgstr "Jälkikäsittely"
+
 #. Eden is the emulator's name (unchanged).
 #: pe/ui/browse.cpp
 msgid "Powered by Eden"
@@ -1590,6 +1594,10 @@ msgstr "Tallennettu. Tulee voimaan, kun peli käynnistyy."
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Saved. Full quality uses four times the graphics memory for these textures and can run out above 1x."
 msgstr "Tallennettu. Täysi laatu käyttää näihin tekstuureihin nelinkertaisen grafiikkamuistin, ja muisti voi loppua yli 1x:n."
+
+#: pe/ui/settings.cpp
+msgid "Saved. Post-processing needs the Vulkan renderer."
+msgstr "Tallennettu. Jälkikäsittely vaatii Vulkan-hahmontimen."
 
 #: pe/ui/browse.cpp
 msgid "Saved. Reopen ProsperoEden to use this folder."

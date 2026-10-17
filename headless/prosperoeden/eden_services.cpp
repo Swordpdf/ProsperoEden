@@ -19,6 +19,7 @@
 #include "remote/save_sync.h"
 #include "save_sync_config.h"
 #include "version.h"
+#include "video_core/post_processing/fx_preset.h"
 #include "../system_keyboard.h"
 #include "common/string_util.h"
 
@@ -914,6 +915,8 @@ pe::ui::GameSettings EdenServices::game_settings(std::uint64_t title_id) {
     result.frame_gen = saved.frame_gen;
     result.frame_gen_target = saved.frame_gen_target;
     result.frame_gen_multiplier = saved.frame_gen_multiplier;
+    ReadPostPresets();
+    result.post_processing = saved.post_processing ? PostPresetIndex(*saved.post_processing) : -1;
     result.volume = saved.volume;
     result.mute = saved.mute;
     result.vibration = saved.vibration;
@@ -939,6 +942,7 @@ bool EdenServices::set_game_settings(std::uint64_t title_id, const pe::ui::GameS
     value.frame_gen = settings.frame_gen;
     value.frame_gen_target = settings.frame_gen_target;
     value.frame_gen_multiplier = settings.frame_gen_multiplier;
+    if (settings.post_processing >= 0) value.post_processing = PostPresetName(settings.post_processing);
     value.volume = settings.volume;
     value.mute = settings.mute;
     value.vibration = settings.vibration;
@@ -974,6 +978,8 @@ pe::ui::Preferences EdenServices::preferences() {
     result.frame_gen = saved.frame_gen;
     result.frame_gen_target = saved.frame_gen_target;
     result.frame_gen_multiplier = saved.frame_gen_multiplier;
+    ReadPostPresets();
+    result.post_processing = PostPresetIndex(saved.post_processing);
     result.vibration = saved.vibration;
     result.vibration_strength = saved.vibration_strength;
     result.language = saved.language;
@@ -1020,6 +1026,7 @@ bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     value.frame_gen = preferences.frame_gen;
     value.frame_gen_target = preferences.frame_gen_target;
     value.frame_gen_multiplier = preferences.frame_gen_multiplier;
+    value.post_processing = PostPresetName(preferences.post_processing);
     value.vibration = preferences.vibration;
     value.vibration_strength = preferences.vibration_strength;
     value.language = preferences.language;
@@ -1073,6 +1080,30 @@ int EdenServices::frame_gen_state() {
 const std::vector<std::string>& EdenServices::filter_labels() {
     static const std::vector<std::string> labels = Labels(Eden::kUpscalingFilterLabels);
     return labels;
+}
+
+void EdenServices::ReadPostPresets() {
+    // Eden writes its bundled presets into post_presets the first time, then lists that folder.
+    VideoCore::ReloadFxPresetCatalog();
+    post_presets_ = {tr("Off")};
+    for (const auto& preset : VideoCore::GetFxPresetCatalog())
+        if (!preset.name.empty() && Eden::ValidPostProcessing(preset.name)) post_presets_.push_back(preset.name);
+}
+
+// "" (off) is 0; a name the console has no preset of any more reads as off.
+int EdenServices::PostPresetIndex(const std::string& name) const {
+    for (std::size_t i = 1; i < post_presets_.size(); ++i)
+        if (post_presets_[i] == name) return static_cast<int>(i);
+    return 0;
+}
+
+std::string EdenServices::PostPresetName(int index) const {
+    return index > 0 && index < static_cast<int>(post_presets_.size()) ? post_presets_[index] : std::string{};
+}
+
+const std::vector<std::string>& EdenServices::post_processing_labels() {
+    if (post_presets_.empty()) ReadPostPresets();
+    return post_presets_;
 }
 
 const std::vector<std::string>& EdenServices::astc_labels() {

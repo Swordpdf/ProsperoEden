@@ -285,7 +285,7 @@ msgstr ""
 msgid "Circle"
 msgstr ""
 
-#: pe/ui/remote.cpp, pe/ui/update.cpp
+#: pe/ui/launcher.cpp, pe/ui/remote.cpp, pe/ui/update.cpp
 msgid "Close"
 msgstr ""
 
@@ -1190,7 +1190,7 @@ msgid "Nothing to import"
 msgstr ""
 
 #. A setting that is switched off.
-#: pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: eden_services.cpp, host/fake_services.cpp, pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Off"
 msgstr ""
 
@@ -1337,6 +1337,10 @@ msgstr ""
 
 #: settings_store.h
 msgid "Portuguese (Brazil)"
+msgstr ""
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Post-processing"
 msgstr ""
 
 #. Eden is the emulator's name (unchanged).
@@ -1629,6 +1633,10 @@ msgstr ""
 #. Shown after choosing 'Full quality' for 'ASTC textures'. 1x is a resolution scale (unchanged). It has two lines: keep it short.
 #: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Saved. Full quality uses four times the graphics memory for these textures and can run out above 1x."
+msgstr ""
+
+#: pe/ui/settings.cpp
+msgid "Saved. Post-processing needs the Vulkan renderer."
 msgstr ""
 
 #: pe/ui/browse.cpp
