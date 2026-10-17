@@ -215,6 +215,15 @@ int main() {
     video.frame_gen_target = 0;
     video.frame_gen_multiplier = 0;
     assert(Eden::SavePreferences(video, file));
+    // The frame generation method defaults to LSFG (index 0) and round-trips as its key.
+    assert(video.frame_gen_method == 0);
+    assert(Read(file).find("\"frame_gen_method\": \"lsfg\"") != std::string::npos);
+    video.frame_gen_method = 1;  // "mihawkgen"
+    assert(Eden::SavePreferences(video, file));
+    assert(Eden::LoadPreferences(file).frame_gen_method == 1);
+    assert(Read(file).find("\"frame_gen_method\": \"mihawkgen\"") != std::string::npos);
+    video.frame_gen_method = 0;
+    assert(Eden::SavePreferences(video, file));
 
     // Vibration (Settings > Controls): on unless turned off.
     auto controls = Eden::LoadPreferences(file);
@@ -282,6 +291,19 @@ int main() {
            Eden::LoadGameSettings(racer, file).frame_gen == -1);
     game.frame_gen = 2;
     assert(!Eden::SaveGameSettings(racer, game, file));
+
+    // A game's own frame gen method: -1 follows Settings, 0 is LSFG, 1 is MihawkGen, 2+ refused.
+    assert(Eden::LoadGameSettings(racer, file).frame_gen_method == -1);
+    game = Eden::LoadGameSettings(racer, file);
+    game.frame_gen_method = 1;  // "mihawkgen"
+    assert(Eden::SaveGameSettings(racer, game, file));
+    assert(Eden::LoadGameSettings(racer, file).frame_gen_method == 1);
+    assert(Eden::PreferencesFor(racer, file).frame_gen_method == 1);
+    game.frame_gen_method = -1;
+    assert(Eden::SaveGameSettings(racer, game, file));
+    game.frame_gen_method = 2;  // one past the last method
+    assert(!Eden::SaveGameSettings(racer, game, file));
+    game.frame_gen_method = -1;
 
     // A game's own target rate and multiplier ride along the same path, and an index outside the
     // tables is refused the way the boolean above is.

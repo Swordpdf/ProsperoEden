@@ -811,6 +811,12 @@ adapt('src/video_core/renderer_vulkan/vk_blit_screen.h',
 adapt('src/video_core/renderer_vulkan/renderer_vulkan.h',
       'include/video_core/renderer_vulkan/renderer_vulkan.h', [
     ('    void Composite(', '    void PresentLoading();\n    void Composite('),
+    ('#ifdef HAS_LSFG\n#include "video_core/renderer_vulkan/present/frame_gen.h"\n#endif',
+     '#ifdef HAS_LSFG\n#include "video_core/renderer_vulkan/present/frame_gen.h"\n#endif\n'
+     '#ifdef HAS_MIHAWKGEN\n#include "mihawkgen.h"\n#include "mihawkgen_bridge.h"\n#endif'),
+    ('#ifdef HAS_LSFG\n    FrameGen frame_gen;\n#endif',
+     '#ifdef HAS_LSFG\n    FrameGen frame_gen;\n#endif\n'
+     '#ifdef HAS_MIHAWKGEN\n    Eden::MihawkGen mihawkgen_;\n    bool mihawkgen_init_{};\n#endif'),
 ])
 adapt('src/video_core/renderer_vulkan/renderer_vulkan.cpp', 'vulkan_renderer.cpp', [
     ('#include "video_core/renderer_vulkan/renderer_vulkan.h"',
@@ -851,6 +857,20 @@ adapt('src/video_core/renderer_vulkan/renderer_vulkan.cpp', 'vulkan_renderer.cpp
     ('    present_manager.Present(frame);\n#ifdef HAS_LSFG\n    scheduler.DispatchWork();\n#endif',
      '    present_manager.Present(frame);\n    Eden::CountPresentedFrame();\n'
      '    scheduler.DispatchWork();'),
+    # MihawkGen neural frame generation: skip the LSFG block when MihawkGen is active,
+    # and run MihawkGen's own present path instead (headless/vulkan_mihawkgen.inc).
+    ('#ifdef HAS_LSFG\n    void(frame_gen.WantedGenerations',
+     '#ifdef HAS_LSFG\n'
+     '#ifndef HAS_MIHAWKGEN\n'
+     '#define EDEN_LSFG_GATE true\n'
+     '#else\n'
+     '#define EDEN_LSFG_GATE (!Eden::MihawkGenBridge::active.load(std::memory_order_relaxed))\n'
+     '#endif\n'
+     '    if (EDEN_LSFG_GATE) {\n'
+     '    void(frame_gen.WantedGenerations'),
+    ('        Eden::CountPresentedFrame();\n    }\n#endif',
+     '        Eden::CountPresentedFrame();\n    }\n    } // LSFG gate\n#endif\n'
+     + (port / 'vulkan_mihawkgen.inc').read_text()),
     ('} // namespace Vulkan', '''} // namespace Vulkan
 namespace Eden {
 void PresentVulkanLoading(VideoCore::RendererBase& renderer) {

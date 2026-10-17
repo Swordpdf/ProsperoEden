@@ -45,9 +45,9 @@ constexpr int kHudRow = 5;
 constexpr int kHudSizeRow = 6;
 constexpr int kHudCornerRow = 7;
 constexpr int kPostProcessingRow = 8;
-// Frame generation follows the overlay's three rows wherever it is shown (with_option): the last
-// of them needs no row constant, because the chain there falls through to frame_gen_multiplier.
-constexpr int kFrameGenRow = 9, kFrameGenTargetRow = 10;
+// Frame generation follows the overlay's rows wherever it is shown (with_option): toggle, method,
+// target and multiplier. The last needs no row constant (the chain falls through).
+constexpr int kFrameGenRow = 9, kFrameGenMethodRow = 10, kFrameGenTargetRow = 11;
 // The Controls category's rows.
 constexpr int kVibrationRow = 0;
 constexpr int kMappingRow = 1;
@@ -136,13 +136,16 @@ std::vector<Option> options(int category, const GameSettings &game, Preferences 
                         pick(services.post_processing_labels(), prefs.post_processing)});
         // Frame generation comes last on purpose: the rows above keep the indexes with_option()
         // and the saved game settings use. Vulkan only -- the OpenGL renderer has no frame
-        // generation. Not shown in a build without it; greyed out while the user's Lossless.dll
-        // is missing.
-        const int frame_gen = services.frame_gen_state();
-        if (frame_gen == 0)
+        // generation. Not shown in a build without either method compiled.
+        if (services.frame_gen_state() == 0 && services.mihawkgen_state() == 0)
             break;
-        const bool locked = frame_gen == 1;
+        const int method = prefs.frame_gen_method;
+        const bool locked = method == 0 ? services.frame_gen_state() != 2
+                                        : services.mihawkgen_state() != 2;
         rows.push_back({tr("Frame generation"), off_on, game.frame_gen, on_off(prefs.frame_gen), locked});
+        const std::vector<std::string> methods = {"Lossless Scaling", "MihawkGen"};
+        rows.push_back({tr("Frame gen method"), methods, game.frame_gen_method,
+                        pick(methods, prefs.frame_gen_method)});
         // Indexes match the settings layer's tables (settings_store.h). Eden's two controls work the
         // way Eden defines them: a target rate makes the pacer add as many frames as that rate
         // needs, up to Eden's own maximum; "Auto" asks for none and leaves the multiplier in charge.
@@ -216,8 +219,8 @@ GameSettings with_option(GameSettings game, int category, int row, int value, co
          row == kAstcRow ? game.astc : row == kRefreshRow ? game.refresh : row == kHudRow ? game.hud :
          row == kHudSizeRow ? game.hud_size : row == kHudCornerRow ? game.hud_corner :
          row == kPostProcessingRow ? game.post_processing :
-         row == kFrameGenRow ? game.frame_gen : row == kFrameGenTargetRow ? game.frame_gen_target :
-         game.frame_gen_multiplier) = value;
+         row == kFrameGenRow ? game.frame_gen : row == kFrameGenMethodRow ? game.frame_gen_method :
+         row == kFrameGenTargetRow ? game.frame_gen_target : game.frame_gen_multiplier) = value;
         break;
     case category_performance:
         game.performance[static_cast<std::size_t>(std::clamp(row, 0, 7))] = value;
@@ -261,8 +264,8 @@ int Launcher::game_overrides(int category) const
     case category_video:
         return (game.renderer >= 0) + (game.resolution >= 0) + (game.filter >= 0) + (game.astc >= 0) +
                (game.refresh >= 0) + (game.hud >= 0) + (game.hud_size >= 0) + (game.hud_corner >= 0) +
-               (game.post_processing >= 0) + (game.frame_gen >= 0) + (game.frame_gen_target >= 0) +
-               (game.frame_gen_multiplier >= 0);
+               (game.post_processing >= 0) + (game.frame_gen >= 0) + (game.frame_gen_method >= 0) +
+               (game.frame_gen_target >= 0) + (game.frame_gen_multiplier >= 0);
     case category_performance:
         return static_cast<int>(
             std::count_if(game.performance.begin(), game.performance.end(), [](int v) { return v >= 0; }));

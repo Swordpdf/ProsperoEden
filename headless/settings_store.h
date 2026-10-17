@@ -6,7 +6,7 @@
 //     "video": { "renderer": "vulkan", "fps_overlay": true, "resolution": "1x",
 //                "upscaling_filter": "bilinear", "astc_textures": "compressed",
 //                "refresh_rate": "60",
-//                "output_resolution": "1080p", "frame_gen": false,
+//                "output_resolution": "1080p", "frame_gen": false, "frame_gen_method": "lsfg",
 //                "frame_gen_target": "auto", "frame_gen_multiplier": "2", "post_processing": "Cinematic" },
 //     "audio": { "volume": 100, "mute": false, "menu_volume": 70 },
 //     "controls": { "vibration": true, "vibration_strength": 100,
@@ -24,7 +24,7 @@
 //                                      "resolution": "0.75x", "upscaling_filter": "fsr",
 //                                      "astc_textures": "full",
 //                                      "refresh_rate": "120", "fps_overlay": false,
-//                                      "frame_gen": true,
+//                                      "frame_gen": true, "frame_gen_method": "mihawkgen",
 //                                      "frame_gen_target": "120", "frame_gen_multiplier": "3",
 //                                      "volume": 80, "mute": false, "vibration": false,
 //                                      "language": "ja", "mapping": { "a": "cross" },
@@ -90,6 +90,11 @@ inline constexpr int kRefreshHz[] = {60, 120};
 // ignores the multiplier once a target rate is set (FrameGenMaxGenerations in settings.cpp lets
 // the pacer add up to its own maximum then), so "auto" passes 0 and leaves the ratio in charge.
 // The target's limits are Eden's own: 0 to 240 Hz.
+// Frame generation method: which generator to use (Vulkan only). LSFG needs the user's own
+// Lossless.dll; MihawkGen uses its own neural network weights shipped in the build.
+inline constexpr const char* kFrameGenMethodKeys[] = {"lsfg", "mihawkgen"};
+inline constexpr const char* kFrameGenMethodLabels[] = {"Lossless Scaling", "MihawkGen"};
+static_assert(std::size(kFrameGenMethodKeys) == std::size(kFrameGenMethodLabels));
 inline constexpr const char* kFrameGenTargetKeys[] = {"auto", "60", "90", "120", "144", "240"};
 inline constexpr int kFrameGenTargetHz[] = {0, 60, 90, 120, 144, 240};
 static_assert(std::size(kFrameGenTargetKeys) == std::size(kFrameGenTargetHz));
@@ -137,7 +142,8 @@ struct Preferences {
     int astc_textures = 0;               // index into kAstcTextureKeys (0 is compressed)
     int refresh = 0;                     // index into kRefreshKeys
     int output = 0;                      // index into kOutputKeys
-    bool frame_gen = false;              // Lossless Scaling frame generation (Vulkan only)
+    bool frame_gen = false;              // frame generation (Vulkan only)
+    int frame_gen_method = 0;            // index into kFrameGenMethodKeys (0 is LSFG)
     int frame_gen_target = 0;            // index into kFrameGenTargetKeys (0 is "auto")
     int frame_gen_multiplier = 0;        // index into kFrameGenMultiplierKeys (0 is 2x)
     std::string post_processing;         // Settings > Video > Post-processing: a preset's name ("": off)
@@ -449,6 +455,9 @@ inline Preferences LoadPreferences(const std::string& file = SettingsFile()) {
     result.output = KeyIndex(Settings::String(document, Json::json_pointer("/video/output_resolution")),
                              kOutputKeys, int(std::size(kOutputKeys)), result.output);
     result.frame_gen = Settings::Bool(document, Json::json_pointer("/video/frame_gen"), result.frame_gen);
+    result.frame_gen_method = KeyIndex(
+        Settings::String(document, Json::json_pointer("/video/frame_gen_method")), kFrameGenMethodKeys,
+        int(std::size(kFrameGenMethodKeys)), result.frame_gen_method);
     result.frame_gen_target = KeyIndex(
         Settings::String(document, Json::json_pointer("/video/frame_gen_target")), kFrameGenTargetKeys,
         int(std::size(kFrameGenTargetKeys)), result.frame_gen_target);
@@ -502,6 +511,7 @@ inline bool SavePreferences(const Preferences& value, const std::string& file = 
     document["video"]["refresh_rate"] = kRefreshKeys[value.refresh];
     document["video"]["output_resolution"] = kOutputKeys[value.output];
     document["video"]["frame_gen"] = value.frame_gen;
+    document["video"]["frame_gen_method"] = kFrameGenMethodKeys[value.frame_gen_method];
     document["video"]["frame_gen_target"] = kFrameGenTargetKeys[value.frame_gen_target];
     document["video"]["frame_gen_multiplier"] = kFrameGenMultiplierKeys[value.frame_gen_multiplier];
     if (value.post_processing.empty()) document["video"].erase("post_processing");
@@ -582,7 +592,8 @@ struct GameSettings {
     int hud = -1;               // FPS overlay
     int hud_size = -1;          // index into kHudSizeKeys
     int hud_corner = -1;        // index into kHudCornerKeys
-    int frame_gen = -1;         // Lossless Scaling frame generation (Vulkan only)
+    int frame_gen = -1;         // frame generation (Vulkan only)
+    int frame_gen_method = -1;  // index into kFrameGenMethodKeys
     int frame_gen_target = -1;  // index into kFrameGenTargetKeys
     int frame_gen_multiplier = -1;  // index into kFrameGenMultiplierKeys
     std::optional<std::string> post_processing;  // a preset's name, "" off; none: as Settings
@@ -632,6 +643,8 @@ inline GameSettings LoadGameSettings(uint64_t title_id, const std::string& file 
     result.hud_size = KeyIndex(key("fps_overlay_size"), kHudSizeKeys, int(std::size(kHudSizeKeys)), -1);
     result.hud_corner = KeyIndex(key("fps_overlay_corner"), kHudCornerKeys,
                                  int(std::size(kHudCornerKeys)), -1);
+    result.frame_gen_method = KeyIndex(key("frame_gen_method"), kFrameGenMethodKeys,
+                                       int(std::size(kFrameGenMethodKeys)), -1);
     result.frame_gen_target = KeyIndex(key("frame_gen_target"), kFrameGenTargetKeys,
                                        int(std::size(kFrameGenTargetKeys)), -1);
     result.frame_gen_multiplier = KeyIndex(key("frame_gen_multiplier"), kFrameGenMultiplierKeys,
@@ -672,6 +685,7 @@ inline bool SaveGameSettings(uint64_t title_id, const GameSettings& value, const
         value.astc_textures >= int(std::size(kAstcTextureKeys)) ||
         value.refresh >= int(std::size(kRefreshKeys)) || value.language >= int(std::size(kLanguageKeys)) ||
         value.controller >= int(std::size(kControllerKeys)) ||
+        value.frame_gen_method >= int(std::size(kFrameGenMethodKeys)) ||
         value.frame_gen_target >= int(std::size(kFrameGenTargetKeys)) ||
         value.frame_gen_multiplier >= int(std::size(kFrameGenMultiplierKeys)) ||
         value.volume > 100 || value.rng_seed < -1 || value.rng_seed > 0xffffffffLL ||
@@ -698,6 +712,7 @@ inline bool SaveGameSettings(uint64_t title_id, const GameSettings& value, const
     store("refresh_rate", value.refresh, kRefreshKeys);
     store("fps_overlay_size", value.hud_size, kHudSizeKeys);
     store("fps_overlay_corner", value.hud_corner, kHudCornerKeys);
+    store("frame_gen_method", value.frame_gen_method, kFrameGenMethodKeys);
     store("frame_gen_target", value.frame_gen_target, kFrameGenTargetKeys);
     store("frame_gen_multiplier", value.frame_gen_multiplier, kFrameGenMultiplierKeys);
     if (value.post_processing) game["post_processing"] = *value.post_processing;
@@ -739,6 +754,7 @@ inline Preferences PreferencesFor(uint64_t title_id, const std::string& file = S
     if (game.hud_size >= 0) result.hud_size = game.hud_size;
     if (game.hud_corner >= 0) result.hud_corner = game.hud_corner;
     if (game.frame_gen >= 0) result.frame_gen = game.frame_gen == 1;
+    if (game.frame_gen_method >= 0) result.frame_gen_method = game.frame_gen_method;
     if (game.frame_gen_target >= 0) result.frame_gen_target = game.frame_gen_target;
     if (game.frame_gen_multiplier >= 0) result.frame_gen_multiplier = game.frame_gen_multiplier;
     if (game.post_processing) result.post_processing = *game.post_processing;

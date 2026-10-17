@@ -159,6 +159,14 @@
       "url": "https://github.com/mihawk-99/PS5_PayloadSDK.git",
       "commit": "b83202be73e930050e00de0f1b4d9ec46c0391bf",
       "path": "../mihawk-sdk-review"
+    },
+    {
+      "name": "mihawkgen",
+      "about": "Mihawk's PS5_MihawkGen: neural frame generation (framegen module, GPL-3.0-or-later)",
+      "kind": "git",
+      "url": "https://github.com/mihawk-99/PS5_MihawkGen.git",
+      "commit": "c57232a9f16bcb6df5fe07c9bb631518f2b1cc0e",
+      "path": "../mihawk-framegen-review"
     }
   ]
 }

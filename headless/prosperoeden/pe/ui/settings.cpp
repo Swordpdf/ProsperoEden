@@ -72,6 +72,7 @@ enum VideoRow : int
     video_post_processing, // one of Eden's ReShade FX presets, or off (Vulkan only)
     // Frame generation: not shown in a build without it (Services::frame_gen_state).
     video_frame_gen,
+    video_frame_gen_method,
     video_frame_gen_target,
     video_frame_gen_multiplier,
     kVideoRows,
@@ -96,6 +97,7 @@ enum HudRow : int
     hud_resolution_row, // the game's own picture, as it renders it (bit 9; last, so no earlier bit moves)
     kHudRows,
 };
+constexpr int kFrameGenMethods = 2;     // Lossless Scaling, MihawkGen (settings_store.h)
 constexpr int kFrameGenTargets = 6;     // Auto, 60, 90, 120, 144, 240 Hz (settings_store.h)
 constexpr int kFrameGenMultipliers = 3; // 2x, 3x, 4x
 constexpr int kHudSizes = 3;            // Regular, Medium, Large (settings_store.h, kHudSizeKeys)
@@ -156,6 +158,7 @@ constexpr const char *kOutputs[] = {"1080p", "1440p", "2160p"};
 // (settings_store.h's kMemoryLayoutKeys). A size and its unit, so nothing here to translate.
 constexpr const char *kMemoryLayouts[] = {"4 GiB", "6 GiB", "8 GiB"};
 
+constexpr const char *kFrameGenMethodNames[] = {"Lossless Scaling", "MihawkGen"};
 constexpr const char *kFrameGenTargetNames[] = {"", "60", "90", "120", "144", "240"};
 constexpr const char *kFrameGenMultiplierNames[] = {"2x", "3x", "4x"};
 
@@ -532,7 +535,8 @@ int Launcher::dialog_rows(Modal modal) const
     switch (modal)
     {
     case Modal::video:
-        return services_.frame_gen_state() == 0 ? static_cast<int>(video_frame_gen) : static_cast<int>(kVideoRows);
+        return (services_.frame_gen_state() == 0 && services_.mihawkgen_state() == 0)
+            ? static_cast<int>(video_frame_gen) : static_cast<int>(kVideoRows);
     case Modal::hud:
         return kHudRows;
     case Modal::performance:
@@ -761,9 +765,26 @@ void Launcher::press_dialog(Key key)
                 open_hud();
             return;
         }
-        else if (option_ >= video_frame_gen && services_.frame_gen_state() != 2)
+        else if (option_ == video_frame_gen_method) {
+            auto method_available = [&](int m) {
+                return m == 0 ? services_.frame_gen_state() == 2
+                              : services_.mihawkgen_state() == 2;
+            };
+            int m = std::clamp(prefs_.frame_gen_method, 0, kFrameGenMethods - 1);
+            for (int i = 0; i < kFrameGenMethods; ++i) {
+                m = (m + step + kFrameGenMethods) % kFrameGenMethods;
+                if (method_available(m)) break;
+            }
+            prefs_.frame_gen_method = m;
+        }
+        else if (option_ >= video_frame_gen && option_ != video_frame_gen_method &&
+                 (prefs_.frame_gen_method == 0 ? services_.frame_gen_state() != 2
+                                               : services_.mihawkgen_state() != 2))
         {
-            say(tr("Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."), true);
+            if (prefs_.frame_gen_method == 0)
+                say(tr("Frame generation needs Lossless.dll, from Lossless Scaling, in the lossless folder."), true);
+            else
+                say(tr("Frame generation needs MihawkGen weights (network.fgw)."), true);
             cue(Cue::error);
             return;
         }
@@ -1032,16 +1053,20 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
             std::string{}, // Overlay options: an opener
             pick(services_.post_processing_labels(), prefs_.post_processing),
             on_off(prefs_.frame_gen),
+            std::string{kFrameGenMethodNames[std::clamp(prefs_.frame_gen_method, 0, kFrameGenMethods - 1)]},
             prefs_.frame_gen_target <= 0 ? std::string{tr("Auto")} :
                 fill(tr("{0} Hz"), {kFrameGenTargetNames[std::clamp(prefs_.frame_gen_target, 1, kFrameGenTargets - 1)]}),
             kFrameGenMultiplierNames[std::clamp(prefs_.frame_gen_multiplier, 0, kFrameGenMultipliers - 1)],
         };
-        const bool frame_gen_locked = services_.frame_gen_state() != 2;
+        const bool lsfg_locked = services_.frame_gen_state() != 2;
+        const bool mihawkgen_locked = services_.mihawkgen_state() != 2;
+        const bool frame_gen_locked = prefs_.frame_gen_method == 0 ? lsfg_locked :
+                                      prefs_.frame_gen_method == 1 ? mihawkgen_locked : true;
         static constexpr const char *kNames[kVideoRows] = {
             TR("Renderer"),         TR("Output resolution"), TR("Resolution"),
             TR("Upscaling filter"), TR("ASTC textures"),     TR("Refresh rate"),
             TR("FPS overlay"),      TR("Overlay options"),   TR("Post-processing"),
-            TR("Frame generation"), TR("Frame gen target"),  TR("Frame gen multiplier")};
+            TR("Frame generation"), TR("Frame gen method"),  TR("Frame gen target"),  TR("Frame gen multiplier")};
         for (int row = first; row <= last; ++row)
         {
             list.push_opacity(video_rows_.row_alpha(row, kVideoRowHeight));
@@ -1058,9 +1083,9 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
                                                 th().size_small, th().meta, 320.0f, Align::right);
                 label(row, tr(kNames[row]), shown);
             }
-            else if (row >= video_frame_gen && frame_gen_locked)
+            else if (row >= video_frame_gen && row != video_frame_gen_method && frame_gen_locked)
             {
-                // Greyed out: the user's Lossless.dll is not there.
+                // Greyed out: the selected method's requirement is not met.
                 list.push_opacity(0.38f);
                 label(row, tr(kNames[row]), choice(row, tr("Unavailable")));
                 list.pop_opacity();

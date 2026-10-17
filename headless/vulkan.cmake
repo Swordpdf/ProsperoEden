@@ -15,7 +15,7 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
     "${PORT_ROOT}/tools/prepare-vulkan-port.py"
     "${EDEN_PORT_DIR}/vulkan_hud.vert" "${EDEN_PORT_DIR}/vulkan_hud.frag"
     "${EDEN_PORT_DIR}/vulkan_hud_prepare.inc" "${EDEN_PORT_DIR}/vulkan_hud_draw.inc"
-    "${EDEN_PORT_DIR}/vulkan_loading.inc")
+    "${EDEN_PORT_DIR}/vulkan_loading.inc" "${EDEN_PORT_DIR}/vulkan_mihawkgen.inc")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
     "${EDEN_PORT_DIR}/vulkan_download_batch.inc"
     "${EDEN_PORT_DIR}/vulkan_gc_downloads.inc"
@@ -143,4 +143,48 @@ if(EDEN_PS5_FRAMEGEN)
     # (and say so in the log). eden-headless is created after this file is
     # included, so a directory-level definition reaches it.
     add_compile_definitions(EDEN_PS5_FRAMEGEN=1)
+endif()
+
+# Mihawk's neural frame generation (PS5_MihawkGen). The framegen module is compiled
+# as a static library with volk for Vulkan dispatch: its code calls raw vk*() which
+# volk routes through function pointers loaded from RADV at init time. The wrapper
+# (headless/mihawkgen.cpp) calls volkInitializeCustom + volkLoadDevice before making
+# the context, so the generator sees the same device as Eden's renderer.
+set(MIHAWKGEN_ROOT "${PORT_ROOT}/../mihawk-framegen-review")
+option(EDEN_PS5_MIHAWKGEN "Build MihawkGen neural frame generation" ON)
+if(EDEN_PS5_MIHAWKGEN AND EXISTS "${MIHAWKGEN_ROOT}/framegen/include/framegen.h")
+    set(MIHAWKGEN_VOLK_DIR "${MIHAWKGEN_ROOT}/ps5/third_party/volk")
+    set(MIHAWKGEN_VOLK_SOURCES
+        "${MIHAWKGEN_ROOT}/framegen/src/fg_common.cpp"
+        "${MIHAWKGEN_ROOT}/framegen/src/fg_neural.cpp"
+        "${MIHAWKGEN_ROOT}/framegen/src/fg_splat.cpp"
+        "${MIHAWKGEN_ROOT}/framegen/src/fg_vulkan.cpp"
+        "${MIHAWKGEN_VOLK_DIR}/volk.c"
+        "${EDEN_PORT_DIR}/mihawkgen.cpp")
+    add_library(mihawkgen STATIC
+        ${MIHAWKGEN_VOLK_SOURCES})
+    set_source_files_properties(${MIHAWKGEN_VOLK_SOURCES}
+        TARGET_DIRECTORY mihawkgen PROPERTIES COMPILE_FLAGS
+        "-include ${MIHAWKGEN_VOLK_DIR}/volk.h")
+    target_include_directories(mihawkgen PRIVATE
+        "${MIHAWKGEN_ROOT}/framegen/include"
+        "${MIHAWKGEN_ROOT}/framegen/src"
+        "${MIHAWKGEN_VOLK_DIR}"
+        "${EDEN_PORT_DIR}")
+    target_include_directories(mihawkgen PUBLIC
+        "${MIHAWKGEN_ROOT}/framegen/include"
+        "${MIHAWKGEN_VOLK_DIR}"
+        "${EDEN_PORT_DIR}")
+    set_target_properties(mihawkgen PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON C_STANDARD 11)
+    target_compile_options(mihawkgen PRIVATE
+        -O2 -g1 -ffunction-sections -fdata-sections)
+    target_compile_definitions(mihawkgen PRIVATE VK_NO_PROTOTYPES HAS_MIHAWKGEN
+        vkGetInstanceProcAddr=mihawkgen_volk_gipa)
+    target_link_libraries(mihawkgen PRIVATE Vulkan::Headers)
+    target_link_libraries(video_core PRIVATE mihawkgen)
+    target_compile_definitions(video_core PUBLIC HAS_MIHAWKGEN)
+    add_compile_definitions(EDEN_PS5_MIHAWKGEN=1)
+elseif(EDEN_PS5_MIHAWKGEN)
+    message(WARNING "MihawkGen requested but not found at ${MIHAWKGEN_ROOT}")
+    set(EDEN_PS5_MIHAWKGEN OFF)
 endif()

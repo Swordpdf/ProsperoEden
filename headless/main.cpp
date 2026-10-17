@@ -123,6 +123,9 @@ extern "C" unsigned long long eden_dmb_dropped, eden_checkbit_fused;
 #include "video_core/frame_gen/lossless_dll.h"
 #include "video_core/post_processing/fx_preset.h"
 #endif
+#ifdef EDEN_PS5_MIHAWKGEN
+#include "mihawkgen_bridge.h"
+#endif
 #include "profiles.h"
 #include "stop_limit.h"
 namespace Common {
@@ -1145,20 +1148,9 @@ int main(int argc, char** argv) {
                 }
                 Eden::Report("launch", line.c_str());
             }
-#ifdef EDEN_PS5_FRAMEGEN
-            // Lossless Scaling frame generation (EDEN_PS5_FRAMEGEN, headless/vulkan.cmake).
-            // Settings > Video's switch, or the game's own in Library > Triangle > Video, asks
-            // for it. The app folder's framegen.txt overrides all of it, the way block-list.txt
-            // turns the block list on: its first number is the target rate in Hz, its second the
-            // multiplier.
-            //
-            // Eden's two controls work the way Eden defines them (settings.cpp). A target rate
-            // makes the pacer add as many frames as that rate needs, up to Eden's own maximum;
-            // "auto" passes 0 and leaves the multiplier in charge, which is the ratio Eden uses
-            // when no target is asked for. Per session, and before the renderer starts: the
-            // swapchain and the presentation manager read them as they are created. Vulkan only,
-            // and only when the build has the feature at all (it needs the user's own
-            // Lossless.dll).
+            // Frame generation: common setup for both methods (LSFG and MihawkGen).
+            // The target rate and multiplier control the pacer regardless of which method
+            // generates the frames. framegen.txt overrides them; Vulkan only.
             {
                 const auto at = [](int index, auto count) {
                     return std::clamp(index, 0, static_cast<int>(count) - 1);
@@ -1176,21 +1168,17 @@ int main(int argc, char** argv) {
                 (void)(frame_gen_file >> override_multiplier);
                 if (override_rate > 0) target = override_rate;
                 if (override_multiplier >= 2) multiplier = override_multiplier;
-                const bool active = (override_rate >= 0 || override_multiplier >= 0 || video.frame_gen) &&
+                const bool wants_framegen = (override_rate >= 0 || override_multiplier >= 0 || video.frame_gen) &&
                                     video.backend == Eden::GraphicsBackend::Vulkan;
-                Settings::values.frame_gen.SetValue(active);
+#ifdef EDEN_PS5_FRAMEGEN
+                const bool use_lsfg = wants_framegen && video.frame_gen_method == 0;
+                Settings::values.frame_gen.SetValue(use_lsfg);
                 Settings::values.frame_gen_target_rate.SetValue(
-                    active ? static_cast<unsigned>(std::min(target, 240)) : 0u);
+                    use_lsfg ? static_cast<unsigned>(std::min(target, 240)) : 0u);
                 Settings::values.frame_gen_multiplier.SetValue(
                     static_cast<unsigned>(std::clamp(multiplier, 2, 4)));
-                if (active)
+                if (use_lsfg)
                 {
-                    // Both of frame generation's gates give up silently, so a session that
-                    // cannot run it looks exactly like one that never asked: the shaders load
-                    // only from the user's own Lossless Scaling library, and the shader stage
-                    // needs Vulkan memory model plus robustBufferAccess2's null descriptors.
-                    // Say what this session found, in the log and in the crash report, so the
-                    // answer does not need another console round trip.
                     const auto folder = Common::FS::GetEdenPath(Common::FS::EdenPath::LosslessDir);
                     const auto status =
                         static_cast<unsigned>(VideoCore::FrameGen::GetInstalledLosslessStatus());
@@ -1209,8 +1197,31 @@ int main(int argc, char** argv) {
                                   (Eden::DevVulkan::disable_null_descriptor ? "off" : "on"))
                                      .c_str());
                 }
-            }
 #endif
+#ifdef EDEN_PS5_MIHAWKGEN
+                const bool use_mihawkgen = wants_framegen && video.frame_gen_method == 1;
+                Eden::MihawkGenBridge::active.store(use_mihawkgen);
+                if (use_mihawkgen) {
+                    Eden::MihawkGenBridge::weights_path =
+                        Eden::FileExists(Eden::UserDir() + "/mihawkgen/network.fgw")
+                            ? Eden::UserDir() + "/mihawkgen/network.fgw"
+                            : Eden::AppDir() + "/mihawkgen/network.fgw";
+                    Eden::MihawkGenBridge::target_rate.store(target);
+                    Eden::MihawkGenBridge::multiplier.store(multiplier);
+                    Settings::values.frame_gen.SetValue(true);
+                    Settings::values.frame_gen_target_rate.SetValue(
+                        static_cast<unsigned>(std::min(target, 240)));
+                    Settings::values.frame_gen_multiplier.SetValue(
+                        static_cast<unsigned>(std::clamp(multiplier, 2, 4)));
+                }
+                Eden::Report("launch",
+                             (std::string("MihawkGen frame generation: ") +
+                              (use_mihawkgen ? "active" : "inactive") + "; weights " +
+                              (Eden::FileExists(Eden::MihawkGenBridge::weights_path)
+                                   ? "found" : "not found") +
+                              " at " + Eden::MihawkGenBridge::weights_path).c_str());
+#endif
+            }
             // The output's refresh rate while the game runs (display_refresh.h): the renderer asks
             // for it as it opens the output.
             const int refresh = video.refresh;

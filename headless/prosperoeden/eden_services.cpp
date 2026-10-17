@@ -913,6 +913,7 @@ pe::ui::GameSettings EdenServices::game_settings(std::uint64_t title_id) {
     result.hud_size = saved.hud_size;
     result.hud_corner = saved.hud_corner;
     result.frame_gen = saved.frame_gen;
+    result.frame_gen_method = saved.frame_gen_method;
     result.frame_gen_target = saved.frame_gen_target;
     result.frame_gen_multiplier = saved.frame_gen_multiplier;
     ReadPostPresets();
@@ -940,6 +941,7 @@ bool EdenServices::set_game_settings(std::uint64_t title_id, const pe::ui::GameS
     value.hud_size = settings.hud_size;
     value.hud_corner = settings.hud_corner;
     value.frame_gen = settings.frame_gen;
+    value.frame_gen_method = settings.frame_gen_method;
     value.frame_gen_target = settings.frame_gen_target;
     value.frame_gen_multiplier = settings.frame_gen_multiplier;
     if (settings.post_processing >= 0) value.post_processing = PostPresetName(settings.post_processing);
@@ -976,6 +978,7 @@ pe::ui::Preferences EdenServices::preferences() {
     result.refresh = saved.refresh;
     result.output = saved.output;
     result.frame_gen = saved.frame_gen;
+    result.frame_gen_method = saved.frame_gen_method;
     result.frame_gen_target = saved.frame_gen_target;
     result.frame_gen_multiplier = saved.frame_gen_multiplier;
     ReadPostPresets();
@@ -1024,6 +1027,7 @@ bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     value.refresh = preferences.refresh;
     value.output = preferences.output;
     value.frame_gen = preferences.frame_gen;
+    value.frame_gen_method = preferences.frame_gen_method;
     value.frame_gen_target = preferences.frame_gen_target;
     value.frame_gen_multiplier = preferences.frame_gen_multiplier;
     value.post_processing = PostPresetName(preferences.post_processing);
@@ -1072,6 +1076,17 @@ const std::vector<std::string>& EdenServices::resolution_keys() {
 int EdenServices::frame_gen_state() {
 #ifdef EDEN_PS5_FRAMEGEN
     return Eden::FileExists(Eden::UserDir() + "/lossless/Lossless.dll") ? 2 : 1;
+#else
+    return 0;
+#endif
+}
+
+// MihawkGen weights: <user folder>/mihawkgen/network.fgw, or bundled in the app.
+int EdenServices::mihawkgen_state() {
+#ifdef EDEN_PS5_MIHAWKGEN
+    if (Eden::FileExists(Eden::UserDir() + "/mihawkgen/network.fgw")) return 2;
+    if (Eden::FileExists(Eden::AppDir() + "/mihawkgen/network.fgw")) return 2;
+    return 1;
 #else
     return 0;
 #endif

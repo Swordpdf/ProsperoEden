@@ -50,6 +50,7 @@ public:
     const std::vector<std::string>& astc_labels() override;
     const std::vector<std::string>& post_processing_labels() override;
     int frame_gen_state() override;
+    int mihawkgen_state() override;
     const std::vector<std::string>& language_labels() override;
     std::string language_region(int language) override;
     std::string setup_details() override;

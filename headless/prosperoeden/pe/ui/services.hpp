@@ -335,6 +335,7 @@ struct Preferences
     // Lossless Scaling frame generation (Vulkan only): between a game's own frames, show
     // frames generated from them, up to the output's rate.
     bool frame_gen = false;
+    int frame_gen_method = 0;      // 0 Lossless Scaling, 1 MihawkGen
     int frame_gen_target = 0;      // index into kFrameGenTargetKeys: 0 auto, then 60/90/120/144/240
     int frame_gen_multiplier = 0;  // index into kFrameGenMultiplierKeys: 2x, 3x, 4x
     int post_processing = 0;       // index into Services::post_processing_labels: 0 off, then a preset
@@ -388,6 +389,7 @@ struct GameSettings
     int hud_size = -1;   // the overlay's chip: 0 regular, 1 large
     int hud_corner = -1; // 0 top left, 1 top right, 2 bottom left, 3 bottom right
     int frame_gen = -1;  // Lossless Scaling frame generation (Vulkan only)
+    int frame_gen_method = -1;      // 0 Lossless Scaling, 1 MihawkGen
     int frame_gen_target = -1;      // index into kFrameGenTargetKeys
     int frame_gen_multiplier = -1;  // index into kFrameGenMultiplierKeys
     int post_processing = -1;       // index into Services::post_processing_labels (0 off)
@@ -516,6 +518,11 @@ class Services
     // Frame generation: 0 this build has none (its settings are not shown), 1 the user's
     // Lossless.dll is missing (they are shown greyed out), 2 ready.
     virtual int frame_gen_state()
+    {
+        return 0;
+    }
+    // MihawkGen neural frame generation: 0 not compiled, 1 weights missing, 2 ready.
+    virtual int mihawkgen_state()
     {
         return 0;
     }
