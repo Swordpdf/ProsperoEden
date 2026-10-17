@@ -174,6 +174,26 @@ eden_sparse_replace("    std::size_t alloc_size{};\n"
 write_derived("${PORT_BUILD_DIR}/sparse/common/sparse_large_vector.h" "${sparse_header}")
 include("${EDEN_PORT_DIR}/jit-page-table.cmake")
 
+# A pixel shader's colour that is not a number (NaN) is written as zero. The guest's shaders
+# were written against the guest GPU, and an expression that gives a finite colour there can give
+# NaN here; a later pass that blurs or reprojects the frame (glow, bloom, temporal history) then
+# spreads it, so a few such pixels became dark boxes that grew from frame to frame until they
+# covered the screen (issue 245). Zero keeps a bad pixel to itself. Only float outputs change.
+file(READ "${PROJECT_SOURCE_DIR}/src/shader_recompiler/backend/spirv/emit_spirv_context_get_set.cpp" frag_color_source)
+set(frag_color_site "        const Id pointer{ctx.OpAccessChain(ctx.output_f32, ctx.frag_color.at(index), component_id)};\n        ctx.OpStore(pointer, value);\n")
+string(FIND "${frag_color_source}" "${frag_color_site}" frag_color_at)
+if(frag_color_at LESS 0)
+    message(FATAL_ERROR "Pinned fragment colour output changed; review the NaN colour output.")
+endif()
+string(REPLACE "${frag_color_site}"
+    "        const Id pointer{ctx.OpAccessChain(ctx.output_f32, ctx.frag_color.at(index), component_id)};\n        ctx.OpStore(pointer, ctx.OpSelect(ctx.F32[1], ctx.OpIsNan(ctx.U1, value), ctx.Const(0.0f), value));\n"
+    frag_color_source "${frag_color_source}")
+write_derived("${PORT_BUILD_DIR}/emit_spirv_context_get_set.cpp" "${frag_color_source}")
+get_target_property(recompiler_sources shader_recompiler SOURCES)
+list(FILTER recompiler_sources EXCLUDE REGEX "(^|/)emit_spirv_context_get_set\\.cpp$")
+set_property(TARGET shader_recompiler PROPERTY SOURCES "${recompiler_sources}")
+target_sources(shader_recompiler PRIVATE "${PORT_BUILD_DIR}/emit_spirv_context_get_set.cpp")
+
 # The GPU's address space table (Common::MultiLevelPageTable, one per address space a game asks
 # for) reserves its whole range with an anonymous mmap and relies on the system to back a page
 # only when it is first written. On the PS5 an anonymous mapping comes out of the flexible pool
