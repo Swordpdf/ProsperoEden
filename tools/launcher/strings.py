@@ -74,6 +74,8 @@ NOTES = {
     "Handheld": "Console mode: the console as if held in the hands.",
     "{0} OF {1}": "Position in a list: 3 OF 12.",
     "Off": "A setting that is switched off.",
+    "Cheats folder": "Shown under a cheat that came from the game's cheats folder (not from a mod).",
+    "No cheats for this game yet. Copy its cheat files (<build ID>.txt) to {0}.": "<build ID>.txt stays as it is: a cheat file is named after the game version's build ID. {0} is a folder such as roms/Game/cheats/.",
     "On": "A setting that is switched on.",
     "None": "No add-ons (updates or DLC).",
     "Default ({0})": "A per-game setting that follows the general setting; {0} is its value.",

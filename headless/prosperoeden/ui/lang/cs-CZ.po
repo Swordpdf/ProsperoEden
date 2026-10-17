@@ -88,6 +88,10 @@ msgstr "Přidáno ke stahování. Frontu ukazuje Nastavení, Stahování."
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "Přidáno. Křížek hraje za tento profil; vlevo a vpravo mění jeho jméno."
 
+#: pe/ui/library.cpp
+msgid "All cheats"
+msgstr "Všechny cheaty"
+
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
 msgstr "Veškeré uznání za emulátor Eden patří jeho vývojářům a přispěvatelům."
@@ -227,9 +231,14 @@ msgid "Changed"
 msgstr "Změněno"
 
 #. What a mod is made of: cheat codes.
-#: eden_services.cpp, host/fake_services.cpp
+#: eden_services.cpp, host/fake_services.cpp, pe/ui/library.cpp
 msgid "Cheats"
 msgstr "Cheaty"
+
+#. Shown under a cheat that came from the game's cheats folder (not from a mod).
+#: pe/ui/library.cpp
+msgid "Cheats folder"
+msgstr "Složka cheatů"
 
 #: pe/ui/pairing.cpp
 msgid "Check that the code there is this one, and approve."
@@ -1093,6 +1102,15 @@ msgstr "Přezdívka"
 msgid "Nickname: {0}"
 msgstr "Přezdívka: {0}"
 
+#: pe/ui/library.cpp
+msgid "No cheats"
+msgstr "Žádné cheaty"
+
+#. <build ID>.txt stays as it is: a cheat file is named after the game version's build ID. {0} is a folder such as roms/Game/cheats/.
+#: pe/ui/library.cpp
+msgid "No cheats for this game yet. Copy its cheat files (<build ID>.txt) to {0}."
+msgstr "Tato hra zatím nemá žádné cheaty. Zkopíruj její soubory cheatů (<build ID>.txt) do {0}."
+
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
 msgstr "Není nastaven žádný zdroj stahování. Ulož soubor {0} se seznamem svých zdrojů, jako tento se serverem RomM, a pak tuto nabídku otevři znovu. Stahování potřebuje FTP server spuštěný na konzoli na portu {1}."
@@ -1118,10 +1136,9 @@ msgstr "Nejsou tu žádné složky."
 msgid "No mods"
 msgstr "Žádné mody"
 
-#. {0} is a folder; roms/ is a folder name (unchanged).
 #: pe/ui/library.cpp
-msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
-msgstr "Tato hra zatím nemá žádné mody. Zkopíruj složku každého modu do {0}, vedle roms/."
+msgid "No mods for this game yet. Copy each mod's folder to {0}."
+msgstr "Tato hra zatím nemá žádné mody. Zkopíruj složku každého modu do {0}."
 
 #: pe/ui/multiplayer.cpp
 msgid "No public rooms are available."

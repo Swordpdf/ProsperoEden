@@ -88,6 +88,10 @@ msgstr "Hozzáadva a letöltésekhez. A sor a Beállítások, Letöltések alatt
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "Hozzáadva. A Kereszt ezzel a profillal játszik; a bal és a jobb a nevét váltja."
 
+#: pe/ui/library.cpp
+msgid "All cheats"
+msgstr "Összes csalás"
+
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
 msgstr "Az Eden emulátorért minden elismerés a fejlesztőit és közreműködőit illeti."
@@ -227,9 +231,14 @@ msgid "Changed"
 msgstr "Módosítva"
 
 #. What a mod is made of: cheat codes.
-#: eden_services.cpp, host/fake_services.cpp
+#: eden_services.cpp, host/fake_services.cpp, pe/ui/library.cpp
 msgid "Cheats"
 msgstr "Csalások"
+
+#. Shown under a cheat that came from the game's cheats folder (not from a mod).
+#: pe/ui/library.cpp
+msgid "Cheats folder"
+msgstr "Csalások mappája"
 
 #: pe/ui/pairing.cpp
 msgid "Check that the code there is this one, and approve."
@@ -1093,6 +1102,15 @@ msgstr "Becenév"
 msgid "Nickname: {0}"
 msgstr "Becenév: {0}"
 
+#: pe/ui/library.cpp
+msgid "No cheats"
+msgstr "Nincs csalás"
+
+#. <build ID>.txt stays as it is: a cheat file is named after the game version's build ID. {0} is a folder such as roms/Game/cheats/.
+#: pe/ui/library.cpp
+msgid "No cheats for this game yet. Copy its cheat files (<build ID>.txt) to {0}."
+msgstr "Ehhez a játékhoz még nincs csalás. Másold a csalásfájljait (<build ID>.txt) ide: {0}."
+
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
 msgstr "Nincs beállítva letöltési forrás. Ments el egy {0} nevű fájlt, amely felsorolja a forrásaidat, ahogy ez teszi egy RomM-szerverrel, majd nyisd meg újra ezt a menüt. A letöltésekhez FTP-szervernek kell futnia a konzolon, ezen a porton: {1}."
@@ -1118,10 +1136,9 @@ msgstr "Itt nincsenek mappák."
 msgid "No mods"
 msgstr "Nincs mod"
 
-#. {0} is a folder; roms/ is a folder name (unchanged).
 #: pe/ui/library.cpp
-msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
-msgstr "Ehhez a játékhoz még nincs mod. Másold az egyes modok mappáját ide: {0}, a roms/ mellé."
+msgid "No mods for this game yet. Copy each mod's folder to {0}."
+msgstr "Ehhez a játékhoz még nincs mod. Másold az egyes modok mappáját ide: {0}."
 
 #: pe/ui/multiplayer.cpp
 msgid "No public rooms are available."

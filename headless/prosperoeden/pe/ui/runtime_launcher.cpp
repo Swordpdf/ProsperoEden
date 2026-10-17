@@ -362,6 +362,7 @@ struct RuntimeLauncher::Impl {
         if (name == "status") { const auto room = services.room_status(); return {{"clock",services.clock()},{"controllers",services.controllers()},{"version",services.version()},{"room",{{"phase",static_cast<int>(room.phase)},{"error",room.error},{"name",room.room},{"members",room.members}}},{"launch",launch},{"update",offer},{"update_status",services.update_status()},{"save_sync",services.save_sync()},{"keyboard",keyboard_status}}; }
         if (name == "game_files") { const std::string path=args.value("path",services.files_folder()); std::vector<std::string> folders; const bool ok=services.folders(path,&folders); return {{"path",path},{"folders",folders},{"ok",ok},{"info",services.folder_info(path)},{"current",services.files_folder()},{"saved",services.saved_files_folder()},{"default",services.default_files_folder()},{"access",services.filesystem_access()}}; }
         if (name == "mods") { const auto& g=game(args); return {{"mods",services.mods(g.title_id)},{"enabled",services.mods_enabled(g.title_id)},{"folder",services.mods_folder(g.title_id)}}; }
+        if (name == "cheats") { const auto& g=game(args); return {{"cheats",services.cheats(g.title_id)},{"enabled",services.cheats_enabled(g.title_id)},{"folder",services.cheats_folder(g.title_id)}}; }
         if (name == "sources") return services.sources();
         if (name == "downloads") return services.downloads();
         if (name == "save_sync") return services.save_sync();
@@ -424,6 +425,7 @@ struct RuntimeLauncher::Impl {
         else if (name == "mods.enabled") { const auto& g=game(args); ok=services.set_mods_enabled(g.title_id,args.at("value")); }
         else if (name == "mod.enabled") { const auto& g=game(args); ok=services.set_mod_enabled(g.title_id,args.at("name"),args.at("value")); }
         else if (name == "cheat.enabled") { const auto& g=game(args); ok=services.set_cheat_enabled(g.title_id,args.at("mod"),args.at("name"),args.at("value")); }
+        else if (name == "cheats.enabled") { const auto& g=game(args); ok=services.set_cheats_enabled(g.title_id,args.at("value")); }
         else if (name == "mods.folder") { const auto& g=game(args); ok=services.make_mods_folder(g.title_id); }
         else if (name == "save.import" || name == "save.export") { const auto& g=game(args); ok=name=="save.import"?services.save_import(g.title_id,&message):services.save_export(g.title_id,&message); }
         else if (name == "sources.refresh") services.refresh_sources();

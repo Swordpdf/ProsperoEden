@@ -88,6 +88,10 @@ msgstr "Добавлено в загрузки. Очередь — в разде
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "Добавлено. Крест — играть этим профилем; влево и вправо меняют имя."
 
+#: pe/ui/library.cpp
+msgid "All cheats"
+msgstr "Все читы"
+
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
 msgstr "Эмулятор Eden — целиком заслуга его разработчиков и участников проекта."
@@ -227,9 +231,14 @@ msgid "Changed"
 msgstr "Изменено"
 
 #. What a mod is made of: cheat codes.
-#: eden_services.cpp, host/fake_services.cpp
+#: eden_services.cpp, host/fake_services.cpp, pe/ui/library.cpp
 msgid "Cheats"
 msgstr "Читы"
+
+#. Shown under a cheat that came from the game's cheats folder (not from a mod).
+#: pe/ui/library.cpp
+msgid "Cheats folder"
+msgstr "Папка читов"
 
 #: pe/ui/pairing.cpp
 msgid "Check that the code there is this one, and approve."
@@ -1093,6 +1102,15 @@ msgstr "Никнейм"
 msgid "Nickname: {0}"
 msgstr "Никнейм: {0}"
 
+#: pe/ui/library.cpp
+msgid "No cheats"
+msgstr "Нет читов"
+
+#. <build ID>.txt stays as it is: a cheat file is named after the game version's build ID. {0} is a folder such as roms/Game/cheats/.
+#: pe/ui/library.cpp
+msgid "No cheats for this game yet. Copy its cheat files (<build ID>.txt) to {0}."
+msgstr "Для этой игры пока нет читов. Скопируйте её файлы читов (<build ID>.txt) в {0}."
+
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
 msgstr "Источник загрузки не настроен. Сохраните файл с именем {0} со списком источников, как в этом примере с сервером RomM, и откройте это меню снова. Для загрузок нужен FTP-сервер, запущенный на консоли, на порту {1}."
@@ -1118,10 +1136,9 @@ msgstr "Здесь нет папок."
 msgid "No mods"
 msgstr "Нет модов"
 
-#. {0} is a folder; roms/ is a folder name (unchanged).
 #: pe/ui/library.cpp
-msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
-msgstr "Для этой игры пока нет модов. Скопируйте папку каждого мода в {0}, рядом с roms/."
+msgid "No mods for this game yet. Copy each mod's folder to {0}."
+msgstr "Для этой игры пока нет модов. Скопируйте папку каждого мода в {0}."
 
 #: pe/ui/multiplayer.cpp
 msgid "No public rooms are available."

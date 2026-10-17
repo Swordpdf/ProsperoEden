@@ -88,6 +88,10 @@ msgstr "Dodano do pobierania. Kolejkę pokazuje Ustawienia, Pobieranie."
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "Dodano. Krzyżyk gra tym profilem; lewo i prawo zmieniają jego nazwę."
 
+#: pe/ui/library.cpp
+msgid "All cheats"
+msgstr "Wszystkie kody"
+
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
 msgstr "Całe uznanie za emulator Eden należy się jego twórcom i współtwórcom."
@@ -227,9 +231,14 @@ msgid "Changed"
 msgstr "Zmienione"
 
 #. What a mod is made of: cheat codes.
-#: eden_services.cpp, host/fake_services.cpp
+#: eden_services.cpp, host/fake_services.cpp, pe/ui/library.cpp
 msgid "Cheats"
 msgstr "Kody"
+
+#. Shown under a cheat that came from the game's cheats folder (not from a mod).
+#: pe/ui/library.cpp
+msgid "Cheats folder"
+msgstr "Folder kodów"
 
 #: pe/ui/pairing.cpp
 msgid "Check that the code there is this one, and approve."
@@ -1093,6 +1102,15 @@ msgstr "Pseudonim"
 msgid "Nickname: {0}"
 msgstr "Pseudonim: {0}"
 
+#: pe/ui/library.cpp
+msgid "No cheats"
+msgstr "Brak kodów"
+
+#. <build ID>.txt stays as it is: a cheat file is named after the game version's build ID. {0} is a folder such as roms/Game/cheats/.
+#: pe/ui/library.cpp
+msgid "No cheats for this game yet. Copy its cheat files (<build ID>.txt) to {0}."
+msgstr "Ta gra nie ma jeszcze kodów. Skopiuj jej pliki z kodami (<build ID>.txt) do {0}."
+
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
 msgstr "Nie skonfigurowano źródła pobierania. Zapisz plik o nazwie {0} z listą swoich źródeł, tak jak ten z serwerem RomM, i otwórz to menu ponownie. Pobieranie wymaga serwera FTP działającego na konsoli, na porcie {1}."
@@ -1118,10 +1136,9 @@ msgstr "Nie ma tu folderów."
 msgid "No mods"
 msgstr "Brak modów"
 
-#. {0} is a folder; roms/ is a folder name (unchanged).
 #: pe/ui/library.cpp
-msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
-msgstr "Ta gra nie ma jeszcze modów. Skopiuj folder każdego moda do {0}, obok roms/."
+msgid "No mods for this game yet. Copy each mod's folder to {0}."
+msgstr "Ta gra nie ma jeszcze modów. Skopiuj folder każdego moda do {0}."
 
 #: pe/ui/multiplayer.cpp
 msgid "No public rooms are available."

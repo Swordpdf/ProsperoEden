@@ -88,6 +88,10 @@ msgstr "ダウンロードに追加しました。待機列は設定の「ダウ
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "追加しました。バツでこのプロフィールでプレイ、左右で名前を変更。"
 
+#: pe/ui/library.cpp
+msgid "All cheats"
+msgstr "すべてのチート"
+
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
 msgstr "Edenエミュレーターの功績は、すべてその開発者と貢献者のものです。"
@@ -227,9 +231,14 @@ msgid "Changed"
 msgstr "変更あり"
 
 #. What a mod is made of: cheat codes.
-#: eden_services.cpp, host/fake_services.cpp
+#: eden_services.cpp, host/fake_services.cpp, pe/ui/library.cpp
 msgid "Cheats"
 msgstr "チート"
+
+#. Shown under a cheat that came from the game's cheats folder (not from a mod).
+#: pe/ui/library.cpp
+msgid "Cheats folder"
+msgstr "チートフォルダー"
 
 #: pe/ui/pairing.cpp
 msgid "Check that the code there is this one, and approve."
@@ -1093,6 +1102,15 @@ msgstr "ニックネーム"
 msgid "Nickname: {0}"
 msgstr "ニックネーム: {0}"
 
+#: pe/ui/library.cpp
+msgid "No cheats"
+msgstr "チートなし"
+
+#. <build ID>.txt stays as it is: a cheat file is named after the game version's build ID. {0} is a folder such as roms/Game/cheats/.
+#: pe/ui/library.cpp
+msgid "No cheats for this game yet. Copy its cheat files (<build ID>.txt) to {0}."
+msgstr "このゲームのチートはまだありません。チートファイル (<build ID>.txt) を {0} にコピーしてください。"
+
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
 msgstr "ダウンロード元が設定されていません。この例（RomMサーバー）のようにダウンロード元を記載した{0}という名前のファイルを保存し、このメニューを開き直してください。ダウンロードには、本体のポート{1}でFTPサーバーが動作している必要があります。"
@@ -1118,10 +1136,9 @@ msgstr "ここにフォルダーはありません。"
 msgid "No mods"
 msgstr "MODなし"
 
-#. {0} is a folder; roms/ is a folder name (unchanged).
 #: pe/ui/library.cpp
-msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
-msgstr "このゲームのMODはまだありません。各MODのフォルダーを roms/ の隣の {0} にコピーしてください。"
+msgid "No mods for this game yet. Copy each mod's folder to {0}."
+msgstr "このゲームのMODはまだありません。各MODのフォルダーを {0} にコピーしてください。"
 
 #: pe/ui/multiplayer.cpp
 msgid "No public rooms are available."

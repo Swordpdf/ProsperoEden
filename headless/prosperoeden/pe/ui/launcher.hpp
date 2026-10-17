@@ -101,6 +101,7 @@ class Launcher
         theme,        // Settings > Appearance > Theme: the launcher's look
         wallpaper,    // Settings > Appearance > Wallpaper: the image behind the screens
         accent,       // Settings > Colour: the accent preset
+        cheats,       // a game's cheats, opened from its settings
     };
     // The update dialog's steps: the offer, installing, stopping it, closing for the helper to
     // finish, and a failure.
@@ -197,11 +198,14 @@ class Launcher
     void read_home();
     // A game's mods as its list has them: how many, and how many are switched on.
     void count_mods(Game &game, const std::vector<Mod> &mods);
+    // A game's mods for the Mods list and its counts: those of cheats alone are in the Cheats list.
+    std::vector<Mod> game_mods(std::uint64_t title_id);
     // Games whose file left the game files folder leave the home screen and the Library.
     void check_games_present();
     bool drop_missing_games();
-    // Reads a game's mods for its dialogs, with the rows of the Mods list.
+    // Reads a game's mods for its dialogs, and its cheats with the game's Cheats switch.
     void read_mods(Game &game);
+    void read_cheats(const Game &game);
     // What a game comes with, on one line: "Update 1.2.0, 2 DLC, 2 mods"; "None" without any.
     // brief: for Game::addons_short, where the line would not fit ("v1.2.0, 2 DLC, 1/2 mods").
     static std::string addons_line(const std::string &addons, int mods, int mods_on,
@@ -218,6 +222,7 @@ class Launcher
     void draw_game_page(Canvas &c, float open);
     void draw_mode_pane(Canvas &c, const Rect &pane);
     void draw_mods_pane(Canvas &c, const Rect &pane, bool active);
+    void draw_cheats_pane(Canvas &c, const Rect &pane, bool active);
     void draw_save_pane(Canvas &c, const Rect &pane, bool removing);
     void draw_explain_pane(Canvas &c, const Rect &pane, int kind);
     // How many settings the game has of its own, over every kind.
@@ -225,7 +230,10 @@ class Launcher
     // What a row of the game settings dialog is (GameRow in library.cpp): Save data is there in
     // builds that move saves, and the deleting of a game a download source has (it comes back from there).
     int game_row(int row) const;
+    // The pitch of those rows: closer when all of them are there, so that they fit.
+    float game_kind_pitch() const;
     void press_mods(Key key);
+    void press_cheats(Key key);
 
     // ---- a game's own settings by category, and the button mapping (game_options.cpp) ----
     // Categories, in the order of the game settings' rows: video, performance, audio, controls,
@@ -518,14 +526,12 @@ class Launcher
     bool delete_armed_ = false;                   // the same before a game is deleted
     ListView game_rows_;                          // the game dialog's rows (more than it shows)
     std::vector<Mod> mods_;                       // the game's mods, read when its dialog opens
-    // The Mods list's rows: each mod, then its cheats when it lists several.
-    struct ModRow
-    {
-        int mod = 0;
-        int cheat = -1; // -1: the mod itself
-    };
-    std::vector<ModRow> mod_list_;
     ListView mod_rows_;
+    // The game's cheats and its Cheats switch, read with its mods. The Cheats list's first row is
+    // that switch, then a row per cheat.
+    std::vector<GameCheat> cheats_;
+    bool cheats_enabled_ = true;
+    ListView cheat_rows_;
     int game_options_ = 0;          // the category a game's own settings dialog shows
     ListView option_rows_;          // its rows
     std::atomic<bool> seed_edit_stop_{false};

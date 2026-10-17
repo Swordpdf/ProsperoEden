@@ -88,6 +88,10 @@ msgstr "已加入下載。可在「設定」的「下載」中查看佇列。"
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "已新增。叉鍵以此檔案遊玩；左右變更名稱。"
 
+#: pe/ui/library.cpp
+msgid "All cheats"
+msgstr "全部金手指"
+
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
 msgstr "Eden 模擬器的所有功勞皆歸於其開發者與貢獻者。"
@@ -227,9 +231,14 @@ msgid "Changed"
 msgstr "已變更"
 
 #. What a mod is made of: cheat codes.
-#: eden_services.cpp, host/fake_services.cpp
+#: eden_services.cpp, host/fake_services.cpp, pe/ui/library.cpp
 msgid "Cheats"
 msgstr "金手指"
+
+#. Shown under a cheat that came from the game's cheats folder (not from a mod).
+#: pe/ui/library.cpp
+msgid "Cheats folder"
+msgstr "金手指資料夾"
 
 #: pe/ui/pairing.cpp
 msgid "Check that the code there is this one, and approve."
@@ -1093,6 +1102,15 @@ msgstr "暱稱"
 msgid "Nickname: {0}"
 msgstr "暱稱：{0}"
 
+#: pe/ui/library.cpp
+msgid "No cheats"
+msgstr "沒有金手指"
+
+#. <build ID>.txt stays as it is: a cheat file is named after the game version's build ID. {0} is a folder such as roms/Game/cheats/.
+#: pe/ui/library.cpp
+msgid "No cheats for this game yet. Copy its cheat files (<build ID>.txt) to {0}."
+msgstr "此遊戲尚無金手指。請將它的金手指檔案 (<build ID>.txt) 複製到 {0}。"
+
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
 msgstr "尚未設定下載來源。請儲存一個名為 {0} 的檔案並列出你的來源（如此範例中的 RomM 伺服器），然後重新開啟此選單。下載需要主機上執行 FTP 伺服器，連接埠為 {1}。"
@@ -1118,10 +1136,9 @@ msgstr "這裡沒有資料夾。"
 msgid "No mods"
 msgstr "沒有模組"
 
-#. {0} is a folder; roms/ is a folder name (unchanged).
 #: pe/ui/library.cpp
-msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
-msgstr "此遊戲尚無模組。請將每個模組的資料夾複製到 roms/ 旁邊的 {0}。"
+msgid "No mods for this game yet. Copy each mod's folder to {0}."
+msgstr "此遊戲尚無模組。請將每個模組的資料夾複製到 {0}。"
 
 #: pe/ui/multiplayer.cpp
 msgid "No public rooms are available."

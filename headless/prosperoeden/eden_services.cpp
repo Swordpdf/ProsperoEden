@@ -1292,7 +1292,8 @@ std::vector<pe::ui::Mod> EdenServices::mods(std::uint64_t title_id) {
         if (mod.kinds & Eden::Mods::kCode) add(TR("Patch"));
         if (mod.kinds & Eden::Mods::kFiles) add(TR("Files"));
         if (mod.kinds & Eden::Mods::kCheats) add(TR("Cheats"));
-        result.push_back({mod.name, kind, std::find(off.begin(), off.end(), mod.name) == off.end(), {}});
+        result.push_back({mod.name, kind, std::find(off.begin(), off.end(), mod.name) == off.end(), {},
+                          Eden::Mods::CheatsOnly(mod)});
         for (const auto& cheat : mod.cheats)
             result.back().cheats.push_back(
                 {cheat.name, std::find(chosen.begin(), chosen.end(), cheat.id) != chosen.end()});
@@ -1300,15 +1301,54 @@ std::vector<pe::ui::Mod> EdenServices::mods(std::uint64_t title_id) {
     return result;
 }
 
+// Every cheat of a game (headless/mods.h), whichever of its mods holds it.
+std::vector<pe::ui::GameCheat> EdenServices::cheats(std::uint64_t title_id) {
+    std::vector<pe::ui::GameCheat> result;
+    for (const auto& item : Eden::Mods::CheatItems(Eden::Mods::List(ModPlaces(title_id), title_id),
+                                                   Eden::LoadDisabledMods(title_id), Eden::LoadChosenCheats(title_id),
+                                                   Eden::LoadCheatsOff(title_id)))
+        result.push_back({item.mod, item.name, item.on});
+    return result;
+}
+
+// A cheat is switched where its kind keeps it: chosen among its mod's several, its mod's own
+// switch for a mod of one cheat alone, or on its own beside a mod's patches or files.
 bool EdenServices::set_cheat_enabled(std::uint64_t title_id, const std::string& name, const std::string& cheat,
                                      bool enabled) {
+    using Switch = Eden::Mods::CheatItem::Switch;
     bool saved = false;
-    for (const Eden::Mods::Mod& mod : Eden::Mods::List(ModPlaces(title_id), title_id))
-        if (mod.name == name)
-            saved = Eden::SaveChosenCheats(
-                title_id, Eden::Mods::ChooseCheat(mod, cheat, enabled, Eden::LoadChosenCheats(title_id)));
+    const auto mods = Eden::Mods::List(ModPlaces(title_id), title_id);
+    for (const auto& item : Eden::Mods::CheatItems(mods, {}, {}, {})) {
+        if (item.mod != name || item.name != cheat) continue;
+        if (item.by == Switch::mod) {
+            saved = Eden::SaveModEnabled(title_id, name, enabled);
+        } else if (item.by == Switch::own) {
+            saved = Eden::SaveCheatOff(title_id, Eden::Cheats::Key(name, cheat), !enabled);
+        } else {
+            for (const Eden::Mods::Mod& mod : mods)
+                if (mod.name == name)
+                    saved = Eden::SaveChosenCheats(
+                        title_id, Eden::Mods::ChooseCheat(mod, cheat, enabled, Eden::LoadChosenCheats(title_id)));
+        }
+        break;
+    }
     if (!saved) Eden::Report("settings", "Could not write the game's cheats");
     return saved;
+}
+
+bool EdenServices::cheats_enabled(std::uint64_t title_id) { return Eden::LoadCheatsEnabled(title_id); }
+
+bool EdenServices::set_cheats_enabled(std::uint64_t title_id, bool enabled) {
+    const bool saved = Eden::SaveCheatsEnabled(title_id, enabled);
+    if (!saved) Eden::Report("settings", "Could not write the game's cheats switch");
+    return saved;
+}
+
+// A game in its own folder keeps its cheat files there; any other, in cheats/<title ID>/.
+std::string EdenServices::cheats_folder(std::uint64_t title_id) {
+    if (const std::string folder = ModPlaces(title_id).game_folder; !folder.empty())
+        return "roms/" + std::filesystem::path(folder).filename().string() + "/cheats/";
+    return "cheats/" + Eden::Mods::TitleName(title_id) + "/";
 }
 
 bool EdenServices::set_mod_enabled(std::uint64_t title_id, const std::string& name, bool enabled) {

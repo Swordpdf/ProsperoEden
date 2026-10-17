@@ -51,13 +51,17 @@ enum GameRow : int
     row_system,
     row_language,
     row_mods,
+    row_cheats,
     row_save,   // in builds that move saves
     row_delete, // a game a download source has: deleted from the console
 };
 constexpr const char *kKindNames[] = {TR("Console mode"), TR("Video"),    TR("Performance"),
                                       TR("Audio"),        TR("Controls"), TR("System"),
-                                      TR("Language"),     TR("Mods"),     TR("Save data"),
-                                      TR("Delete from console")};
+                                      TR("Language"),     TR("Mods"),     TR("Cheats"),
+                                      TR("Save data"),    TR("Delete from console")};
+
+// The mod Eden makes of a game's cheats folder (headless/mods.h), named in the player's language.
+constexpr const char *kCheatsFolder = TR("Cheats folder");
 
 // How many settings a game has of its own.
 int changes_of(const GameSettings &game)
@@ -142,7 +146,7 @@ void Launcher::apply_games(std::vector<Game> games)
     games_loaded_ = true;
     for (Game &game : games_)
         if (game.title_id != 0)
-            count_mods(game, services_.mods(game.title_id));
+            count_mods(game, game_mods(game.title_id));
     if (!same)
     {
         int index = 0;
@@ -177,7 +181,7 @@ void Launcher::read_home()
         recent.title = shown_name(fonts_.font, recent.title, recent.file);
     if (home_.last_title_id == 0)
         return;
-    const std::vector<Mod> mods = services_.mods(home_.last_title_id);
+    const std::vector<Mod> mods = game_mods(home_.last_title_id);
     home_.last_mods = static_cast<int>(mods.size());
     // With the game's Mods switch off none of them is on.
     const bool enabled = mods.empty() || services_.mods_enabled(home_.last_title_id);
@@ -248,18 +252,24 @@ void Launcher::count_mods(Game &game, const std::vector<Mod> &mods)
     }
 }
 
+std::vector<Mod> Launcher::game_mods(std::uint64_t title_id)
+{
+    std::vector<Mod> mods = services_.mods(title_id);
+    mods.erase(std::remove_if(mods.begin(), mods.end(), [](const Mod &mod) { return mod.cheats_only; }), mods.end());
+    return mods;
+}
+
 void Launcher::read_mods(Game &game)
 {
-    mods_ = services_.mods(game.title_id);
+    mods_ = game_mods(game.title_id);
     count_mods(game, mods_);
-    mod_list_.clear();
-    for (int mod = 0; mod < static_cast<int>(mods_.size()); ++mod)
-    {
-        mod_list_.push_back({mod, -1});
-        for (int cheat = 0; cheat < static_cast<int>(mods_[static_cast<std::size_t>(mod)].cheats.size());
-             ++cheat)
-            mod_list_.push_back({mod, cheat});
-    }
+    read_cheats(game);
+}
+
+void Launcher::read_cheats(const Game &game)
+{
+    cheats_ = services_.cheats(game.title_id);
+    cheats_enabled_ = services_.cheats_enabled(game.title_id);
 }
 
 std::string Launcher::addons_line(const std::string &addons, int mods, int mods_on, bool brief)
@@ -421,7 +431,7 @@ void Launcher::press_library(Key key)
         Game &chosen = games_[static_cast<std::size_t>(library_.selected)];
         const bool saved = services_.set_mods_enabled(chosen.title_id, !chosen.mods_enabled);
         if (saved)
-            count_mods(chosen, services_.mods(chosen.title_id));
+            count_mods(chosen, game_mods(chosen.title_id));
         say(saved ? tr("Saved for this game. Applies on next launch.") :
                     tr("Could not save. Please try again."),
             !saved);
@@ -453,8 +463,8 @@ void Launcher::press_library(Key key)
         read_mods(games_[static_cast<std::size_t>(library_.selected)]);
         open_modal(Modal::game);
         pane_.snap(0.0f);
-        game_rows_.visible = 10;
-        game_rows_.pitch = kKindPitch;
+        game_rows_.visible = 11;
+        game_rows_.pitch = game_kind_pitch();
         game_rows_.reset(dialog_rows(Modal::game), 0);
         return;
     case Key::cross:
@@ -809,6 +819,12 @@ int Launcher::game_row(int row) const
     return services_.save_transfer_available() ? row : row + 1;
 }
 
+float Launcher::game_kind_pitch() const
+{
+    // Eleven rows at the usual pitch would run into the hints.
+    return dialog_rows(Modal::game) > 10 ? kKindPitch - 8.0f : kKindPitch;
+}
+
 void Launcher::press_game(Key key)
 {
     Game &game = games_[static_cast<std::size_t>(library_.selected)];
@@ -866,8 +882,22 @@ void Launcher::press_game(Key key)
         read_mods(game);
         mod_rows_.visible = layout::kPaneRows;
         mod_rows_.pitch = layout::kPanePitch;
-        mod_rows_.reset(static_cast<int>(mod_list_.size()), 0);
+        mod_rows_.reset(static_cast<int>(mods_.size()), 0);
         modal_ = modal_shown_ = Modal::mods;
+        message_.clear();
+        cue(Cue::open);
+        return;
+    }
+    if (kind == row_cheats)
+    {
+        // So do its cheats, the game's Cheats switch first.
+        if (key != Key::cross && key != Key::right)
+            return;
+        read_mods(game);
+        cheat_rows_.visible = layout::kPaneRows;
+        cheat_rows_.pitch = layout::kPanePitch;
+        cheat_rows_.reset(cheats_.empty() ? 0 : 1 + static_cast<int>(cheats_.size()), 0);
+        modal_ = modal_shown_ = Modal::cheats;
         message_.clear();
         cue(Cue::open);
         return;
@@ -1010,6 +1040,14 @@ void Launcher::draw_game_page(Canvas &c, float open)
                             {std::to_string(std::count_if(mods_.begin(), mods_.end(),
                                                           [](const Mod &mod) { return mod.enabled; })),
                              std::to_string(mods_.size())});
+        case row_cheats:
+            // With the game's Cheats switch off, none of them is on.
+            return cheats_.empty() ? std::string{tr("No cheats")} :
+                   !cheats_enabled_ ? std::string{tr("Off")} :
+                       fill(tr("{0} of {1} on"),
+                            {std::to_string(std::count_if(cheats_.begin(), cheats_.end(),
+                                                          [](const GameCheat &cheat) { return cheat.enabled; })),
+                             std::to_string(cheats_.size())});
         case row_save:
             return import_source_ == SaveSource::ryujinx ? tr("Ryujinx save found") :
                    import_source_ == SaveSource::folder ? tr("Save folder found") : tr("Nothing to import");
@@ -1023,18 +1061,22 @@ void Launcher::draw_game_page(Canvas &c, float open)
     {
         return which == row_mode ? true :
                which == row_mods ? !mods_.empty() && game.mods_enabled :
+               which == row_cheats ? !cheats_.empty() && cheats_enabled_ :
                which == row_save ? import_source_ != SaveSource::none :
                which == row_delete ? false : game_overrides(which - row_video) > 0;
     };
     // The highlight: whole while the focus is on the kinds, quieter once it is on the rows.
-    const Rect lit{kinds.x, kinds.y + game_rows_.cursor(), kinds.w, kKindHeight};
+    const float pitch = game_rows_.pitch;
+    const float height = kKindHeight - (kKindPitch - pitch);
+    const float inset = (kKindPitch - pitch) * 0.5f;
+    const Rect lit{kinds.x, kinds.y + game_rows_.cursor(), kinds.w, height};
     plate_focus(c, row_plate(), lit, 1.0f - 0.62f * pane);
     if (!look().high_contrast)
-        list.rounded_rect({lit.x + 14.0f, lit.y + 20.0f, 4.0f, kKindHeight - 40.0f}, 2.0f, t.accent);
+        list.rounded_rect({lit.x + 14.0f, lit.y + 20.0f, 4.0f, height - 40.0f}, 2.0f, t.accent);
     for (int row = 0; row < rows; ++row)
     {
         const int which = game_row(row);
-        const float top = kinds.y + kKindPitch * static_cast<float>(row);
+        const float top = kinds.y + pitch * static_cast<float>(row) - inset;
         const bool on = row == chosen;
         text_shrink(c, tr(kKindNames[which]), kinds.x + 34.0f, baseline(top + 8.0f, 32.0f, t.size_text), t.size_text,
                     which == row_delete ? t.warning : on ? t.title : t.copy, kinds.w - 58.0f);
@@ -1048,6 +1090,8 @@ void Launcher::draw_game_page(Canvas &c, float open)
         draw_mode_pane(c, middle);
     else if (kind == row_mods)
         draw_mods_pane(c, middle, active);
+    else if (kind == row_cheats)
+        draw_cheats_pane(c, middle, active);
     else if (kind == row_save || kind == row_delete)
         draw_save_pane(c, middle, kind == row_delete);
     else
@@ -1071,6 +1115,21 @@ void Launcher::draw_game_page(Canvas &c, float open)
                                              {Pad::cross, TR("Turn on or off")},
                                              {Pad::circle, TR("Back")}};
             hints(kMods, 3);
+        }
+    }
+    else if (modal_shown_ == Modal::cheats)
+    {
+        if (cheats_.empty())
+        {
+            static constexpr Hint kEmpty[] = {{Pad::circle, TR("Back")}};
+            hints(kEmpty, 1);
+        }
+        else
+        {
+            static constexpr Hint kCheats[] = {{Pad::updown, TR("Select")},
+                                               {Pad::cross, TR("Turn on or off")},
+                                               {Pad::circle, TR("Back")}};
+            hints(kCheats, 3);
         }
     }
     else if (modal_shown_ == Modal::game_options || modal_shown_ == Modal::mapping)
@@ -1154,7 +1213,7 @@ void Launcher::draw_mode_pane(Canvas &c, const Rect &pane)
     }
 }
 
-// The game's mods, each with its switch (and its cheats under it when it lists several).
+// The game's mods, each with its switch. Their cheats are in the Cheats list.
 void Launcher::draw_mods_pane(Canvas &c, const Rect &pane, bool active)
 {
     gfx::DrawList &list = c.list;
@@ -1163,7 +1222,7 @@ void Launcher::draw_mods_pane(Canvas &c, const Rect &pane, bool active)
     if (mods_.empty())
     {
         text_block(c,
-                   fill(tr("No mods for this game yet. Copy each mod's folder to {0}, next to roms/."),
+                   fill(tr("No mods for this game yet. Copy each mod's folder to {0}."),
                         {services_.mods_folder(game.title_id)}),
                    pane.x + 8.0f, baseline(pane.y + 8.0f, 40.0f, t.size_text), t.size_text, 40.0f, t.body,
                    pane.w - 16.0f, 6, kShrink);
@@ -1172,7 +1231,7 @@ void Launcher::draw_mods_pane(Canvas &c, const Rect &pane, bool active)
     const float pitch = layout::kPanePitch;
     const float height = layout::kPaneRow;
     const float scroll = active ? mod_rows_.scroll() : 0.0f;
-    const int count = static_cast<int>(mod_list_.size());
+    const int count = static_cast<int>(mods_.size());
     const int first = active ? mod_rows_.first_row() : 0;
     const int last = active ? mod_rows_.last_row() : std::min(count, layout::kPaneRows) - 1;
     list.push_opacity(active ? 1.0f : 0.72f);
@@ -1192,35 +1251,13 @@ void Launcher::draw_mods_pane(Canvas &c, const Rect &pane, bool active)
     const float right = pane.x + pane.w - 28.0f;
     for (int row = first; row <= last && row < count; ++row)
     {
-        const ModRow at = mod_list_[static_cast<std::size_t>(row)];
-        const Mod &mod = mods_[static_cast<std::size_t>(at.mod)];
+        const Mod &mod = mods_[static_cast<std::size_t>(row)];
         const float top = row_top(row);
         list.push_opacity(active ? mod_rows_.row_alpha(row, height) : 1.0f);
-        if (at.cheat >= 0)
-        {
-            // One of the mod's cheats, set in under it, with its own switch: faint while its mod
-            // is off.
-            const Cheat &cheat = mod.cheats[static_cast<std::size_t>(at.cheat)];
-            const bool used = live && mod.enabled;
-            text_fit(c, cheat.name, pane.x + 68.0f, baseline(top, height, t.size_text), t.size_text,
-                     cheat.enabled && used ? t.value : t.meta, pane.w - 68.0f - 120.0f);
-            list.push_opacity(used ? 1.0f : 0.4f);
-            toggle(c, right, top + height * 0.5f, cheat.enabled ? 1.0f : 0.0f);
-            list.pop_opacity();
-            list.pop_opacity();
-            continue;
-        }
-        // Its name as the player's folder has it, what it changes under it (with how many of
-        // its cheats are chosen when it lists several), its switch.
-        std::string made = mod.kind;
-        if (!mod.cheats.empty())
-            made += ", " + fill(tr("{0} of {1} on"),
-                                {std::to_string(std::count_if(mod.cheats.begin(), mod.cheats.end(),
-                                                              [](const Cheat &cheat) { return cheat.enabled; })),
-                                 std::to_string(mod.cheats.size())});
+        // Its name as the player's folder has it, what it changes under it, its switch.
         text_fit(c, mod.name, pane.x + 28.0f, baseline(top + 10.0f, 36.0f, t.size_text), t.size_text,
                  mod.enabled && live ? t.value : t.meta, pane.w - 28.0f - 120.0f);
-        text_shrink(c, made, pane.x + 28.0f, baseline(top + 46.0f, 26.0f, 18.0f), 18.0f, t.meta,
+        text_shrink(c, mod.kind, pane.x + 28.0f, baseline(top + 46.0f, 26.0f, 18.0f), 18.0f, t.meta,
                     pane.w - 28.0f - 120.0f);
         list.push_opacity(live ? 1.0f : 0.4f);
         toggle(c, right, top + height * 0.5f, mod.enabled ? 1.0f : 0.0f);
@@ -1230,6 +1267,73 @@ void Launcher::draw_mods_pane(Canvas &c, const Rect &pane, bool active)
     list.pop_clip();
     if (active)
         scrollbar(c, mod_rows_, pane.x + pane.w + 14.0f, pane.y, pitch * (layout::kPaneRows - 1) + height);
+    list.pop_opacity();
+}
+
+// The game's cheats: the switch for all of them, then each with its switch and the file it came
+// from under its name.
+void Launcher::draw_cheats_pane(Canvas &c, const Rect &pane, bool active)
+{
+    gfx::DrawList &list = c.list;
+    const Theme &t = th();
+    const Game &game = games_[static_cast<std::size_t>(library_.selected)];
+    if (cheats_.empty())
+    {
+        text_block(c,
+                   fill(tr("No cheats for this game yet. Copy its cheat files (<build ID>.txt) to {0}."),
+                        {services_.cheats_folder(game.title_id)}),
+                   pane.x + 8.0f, baseline(pane.y + 8.0f, 40.0f, t.size_text), t.size_text, 40.0f, t.body,
+                   pane.w - 16.0f, 6, kShrink);
+        return;
+    }
+    const float pitch = layout::kPanePitch;
+    const float height = layout::kPaneRow;
+    const float scroll = active ? cheat_rows_.scroll() : 0.0f;
+    const int count = 1 + static_cast<int>(cheats_.size());
+    const int first = active ? cheat_rows_.first_row() : 0;
+    const int last = active ? cheat_rows_.last_row() : std::min(count, layout::kPaneRows) - 1;
+    list.push_opacity(active ? 1.0f : 0.72f);
+    list.push_clip({pane.x - 24.0f, pane.y - 8.0f, pane.w + 48.0f, pitch * (layout::kPaneRows - 1) + height + 16.0f});
+    const auto row_top = [&](int row) { return pane.y + static_cast<float>(row) * pitch - scroll; };
+    for (int row = first; row <= last; ++row)
+    {
+        list.push_opacity(active ? cheat_rows_.row_alpha(row, height) : 1.0f);
+        plate_rest(c, row_plate(), {pane.x, row_top(row), pane.w, height});
+        list.pop_opacity();
+    }
+    if (active)
+        plate_focus(c, row_plate(), {pane.x, pane.y + cheat_rows_.cursor() - scroll, pane.w, height}, 1.0f);
+    // With the game's Cheats switch off no cheat runs: their own switches keep their state, drawn
+    // faint.
+    const float right = pane.x + pane.w - 28.0f;
+    for (int row = first; row <= last && row < count; ++row)
+    {
+        const float top = row_top(row);
+        list.push_opacity(active ? cheat_rows_.row_alpha(row, height) : 1.0f);
+        if (row == 0)
+        {
+            const Heavy heavy(c);
+            text_fit(c, tr("All cheats"), pane.x + 28.0f, baseline(top, height, t.size_text), t.size_text,
+                     cheats_enabled_ ? t.title : t.meta, pane.w - 28.0f - 120.0f);
+            toggle(c, right, top + height * 0.5f, cheats_enabled_ ? 1.0f : 0.0f);
+            list.pop_opacity();
+            continue;
+        }
+        const GameCheat &cheat = cheats_[static_cast<std::size_t>(row - 1)];
+        text_fit(c, cheat.name, pane.x + 28.0f, baseline(top + 10.0f, 36.0f, t.size_text), t.size_text,
+                 cheat.enabled && cheats_enabled_ ? t.value : t.meta, pane.w - 28.0f - 120.0f);
+        // The game's cheats folder is a mod of Eden's making: it is named in the player's language.
+        const std::string from = cheat.mod == "Cheats folder" ? std::string{tr(kCheatsFolder)} : cheat.mod;
+        text_shrink(c, from, pane.x + 28.0f, baseline(top + 46.0f, 26.0f, 18.0f), 18.0f, t.meta,
+                    pane.w - 28.0f - 120.0f);
+        list.push_opacity(cheats_enabled_ ? 1.0f : 0.4f);
+        toggle(c, right, top + height * 0.5f, cheat.enabled ? 1.0f : 0.0f);
+        list.pop_opacity();
+        list.pop_opacity();
+    }
+    list.pop_clip();
+    if (active)
+        scrollbar(c, cheat_rows_, pane.x + pane.w + 14.0f, pane.y, pitch * (layout::kPaneRows - 1) + height);
     list.pop_opacity();
 }
 
@@ -1359,37 +1463,74 @@ void Launcher::press_mods(Key key)
     {
         if (mods_.empty())
             return;
-        const ModRow at = mod_list_[static_cast<std::size_t>(mod_rows_.selected)];
-        Mod &mod = mods_[static_cast<std::size_t>(at.mod)];
+        Mod &mod = mods_[static_cast<std::size_t>(mod_rows_.selected)];
         // With the game's Mods switch off (the Library's), choosing a mod turns the switch on and
         // that mod with it: nobody switches a mod in a list that is switched off.
         const bool revive = !game.mods_enabled;
-        if (at.cheat >= 0)
-        {
-            // One of the mod's cheats. Choosing it turns on what it runs behind: its mod, and the
-            // game's Mods switch. One of a group (two frame rates) takes the other's place, so
-            // the list is read again.
-            const Cheat &cheat = mod.cheats[static_cast<std::size_t>(at.cheat)];
-            const bool enabled = revive || !mod.enabled || !cheat.enabled;
-            const bool saved =
-                (!revive || services_.set_mods_enabled(game.title_id, true)) &&
-                (mod.enabled || services_.set_mod_enabled(game.title_id, mod.name, true)) &&
-                services_.set_cheat_enabled(game.title_id, mod.name, cheat.name, enabled);
-            read_mods(game);
-            if (mod_rows_.count != static_cast<int>(mod_list_.size()))
-                mod_rows_.reset(static_cast<int>(mod_list_.size()), 0);
-            say(saved ? tr("Saved for this game. Applies on next launch.") :
-                        tr("Could not save. Please try again."),
-                !saved);
-            cue(saved ? Cue::toggle : Cue::error);
-            return;
-        }
         const bool enabled = revive || !mod.enabled;
         const bool saved = (!revive || services_.set_mods_enabled(game.title_id, true)) &&
                            services_.set_mod_enabled(game.title_id, mod.name, enabled);
         if (saved)
             mod.enabled = enabled;
         count_mods(game, mods_);
+        say(saved ? tr("Saved for this game. Applies on next launch.") :
+                    tr("Could not save. Please try again."),
+            !saved);
+        cue(saved ? Cue::toggle : Cue::error);
+        return;
+    }
+    default:
+        return;
+    }
+}
+
+// ---------------------------------------------------------------- a game's cheats
+
+void Launcher::press_cheats(Key key)
+{
+    const Game &game = games_[static_cast<std::size_t>(library_.selected)];
+    switch (key)
+    {
+    case Key::circle:
+        // Back to the game's settings, on its Cheats row.
+        modal_ = modal_shown_ = Modal::game;
+        message_.clear();
+        cue(Cue::back);
+        return;
+    case Key::up:
+    case Key::down:
+        if (cheat_rows_.move(key == Key::down ? 1 : -1))
+        {
+            message_.clear();
+            cue(Cue::focus);
+        }
+        return;
+    case Key::cross:
+    case Key::left:
+    case Key::right:
+    {
+        if (cheats_.empty())
+            return;
+        bool saved = false;
+        if (cheat_rows_.selected == 0)
+        {
+            // The game's Cheats switch: all of its cheats on or off at once.
+            saved = services_.set_cheats_enabled(game.title_id, !cheats_enabled_);
+        }
+        else
+        {
+            // One cheat. With the game's Cheats switch off, choosing one turns the switch on and
+            // that cheat with it, as in the Mods list. One of a group (two frame rates) takes the
+            // other's place, so the list is read again.
+            const GameCheat &cheat = cheats_[static_cast<std::size_t>(cheat_rows_.selected - 1)];
+            const bool revive = !cheats_enabled_;
+            saved = (!revive || services_.set_cheats_enabled(game.title_id, true)) &&
+                    services_.set_cheat_enabled(game.title_id, cheat.mod, cheat.name, revive || !cheat.enabled);
+        }
+        read_cheats(game);
+        const int rows = cheats_.empty() ? 0 : 1 + static_cast<int>(cheats_.size());
+        if (cheat_rows_.count != rows)
+            cheat_rows_.reset(rows, 0);
         say(saved ? tr("Saved for this game. Applies on next launch.") :
                     tr("Could not save. Please try again."),
             !saved);

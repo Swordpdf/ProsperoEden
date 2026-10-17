@@ -232,6 +232,8 @@ void Launcher::press(Key key)
         return press_game(key);
     if (modal_ == Modal::mods)
         return press_mods(key);
+    if (modal_ == Modal::cheats)
+        return press_cheats(key);
     if (modal_ == Modal::game_options)
         return press_game_options(key);
     if (modal_ == Modal::mapping)
@@ -373,7 +375,7 @@ void Launcher::update(float dt)
     grid_rows_.update(dt);
     grid_x_.update(dt, t.cursor_spring);
     grid_y_.update(dt, t.cursor_spring);
-    pane_.target = modal_ == Modal::game_options || modal_ == Modal::mods ||
+    pane_.target = modal_ == Modal::game_options || modal_ == Modal::mods || modal_ == Modal::cheats ||
                            (modal_ == Modal::mapping && mapping_for_game_) ? 1.0f : 0.0f;
     pane_.update(dt, 18.0f);
     settings_.update(dt);
@@ -386,6 +388,7 @@ void Launcher::update(float dt)
     wallpaper_rows_.update(dt);
     game_rows_.update(dt);
     mod_rows_.update(dt);
+    cheat_rows_.update(dt);
     option_rows_.update(dt);
     mapping_rows_.update(dt);
     menu_mapping_rows_.update(dt);
@@ -749,7 +752,7 @@ void Launcher::draw(gfx::DrawList &list)
     // mapping is a dialog over that page.
     const float opened = tween::clamp01(modal_open_.value);
     const bool mapping_of_game = modal_shown_ == Modal::mapping && mapping_for_game_;
-    const bool page = modal_shown_ == Modal::game || modal_shown_ == Modal::mods ||
+    const bool page = modal_shown_ == Modal::game || modal_shown_ == Modal::mods || modal_shown_ == Modal::cheats ||
                       modal_shown_ == Modal::game_options || mapping_of_game;
     if (page)
         draw_game_page(c, opened);

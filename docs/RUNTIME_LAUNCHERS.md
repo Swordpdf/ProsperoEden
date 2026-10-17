@@ -96,7 +96,7 @@ can fail. Services and serialized fields are defined in
 | `library`, `home`, `profiles` | Library snapshots, recents, setup status and current profile |
 | `preferences`, `choices`, `game_settings` | Global and per-game settings and supported choices |
 | `status` | Clock, real controller mask, multiplayer phase, launch/sync/update/keyboard state |
-| `game_files`, `mods`, `setup` | Folder information, mods/cheats and setup details |
+| `game_files`, `mods`, `cheats`, `setup` | Folder information, a game's mods (each with `cheats_only` when it holds cheats alone), its cheats with the Cheats switch, and setup details |
 | `sources`, `downloads` | Remote-source catalog and native download queue |
 | `save_sync`, `save_sync_setup`, `pair_servers`, `pairing` | Native save synchronization and pairing |
 | `room_form`, `public_rooms` | Room form without a saved password, cached public directory |
@@ -109,7 +109,7 @@ can fail. Services and serialized fields are defined in
 | `profile.choose` (`handle` or `index`), `profile.add`, `profile.rename` (`index`, `step`), `profile.remove` (`index`) | Native profiles |
 | `preferences.set` (field patch), `game_settings.set` (`game`, `patch`), `game.docked` (`game`, `value`) | Existing settings storage |
 | `game_files.set` (`path`) | Existing game-files folder selection |
-| `mods.enabled`, `mod.enabled`, `cheat.enabled`, `mods.folder` | Native mod and cheat operations, using a library `game` handle |
+| `mods.enabled`, `mod.enabled`, `cheats.enabled`, `cheat.enabled` (`mod`, `name`), `mods.folder` | Native mod and cheat operations, using a library `game` handle |
 | `save.import`, `save.export` (`game`) | Native save transfer |
 | `sources.refresh`, `download.start` (`game`, `source`, `first`), `download.cancel` (`key`), `game.delete` (`game`, `confirmed`) | Native remote and file operations |
 | `room.refresh`, `room.leave`, `room.join` (connection fields), `room.join_public` (`index`, `nickname`, `password`) | Existing multiplayer services |

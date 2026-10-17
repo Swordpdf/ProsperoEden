@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Cheats chosen one by one. Eden runs every cheat of every mod that is on; a mod that lists
 // several (mods.h) has each of them chosen in the launcher instead (Library > Game settings >
-// Mods), and the ones not chosen are named here before the game starts. The derived
+// Cheats), and the ones not chosen are named here before the game starts. The derived
 // patch_manager.cpp (headless/CMakeLists.txt) passes each mod's cheat list through Append(),
 // which leaves those in the list but switched off: Eden's cheat machine skips them.
 #pragma once
@@ -22,6 +22,12 @@ inline std::string Key(std::string_view mod, std::string_view cheat) {
     return std::string(mod) + "#" + std::string(cheat);
 }
 
+// Every cheat of a mod at once: the game's Cheats switch off (mods.h) leaves a mod that also
+// patches the code or replaces files running without them.
+inline std::string AllOf(std::string_view mod) {
+    return std::string(mod) + "#*";
+}
+
 // The cheats that stay off in the game about to start (main.cpp fills it before Eden boots).
 inline std::vector<std::string>& Off() {
     static std::vector<std::string> off;
@@ -30,7 +36,8 @@ inline std::vector<std::string>& Off() {
 
 inline bool Runs(std::string_view mod, std::string_view cheat) {
     const auto& off = Off();
-    return std::find(off.begin(), off.end(), Key(mod, cheat)) == off.end();
+    return std::find(off.begin(), off.end(), Key(mod, cheat)) == off.end() &&
+           std::find(off.begin(), off.end(), AllOf(mod)) == off.end();
 }
 
 // A mod's cheat list as Eden parsed it, added to the game's: the first entry is the file's

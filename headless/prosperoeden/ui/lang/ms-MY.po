@@ -88,6 +88,10 @@ msgstr "Ditambah ke muat turun. Tetapan, Muat Turun memaparkan giliran."
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "Ditambah. Tekan Silang untuk bermain sebagai profil ini; kiri dan kanan untuk menukar namanya."
 
+#: pe/ui/library.cpp
+msgid "All cheats"
+msgstr "Semua cheat"
+
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
 msgstr "Semua kredit untuk emulator Eden adalah milik pembangun dan penyumbangnya."
@@ -227,9 +231,14 @@ msgid "Changed"
 msgstr "Diubah"
 
 #. What a mod is made of: cheat codes.
-#: eden_services.cpp, host/fake_services.cpp
+#: eden_services.cpp, host/fake_services.cpp, pe/ui/library.cpp
 msgid "Cheats"
 msgstr "Cheat"
+
+#. Shown under a cheat that came from the game's cheats folder (not from a mod).
+#: pe/ui/library.cpp
+msgid "Cheats folder"
+msgstr "Folder cheat"
 
 #: pe/ui/pairing.cpp
 msgid "Check that the code there is this one, and approve."
@@ -1093,6 +1102,15 @@ msgstr "Nama samaran"
 msgid "Nickname: {0}"
 msgstr "Nama samaran: {0}"
 
+#: pe/ui/library.cpp
+msgid "No cheats"
+msgstr "Tiada cheat"
+
+#. <build ID>.txt stays as it is: a cheat file is named after the game version's build ID. {0} is a folder such as roms/Game/cheats/.
+#: pe/ui/library.cpp
+msgid "No cheats for this game yet. Copy its cheat files (<build ID>.txt) to {0}."
+msgstr "Belum ada cheat untuk game ini. Salin fail cheatnya (<build ID>.txt) ke {0}."
+
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
 msgstr "Tiada sumber muat turun disediakan. Simpan fail bernama {0} yang menyenaraikan sumber anda, seperti contoh ini dengan pelayan RomM, kemudian buka menu ini semula. Muat turun memerlukan pelayan FTP berjalan pada konsol, pada port {1}."
@@ -1118,10 +1136,9 @@ msgstr "Tiada folder di sini."
 msgid "No mods"
 msgstr "Tiada mod"
 
-#. {0} is a folder; roms/ is a folder name (unchanged).
 #: pe/ui/library.cpp
-msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
-msgstr "Belum ada mod untuk game ini. Salin folder setiap mod ke {0}, bersebelahan dengan roms/."
+msgid "No mods for this game yet. Copy each mod's folder to {0}."
+msgstr "Belum ada mod untuk game ini. Salin folder setiap mod ke {0}."
 
 #: pe/ui/multiplayer.cpp
 msgid "No public rooms are available."

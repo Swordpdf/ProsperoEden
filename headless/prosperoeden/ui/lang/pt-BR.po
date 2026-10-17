@@ -88,6 +88,10 @@ msgstr "Adicionado aos downloads. Configurações, Downloads mostra a fila."
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "Adicionado. Xis joga com este perfil; esquerda e direita mudam o nome."
 
+#: pe/ui/library.cpp
+msgid "All cheats"
+msgstr "Todas as trapaças"
+
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
 msgstr "Todo o crédito pelo emulador Eden é dos seus desenvolvedores e colaboradores."
@@ -227,9 +231,14 @@ msgid "Changed"
 msgstr "Alterado"
 
 #. What a mod is made of: cheat codes.
-#: eden_services.cpp, host/fake_services.cpp
+#: eden_services.cpp, host/fake_services.cpp, pe/ui/library.cpp
 msgid "Cheats"
 msgstr "Trapaças"
+
+#. Shown under a cheat that came from the game's cheats folder (not from a mod).
+#: pe/ui/library.cpp
+msgid "Cheats folder"
+msgstr "Pasta de trapaças"
 
 #: pe/ui/pairing.cpp
 msgid "Check that the code there is this one, and approve."
@@ -1093,6 +1102,15 @@ msgstr "Apelido"
 msgid "Nickname: {0}"
 msgstr "Apelido: {0}"
 
+#: pe/ui/library.cpp
+msgid "No cheats"
+msgstr "Sem trapaças"
+
+#. <build ID>.txt stays as it is: a cheat file is named after the game version's build ID. {0} is a folder such as roms/Game/cheats/.
+#: pe/ui/library.cpp
+msgid "No cheats for this game yet. Copy its cheat files (<build ID>.txt) to {0}."
+msgstr "Este jogo ainda não tem trapaças. Copie os arquivos de trapaças dele (<build ID>.txt) para {0}."
+
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
 msgstr "Nenhuma fonte de download está configurada. Salve um arquivo chamado {0} que liste suas fontes, como este faz com um servidor RomM, e abra este menu de novo. Os downloads precisam de um servidor FTP em execução no console, na porta {1}."
@@ -1118,10 +1136,9 @@ msgstr "Nenhuma pasta aqui."
 msgid "No mods"
 msgstr "Sem mods"
 
-#. {0} is a folder; roms/ is a folder name (unchanged).
 #: pe/ui/library.cpp
-msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
-msgstr "Este jogo ainda não tem mods. Copie a pasta de cada mod para {0}, ao lado de roms/."
+msgid "No mods for this game yet. Copy each mod's folder to {0}."
+msgstr "Este jogo ainda não tem mods. Copie a pasta de cada mod para {0}."
 
 #: pe/ui/multiplayer.cpp
 msgid "No public rooms are available."

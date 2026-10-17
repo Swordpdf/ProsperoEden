@@ -59,10 +59,10 @@ Local-wireless multiplayer through Eden rooms is new in v1.000.110 and experimen
 - **Your language** - the launcher follows the language the PS5 is set to (29 languages; English otherwise).
 - **Accessibility** - larger text, high contrast and reduced motion, in **Settings > Accessibility**.
 - **Save data in and out** - import a game's save from a folder or from a Ryujinx data folder, and export a copy (Triangle in the Library, then **Save data**).
-- **Game updates and DLC** - put update and DLC files (NSP or XCI) in the `updates` folder next to `roms`, or keep each game in a folder of its own in `roms` together with its update and DLC; see [Game files folder](docs/INSTALL.md#game-files-folder). They apply when the game starts, and each game's details show the update version and DLC count.
+- **Game updates and DLC** - keep each game in a folder of its own in `roms`, with its update and DLC files (NSP or XCI) beside it; see [Game files folder](docs/INSTALL.md#game-files-folder). They apply when the game starts, and each game's details show the update version and DLC count.
 - **Download sources** - the games on servers in your network, such as a [RomM](https://github.com/rommapp/romm) server, appear in the Library next to the ones on the console. A game is downloaded when you play it, or ahead of time through a download queue, and then runs from the console like any other: nothing is streamed. Downloads need an FTP server running on the console; see [Download sources](docs/DOWNLOADS.md#download-sources).
 - **Save sync** - each profile can keep its save data on a server, such as a [RomM](https://github.com/rommapp/romm) server, as Steam does: it is synced before a game starts and after it ended, and when it changed on two devices you choose which one stays. A profile is paired with its server by a QR code, no typing. See [Save sync](docs/SAVES.md#save-sync).
-- **Mods** - patches, replacement game files and cheats for a game, from a `mods` folder next to `roms`, each switched on or off in the game's settings (Triangle in the Library, then **Mods**).
+- **Mods and cheats** - patches and replacement game files from the `mods` folder in the game's folder, and cheats from its `cheats` folder. Each has a list of its own in the game's settings (Triangle in the Library, then **Mods** or **Cheats**), where every mod and every cheat is switched on or off, and a switch for all of them at once.
 - **Performance switches** - seven switches that trade accuracy for speed (compiling a game's code ahead, asynchronous shaders, faster GPU, CPU and DMA emulation, and more) in **Settings > Performance**; see [Performance settings](docs/SETTINGS.md#performance-settings).
 - **Shader cache** - shaders compiled in earlier sessions are loaded when a game starts, so an effect stutters only the first time it appears.
 - **In-game shortcuts** - a performance overlay (Touchpad + R1), and Touchpad + L1 to end the game and return to the library. Leaving takes ten seconds at most, also while a game is still loading.
@@ -95,7 +95,7 @@ Local-wireless multiplayer through Eden rooms is new in v1.000.110 and experimen
 | [Settings](docs/SETTINGS.md) | The Performance switches, post-processing (ReShade FX presets), frame generation, profiles, settings per game, button mapping, language and accessibility |
 | [Save data](docs/SAVES.md) | Moving save data in and out, and save sync with a server |
 | [Download sources and RomM](docs/DOWNLOADS.md) | Games from a RomM server or another source in your network, and the download queue |
-| [Mods](docs/MODS.md) | Patches, replacement game files and cheats |
+| [Mods and cheats](docs/MODS.md) | Patches and replacement game files, and cheats, each in a list of their own |
 | [Multiplayer](docs/MULTIPLAYER.md) | Local wireless play through Eden rooms: setup and current limits |
 | [Forwarders](docs/FORWARDER.md) | Starting a game from its own tile on the PS5's home screen |
 | [Themes](docs/THEMES.md) | What a launcher theme is made of |

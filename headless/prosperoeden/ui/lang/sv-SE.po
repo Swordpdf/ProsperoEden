@@ -88,6 +88,10 @@ msgstr "Tillagt bland nedladdningarna. Inställningar, Nedladdningar visar kön.
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "Tillagd. Kryss spelar som den här profilen; vänster och höger byter namn."
 
+#: pe/ui/library.cpp
+msgid "All cheats"
+msgstr "Allt fusk"
+
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
 msgstr "All ära för Eden-emulatorn går till dess utvecklare och bidragsgivare."
@@ -227,9 +231,14 @@ msgid "Changed"
 msgstr "Ändrad"
 
 #. What a mod is made of: cheat codes.
-#: eden_services.cpp, host/fake_services.cpp
+#: eden_services.cpp, host/fake_services.cpp, pe/ui/library.cpp
 msgid "Cheats"
 msgstr "Fusk"
+
+#. Shown under a cheat that came from the game's cheats folder (not from a mod).
+#: pe/ui/library.cpp
+msgid "Cheats folder"
+msgstr "Fuskmapp"
 
 #: pe/ui/pairing.cpp
 msgid "Check that the code there is this one, and approve."
@@ -1093,6 +1102,15 @@ msgstr "Smeknamn"
 msgid "Nickname: {0}"
 msgstr "Smeknamn: {0}"
 
+#: pe/ui/library.cpp
+msgid "No cheats"
+msgstr "Inget fusk"
+
+#. <build ID>.txt stays as it is: a cheat file is named after the game version's build ID. {0} is a folder such as roms/Game/cheats/.
+#: pe/ui/library.cpp
+msgid "No cheats for this game yet. Copy its cheat files (<build ID>.txt) to {0}."
+msgstr "Inget fusk för det här spelet än. Kopiera dess fuskfiler (<build ID>.txt) till {0}."
+
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
 msgstr "Ingen nedladdningskälla är konfigurerad. Spara en fil med namnet {0} som listar dina källor, som den här gör med en RomM-server, och öppna sedan den här menyn igen. Nedladdningar kräver en FTP-server som körs på konsolen, på port {1}."
@@ -1118,10 +1136,9 @@ msgstr "Inga mappar här."
 msgid "No mods"
 msgstr "Inga moddar"
 
-#. {0} is a folder; roms/ is a folder name (unchanged).
 #: pe/ui/library.cpp
-msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
-msgstr "Inga moddar för det här spelet än. Kopiera varje modds mapp till {0}, bredvid roms/."
+msgid "No mods for this game yet. Copy each mod's folder to {0}."
+msgstr "Inga moddar för det här spelet än. Kopiera varje modds mapp till {0}."
 
 #: pe/ui/multiplayer.cpp
 msgid "No public rooms are available."

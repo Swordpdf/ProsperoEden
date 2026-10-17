@@ -411,13 +411,24 @@ struct Cheat
     bool enabled = false; // chosen: runs when its mod is on
 };
 
-// A mod of one game, from the game files folder's mods/<title ID>/.
+// A mod of one game, from its mods folder.
 struct Mod
 {
     std::string name;    // its folder's name
     std::string kind;    // what it is made of: "Patch", "Files", "Cheats"
     bool enabled = true; // used when the game starts
     std::vector<Cheat> cheats; // its cheats when it lists several; empty for a single one
+    // Cheats and nothing else: the Cheats list has it (Services::cheats), not the Mods list.
+    bool cheats_only = false;
+};
+
+// One cheat of a game as the Cheats list has it, whichever file it came from: a mod's cheats
+// folder, a loose cheat file, or the game's cheats folder.
+struct GameCheat
+{
+    std::string mod;      // the mod it comes from, as Services::set_cheat_enabled names it
+    std::string name;     // shown
+    bool enabled = false; // runs when the game starts (with the game's Cheats switch on)
 };
 
 // Where a save to import was found, in the game files folder.
@@ -599,7 +610,7 @@ class Services
         return false;
     }
 
-    // ---- mods: patches, replacement files and cheats the player added for a game ----
+    // ---- mods and cheats: patches, replacement files and cheats the player added for a game ----
     virtual std::vector<Mod> mods(std::uint64_t)
     {
         return {};
@@ -608,11 +619,36 @@ class Services
     {
         return false;
     }
-    // One cheat of a mod that lists several. Choosing one of a group (two frame rates) takes the
-    // other out: the list is read again afterwards.
+    // One cheat of a mod (GameCheat::mod and GameCheat::name). Choosing one of a group (two frame
+    // rates) takes the other out: the list is read again afterwards. A mod of one cheat alone is
+    // switched as a whole.
     virtual bool set_cheat_enabled(std::uint64_t, const std::string &, const std::string &, bool)
     {
         return false;
+    }
+    // Every cheat of a game, for its Cheats list. By default: those of mods() that list several.
+    virtual std::vector<GameCheat> cheats(std::uint64_t title_id)
+    {
+        std::vector<GameCheat> result;
+        for (const Mod &mod : mods(title_id))
+            for (const Cheat &cheat : mod.cheats)
+                result.push_back({mod.name, cheat.name, cheat.enabled});
+        return result;
+    }
+    // One switch for all of a game's cheats, apart from the Mods switch, on unless turned off.
+    // The cheats keep their own switches behind it.
+    virtual bool cheats_enabled(std::uint64_t)
+    {
+        return true;
+    }
+    virtual bool set_cheats_enabled(std::uint64_t, bool)
+    {
+        return false;
+    }
+    // Where a game's cheat files go, as the player would write it.
+    virtual std::string cheats_folder(std::uint64_t)
+    {
+        return {};
     }
     // One switch for all of a game's mods (the Library's Mods switch), on unless turned off. The
     // mods keep their own switches behind it.
@@ -624,7 +660,7 @@ class Services
     {
         return false;
     }
-    // Where a game's mods go, as the player would write it: "mods/0100.../".
+    // Where a game's mods go, as the player would write it: "roms/<game>/mods/".
     virtual std::string mods_folder(std::uint64_t)
     {
         return {};

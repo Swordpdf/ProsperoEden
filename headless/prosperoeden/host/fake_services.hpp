@@ -318,14 +318,17 @@ class FakeServices : public ui::Services
         *message = fill(tr("Exported to {0}."), {"save-export/0100A00B00003000-20261001-213000"});
         return true;
     }
-    // Sample mods, for two of the games: three, the second switched off, the third with cheats
-    // chosen one by one (its two frame rates replace each other); none when has_mods is cleared.
+    // Sample mods, for three of the games and their copies: three, the second switched off, the third with one cheat
+    // beside its files; and two of cheats alone, the cheats folder with cheats chosen one by one
+    // (its two frame rates replace each other) and a loose file of one cheat. None when has_mods
+    // is cleared.
     bool has_mods = true;
     std::vector<ui::Mod> mods(std::uint64_t) override;
     bool set_mod_enabled(std::uint64_t, const std::string &name, bool enabled) override;
     bool set_cheat_enabled(std::uint64_t, const std::string &mod, const std::string &cheat,
                            bool enabled) override;
-    // One Mods switch for every sample game.
+    std::vector<ui::GameCheat> cheats(std::uint64_t title_id) override;
+    // One Mods switch and one Cheats switch for every sample game.
     bool mods_enabled(std::uint64_t) override
     {
         return mods_enabled_;
@@ -335,9 +338,23 @@ class FakeServices : public ui::Services
         mods_enabled_ = enabled;
         return true;
     }
-    std::string mods_folder(std::uint64_t) override
+    bool cheats_enabled(std::uint64_t) override
     {
-        return "mods/0100A00B00003000/";
+        return cheats_enabled_;
+    }
+    bool set_cheats_enabled(std::uint64_t, bool enabled) override
+    {
+        cheats_enabled_ = enabled;
+        return true;
+    }
+    // Every sample game is in a folder of its own in roms/, named after it.
+    std::string mods_folder(std::uint64_t title_id) override
+    {
+        return "roms/" + game_folder(title_id) + "/mods/";
+    }
+    std::string cheats_folder(std::uint64_t title_id) override
+    {
+        return "roms/" + game_folder(title_id) + "/cheats/";
     }
     bool make_mods_folder(std::uint64_t) override
     {
@@ -431,7 +448,17 @@ class FakeServices : public ui::Services
     std::vector<std::uint64_t> modded_; // the games that have the sample mods
     std::vector<std::string> mods_off_{"Sharper textures"};
     std::vector<std::string> cheats_on_{"60 FPS"};
+    bool bonus_cheat_ = true; // the one cheat beside the third mod's files
+    // The name of a sample game, as its folder in roms/ would have it.
+    std::string game_folder(std::uint64_t title_id) const
+    {
+        for (const ui::Game &game : games_)
+            if (game.title_id == title_id)
+                return game.name;
+        return "Game";
+    }
     bool mods_enabled_ = true;
+    bool cheats_enabled_ = true;
 };
 
 } // namespace pe::host

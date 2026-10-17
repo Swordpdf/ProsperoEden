@@ -88,6 +88,10 @@ msgstr "Đã thêm vào mục tải xuống. Cài đặt, Tải xuống hiển t
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "Đã thêm. Chéo để chơi bằng hồ sơ này; trái và phải đổi tên."
 
+#: pe/ui/library.cpp
+msgid "All cheats"
+msgstr "Tất cả mã gian lận"
+
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
 msgstr "Mọi công lao về trình giả lập Eden thuộc về các nhà phát triển và người đóng góp của dự án."
@@ -227,9 +231,14 @@ msgid "Changed"
 msgstr "Đã đổi"
 
 #. What a mod is made of: cheat codes.
-#: eden_services.cpp, host/fake_services.cpp
+#: eden_services.cpp, host/fake_services.cpp, pe/ui/library.cpp
 msgid "Cheats"
 msgstr "Mã gian lận"
+
+#. Shown under a cheat that came from the game's cheats folder (not from a mod).
+#: pe/ui/library.cpp
+msgid "Cheats folder"
+msgstr "Thư mục mã gian lận"
 
 #: pe/ui/pairing.cpp
 msgid "Check that the code there is this one, and approve."
@@ -1093,6 +1102,15 @@ msgstr "Biệt danh"
 msgid "Nickname: {0}"
 msgstr "Biệt danh: {0}"
 
+#: pe/ui/library.cpp
+msgid "No cheats"
+msgstr "Không có mã gian lận"
+
+#. <build ID>.txt stays as it is: a cheat file is named after the game version's build ID. {0} is a folder such as roms/Game/cheats/.
+#: pe/ui/library.cpp
+msgid "No cheats for this game yet. Copy its cheat files (<build ID>.txt) to {0}."
+msgstr "Trò chơi này chưa có mã gian lận. Hãy chép các tệp mã gian lận của nó (<build ID>.txt) vào {0}."
+
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
 msgstr "Chưa thiết lập nguồn tải xuống. Lưu một tệp tên {0} liệt kê các nguồn của bạn, như tệp này làm với một máy chủ RomM, rồi mở lại menu này. Tải xuống cần một máy chủ FTP chạy trên máy, ở cổng {1}."
@@ -1118,10 +1136,9 @@ msgstr "Không có thư mục nào."
 msgid "No mods"
 msgstr "Không có mod"
 
-#. {0} is a folder; roms/ is a folder name (unchanged).
 #: pe/ui/library.cpp
-msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
-msgstr "Trò chơi này chưa có mod. Hãy chép thư mục của từng mod vào {0}, cạnh roms/."
+msgid "No mods for this game yet. Copy each mod's folder to {0}."
+msgstr "Trò chơi này chưa có mod. Hãy chép thư mục của từng mod vào {0}."
 
 #: pe/ui/multiplayer.cpp
 msgid "No public rooms are available."

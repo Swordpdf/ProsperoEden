@@ -88,6 +88,10 @@ msgstr "เพิ่ม​ใน​การ​ดาวน์โหลด​แ
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "เพิ่ม​แล้ว กากบาท​เล่น​ด้วย​โปรไฟล์​นี้ ซ้าย​และ​ขวา​เปลี่ยน​ชื่อ"
 
+#: pe/ui/library.cpp
+msgid "All cheats"
+msgstr "สูตรโกง​ทั้งหมด"
+
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
 msgstr "เครดิต​ทั้งหมด​ของ​อีมูเลเตอร์ Eden ​เป็นของ​นักพัฒนา​และ​ผู้ร่วมพัฒนา"
@@ -227,9 +231,14 @@ msgid "Changed"
 msgstr "เปลี่ยนแล้ว"
 
 #. What a mod is made of: cheat codes.
-#: eden_services.cpp, host/fake_services.cpp
+#: eden_services.cpp, host/fake_services.cpp, pe/ui/library.cpp
 msgid "Cheats"
 msgstr "สูตรโกง"
+
+#. Shown under a cheat that came from the game's cheats folder (not from a mod).
+#: pe/ui/library.cpp
+msgid "Cheats folder"
+msgstr "โฟลเดอร์​สูตรโกง"
 
 #: pe/ui/pairing.cpp
 msgid "Check that the code there is this one, and approve."
@@ -1093,6 +1102,15 @@ msgstr "ชื่อเล่น"
 msgid "Nickname: {0}"
 msgstr "ชื่อเล่น: {0}"
 
+#: pe/ui/library.cpp
+msgid "No cheats"
+msgstr "ไม่มี​สูตรโกง"
+
+#. <build ID>.txt stays as it is: a cheat file is named after the game version's build ID. {0} is a folder such as roms/Game/cheats/.
+#: pe/ui/library.cpp
+msgid "No cheats for this game yet. Copy its cheat files (<build ID>.txt) to {0}."
+msgstr "เกม​นี้​ยัง​ไม่มี​สูตรโกง คัดลอก​ไฟล์​สูตรโกง​ของ​เกม (<build ID>.txt) ไป​ที่ {0}"
+
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
 msgstr "ยัง​ไม่ได้​ตั้งค่า​แหล่ง​ดาวน์โหลด บันทึก​ไฟล์​ชื่อ {0} ที่​ระบุ​แหล่ง​ของ​คุณ เหมือน​ตัวอย่าง​นี้​ที่​ใช้​เซิร์ฟเวอร์ RomM แล้ว​เปิด​เมนู​นี้​อีกครั้ง การ​ดาวน์โหลด​ต้อง​มี​เซิร์ฟเวอร์ FTP ทำงาน​บน​เครื่อง ที่​พอร์ต {1}"
@@ -1118,10 +1136,9 @@ msgstr "ไม่มีโฟลเดอร์ที่นี่"
 msgid "No mods"
 msgstr "ไม่มี​ม็อด"
 
-#. {0} is a folder; roms/ is a folder name (unchanged).
 #: pe/ui/library.cpp
-msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
-msgstr "เกม​นี้​ยัง​ไม่มี​ม็อด คัดลอก​โฟลเดอร์​ของ​แต่ละ​ม็อด​ไป​ที่ {0} ข้าง roms/"
+msgid "No mods for this game yet. Copy each mod's folder to {0}."
+msgstr "เกม​นี้​ยัง​ไม่มี​ม็อด คัดลอก​โฟลเดอร์​ของ​แต่ละ​ม็อด​ไป​ที่ {0}"
 
 #: pe/ui/multiplayer.cpp
 msgid "No public rooms are available."

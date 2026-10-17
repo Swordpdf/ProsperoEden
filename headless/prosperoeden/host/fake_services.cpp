@@ -35,7 +35,7 @@ struct Sample
 
 // Invented titles: nothing here names a real game.
 constexpr Sample kSamples[] = {
-    {"Starfall Odyssey", "NSP", "6.4 GB", "1.2.0", 2, "English (US)", "", 0x1b2a6b, 0x40b3c8, 0xffd166},
+    {"Starfall Odyssey", "NSP", "6.4 GB", "1.2.0", 2, "English (US)", "", 0x1b2a6b, 0x40b3c8, 0xffd166, true},
     {"Moss & Lantern", "XCI", "2.1 GB", "", 0, "English (US)", "", 0x16402f, 0x7bc86c, 0xf4e285},
     {"Kart Carnival Deluxe", "NSP", "7.8 GB", "3.0.1", 48, "English (US)", "", 0xb3261e, 0xffb238, 0xffffff},
     {"Tiny Harbor", "NSP", "512.0 MB", "", 0, "English (US)", "", 0x256d8f, 0x9bd8e6, 0xfff3d6},
@@ -206,7 +206,13 @@ FakeServices::FakeServices(const std::string &covers_directory)
     for(int extra=static_cast<int>(games_.size());extra<64;++extra) {
         ui::Game game=games_[static_cast<std::size_t>(extra)%games_.size()];
         game.name="Sample Software "+std::to_string(extra+1); game.file=game.name+".nsp";
-        game.title_id=0x0100C00000000000ull+static_cast<std::uint64_t>(extra); games_.push_back(std::move(game));
+        // A copy of a game with the sample mods has them too: the game the preview's Library
+        // settles on is one.
+        const bool modded = std::find(modded_.begin(), modded_.end(), game.title_id) != modded_.end();
+        game.title_id=0x0100C00000000000ull+static_cast<std::uint64_t>(extra);
+        if (modded)
+            modded_.push_back(game.title_id);
+        games_.push_back(std::move(game));
     }
     std::sort(games_.begin(), games_.end(),
               [](const ui::Game &a, const ui::Game &b) { return a.name < b.name; });
@@ -379,20 +385,45 @@ std::vector<ui::Mod> FakeServices::mods(std::uint64_t title_id)
         return {};
     std::vector<ui::Mod> mods = {
         {"60 FPS", tr("Patch"), true, {}},
+        {"Cheats folder", tr("Cheats"), true, {}, true},
         {"Sharper textures", tr("Files"), true, {}},
         {"Starter pack", std::string(tr("Files")) + ", " + tr("Cheats"), true, {}},
+        {"cheat_lives.txt", tr("Cheats"), true, {}, true},
     };
     for (ui::Mod &mod : mods)
         mod.enabled = std::find(mods_off_.begin(), mods_off_.end(), mod.name) == mods_off_.end();
     for (const char *cheat : {"60 FPS", "30 FPS", "Infinite health", "All items", "Moon jump"})
-        mods.back().cheats.push_back(
+        mods[1].cheats.push_back(
             {cheat, std::find(cheats_on_.begin(), cheats_on_.end(), cheat) != cheats_on_.end()});
     return mods;
 }
 
-bool FakeServices::set_cheat_enabled(std::uint64_t, const std::string &, const std::string &cheat,
+std::vector<ui::GameCheat> FakeServices::cheats(std::uint64_t title_id)
+{
+    std::vector<ui::GameCheat> cheats;
+    for (const ui::Mod &mod : mods(title_id))
+    {
+        for (const ui::Cheat &cheat : mod.cheats)
+            cheats.push_back({mod.name, cheat.name, cheat.enabled});
+        if (mod.name == "Starter pack")
+            cheats.push_back({mod.name, "Bonus outfit", bonus_cheat_});
+        if (mod.name == "cheat_lives.txt")
+            cheats.push_back({mod.name, "Infinite lives", mod.enabled});
+    }
+    return cheats;
+}
+
+bool FakeServices::set_cheat_enabled(std::uint64_t title_id, const std::string &mod, const std::string &cheat,
                                      bool enabled)
 {
+    // The cheats of mods with one: as EdenServices keeps them.
+    if (mod == "Starter pack")
+    {
+        bonus_cheat_ = enabled;
+        return true;
+    }
+    if (mod == "cheat_lives.txt")
+        return set_mod_enabled(title_id, mod, enabled);
     const auto drop = [this](const std::string &name)
     { cheats_on_.erase(std::remove(cheats_on_.begin(), cheats_on_.end(), name), cheats_on_.end()); };
     drop(cheat);

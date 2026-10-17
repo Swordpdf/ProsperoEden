@@ -1284,8 +1284,8 @@ int main(int argc, char** argv) {
             std::snprintf(title_id, sizeof(title_id), "%016llx",
                           static_cast<unsigned long long>(eden_game_title_id(guest)));
             // The game's mods, minus those switched off in the launcher (Library > Game settings >
-            // Mods): Eden's patch manager skips the names in this list. With the Library's Mods
-            // switch off for the game, every one of them is in it.
+            // Mods and Cheats): Eden's patch manager skips the names in this list. The game's Mods
+            // and Cheats switches add theirs (mods.h).
             const u64 title = eden_game_title_id(guest);
             // A game in its own folder in roms/ (issue 168) brings its update, DLC, mods and cheats.
             Eden::Mods::SessionGameFolder().clear();
@@ -1298,15 +1298,14 @@ int main(int argc, char** argv) {
             }
             const auto all_mods = Eden::Mods::List(
                 {Eden::AssetsPath("mods"), Eden::AssetsPath("cheats"), Eden::Mods::SessionGameFolder()}, title);
-            auto mods_off = Eden::LoadDisabledMods(title);
-            if (!Eden::LoadModsEnabled(title)) {
-                for (const auto& mod : all_mods)
-                    if (std::find(mods_off.begin(), mods_off.end(), mod.name) == mods_off.end())
-                        mods_off.push_back(mod.name);
-            }
             // Of a mod that lists several cheats, only the ones chosen there run (cheats.h).
-            const auto cheats_on = Eden::LoadChosenCheats(title);
-            Eden::Cheats::Off() = Eden::Mods::CheatsOff(all_mods, cheats_on);
+            const bool cheats_enabled = Eden::LoadCheatsEnabled(title);
+            const auto cheats_on = cheats_enabled ? Eden::LoadChosenCheats(title) : std::vector<std::string>{};
+            auto switched = Eden::Mods::Switches(all_mods, Eden::LoadDisabledMods(title), cheats_on,
+                                                 Eden::LoadCheatsOff(title), Eden::LoadModsEnabled(title),
+                                                 cheats_enabled);
+            Eden::Cheats::Off() = std::move(switched.cheats_off);
+            const auto& mods_off = switched.mods_off;
             const std::string mods = Eden::Mods::Summary(all_mods, mods_off, cheats_on);
             Settings::values.disabled_addons[title] = mods_off;
             Eden::Report("launch", ("Mods: " + mods).c_str());

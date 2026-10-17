@@ -30,7 +30,6 @@ constexpr int kViewAll = kFirstRecent + kRecents;
 
 // The library grid on the home screen shares these with library.cpp.
 constexpr int kGridColumns = 4;
-constexpr float kGameKindPitch = 80.0f;
 
 // The words at the left, the cover at the right.
 constexpr float kWords = 1120.0f;
@@ -156,8 +155,8 @@ void Launcher::press_home(Key key)
             read_mods(games_[static_cast<std::size_t>(library_.selected)]);
             open_modal(Modal::game);
             pane_.snap(0.0f);
-            game_rows_.visible = 10;
-            game_rows_.pitch = kGameKindPitch;
+            game_rows_.visible = 11;
+            game_rows_.pitch = game_kind_pitch();
             game_rows_.reset(dialog_rows(Modal::game), 0);
             return;
         }
@@ -179,7 +178,7 @@ void Launcher::press_home(Key key)
             Game &chosen = games_[static_cast<std::size_t>(library_.selected)];
             const bool saved = services_.set_mods_enabled(chosen.title_id, !chosen.mods_enabled);
             if (saved)
-                count_mods(chosen, services_.mods(chosen.title_id));
+                count_mods(chosen, game_mods(chosen.title_id));
             say(saved ? tr("Saved for this game. Applies on next launch.") :
                         tr("Could not save. Please try again."),
                 !saved);

@@ -88,6 +88,10 @@ msgstr "أُضيفت إلى التنزيلات. قائمة الانتظار في
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "تمت الإضافة. زر إكس للّعب بهذا الملف؛ يسار ويمين لتغيير اسمه."
 
+#: pe/ui/library.cpp
+msgid "All cheats"
+msgstr "كل شفرات الغش"
+
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
 msgstr "كل الفضل في محاكي Eden يعود إلى مطوّريه والمساهمين فيه."
@@ -227,9 +231,14 @@ msgid "Changed"
 msgstr "مُعدَّل"
 
 #. What a mod is made of: cheat codes.
-#: eden_services.cpp, host/fake_services.cpp
+#: eden_services.cpp, host/fake_services.cpp, pe/ui/library.cpp
 msgid "Cheats"
 msgstr "شفرات غش"
+
+#. Shown under a cheat that came from the game's cheats folder (not from a mod).
+#: pe/ui/library.cpp
+msgid "Cheats folder"
+msgstr "مجلد شفرات الغش"
 
 #: pe/ui/pairing.cpp
 msgid "Check that the code there is this one, and approve."
@@ -1093,6 +1102,15 @@ msgstr "الاسم المستعار"
 msgid "Nickname: {0}"
 msgstr "الاسم المستعار: {0}"
 
+#: pe/ui/library.cpp
+msgid "No cheats"
+msgstr "لا توجد شفرات غش"
+
+#. <build ID>.txt stays as it is: a cheat file is named after the game version's build ID. {0} is a folder such as roms/Game/cheats/.
+#: pe/ui/library.cpp
+msgid "No cheats for this game yet. Copy its cheat files (<build ID>.txt) to {0}."
+msgstr "لا توجد شفرات غش لهذه اللعبة بعد. انسخ ملفات شفرات الغش الخاصة بها (<build ID>.txt) إلى {0}."
+
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
 msgstr "لم يُعَدّ أي مصدر تنزيل. احفظ ملفًا باسم {0} يسرد مصادرك، كما يفعل هذا الملف مع خادم RomM، ثم افتح هذه القائمة مجددًا. التنزيلات تحتاج إلى خادم FTP يعمل على الجهاز، على المنفذ {1}."
@@ -1118,10 +1136,9 @@ msgstr "لا توجد مجلدات هنا."
 msgid "No mods"
 msgstr "لا توجد تعديلات"
 
-#. {0} is a folder; roms/ is a folder name (unchanged).
 #: pe/ui/library.cpp
-msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
-msgstr "لا توجد تعديلات لهذه اللعبة بعد. انسخ مجلد كل تعديل إلى {0} بجوار roms/"
+msgid "No mods for this game yet. Copy each mod's folder to {0}."
+msgstr "لا توجد تعديلات لهذه اللعبة بعد. انسخ مجلد كل تعديل إلى {0}."
 
 #: pe/ui/multiplayer.cpp
 msgid "No public rooms are available."

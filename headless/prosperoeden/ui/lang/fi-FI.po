@@ -88,6 +88,10 @@ msgstr "Lisätty latauksiin. Jono näkyy kohdassa Asetukset, Lataukset."
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "Lisätty. Risti pelaa tällä profiililla; vasen ja oikea vaihtavat nimen."
 
+#: pe/ui/library.cpp
+msgid "All cheats"
+msgstr "Kaikki huijaukset"
+
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
 msgstr "Kaikki kunnia Eden-emulaattorista kuuluu sen kehittäjille ja avustajille."
@@ -227,9 +231,14 @@ msgid "Changed"
 msgstr "Muutettu"
 
 #. What a mod is made of: cheat codes.
-#: eden_services.cpp, host/fake_services.cpp
+#: eden_services.cpp, host/fake_services.cpp, pe/ui/library.cpp
 msgid "Cheats"
 msgstr "Huijaukset"
+
+#. Shown under a cheat that came from the game's cheats folder (not from a mod).
+#: pe/ui/library.cpp
+msgid "Cheats folder"
+msgstr "Huijauskansio"
 
 #: pe/ui/pairing.cpp
 msgid "Check that the code there is this one, and approve."
@@ -1093,6 +1102,15 @@ msgstr "Nimimerkki"
 msgid "Nickname: {0}"
 msgstr "Nimimerkki: {0}"
 
+#: pe/ui/library.cpp
+msgid "No cheats"
+msgstr "Ei huijauksia"
+
+#. <build ID>.txt stays as it is: a cheat file is named after the game version's build ID. {0} is a folder such as roms/Game/cheats/.
+#: pe/ui/library.cpp
+msgid "No cheats for this game yet. Copy its cheat files (<build ID>.txt) to {0}."
+msgstr "Tällä pelillä ei ole vielä huijauksia. Kopioi sen huijaustiedostot (<build ID>.txt) kohteeseen {0}."
+
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
 msgstr "Latauslähdettä ei ole määritetty. Tallenna tiedosto nimellä {0}, jossa lähteesi luetellaan, kuten tässä RomM-palvelimen kanssa, ja avaa tämä valikko uudelleen. Lataukset vaativat konsolissa käynnissä olevan FTP-palvelimen portissa {1}."
@@ -1118,10 +1136,9 @@ msgstr "Täällä ei ole kansioita."
 msgid "No mods"
 msgstr "Ei modeja"
 
-#. {0} is a folder; roms/ is a folder name (unchanged).
 #: pe/ui/library.cpp
-msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
-msgstr "Tällä pelillä ei ole vielä modeja. Kopioi kunkin modin kansio kohteeseen {0}, roms/-kansion viereen."
+msgid "No mods for this game yet. Copy each mod's folder to {0}."
+msgstr "Tällä pelillä ei ole vielä modeja. Kopioi kunkin modin kansio kohteeseen {0}."
 
 #: pe/ui/multiplayer.cpp
 msgid "No public rooms are available."

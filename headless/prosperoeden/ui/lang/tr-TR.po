@@ -88,6 +88,10 @@ msgstr "İndirmelere eklendi. Ayarlar, İndirmeler sırayı gösterir."
 msgid "Added. Cross plays as this profile; left and right change its name."
 msgstr "Eklendi. Çarpı bu profille oynar; sol ve sağ adını değiştirir."
 
+#: pe/ui/library.cpp
+msgid "All cheats"
+msgstr "Tüm hileler"
+
 #: pe/ui/browse.cpp
 msgid "All credit for the Eden emulator goes to its developers and contributors."
 msgstr "Eden emülatöründeki tüm emek, geliştiricilerine ve katkıda bulunanlara aittir."
@@ -227,9 +231,14 @@ msgid "Changed"
 msgstr "Değiştirildi"
 
 #. What a mod is made of: cheat codes.
-#: eden_services.cpp, host/fake_services.cpp
+#: eden_services.cpp, host/fake_services.cpp, pe/ui/library.cpp
 msgid "Cheats"
 msgstr "Hileler"
+
+#. Shown under a cheat that came from the game's cheats folder (not from a mod).
+#: pe/ui/library.cpp
+msgid "Cheats folder"
+msgstr "Hile klasörü"
 
 #: pe/ui/pairing.cpp
 msgid "Check that the code there is this one, and approve."
@@ -1093,6 +1102,15 @@ msgstr "Takma ad"
 msgid "Nickname: {0}"
 msgstr "Takma ad: {0}"
 
+#: pe/ui/library.cpp
+msgid "No cheats"
+msgstr "Hile yok"
+
+#. <build ID>.txt stays as it is: a cheat file is named after the game version's build ID. {0} is a folder such as roms/Game/cheats/.
+#: pe/ui/library.cpp
+msgid "No cheats for this game yet. Copy its cheat files (<build ID>.txt) to {0}."
+msgstr "Bu oyun için henüz hile yok. Hile dosyalarını (<build ID>.txt) {0} konumuna kopyalayın."
+
 #: pe/ui/remote.cpp
 msgid "No download source is set up. Save a file named {0} that lists your sources, as this one does with a RomM server, then open this menu again. Downloads need an FTP server running on the console, on port {1}."
 msgstr "Hiçbir indirme kaynağı ayarlanmamış. Buradaki RomM sunucusu örneği gibi, kaynaklarınızı listeleyen {0} adlı bir dosya kaydedin, sonra bu menüyü yeniden açın. İndirmeler için konsolda {1} numaralı bağlantı noktasında çalışan bir FTP sunucusu gerekir."
@@ -1118,10 +1136,9 @@ msgstr "Burada klasör yok."
 msgid "No mods"
 msgstr "Mod yok"
 
-#. {0} is a folder; roms/ is a folder name (unchanged).
 #: pe/ui/library.cpp
-msgid "No mods for this game yet. Copy each mod's folder to {0}, next to roms/."
-msgstr "Bu oyun için henüz mod yok. Her modun klasörünü roms/ klasörünün yanındaki {0} konumuna kopyalayın."
+msgid "No mods for this game yet. Copy each mod's folder to {0}."
+msgstr "Bu oyun için henüz mod yok. Her modun klasörünü {0} konumuna kopyalayın."
 
 #: pe/ui/multiplayer.cpp
 msgid "No public rooms are available."

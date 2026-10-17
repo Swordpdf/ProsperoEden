@@ -318,11 +318,6 @@ void pictures(Stage &s)
     s.press({Key::down, Key::cross});
     s.wait(0.4f);
     s.shoot("37-mods-switched");
-    // A mod that lists several cheats: each has its switch, and one frame rate takes the place
-    // of the other.
-    s.press({Key::down, Key::down, Key::down, Key::cross});
-    s.wait(0.6f);
-    s.shoot("46-mods-cheats");
     s.services.has_mods = false;
     s.press({Key::circle, Key::cross});
     s.wait(0.6f);
@@ -330,6 +325,26 @@ void pictures(Stage &s)
     s.press({Key::square});
     s.wait(0.4f);
     s.shoot("39-mods-folder-made");
+    s.services.has_mods = true;
+    // The game's cheats: the row, the list with the switch for all of them first, one frame rate
+    // taking the other's place, all of them off, and a game that has none.
+    s.press({Key::circle, Key::down});
+    s.wait(0.6f);
+    s.shoot("46-game-cheats-row");
+    s.press({Key::cross});
+    s.wait(0.6f);
+    s.shoot("46b-cheats");
+    s.press({Key::down, Key::down, Key::cross});
+    s.wait(0.4f);
+    s.shoot("46c-cheats-chosen");
+    s.press({Key::up, Key::up, Key::cross});
+    s.wait(0.4f);
+    s.shoot("46d-cheats-off");
+    s.press({Key::cross});
+    s.services.has_mods = false;
+    s.press({Key::circle, Key::cross});
+    s.wait(0.6f);
+    s.shoot("46e-cheats-none");
     s.services.has_mods = true;
     s.press({Key::circle, Key::down});
     s.wait(0.6f);
@@ -867,7 +882,7 @@ void pictures(Stage &s)
     s.press({Key::triangle});
     s.wait(0.6f);
     s.press({Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down,
-             Key::down});
+             Key::down, Key::down});
     s.wait(0.6f);
     s.shoot("95-game-delete-row");
     s.press({Key::cross});

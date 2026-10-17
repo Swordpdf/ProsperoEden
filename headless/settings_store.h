@@ -29,9 +29,10 @@
 //                                      "volume": 80, "mute": false, "vibration": false,
 //                                      "language": "ja", "mapping": { "a": "cross" },
 //                                      "controller": "handheld",
-//                                      "mods": false,
+//                                      "mods": false, "cheats": false,
 //                                      "mods_off": ["A mod's folder name"],
 //                                      "cheats_on": ["A mod's folder name#A cheat's name"],
+//                                      "cheats_off": ["A mod's folder name#Its one cheat's name"],
 //                                      "performance": { "fast_gpu": true } } }
 //   }
 //
@@ -853,24 +854,44 @@ inline bool SaveModEnabled(uint64_t title_id, std::string_view name, bool enable
     return Settings::Write(document, file);
 }
 
+namespace Settings {
+// A game's switch that is on unless the player turned it off (`key`: false).
+inline bool LoadGameSwitch(uint64_t title_id, const char* key, const std::string& file) {
+    if (!title_id) return true;
+    return Bool(Load(file), Json::json_pointer("/games/" + TitleKey(title_id) + "/" + key), true);
+}
+
+inline bool SaveGameSwitch(uint64_t title_id, const char* key, bool enabled, const std::string& file) {
+    if (!title_id) return false;
+    Json document = Load(file);
+    document["version"] = 1;
+    auto& game = document["games"][TitleKey(title_id)];
+    if (!game.is_object()) game = Json::object();
+    if (enabled) game.erase(key);
+    else game[key] = false;
+    return Write(document, file);
+}
+} // namespace Settings
+
 // The Library's Mods switch: one switch for all of a game's mods, on unless the player turned it
 // off ("mods": false). The mods' own switches (mods_off) keep their state behind it.
 inline bool LoadModsEnabled(uint64_t title_id, const std::string& file = SettingsFile()) {
-    if (!title_id) return true;
-    using Settings::Json;
-    return Settings::Bool(Settings::Load(file),
-                          Json::json_pointer("/games/" + Settings::TitleKey(title_id) + "/mods"), true);
+    return Settings::LoadGameSwitch(title_id, "mods", file);
 }
 
 inline bool SaveModsEnabled(uint64_t title_id, bool enabled, const std::string& file = SettingsFile()) {
-    if (!title_id) return false;
-    Settings::Json document = Settings::Load(file);
-    document["version"] = 1;
-    auto& game = document["games"][Settings::TitleKey(title_id)];
-    if (!game.is_object()) game = Settings::Json::object();
-    if (enabled) game.erase("mods");
-    else game["mods"] = false;
-    return Settings::Write(document, file);
+    return Settings::SaveGameSwitch(title_id, "mods", enabled, file);
+}
+
+// Game settings > Cheats: one switch for all of a game's cheats, apart from the Mods switch, on
+// unless the player turned it off ("cheats": false). The cheats' own switches keep their state
+// behind it.
+inline bool LoadCheatsEnabled(uint64_t title_id, const std::string& file = SettingsFile()) {
+    return Settings::LoadGameSwitch(title_id, "cheats", file);
+}
+
+inline bool SaveCheatsEnabled(uint64_t title_id, bool enabled, const std::string& file = SettingsFile()) {
+    return Settings::SaveGameSwitch(title_id, "cheats", enabled, file);
 }
 
 // The cheats chosen for a game, each as "<mod>#<cheat>" (mods.h). A mod that lists several cheats
@@ -897,6 +918,36 @@ inline bool SaveChosenCheats(uint64_t title_id, const std::vector<std::string>& 
     if (!game.is_object()) game = Settings::Json::object();
     if (ids.empty()) game.erase("cheats_on");
     else game["cheats_on"] = ids;
+    return Settings::Write(document, file);
+}
+
+// The single cheats of mods that also patch the code or replace files, switched off on their own
+// in the Cheats list, each as "<mod>#<cheat>" (cheats.h). They run unless listed, as before the
+// Cheats list had them.
+inline std::vector<std::string> LoadCheatsOff(uint64_t title_id, const std::string& file = SettingsFile()) {
+    std::vector<std::string> keys;
+    if (!title_id) return keys;
+    using Settings::Json;
+    const Json document = Settings::Load(file);
+    const Json::json_pointer at("/games/" + Settings::TitleKey(title_id) + "/cheats_off");
+    if (!document.contains(at) || !document.at(at).is_array()) return keys;
+    for (const auto& entry : document.at(at))
+        if (entry.is_string() && std::find(keys.begin(), keys.end(), entry.get<std::string>()) == keys.end())
+            keys.push_back(entry.get<std::string>());
+    return keys;
+}
+
+inline bool SaveCheatOff(uint64_t title_id, std::string_view key, bool off, const std::string& file = SettingsFile()) {
+    if (!title_id || key.empty() || key.size() > 512) return false;
+    auto keys = LoadCheatsOff(title_id, file);
+    keys.erase(std::remove(keys.begin(), keys.end(), key), keys.end());
+    if (off) keys.emplace_back(key);
+    Settings::Json document = Settings::Load(file);
+    document["version"] = 1;
+    auto& game = document["games"][Settings::TitleKey(title_id)];
+    if (!game.is_object()) game = Settings::Json::object();
+    if (keys.empty()) game.erase("cheats_off");
+    else game["cheats_off"] = keys;
     return Settings::Write(document, file);
 }
 

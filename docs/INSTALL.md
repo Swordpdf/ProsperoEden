@@ -14,29 +14,24 @@ Only these subfolders matter; the folder itself can have any name and location.
 ├── firmware/
 │   └── *.nca                           # extracted firmware NCAs
 ├── roms/
-│   ├── Game.nsp                        # a game directly in roms/
-│   ├── Game.xci
-│   └── Other game/                     # or a folder per game, with its update and DLC
-│       ├── Other game.nsp
-│       ├── Other game update.nsp
-│       └── Other game DLC.nsp
-├── updates/                            # optional: update and DLC files of any game
-│   └── Game update.nsp
-├── mods/                               # optional: mods, one folder per title ID
-│   └── <title ID>/                     # the 16-character code in the game's file name
-│       ├── <mod name>/
-│       │   ├── exefs/                  # code patches: *.pchtxt, *.ips
-│       │   ├── romfs/                  # replacement game files
-│       │   └── cheats/
-│       │       └── <build ID>.txt      # cheats for one version of the game
-│       └── cheat_<name>.txt            # optional: cheats without a mod folder
+│   └── <Game>/                         # one folder per game
+│       ├── <game>.nsp                  # the game (NSP or XCI)
+│       ├── <game> update.nsp           # optional: its update and DLC files, beside it
+│       ├── <game> DLC.nsp
+│       ├── mods/                       # optional: its mods, one folder each (see Mods and cheats)
+│       │   └── <mod name>/
+│       │       ├── exefs/              # code patches: *.pchtxt, *.ips
+│       │       ├── romfs/              # replacement game files
+│       │       └── romfs_ext/          # files added to the game's own
+│       └── cheats/                     # optional: its cheats
+│           └── <build ID>.txt          # one file per version of the game
 ├── save-import/                        # optional: saves to import, one folder per title ID
 ├── ryujinx/                            # optional: a Ryujinx data folder to import saves from
 ├── save-export/                        # written by "Export a copy"
 └── .remote-downloads/                  # downloads that are not finished yet (see Download sources)
 ```
 
-A game can be a file directly in `roms/`, or sit in a folder of its own in `roms/` together with its update and DLC files. Both work at the same time, so a library can move to folders one game at a time. In a game folder, ProsperoEden tells the game from its update and DLC by what each file holds, not by its name. Update and DLC files apply to their game wherever they are: in `updates/` (at any depth) or in the game's folder. Folders inside a game folder are not searched for games, and folders whose names start with a dot are skipped. **Delete from console** also deletes the update and DLC files in the game's folder, and the folder once it is empty.
+Each game sits in a folder of its own in `roms/`, with everything that belongs to it: its update and DLC files, its mods and its cheats. ProsperoEden tells the game from its update and DLC by what each file holds, not by its name, so the files can have any names. Folders inside a game folder are not searched for games, and folders whose names start with a dot are skipped. **Delete from console** also deletes the update and DLC files in the game's folder, and the folder once it is empty.
 
 The folder browser shows how many keys, firmware files, and games each folder holds, so you can check a folder before selecting it. Moving your files later only needs a new selection in Settings; saved settings, covers, and recently played games carry over.
 
