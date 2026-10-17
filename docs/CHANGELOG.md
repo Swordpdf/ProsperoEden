@@ -2,12 +2,37 @@
 
 What changed in each release of ProsperoEden, newest first. A release's notes on GitHub are its section here.
 
-## Unreleased
+## v1.004.000
+
+This alpha adds post-processing looks and wallpapers of your own, frees more memory, and makes games with many shaders start and start again faster. Performance and compatibility still vary by game.
+
+### New and improved
 
 - **Post-processing (new setting).** **Settings > Video > Post-processing**, and the same row in a game's own settings, draws a look over the picture with ReShade FX effects: Off, or one of six presets that come with the app (Anime, Cinematic, Clean, Dreamy, Retro, Vivid). Presets of your own go in `/data/prosperoeden/user/post_presets/` and their effects in `/data/prosperoeden/user/post_shaders/`. It works with the Vulkan renderer; see [Post-processing](https://github.com/blackbearreloaded/ProsperoEden/blob/main/docs/SETTINGS.md#post-processing).
 - **A wallpaper of your own (new setting).** **Settings > Appearance > Wallpaper** shows an image from `/data/prosperoeden/wallpapers` behind the launcher's screens instead of the theme's artwork: PNG or JPEG (also BMP, GIF, TGA and DDS), put in the folder over FTP and listed when the dialog opens. A game's own cover still takes the place where the theme shows one. An image of another shape is resized to fit the screen whole, with the theme behind what it leaves over. See [Wallpapers](WALLPAPERS.md).
 - **More free memory in 64-bit games.** The emulated console's memory is now taken from the PS5 only where a game writes it, and given back where the game's console clears or frees it, or where it holds only zeroes again. Two games measured on the console held 644 MiB and 1,956 MiB less, at the same frame rate. After "A Compressed RAM Service" (Gregory Price, Linux Plumbers 2026).
 - **Compact memory (new Performance setting, off by default).** Gives back memory a game wrote but left mostly empty, 16 KiB at a time: 100 to 300 MiB more in the same two games. A game that keeps rewriting such memory can stutter; leave it off unless a game runs short of memory.
+- **Games with many shaders start, and start faster the next time.** A game with thousands of pipelines could stop during its loading screen because the locks that guard pipeline builds ran out; they are now shared. The graphics driver keeps its compiled shaders between starts on every setup, and its pipeline cache is kept when a write is cut short, so a large game compiles them once instead of at every start. A line at launch says where the cache is kept.
+- **A game's language from its update.** A game whose languages come from a packed update (NSP or XCI) is offered them again, instead of falling back to English.
+- **Crash reports name the allocation that failed** when a game runs out of memory.
+- **Public rooms.** The project's own rooms are listed first, the list scrolls, and L1/R1 move a page at a time.
+- **Launcher packs update themselves.** A custom launcher pack can name an update feed: ProsperoEden checks it, downloads a newer pack after you confirm, verifies its size and SHA-256, and can go back to the previous version. Libraries load faster in packs. See [Runtime launcher packs](https://github.com/blackbearreloaded/ProsperoEden/blob/main/docs/RUNTIME_LAUNCHERS.md).
+- **Slate theme polish** and the launcher texts of the new settings in all 30 languages.
+
+### Thank you
+
+Thanks to everyone whose contributions landed since v1.003.000:
+
+- [Oliv3rmoon](https://github.com/Oliv3rmoon) — games with many pipelines start, the pipeline cache kept when a write is cut short, the refused allocation in crash reports, and a game's language from a packed update.
+- [bawsdeep](https://github.com/bawsdeep) — wallpapers of your own and Slate theme polish.
+- [kasobos67](https://github.com/kasobos67) — launcher pack updates from a feed and a faster library for packs.
+- [BlackBearReloaded](https://github.com/blackbearreloaded) — post-processing, more free memory and Compact memory, the shader cache between starts, public rooms, translations and integration.
+
+Thanks also to everyone testing and reporting problems on Discord and GitHub, the **Eden developers** for the emulator, and **Mihawk** and the graphics contributors for the platform work this port builds on.
+
+### Before updating
+
+Back up your saves and settings. The package contains no games, firmware or keys; keep your existing user-provided files. This remains an experimental pre-release.
 
 ## v1.003.000
 
