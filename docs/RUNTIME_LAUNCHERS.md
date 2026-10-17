@@ -83,6 +83,10 @@ notices** (true by default): when it is false, a pack should not offer the relea
 it opens, only name it where it shows the running version. The built-in launcher that a
 pack falls back to follows it.
 
+`choices.speed_limit` lists the speed-limit steps as percentages, `0` meaning no limit.
+`preferences.speed_limit` and a game setting's `speed_limit` are indexes into that list;
+the game setting is `-1` while the game follows Settings.
+
 Three functions cross the host boundary:
 
 ```lua

@@ -319,6 +319,10 @@ inline constexpr const char *kHudCornerNames[] = {"Top left", "Top right", "Bott
 // persists the same three by key): regular is 1x, medium one and a half, large twice over.
 inline constexpr const char *kHudSizeNames[] = {"Regular", "Medium", "Large"};
 
+// Settings > Performance > Speed limit, as percentages of the console a game was made for; 0 is no
+// limit. The same steps as settings_store.h's kSpeedLimitKeys (eden_services.cpp checks).
+inline constexpr int kSpeedLimitPercents[] = {100, 150, 200, 300, 0};
+
 struct Preferences
 {
     bool hud = true;
@@ -360,6 +364,8 @@ struct Preferences
     // How much memory a game's console is told it has (settings_store.h's kMemoryLayoutKeys): an
     // index into them, and the memory a mod that keeps a heap of its own asks the kernel for.
     int memory_layout = 0;
+    // How fast a game may run: an index into kSpeedLimitPercents (0 is 100%, the console's own pace).
+    int speed_limit = 0;
     ButtonMapping mapping = kDefaultMapping; // Settings > Controls > Button mapping
     // Settings > Video: the overlay's chip (the same values Eden::Preferences keeps).
     int hud_size = 0;   // 0 regular, 1 medium, 2 large
@@ -405,6 +411,7 @@ struct GameSettings
     // unsafe CPU, unsafe DMA, reactive flushing, skip invalidation, compact memory.
     std::array<int, 8> performance{-1, -1, -1, -1, -1, -1, -1, -1};
     int64_t rng_seed = -1;
+    int speed_limit = -1; // index into kSpeedLimitPercents
 };
 
 // One cheat of a mod that lists several: each is chosen on its own.

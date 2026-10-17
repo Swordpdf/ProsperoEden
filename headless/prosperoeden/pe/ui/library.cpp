@@ -72,7 +72,7 @@ int changes_of(const GameSettings &game)
            (game.frame_gen_multiplier >= 0) +
            static_cast<int>(std::count_if(game.performance.begin(), game.performance.end(),
                                           [](int value) { return value >= 0; })) +
-           (game.volume >= 0) + (game.mute >= 0) + (game.vibration >= 0) + (game.own_mapping ? 1 : 0) +
+           (game.speed_limit >= 0) + (game.volume >= 0) + (game.mute >= 0) + (game.vibration >= 0) + (game.own_mapping ? 1 : 0) +
            (game.controller >= 0) + (game.rng_seed >= 0) + (game.language >= 0);
 }
 

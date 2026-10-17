@@ -17,7 +17,8 @@
 //     "diagnostics": { "detailed_logging": false, "immediate_logs": false },
 //     "performance": { "block_list": false, "async_shaders": false, "fast_gpu": false,
 //                      "unsafe_cpu": false, "unsafe_dma": false, "reactive_flushing": true,
-//                      "skip_invalidation": false, "compact_memory": false, "memory_layout": "4Gb" },
+//                      "skip_invalidation": false, "compact_memory": false, "memory_layout": "4Gb",
+//                      "speed_limit": "100" },
 //     "game_files": "/mnt/ext1/eden",
 //     "library": { "last_game": "Game [id].nsp", "recent": ["Game [id].nsp"] },
 //     "games": { "0100000000010000": { "console_mode": "handheld", "renderer": "opengl",
@@ -587,6 +588,14 @@ inline constexpr int kPerformanceSwitches = int(std::size(kPerformanceKeys));
 inline constexpr const char* kMemoryLayoutKeys[] = {"4Gb", "6Gb", "8Gb"};
 inline constexpr int kMemoryLayoutGib[] = {4, 6, 8};
 static_assert(std::size(kMemoryLayoutKeys) == std::size(kMemoryLayoutGib));
+// Settings > Performance > Speed limit: how fast a game may run, as a percentage of the console it
+// was made for (Eden's speed limit). Above 100% the emulated console's vsync comes that much
+// sooner, so a game locked to 30 FPS can reach 60 at 200% where the console has the time to spare,
+// and a game that counts its frames to keep time plays faster with it. 0 is Eden's limit switched
+// off: as fast as the console can. The menu writes the percentages (settings.cpp).
+inline constexpr const char* kSpeedLimitKeys[] = {"100", "150", "200", "300", "unlimited"};
+inline constexpr int kSpeedLimitPercent[] = {100, 150, 200, 300, 0};
+static_assert(std::size(kSpeedLimitKeys) == std::size(kSpeedLimitPercent));
 
 // Library > Game settings: what one game does differently from Settings. Each value is -1 (absent
 // from the file) while the game follows Settings; switches are 0 off, 1 on.
@@ -612,6 +621,7 @@ struct GameSettings {
     ButtonMapping mapping = kDefaultMapping;
     std::array<int, kPerformanceSwitches> performance{-1, -1, -1, -1, -1, -1, -1, -1};  // kPerformanceKeys
     int64_t rng_seed = -1;      // 0 to 4294967295, or -1: no seed (load_address.h)
+    int speed_limit = -1;       // index into kSpeedLimitKeys ("performance" / "speed_limit")
 };
 // The seed a typed text names: digits and nothing else, 0 to 4294967295. -1 for any other text.
 inline int64_t RngSeedFromText(std::string_view text) {
@@ -664,6 +674,8 @@ inline GameSettings LoadGameSettings(uint64_t title_id, const std::string& file 
     result.vibration = flag("/vibration");
     for (int i = 0; i < kPerformanceSwitches; ++i)
         result.performance[i] = flag(std::string("/performance/") + kPerformanceKeys[i]);
+    result.speed_limit = KeyIndex(key("performance/speed_limit"), kSpeedLimitKeys,
+                                  int(std::size(kSpeedLimitKeys)), -1);
     const int volume = Settings::Int(document, Json::json_pointer(base + "/volume"), -1);
     result.volume = volume >= 0 && volume <= 100 ? volume : -1;
     const Json::json_pointer seed_at(base + "/rng_seed");
@@ -693,6 +705,7 @@ inline bool SaveGameSettings(uint64_t title_id, const GameSettings& value, const
         value.volume > 100 || value.rng_seed < -1 || value.rng_seed > 0xffffffffLL ||
         value.hud_size >= int(std::size(kHudSizeKeys)) ||
         value.hud_corner >= int(std::size(kHudCornerKeys)) ||
+        value.speed_limit >= int(std::size(kSpeedLimitKeys)) ||
         !flag_ok(value.hud) || !flag_ok(value.frame_gen) ||
         !flag_ok(value.mute) ||
         !flag_ok(value.vibration) ||
@@ -737,6 +750,8 @@ inline bool SaveGameSettings(uint64_t title_id, const GameSettings& value, const
     auto& performance = game["performance"];
     if (!performance.is_object()) performance = Settings::Json::object();
     for (int i = 0; i < kPerformanceSwitches; ++i) flag(performance, kPerformanceKeys[i], value.performance[i]);
+    if (value.speed_limit < 0) performance.erase("speed_limit");
+    else performance["speed_limit"] = kSpeedLimitKeys[value.speed_limit];
     if (performance.empty()) game.erase("performance");
     return Settings::Write(document, file);
 }
@@ -785,6 +800,7 @@ struct PerformanceSettings {
     bool skip_invalidation = false;  // Eden's skip_cpu_inner_invalidation: fewer cache invalidations
     bool compact_memory = false;     // the guest's memory in 16 KiB pages where it is mostly zeroes
     int memory_layout = 0;           // index into kMemoryLayoutKeys (0 is the Switch's own 4 GiB)
+    int speed_limit = 0;             // index into kSpeedLimitKeys (0 is 100%, the console's own pace)
 };
 
 inline PerformanceSettings LoadPerformance(uint64_t title_id, const std::string& file = SettingsFile()) {
@@ -807,6 +823,9 @@ inline PerformanceSettings LoadPerformance(uint64_t title_id, const std::string&
         result.memory_layout = KeyIndex(Settings::String(document,
                                                          Json::json_pointer(base + "/performance/memory_layout")),
                                         kMemoryLayoutKeys, int(std::size(kMemoryLayoutKeys)), result.memory_layout);
+        result.speed_limit = KeyIndex(Settings::String(document,
+                                                       Json::json_pointer(base + "/performance/speed_limit")),
+                                      kSpeedLimitKeys, int(std::size(kSpeedLimitKeys)), result.speed_limit);
     };
     read("");
     if (title_id) read("/games/" + Settings::TitleKey(title_id));
@@ -816,7 +835,8 @@ inline PerformanceSettings LoadPerformance(uint64_t title_id, const std::string&
 // Title 0 saves the general values.
 inline bool SavePerformance(uint64_t title_id, const PerformanceSettings& value,
                             const std::string& file = SettingsFile()) {
-    if (value.memory_layout < 0 || value.memory_layout >= int(std::size(kMemoryLayoutKeys))) return false;
+    if (value.memory_layout < 0 || value.memory_layout >= int(std::size(kMemoryLayoutKeys)) ||
+        value.speed_limit < 0 || value.speed_limit >= int(std::size(kSpeedLimitKeys))) return false;
     Settings::Json document = Settings::Load(file);
     document["version"] = 1;
     auto& owner = title_id ? document["games"][Settings::TitleKey(title_id)] : document;
@@ -826,7 +846,8 @@ inline bool SavePerformance(uint64_t title_id, const PerformanceSettings& value,
                             {"unsafe_dma", value.unsafe_dma}, {"reactive_flushing", value.reactive_flushing},
                             {"skip_invalidation", value.skip_invalidation},
                             {"compact_memory", value.compact_memory},
-                            {"memory_layout", kMemoryLayoutKeys[value.memory_layout]}};
+                            {"memory_layout", kMemoryLayoutKeys[value.memory_layout]},
+                            {"speed_limit", kSpeedLimitKeys[value.speed_limit]}};
     return Settings::Write(document, file);
 }
 

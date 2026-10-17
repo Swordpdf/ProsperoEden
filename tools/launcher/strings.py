@@ -59,6 +59,8 @@ NOTES = {
     "Scroll": "Button hint: move through a long text (Up/Down).",
     "Update notices": "Settings switch: whether the app says at its start that a newer release of this app is listed (not game updates).",
     "Says when homebrew.page has a newer version. Off, only About names it.": "About the Update notices switch; homebrew.page is a site's name and stays as it is; About is the menu's last section (use its translation).",
+    "Speed limit": "Settings > Performance: how fast a game may run, as a percentage of the console it was made for.",
+    "Unlimited": "A Speed limit choice: no limit at all (as fast as the console can).",
     "The rest is on the app's page on homebrew.page.": "Shown at the end of release notes that were cut short; homebrew.page is a site's name and stays as it is.",
     "Select": "Button hint: choose the highlighted item (not the Select button).",
     "Back": "Button hint: go back one screen.",

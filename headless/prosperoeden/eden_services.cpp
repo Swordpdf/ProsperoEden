@@ -945,6 +945,13 @@ bool EdenServices::set_docked(std::uint64_t title_id, bool docked) {
 static_assert(pe::ui::kGameButtons == Eden::kGameButtons && pe::ui::kPadButtons == Eden::kPadButtons &&
               pe::ui::kDefaultMapping == Eden::kDefaultMapping, "the launcher's button mapping differs");
 static_assert(std::tuple_size_v<decltype(pe::ui::GameSettings::performance)> == Eden::kPerformanceSwitches);
+static_assert(std::size(pe::ui::kSpeedLimitPercents) == std::size(Eden::kSpeedLimitPercent) &&
+                  pe::ui::kSpeedLimitPercents[0] == Eden::kSpeedLimitPercent[0] &&
+                  pe::ui::kSpeedLimitPercents[1] == Eden::kSpeedLimitPercent[1] &&
+                  pe::ui::kSpeedLimitPercents[2] == Eden::kSpeedLimitPercent[2] &&
+                  pe::ui::kSpeedLimitPercents[3] == Eden::kSpeedLimitPercent[3] &&
+                  pe::ui::kSpeedLimitPercents[4] == Eden::kSpeedLimitPercent[4],
+              "the launcher's speed limits differ");
 
 pe::ui::GameSettings EdenServices::game_settings(std::uint64_t title_id) {
     const Eden::GameSettings saved = Eden::LoadGameSettings(title_id);
@@ -971,6 +978,7 @@ pe::ui::GameSettings EdenServices::game_settings(std::uint64_t title_id) {
     result.mapping = saved.mapping;
     result.performance = saved.performance;
     result.rng_seed = saved.rng_seed;
+    result.speed_limit = saved.speed_limit;
     return result;
 }
 
@@ -1000,6 +1008,7 @@ bool EdenServices::set_game_settings(std::uint64_t title_id, const pe::ui::GameS
     value.mapping = settings.mapping;
     value.performance = settings.performance;
     value.rng_seed = settings.rng_seed;
+    value.speed_limit = settings.speed_limit;
     const bool saved = Eden::SaveGameSettings(title_id, value);
     if (!saved) Eden::Report("settings", "Could not write game settings");
     return saved;
@@ -1050,6 +1059,7 @@ pe::ui::Preferences EdenServices::preferences() {
     result.skip_invalidation = speed.skip_invalidation;
     result.compact_memory = speed.compact_memory;
     result.memory_layout = speed.memory_layout;
+    result.speed_limit = speed.speed_limit;
     result.mapping = saved.mapping;
     result.menu_bind = saved.menu_bind;
     return result;
@@ -1102,6 +1112,8 @@ bool EdenServices::set_preferences(const pe::ui::Preferences& preferences) {
     // save fail, and with it every other setting on the page (settings_store.h's SavePerformance).
     speed.memory_layout = std::clamp(preferences.memory_layout, 0,
                                      static_cast<int>(std::size(Eden::kMemoryLayoutKeys)) - 1);
+    speed.speed_limit = std::clamp(preferences.speed_limit, 0,
+                                   static_cast<int>(std::size(Eden::kSpeedLimitKeys)) - 1);
     const bool saved = Eden::SavePreferences(value) && Eden::SavePerformance(0, speed);
     if (!saved) Eden::Report("settings", "Could not write preferences");
     if (saved) Eden::Multiplayer::SetDetailedLogging(value.detailed_logging);

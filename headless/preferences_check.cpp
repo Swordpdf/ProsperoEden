@@ -396,6 +396,36 @@ int main() {
         assert(Eden::SaveGameSettings(racer, saved_game, layout_file));
         assert(Eden::LoadPerformance(racer, layout_file).memory_layout == 1);
     }
+    // Speed limit ("performance/speed_limit"): 100% without a file, a game's own before the general
+    // one, a value that is not one of the steps read as 100%, and both kinds of write keep it.
+    {
+        const std::string speed_file = std::string(directory) + "/speed.json";
+        assert(Eden::LoadPerformance(racer, speed_file).speed_limit == 0);
+        std::ofstream(speed_file) << R"({"performance": {"speed_limit": "200"},
+            "games": {"0100000000010000": {"performance": {"speed_limit": "unlimited"}}}})";
+        assert(Eden::LoadPerformance(racer, speed_file).speed_limit == 4);
+        assert(Eden::LoadPerformance(quest, speed_file).speed_limit == 2);
+        assert(Eden::LoadGameSettings(racer, speed_file).speed_limit == 4);
+        assert(Eden::LoadGameSettings(quest, speed_file).speed_limit == -1);
+        std::ofstream(speed_file) << R"({"performance": {"speed_limit": 200}})";
+        assert(Eden::LoadPerformance(quest, speed_file).speed_limit == 0);
+        auto general = Eden::LoadPerformance(0, speed_file);
+        general.speed_limit = 3;
+        assert(Eden::SavePerformance(0, general, speed_file));
+        assert(Read(speed_file).find("\"speed_limit\": \"300\"") != std::string::npos);
+        general.speed_limit = int(std::size(Eden::kSpeedLimitKeys));
+        assert(!Eden::SavePerformance(0, general, speed_file));
+        auto own = Eden::LoadGameSettings(racer, speed_file);
+        own.speed_limit = 1;
+        assert(Eden::SaveGameSettings(racer, own, speed_file));
+        assert(Eden::LoadPerformance(racer, speed_file).speed_limit == 1 &&
+               Eden::LoadPerformance(quest, speed_file).speed_limit == 3);
+        own.speed_limit = -1;  // back to Settings
+        assert(Eden::SaveGameSettings(racer, own, speed_file));
+        assert(Eden::LoadPerformance(racer, speed_file).speed_limit == 3);
+        own.speed_limit = int(std::size(Eden::kSpeedLimitKeys));
+        assert(!Eden::SaveGameSettings(racer, own, speed_file));
+    }
 
     // Button mapping (button_mapping.h): the usual one, a changed one, and one the file names
     // badly. Choosing a button another game button has swaps the two.

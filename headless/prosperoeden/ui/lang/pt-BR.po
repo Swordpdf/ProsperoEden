@@ -66,6 +66,10 @@ msgstr "Cerca de {0} min restantes"
 msgid "About {0} s left"
 msgstr "Cerca de {0} s restantes"
 
+#: pe/ui/settings.cpp
+msgid "Above 100%, a game locked to 30 FPS can reach 60, and a game that counts its frames plays faster too."
+msgstr "Acima de 100%, um jogo travado em 30 FPS pode chegar a 60, e um jogo que conta seus quadros também fica mais rápido."
+
 #. Label: which folders the app can read.
 #: pe/ui/browse.cpp
 msgid "ACCESS"
@@ -1784,6 +1788,11 @@ msgstr "Espanhol (América Latina)"
 msgid "Speed"
 msgstr "Velocidade"
 
+#. Settings > Performance: how fast a game may run, as a percentage of the console it was made for.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Speed limit"
+msgstr "Limite de velocidade"
+
 #. A DualSense button.
 #: pe/ui/game_options.cpp
 msgid "Square"
@@ -2034,6 +2043,11 @@ msgstr "Indisponível"
 #: pe/ui/save_sync.cpp
 msgid "Understood"
 msgstr "Entendi"
+
+#. A Speed limit choice: no limit at all (as fast as the console can).
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Unlimited"
+msgstr "Sem limite"
 
 #: pe/ui/pairing.cpp
 msgid "Unlink"

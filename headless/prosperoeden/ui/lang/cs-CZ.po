@@ -66,6 +66,10 @@ msgstr "Zbývá asi {0} min"
 msgid "About {0} s left"
 msgstr "Zbývá asi {0} s"
 
+#: pe/ui/settings.cpp
+msgid "Above 100%, a game locked to 30 FPS can reach 60, and a game that counts its frames plays faster too."
+msgstr "Nad 100 % může hra omezená na 30 FPS dosáhnout 60 a hra, která počítá své snímky, poběží také rychleji."
+
 #. Label: which folders the app can read.
 #: pe/ui/browse.cpp
 msgid "ACCESS"
@@ -1784,6 +1788,11 @@ msgstr "Španělština (Latinská Amerika)"
 msgid "Speed"
 msgstr "Rychlost"
 
+#. Settings > Performance: how fast a game may run, as a percentage of the console it was made for.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Speed limit"
+msgstr "Omezení rychlosti"
+
 #. A DualSense button.
 #: pe/ui/game_options.cpp
 msgid "Square"
@@ -2034,6 +2043,11 @@ msgstr "Není k dispozici"
 #: pe/ui/save_sync.cpp
 msgid "Understood"
 msgstr "Rozumím"
+
+#. A Speed limit choice: no limit at all (as fast as the console can).
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Unlimited"
+msgstr "Bez omezení"
 
 #: pe/ui/pairing.cpp
 msgid "Unlink"

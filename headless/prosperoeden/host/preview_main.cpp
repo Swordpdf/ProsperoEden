@@ -255,6 +255,11 @@ void pictures(Stage &s)
     s.press({Key::circle, Key::down, Key::cross, Key::right, Key::right});
     s.wait(0.6f);
     s.shoot("50-game-performance");
+    // Its own speed limit, the row after the switches: 100%, 150%, then 200%.
+    s.press({Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down, Key::down});
+    s.press({Key::right, Key::right, Key::right});
+    s.wait(0.6f);
+    s.shoot("50b-game-speed-limit");
     // Its own Controls: a button mapping of its own, and A moved to another button.
     s.press({Key::circle, Key::down, Key::down, Key::cross, Key::down, Key::right});
     s.wait(0.6f);
@@ -264,7 +269,8 @@ void pictures(Stage &s)
     s.shoot("52-game-mapping");
     {
         const pe::ui::GameSettings game = s.services.game_settings(0);
-        if (game.renderer != 0 || game.refresh != 1 || game.performance[0] != 1 || !game.own_mapping ||
+        if (game.renderer != 0 || game.refresh != 1 || game.performance[0] != 1 || game.speed_limit != 2 ||
+            !game.own_mapping ||
             game.mapping[0] != 2 || game.mapping[3] != 1)
         {
             std::fprintf(stderr, "error: the game's own settings did not reach the settings\n");
@@ -605,8 +611,27 @@ void pictures(Stage &s)
             std::fprintf(stderr, "error: the Performance switches did not reach the settings\n");
             s.ok = false;
         }
-        // The row after the switches: the memory a game's console is told it has. Left and right
-        // move over the layouts, and the choice reaches the settings file the launcher writes.
+        // The row after the switches: how fast a game may run. Right goes up a step, left from
+        // 100% wraps to Unlimited, and each choice reaches the settings.
+        s.press({Key::down});
+        s.wait(0.4f);
+        s.press({Key::right});
+        s.wait(0.4f);
+        s.shoot("48b-performance-speed-limit");
+        const int faster = s.services.preferences().speed_limit;
+        s.press({Key::left, Key::left});
+        s.wait(0.4f);
+        s.shoot("48c-performance-speed-unlimited");
+        const int unlimited = s.services.preferences().speed_limit;
+        s.press({Key::right});
+        s.wait(0.4f);
+        if (faster != 1 || unlimited != 4 || s.services.preferences().speed_limit != 0)
+        {
+            std::fprintf(stderr, "error: the speed limit did not reach the settings\n");
+            s.ok = false;
+        }
+        // The last row: the memory a game's console is told it has. Left and right move over the
+        // layouts, and the choice reaches the settings file the launcher writes.
         s.press({Key::down});
         s.wait(0.4f);
         s.press({Key::right});

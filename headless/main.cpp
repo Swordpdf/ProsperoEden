@@ -1281,6 +1281,15 @@ int main(int argc, char** argv) {
                           " GiB), direct memory pool " +
                           std::to_string(sceKernelGetDirectMemorySize() >> 20) + " MiB")
                              .c_str());
+            // Settings > Performance > Speed limit: how fast the game may run, as a percentage of
+            // the console it was made for. Eden's vsync clock comes that much sooner (vi/conductor.cpp
+            // on several cores), so a game that waits for it runs faster: one locked to 30 FPS can
+            // reach 60 at 200% where the console has the time to spare, and one that counts its
+            // frames to keep time plays faster with them. Unlimited switches the limit off. 100%,
+            // the default, is Eden's own default and what every session had before.
+            const int speed_percent = Eden::kSpeedLimitPercent[speed.speed_limit];
+            Settings::values.use_speed_limit.SetValue(speed_percent > 0);
+            Settings::values.speed_limit.SetValue(static_cast<u16>(speed_percent > 0 ? speed_percent : 100));
             // The block list is off unless the settings turn it on (block-list.txt in the app
             // folder still does, further down).
             if (!dev_block_list) Eden::JitList::enabled = speed.block_list;
@@ -1297,7 +1306,11 @@ int main(int argc, char** argv) {
                                     on(Settings::values.dma_accuracy.GetValue() == Settings::DmaAccuracy::Unsafe) +
                                     ", reactive flushing " + on(Settings::values.use_reactive_flushing.GetValue()) +
                                     ", skip invalidation " +
-                                    on(Settings::values.skip_cpu_inner_invalidation.GetValue())).c_str());
+                                    on(Settings::values.skip_cpu_inner_invalidation.GetValue()) +
+                                    ", speed limit " +
+                                    (Settings::values.use_speed_limit.GetValue() ?
+                                         std::to_string(Settings::values.speed_limit.GetValue()) + "%" :
+                                         std::string{"unlimited"})).c_str());
             // What a crash report says was running.
             char title_id[20];
             std::snprintf(title_id, sizeof(title_id), "%016llx",

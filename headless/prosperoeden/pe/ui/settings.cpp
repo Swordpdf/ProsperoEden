@@ -122,10 +122,11 @@ enum PerformanceRow : int
     speed_reactive_flushing,
     speed_skip_invalidation,
     speed_compact_memory,
-    speed_memory_layout, // the memory a game's console is told it has; last, so no row moves
+    speed_limit_row,     // how fast a game may run: the row a game's own settings have after the switches
+    speed_memory_layout, // the memory a game's console is told it has; last
     kPerformanceRows,
 };
-constexpr int kPerformanceSwitches = speed_memory_layout;
+constexpr int kPerformanceSwitches = speed_limit_row;
 constexpr int kPerformanceRowsShown = 4;
 constexpr Rect kPerformanceWindow{592.0f, kVideoRowsTop, 736.0f,
                                   kVideoRowPitch * (kPerformanceRowsShown - 1) + kVideoRowHeight};
@@ -155,6 +156,7 @@ constexpr const char *kOutputs[] = {"1080p", "1440p", "2160p"};
 // Settings > Performance > Memory: what the guest's kernel is told the console has
 // (settings_store.h's kMemoryLayoutKeys). A size and its unit, so nothing here to translate.
 constexpr const char *kMemoryLayouts[] = {"4 GiB", "6 GiB", "8 GiB"};
+constexpr int kSpeedLimits = static_cast<int>(std::size(kSpeedLimitPercents));
 
 constexpr const char *kFrameGenTargetNames[] = {"", "60", "90", "120", "144", "240"};
 constexpr const char *kFrameGenMultiplierNames[] = {"2x", "3x", "4x"};
@@ -173,6 +175,13 @@ std::string pick(const std::vector<std::string> &values, int index)
 {
     return index >= 0 && index < static_cast<int>(values.size()) ?
                values[static_cast<std::size_t>(index)] : std::string{"-"};
+}
+
+// Settings > Performance > Speed limit as the menu writes it: a percentage, or Unlimited.
+std::string speed_limit_name(int index)
+{
+    const int value = kSpeedLimitPercents[std::clamp(index, 0, kSpeedLimits - 1)];
+    return value > 0 ? percent(value) : std::string{tr("Unlimited")};
 }
 
 // A path that fits a label: the end is what tells folders apart.
@@ -518,6 +527,11 @@ const char *Launcher::performance_about(int row)
            "can be stale."),
         TR("Gives back memory a game left empty, 16 KiB at a time. More free memory; a game that "
            "writes there again can stutter for a moment.")};
+    // The speed limit is the row after the switches here and in a game's own settings
+    // (game_options.cpp), so the same line describes it in both.
+    if (row == speed_limit_row)
+        return TR("Above 100%, a game locked to 30 FPS can reach 60, and a game that counts its "
+                  "frames plays faster too.");
     // The memory row has no line of its own: every language would need one, and its value says
     // what it is (a size of memory) while the message after it changes says when it arrives.
     if (row >= kPerformanceSwitches)
@@ -807,6 +821,13 @@ void Launcher::press_dialog(Key key)
                 (std::clamp(prefs_.memory_layout, 0, count - 1) + step + count) % count;
             break;
         }
+        if (option_ == speed_limit_row)
+        {
+            // 100% to 300%, then Unlimited, and round to 100% again.
+            prefs_.speed_limit =
+                (std::clamp(prefs_.speed_limit, 0, kSpeedLimits - 1) + step + kSpeedLimits) % kSpeedLimits;
+            break;
+        }
         bool *const switches[kPerformanceSwitches] = {
             &prefs_.block_list, &prefs_.async_shaders,     &prefs_.fast_gpu, &prefs_.unsafe_cpu,
             &prefs_.unsafe_dma, &prefs_.reactive_flushing, &prefs_.skip_invalidation,
@@ -900,9 +921,10 @@ void Launcher::press_dialog(Key key)
         say(tr("Saved. Full quality uses four times the graphics memory for these textures and can run out "
                "above 1x."));
     }
-    else if (modal_ == Modal::performance && option_ == speed_memory_layout)
+    else if (modal_ == Modal::performance && (option_ == speed_memory_layout || option_ == speed_limit_row))
     {
-        // The guest's memory is taken as a game starts, so this says when the change arrives.
+        // The guest's memory is taken, and the speed set, as a game starts, so this says when the
+        // change arrives.
         say(tr("Saved. Applies when a game starts."));
     }
     else if (modal_ == Modal::diagnostics && option_ == 2)
@@ -1173,10 +1195,17 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         static constexpr const char *kNames[kPerformanceRows] = {
             TR("Compile ahead"),        TR("Asynchronous shaders"), TR("Faster GPU emulation"),
             TR("Faster CPU emulation"), TR("Faster DMA"),           TR("Reactive flushing"),
-            TR("Skip CPU invalidation"), TR("Compact memory"), TR("Memory")};
+            TR("Skip CPU invalidation"), TR("Compact memory"), TR("Speed limit"), TR("Memory")};
         for (int row = first; row <= last; ++row)
         {
             list.push_opacity(rows_view.row_alpha(row, kVideoRowHeight));
+            if (row == speed_limit_row)
+            {
+                // Not a switch either: how fast the game may run, 100% being the console's own pace.
+                label(row, tr(kNames[row]), choice(row, speed_limit_name(prefs_.speed_limit)));
+                list.pop_opacity();
+                continue;
+            }
             if (row == speed_memory_layout)
             {
                 // Not a switch: the memory the game's console is told it has. 4 GiB is what a
@@ -1344,9 +1373,9 @@ void Launcher::draw_dialog(Canvas &c, Modal modal, float open)
         list.pop_clip();
         scrollbar(c, rows_view, 1340.0f, window.y, window.h);
     }
-    if (modal == Modal::performance && option_ < kPerformanceSwitches)
+    if (modal == Modal::performance && *performance_about(option_))
     {
-        // What the highlighted switch does, under the window.
+        // What the highlighted switch (or the speed limit) does, under the window.
         text_block(c, tr(performance_about(option_)), 592.0f,
                    baseline(window.y + window.h + 22.0f, 30.0f, th().size_small), th().size_small, 30.0f,
                    th().meta, 736.0f, 2, kShrink);

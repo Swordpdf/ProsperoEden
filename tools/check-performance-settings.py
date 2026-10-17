@@ -25,6 +25,8 @@ for statement in (
     'Settings::values.use_reactive_flushing.SetValue(speed.reactive_flushing);',
     'Settings::values.skip_cpu_inner_invalidation.SetValue(speed.skip_invalidation);',
     'Common::SetGuestMemoryFine(speed.compact_memory || dev_cram_fine);',
+    'Settings::values.use_speed_limit.SetValue(speed_percent > 0);',
+    'Settings::values.speed_limit.SetValue(static_cast<u16>(speed_percent > 0 ? speed_percent : 100));',
 ):
     assert statement in release, statement
 for guard in ('if (speed.fast_gpu) {', 'if (speed.unsafe_cpu)', 'if (speed.unsafe_dma)'):
@@ -57,6 +59,12 @@ for name in ('block_list', 'async_shaders', 'fast_gpu', 'unsafe_cpu', 'unsafe_dm
              'skip_invalidation', 'compact_memory'):
     assert f'result.{name} = speed.{name};' in load, name
     assert f'speed.{name} = preferences.{name};' in save, name
+# The speed limit (Settings > Performance > Speed limit) is a general value too, and its first step
+# is 100%: the speed every session had before the setting existed.
+assert 'result.speed_limit = speed.speed_limit;' in load
+assert 'speed.speed_limit = std::clamp(preferences.speed_limit, 0,' in save
+assert 'inline constexpr int kSpeedLimitPercent[] = {100, ' in store
+assert 'int speed_limit = 0;' in store
 assert 'Eden::PerformanceSettings speed = Eden::LoadPerformance(0);' in save
 assert 'Eden::SavePerformance(0, speed)' in save
 # The console memory a game is told it has ("memory_layout", for a mod that keeps a heap of its
@@ -95,11 +103,11 @@ assert 'speed.memory_layout = std::clamp(preferences.memory_layout,' in save
 assert 'speed.memory_layout = preferences.memory_layout;' not in save
 assert 'prefs_.memory_layout =' in ui and 'TR("Memory")' in ui
 # A change is worth a line on where it arrives, and the words for that are already translated.
-assert 'else if (modal_ == Modal::performance && option_ == speed_memory_layout)' in ui
+assert 'else if (modal_ == Modal::performance && (option_ == speed_memory_layout || option_ == speed_limit_row))' in ui
 assert 'Saved. Applies when a game starts.' in ui
-# The switches keep their own count: the dialog's rows are seven switches and this new one, and the
-# hint line under them only has the seven to show.
-assert 'constexpr int kPerformanceSwitches = speed_memory_layout;' in ui
+# The switches keep their own count: the dialog's rows are the switches, the speed limit and this
+# one, and the line under them describes the switches and the speed limit only.
+assert 'constexpr int kPerformanceSwitches = speed_limit_row;' in ui
 assert 'kAbout[kPerformanceSwitches]' in ui and 'kNames[kPerformanceRows]' in ui
-print('Performance settings: the block list, shaders, GPU, CPU and DMA accuracy, flushing and invalidation '
-      'and the console memory reach the session, and the menu writes them PASS')
+print('Performance settings: the block list, shaders, GPU, CPU and DMA accuracy, flushing and invalidation, '
+      'the console memory and the speed limit reach the session, and the menu writes them PASS')

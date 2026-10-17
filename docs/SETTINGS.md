@@ -1,6 +1,6 @@
 # Settings
 
-The settings that take more than a line to explain: the Performance switches, frame generation, profiles, settings per game, button mapping, language, accessibility and update notices.
+The settings that take more than a line to explain: the Performance switches and speed limit, frame generation, profiles, settings per game, button mapping, language, accessibility and update notices.
 
 ## Performance settings
 
@@ -31,6 +31,29 @@ A game can have its own values: in its settings, **Performance** (see [Settings 
 The accuracy switches help only where a game is held back by what they relax. In the scene they were measured in on the console, a large game standing at its frame rate limit, switching all of them on changed neither the frame rate nor how busy the emulated processor and the graphics thread were. Leave them off unless a game runs under its frame rate, and switch them back off if its graphics go wrong.
 
 Resolution, the upscaling filter, the renderer and the refresh rate, which change speed too, are in **Settings > Video** and in a game's own settings.
+
+### Speed limit
+
+**Settings > Performance > Speed limit** is how fast a game may run, as a percentage of the console it was made for (Eden's *Limit Speed Percentage*). Left and right move over **100%** (the default, and what every earlier version did), **150%**, **200%**, **300%** and **Unlimited**. A game can have its own in **Library > Game settings > Performance**, which follows Settings until you choose one; it applies when a game starts.
+
+Above 100%, the emulated console's display refreshes that much more often, so a game that waits for it runs faster when the PS5 has the time to spare. A game locked to 30 FPS can then reach 60 at 200%, without a 60 FPS mod. It speeds up the whole game, not only its frame rate: a game that keeps time by counting its frames (many do) also plays faster, its animations, timers, music cues and physics included, while a game that keeps time by the clock shows more frames at the same pace. Where the console cannot keep up, the game runs as fast as it can and no faster. **Unlimited** switches the limit off: the game runs as fast as the console allows.
+
+| In the menu | In the file |
+|---|---|
+| 100% | `"100"` (the default) |
+| 150% | `"150"` |
+| 200% | `"200"` |
+| 300% | `"300"` |
+| Unlimited | `"unlimited"` |
+
+```json
+{
+  "performance": { "speed_limit": "100" },
+  "games": { "0100000000010000": { "performance": { "speed_limit": "200" } } }
+}
+```
+
+The launch line says what a session got (`Performance: ... speed limit 200%` in `stderr.log`).
 
 ### Console memory
 
@@ -137,7 +160,7 @@ The menu opens with the profile that the PS5 user in front chose last. If you us
 | Kind | What a game can have of its own |
 |---|---|
 | Video | Renderer, resolution, upscaling filter, ASTC textures, refresh rate, FPS overlay, frame generation with its target and multiplier |
-| Performance | Each of the seven switches. The game's console memory is one value for every game in **Settings > Performance > Memory**; a game's own is in the settings file ([Console memory](#console-memory)) |
+| Performance | Each of the switches, and the speed limit. The game's console memory is one value for every game in **Settings > Performance > Memory**; a game's own is in the settings file ([Console memory](#console-memory)) |
 | Audio | Game volume, mute |
 | Controls | Vibration, and a button mapping of its own |
 | System | RNG seed: with a seed the game is loaded at the same place in memory at every start, which some mods need. Left and right switch between **Random** and the seed; Cross opens the keyboard to type another one. The game's own random numbers still change from start to start |

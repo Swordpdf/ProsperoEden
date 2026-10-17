@@ -66,6 +66,10 @@ msgstr "Лишилося близько {0} хв"
 msgid "About {0} s left"
 msgstr "Лишилося близько {0} с"
 
+#: pe/ui/settings.cpp
+msgid "Above 100%, a game locked to 30 FPS can reach 60, and a game that counts its frames plays faster too."
+msgstr "Понад 100% гра, обмежена 30 FPS, може досягти 60, а гра, що рахує свої кадри, теж іде швидше."
+
 #. Label: which folders the app can read.
 #: pe/ui/browse.cpp
 msgid "ACCESS"
@@ -1784,6 +1788,11 @@ msgstr "Іспанська (Латинська Америка)"
 msgid "Speed"
 msgstr "Швидкість"
 
+#. Settings > Performance: how fast a game may run, as a percentage of the console it was made for.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Speed limit"
+msgstr "Обмеження швидкості"
+
 #. A DualSense button.
 #: pe/ui/game_options.cpp
 msgid "Square"
@@ -2034,6 +2043,11 @@ msgstr "Недоступно"
 #: pe/ui/save_sync.cpp
 msgid "Understood"
 msgstr "Зрозуміло"
+
+#. A Speed limit choice: no limit at all (as fast as the console can).
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Unlimited"
+msgstr "Без обмеження"
 
 #: pe/ui/pairing.cpp
 msgid "Unlink"

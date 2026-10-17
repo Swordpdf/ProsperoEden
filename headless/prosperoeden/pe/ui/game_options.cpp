@@ -52,6 +52,9 @@ constexpr int kFrameGenRow = 9, kFrameGenTargetRow = 10;
 constexpr int kVibrationRow = 0;
 constexpr int kMappingRow = 1;
 constexpr int kControllerRow = 2;
+// The Performance category's row after its eight switches: the row Settings > Performance has
+// there too (settings.cpp's speed_limit_row), so performance_about() describes it.
+constexpr int kSpeedLimitRow = 8;
 // The System category's row.
 constexpr int kSeedRow = 0;
 
@@ -81,6 +84,15 @@ std::string pick(const std::vector<std::string> &values, int index)
 {
     return index >= 0 && index < static_cast<int>(values.size()) ? values[static_cast<std::size_t>(index)] :
                                                                    std::string{"-"};
+}
+
+// The speed limits as the menu writes them (settings.cpp): percentages, then Unlimited.
+std::vector<std::string> speed_limit_names()
+{
+    std::vector<std::string> names;
+    for (const int value : kSpeedLimitPercents)
+        names.push_back(value > 0 ? percent(value) : std::string{tr("Unlimited")});
+    return names;
 }
 
 // One setting of a game: its choices, the one the game has (-1: it follows Settings), and what
@@ -169,6 +181,9 @@ std::vector<Option> options(int category, const GameSettings &game, Preferences 
                             game.performance[static_cast<std::size_t>(i)],
                             on_off(*performance_switch(prefs, i))});
         }
+        // How fast this game may run (kSpeedLimitRow).
+        const std::vector<std::string> speeds = speed_limit_names();
+        rows.push_back({tr("Speed limit"), speeds, game.speed_limit, pick(speeds, prefs.speed_limit)});
         break;
     }
     case category_audio:
@@ -220,7 +235,10 @@ GameSettings with_option(GameSettings game, int category, int row, int value, co
          game.frame_gen_multiplier) = value;
         break;
     case category_performance:
-        game.performance[static_cast<std::size_t>(std::clamp(row, 0, 7))] = value;
+        if (row == kSpeedLimitRow)
+            game.speed_limit = value;
+        else
+            game.performance[static_cast<std::size_t>(std::clamp(row, 0, 7))] = value;
         break;
     case category_audio:
         if (row == 0)
@@ -265,7 +283,8 @@ int Launcher::game_overrides(int category) const
                (game.frame_gen_multiplier >= 0);
     case category_performance:
         return static_cast<int>(
-            std::count_if(game.performance.begin(), game.performance.end(), [](int v) { return v >= 0; }));
+                   std::count_if(game.performance.begin(), game.performance.end(), [](int v) { return v >= 0; })) +
+               (game.speed_limit >= 0);
     case category_audio:
         return (game.volume >= 0) + (game.mute >= 0);
     case category_controls:
@@ -431,7 +450,7 @@ int Launcher::option_action() const
 
 std::string Launcher::option_about(int category, int row) const
 {
-    // The Performance switches each say what they do (settings.cpp).
+    // The Performance switches and the speed limit each say what they do (settings.cpp).
     if (category == category_performance)
         return tr(performance_about(row));
     return {};

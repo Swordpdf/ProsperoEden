@@ -66,6 +66,10 @@ msgstr "약 {0}분 남음"
 msgid "About {0} s left"
 msgstr "약 {0}초 남음"
 
+#: pe/ui/settings.cpp
+msgid "Above 100%, a game locked to 30 FPS can reach 60, and a game that counts its frames plays faster too."
+msgstr "100%를 넘으면 30 FPS로 고정된 게임이 60에 이를 수 있고, 프레임 수로 시간을 세는 게임은 진행도 빨라집니다."
+
 #. Label: which folders the app can read.
 #: pe/ui/browse.cpp
 msgid "ACCESS"
@@ -1784,6 +1788,11 @@ msgstr "스페인어(중남미)"
 msgid "Speed"
 msgstr "속도"
 
+#. Settings > Performance: how fast a game may run, as a percentage of the console it was made for.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Speed limit"
+msgstr "속도 제한"
+
 #. A DualSense button.
 #: pe/ui/game_options.cpp
 msgid "Square"
@@ -2034,6 +2043,11 @@ msgstr "사용할 수 없음"
 #: pe/ui/save_sync.cpp
 msgid "Understood"
 msgstr "확인"
+
+#. A Speed limit choice: no limit at all (as fast as the console can).
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Unlimited"
+msgstr "제한 없음"
 
 #: pe/ui/pairing.cpp
 msgid "Unlink"
