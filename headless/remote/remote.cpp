@@ -133,6 +133,12 @@ bool GameFileName(const std::string& name) {
     return extension == ".nsp" || extension == ".xci";
 }
 
+// The last part of a path: a file's name without its folder.
+std::string BaseName(const std::string& path) {
+    const auto slash = path.rfind('/');
+    return slash == std::string::npos ? path : path.substr(slash + 1);
+}
+
 // A name as one part of a path: letters, digits, '-' and '_' stay, the rest is %XX.
 std::string Safe(const std::string& name) {
     static const char hex[] = "0123456789ABCDEF";
@@ -164,7 +170,7 @@ void MakeFolders(const std::string& path) {
 
 // Unknown on the console: statfs is only in libkernel_sys, which a title does not import, and
 // the SDK's libc.a has it as a raw system call, which ends the process. A full drive still stops
-// the download when a write fails, before anything reaches roms/ or updates/.
+// the download when a write fails, before anything reaches roms/.
 bool FreeSpace([[maybe_unused]] const std::string& path, [[maybe_unused]] std::uint64_t* bytes) {
 #if defined(__PROSPERO__)
     return false;
@@ -261,7 +267,7 @@ bool MakeGame(const std::string& source, const SourceGame& from, Game* game) {
         if (file.kind == FileKind::game && GameFileName(file.name) && (main == nullptr || file.size > main->size))
             main = &file;
     if (main == nullptr || from.id.empty()) return false;
-    game->file = main->name;
+    game->file = GameFolder(main->name, from.id) + "/" + main->name;
     game->parts.push_back({main->id, main->name, main->size, false});
     for (const SourceFile& file : from.files) {
         if (file.kind == FileKind::game || !GameFileName(file.name)) continue;
@@ -272,7 +278,7 @@ bool MakeGame(const std::string& source, const SourceGame& from, Game* game) {
     }
     game->size = 0;
     for (const Part& part : game->parts) game->size += part.size;
-    if (game->name.empty()) game->name = game->file;
+    if (game->name.empty()) game->name = main->name;
     game->normal_name = NormalName(game->name);
     return true;
 }
@@ -325,7 +331,9 @@ void LoadCatalog(Shared& s, SourceState& state) {
         game.source = state.key;
         game.id = Text(item, "id");
         game.name = Text(item, "name");
-        game.file = Text(item, "file");
+        // Its path in roms/ from its file's name, also for a list kept before game folders.
+        if (const std::string file = BaseName(Text(item, "file")); GameFileName(file))
+            game.file = GameFolder(file, game.id) + "/" + file;
         game.size = Unsigned(item, "size");
         game.cover_source = Text(item, "cover");
         game.title_id = NormalTitleId(Text(item, "title_id"));
@@ -342,7 +350,7 @@ void LoadCatalog(Shared& s, SourceState& state) {
                     game.parts.push_back({Text(entry, "id"), Text(entry, "name"), Unsigned(entry, "size"),
                                           update != entry.end() && update->is_boolean() && update->get<bool>()});
                 }
-        const bool usable = !game.id.empty() && GameFileName(game.file) && !game.parts.empty() &&
+        const bool usable = !game.id.empty() && !game.file.empty() && !game.parts.empty() &&
                             std::all_of(game.parts.begin(), game.parts.end(),
                                         [](const Part& part) { return !part.id.empty() && GameFileName(part.name); });
         if (!usable) continue;
@@ -437,8 +445,24 @@ std::string StagedFolder(const Paths& paths, const std::string& source, const st
 std::string StagedPath(const Paths& paths, const Game& game, const Part& part) {
     return StagedFolder(paths, game.source, game.id) + "/" + part.name;
 }
-std::string FinalPath(const Paths& paths, const Part& part) {
+// A game's folder in roms/: its files all go there.
+std::string FolderPath(const Paths& paths, const Game& game) {
+    return paths.roms + "/" + GameFolder(game.file, game.id);
+}
+std::string FinalPath(const Paths& paths, const Game& game, const Part& part) {
+    return FolderPath(paths, game) + "/" + part.name;
+}
+// Where a download before game folders put a file: the game's in roms/, its updates and DLC in
+// updates/. Such a game is still on the console; its files are not moved.
+std::string EarlierPath(const Paths& paths, const Part& part) {
     return (part.update ? paths.updates : paths.roms) + "/" + part.name;
+}
+// A file of a game on the console, in its game folder or where an earlier download put it; empty
+// when it is not there.
+std::string PlacedPath(const Paths& paths, const Game& game, const Part& part) {
+    for (std::string path : {FinalPath(paths, game, part), EarlierPath(paths, part)})
+        if (FileSize(path) >= 0) return path;
+    return {};
 }
 
 // The bytes of a download, to its file in .remote-downloads/ through the console's FTP server
@@ -549,12 +573,14 @@ bool FeedFromDrive(StreamCheck& check, const std::string& path, std::uint64_t ba
 
 Outcome DownloadPart(Source& source, const Paths& paths, const FtpServer& ftp, const Game& game, const Part& part,
                      std::uint64_t base, std::string* error) {
-    const std::string folder = part.update ? paths.updates : paths.roms;
+    // The game folder is made once the download is complete (PlaceParts): one stopped or cancelled
+    // leaves nothing in roms/.
+    const std::string& folder = paths.roms;
     MakeFolders(folder);
-    const std::string final_path = FinalPath(paths, part);
     // A file of that name is on the console already: it stays as it is, whatever its size (one
     // the player copied there, or an earlier download), and nothing is downloaded over it.
-    const std::int64_t present = FileSize(final_path);
+    const std::string placed = PlacedPath(paths, game, part);
+    const std::int64_t present = placed.empty() ? -1 : FileSize(placed);
     if (present >= 0) {
         if (part.size > 0 && static_cast<std::uint64_t>(present) != part.size)
             Log("download of " + game.name + ": " + part.name + " is on the console with another size; it is kept");
@@ -613,22 +639,25 @@ Outcome DownloadPart(Source& source, const Paths& paths, const FtpServer& ftp, c
     return Outcome::done;
 }
 
-// A game whose files are all downloaded: they go to their places, its updates and DLC first, so
-// the game appears in the Library with all of it. A file that was there already stays as it was.
+// A game whose files are all downloaded: they go to its game folder, its updates and DLC first, so
+// the game appears in the Library with all of it. A file that was there already (also where an
+// earlier download put it) stays as it was.
 bool PlaceParts(const Paths& paths, const Game& game, std::string* error) {
     std::vector<Part> parts = game.parts;
     std::stable_sort(parts.begin(), parts.end(), [](const Part& a, const Part& b) { return a.update && !b.update; });
+    const std::string folder = FolderPath(paths, game);
     for (const Part& part : parts) {
         const std::string staged = StagedPath(paths, game, part);
         if (FileSize(staged) < 0) continue;
         // rename() would replace a file that appeared there since the download began.
-        if (FileSize(FinalPath(paths, part)) >= 0) {
+        if (!PlacedPath(paths, game, part).empty()) {
             Log("download of " + game.name + ": " + part.name + " is on the console already; it is kept");
             (void)std::remove(staged.c_str());
             continue;
         }
-        if (std::rename(staged.c_str(), FinalPath(paths, part).c_str()) != 0) {
-            *error = "Cannot move the download into " + std::string{part.update ? paths.updates : paths.roms};
+        MakeFolders(folder);
+        if (std::rename(staged.c_str(), FinalPath(paths, game, part).c_str()) != 0) {
+            *error = "Cannot move the download into " + folder;
             return false;
         }
     }
@@ -647,7 +676,7 @@ void RemoveStaged(const Paths& paths, const std::string& source, const std::stri
 }
 
 // What a cancelled download leaves: its folder in .remote-downloads/. Nothing of it is in roms/
-// or updates/ yet (PlaceParts), so nothing there is touched. The download thread deletes it.
+// yet (PlaceParts), so nothing there is touched. The download thread deletes it.
 void DiscardParts(Shared& s, const std::string& source, const std::string& id, const Game* game) {
     Discard discard{source, id, {}};
     if (game != nullptr)
@@ -658,7 +687,8 @@ void DiscardParts(Shared& s, const std::string& source, const std::string& id, c
 
 // What of a file is on the console: all of it, or what its download has so far.
 std::uint64_t PresentOf(const Paths& paths, const Game& game, const Part& part) {
-    const std::int64_t whole = FileSize(FinalPath(paths, part));
+    const std::string placed = PlacedPath(paths, game, part);
+    const std::int64_t whole = placed.empty() ? -1 : FileSize(placed);
     const std::int64_t started = FileSize(StagedPath(paths, game, part));
     return static_cast<std::uint64_t>(whole >= 0 ? whole : std::max<std::int64_t>(started, 0));
 }
@@ -880,6 +910,37 @@ void DownloadThread() {
 
 } // namespace
 
+std::string GameFolder(const std::string& file, const std::string& id) {
+    const std::string name = BaseName(file);
+    const auto dot = name.rfind('.');
+    const std::string stem = dot == std::string::npos || dot == 0 ? name : name.substr(0, dot);
+    // As the Library's CleanTitle (eden_services.cpp) names a game by its file.
+    std::string title = stem;
+    if (title.rfind("[Game] ", 0) == 0) title.erase(0, 7);
+    if (const auto tag = title.find_first_of("[("); tag != std::string::npos && tag > 0) title.erase(tag);
+    while (!title.empty() && (title.back() == ' ' || title.back() == '_' || title.back() == '-')) title.pop_back();
+    // Fit for a folder's name: no separators or control characters, no leading '.' (a hidden
+    // folder, which the Library skips), no spaces or dots at its ends (a drive formatted exFAT drops
+    // those, and the name would not be found again), and at most 255 bytes, cut between characters.
+    const auto fit = [](const std::string& text) {
+        std::string folder;
+        for (const unsigned char c : text)
+            if (c >= 32 && c != 127 && c != '/' && c != '\\') folder += static_cast<char>(c);
+        const auto loose = [](char c) { return c == ' ' || c == '.'; };
+        folder.erase(0, std::find_if_not(folder.begin(), folder.end(), loose) - folder.begin());
+        if (folder.size() > 255) {
+            std::size_t cut = 255;
+            while (cut > 0 && (static_cast<unsigned char>(folder[cut]) & 0xC0) == 0x80) --cut;
+            folder.resize(cut);
+        }
+        while (!folder.empty() && loose(folder.back())) folder.pop_back();
+        return folder;
+    };
+    for (const std::string& candidate : {title, stem, Safe(id)})
+        if (std::string folder = fit(candidate); !folder.empty()) return folder;
+    return "game";
+}
+
 std::string NormalName(const std::string& name) {
     // Latin-1's letters (U+00C0-U+00FF) and Latin Extended-A (U+0100-U+017F) as plain letters;
     // '*' is a letter of two (Æ, Œ, ĳ...), '-' no letter (×, ÷).
@@ -929,15 +990,18 @@ bool SameGame(const Game& a, const Game& b) {
         const std::string name = a.normal_name.empty() ? NormalName(a.name) : a.normal_name;
         return !name.empty() && name == (b.normal_name.empty() ? NormalName(b.name) : b.normal_name);
     }
-    return Lower(a.file) == Lower(b.file);
+    // The file names alone: the game folders could differ although the files are the same.
+    return Lower(BaseName(a.file)) == Lower(BaseName(b.file));
 }
 
 bool AsGame(const std::string& source, const SourceGame& from, Game* game) { return MakeGame(source, from, game); }
 
 bool SameAsLocal(const Game& game, std::uint64_t title_id, const std::string& normal_name, const std::string& file) {
     // The file it is downloaded as: whatever the title IDs say (a server's can be another than the
-    // one the console reads from the file), it is this game, and not offered again.
-    if (Lower(game.file) == Lower(file)) return true;
+    // one the console reads from the file), it is this game, and not offered again. A game
+    // downloaded before game folders, or copied to roms/ without a folder, is its file name alone.
+    const bool loose = game.file.find('/') == std::string::npos || file.find('/') == std::string::npos;
+    if (loose ? Lower(BaseName(game.file)) == Lower(BaseName(file)) : Lower(game.file) == Lower(file)) return true;
     if (!game.title_id.empty() && title_id != 0) {
         char id[17];
         std::snprintf(id, sizeof(id), "%016llX", static_cast<unsigned long long>(title_id));
@@ -954,7 +1018,7 @@ std::string TitleKey(const Game& game) {
     if (!game.title_id.empty()) return "title:" + game.title_id;
     if (!game.ids.empty()) return game.ids.begin()->first + ":" + game.ids.begin()->second;
     if (game.identified && !NormalName(game.name).empty()) return "name:" + NormalName(game.name);
-    return "file:" + Lower(game.file);
+    return "file:" + Lower(BaseName(game.file));
 }
 
 void Start(const Paths& paths, CoverWriter writer, FolderLister lister) {
@@ -1174,7 +1238,8 @@ std::vector<std::string> Files(const std::string& source, const std::string& id)
     std::vector<std::string> files;
     if (const Game* game = FindGame(s, source, id))
         for (const Part& part : game->parts)
-            if (const std::string path = FinalPath(s.paths, part); FileSize(path) >= 0) files.push_back(path);
+            for (std::string path : {FinalPath(s.paths, *game, part), EarlierPath(s.paths, part)})
+                if (FileSize(path) >= 0) files.push_back(std::move(path));
     return files;
 }
 

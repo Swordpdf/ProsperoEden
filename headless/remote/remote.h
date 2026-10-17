@@ -17,9 +17,11 @@
 //
 // A download is written to the game files folder's .remote-downloads/<source>/<game>/, its
 // contents checked as they come (stream_check.h; a damaged file is deleted), and, once all of the
-// game's files are complete, moved to their places: the game's file to roms/, its
-// updates and DLC to updates/, so those only ever hold whole files of whole games. One that stopped (the app closed, a game started, the network went
-// away) goes on from where it was, its last 4 MB fetched again in case of a power cut;
+// game's files are complete, moved to its game folder in roms/ (GameFolder), the game's file with
+// its updates and DLC, so roms/ only ever holds whole files of whole games. Games downloaded before
+// game folders keep their files where they are (the game's file in roms/, its updates and DLC in
+// updates/), and are still found there. One that stopped (the app closed, a game started, the
+// network went away) goes on from where it was, its last 4 MB fetched again in case of a power cut;
 // .remote-downloads/ keeps nothing else (a cancel deletes a game's folder, the next start whatever
 // is not queued). Everything runs on two threads of this file's own; the menu only reads their
 // state.
@@ -38,8 +40,8 @@ namespace Eden::Remote {
 struct Paths {
     std::string config;    // config/remote: sources.json, queue.json, <source>/catalog.json
     std::string covers;    // where the covers go
-    std::string roms;      // the game files folder's roms/ and updates/
-    std::string updates;
+    std::string roms;      // the game files folder's roms/, where downloads go (in game folders),
+    std::string updates;   // and updates/, where downloads went before game folders
     std::string downloads; // and its .remote-downloads/, for the files being downloaded
 };
 
@@ -54,7 +56,7 @@ struct Part {
     std::string id;         // the source's name for it
     std::string name;       // its file name, also on the console
     std::uint64_t size = 0; // 0 when not known
-    bool update = false;    // goes to updates/ (an update or DLC), not to roms/
+    bool update = false;    // an update or DLC, not the game's file
 };
 
 // A game on a source.
@@ -62,7 +64,7 @@ struct Game {
     std::string source;     // the key of its source (SourceStatus::key)
     std::string id;         // the source's name for it
     std::string name;
-    std::string file;       // the game's file name in roms/ once downloaded
+    std::string file;       // its path in roms/ once downloaded: "<GameFolder>/<game file name>"
     std::uint64_t size = 0; // all of its files
     std::string cover;      // its cover's TGA on the console; empty without one
     std::string cover_source; // the source's name for the cover
@@ -86,14 +88,20 @@ struct Title {
 // the same: their title ID; their id at a metadata provider both have one of; their names, when
 // both come from metadata (NormalName); else their file names.
 bool SameGame(const Game& a, const Game& b);
-// A source's game is a game on the console: by the file name it is downloaded as first, then by
-// their title IDs when the source knows its own, else by their names when it comes from metadata.
-// normal_name: the console
-// game's name as NormalName makes it (once, for all the sources' games it is compared with).
+// A source's game is a game on the console: by the file it is downloaded as first (its path in roms/;
+// the file name alone when either has no folder, as a game downloaded before game folders has not),
+// then by their title IDs when the source knows its own, else by their names when it comes from
+// metadata. normal_name: the console game's name as NormalName makes it (once, for all the
+// sources' games it is compared with). file: the console game's path in roms/.
 bool SameAsLocal(const Game& game, std::uint64_t title_id, const std::string& normal_name, const std::string& file);
 // A source's game as the console takes it (its game file, its updates and DLC); false when it has
 // no game file the console can use. source: the key of its source ("" for none).
 bool AsGame(const std::string& source, const SourceGame& from, Game* game);
+// The folder in roms/ a game is downloaded to, from its game file's name: the name without its
+// extension and the tags dumps carry ("Name [0100...][v0]", "Name (USA)"), as the Library names a
+// game by its file; else the name without its extension, else the source's id for the game, each
+// made fit for a folder's name.
+std::string GameFolder(const std::string& file, const std::string& id);
 // A name as names are compared: lower case, without accents, marks and anything but letters and
 // digits ("Café: Let's Go!" is "cafeletsgo").
 std::string NormalName(const std::string& name);
@@ -143,7 +151,7 @@ void Start(const Paths& paths, CoverWriter writer, FolderLister lister);
 void Stop();
 // Reads every source's game list again.
 void Refresh();
-// Files in roms/ or updates/ changed (a game was deleted): the Library reads its list again.
+// Files in roms/ changed (a game was deleted): the Library reads its list again.
 void Changed();
 
 Status Current();
@@ -161,7 +169,8 @@ std::vector<Download> Downloads();
 bool Enqueue(const std::string& source, const std::string& id, bool first);
 // Takes a game out of the queue; what it had downloaded is deleted.
 bool Cancel(const std::string& source, const std::string& id);
-// The files of a game that are on the console, as full paths.
+// The files of a game that are on the console, as full paths: in its game folder, and where a
+// download before game folders put them.
 std::vector<std::string> Files(const std::string& source, const std::string& id);
 
 } // namespace Eden::Remote

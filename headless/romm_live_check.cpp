@@ -210,10 +210,11 @@ Download Queued(const std::string& source, const std::string& id) {
     return {};
 }
 
-// A source's game by its file name; empty when it has none.
+// A source's game by its file name (its path in roms/ without its game folder); empty when it has
+// none.
 Game GameOf(const std::string& file) {
     for (const Game& game : Games())
-        if (game.file == file) return game;
+        if (fs::path(game.file).filename() == file) return game;
     return {};
 }
 
@@ -322,7 +323,7 @@ void SourceDownloads(const Server& server, const fs::path& library, const std::s
     const fs::path partial = downloads / "test" / big.id / "Delta Big.nsp";
     std::error_code error;
     const auto stopped_at = fs::file_size(partial, error);
-    Expect(!error && stopped_at > 0 && stopped_at < big.size && !fs::exists(roms / "Delta Big.nsp") &&
+    Expect(!error && stopped_at > 0 && stopped_at < big.size && !fs::exists(roms / "Delta Big") &&
                Queued("test", big.id).state == State::queued,
            "stopped part way (a game starts): it stays queued, what came stays in .remote-downloads/");
     // Its last bytes spoilt, as a power cut may leave them: they are fetched again.
@@ -351,7 +352,8 @@ void SourceDownloads(const Server& server, const fs::path& library, const std::s
     Expect(first + (5u << 20) >= stopped_at, "it goes on from where it was (RomM sends the rest: Range)");
     Expect(WaitFor([&] { return Queued("test", big.id).id.empty(); }, 300) && Queued("test", big.id).error.empty(),
            "it goes on and is done");
-    Expect(SameFile(roms / "Delta Big.nsp", switch_roms / "Delta Big.nsp"), "every byte as the server has it, the spoilt end too");
+    Expect(SameFile(roms / "Delta Big" / "Delta Big.nsp", switch_roms / "Delta Big.nsp"),
+           "every byte as the server has it, the spoilt end too, in the game's folder in roms/");
     Expect(!fs::exists(downloads / "test"), "nothing is left in .remote-downloads/");
 
     // A file whose contents are not what they are named after (here what a download that stopped
@@ -365,54 +367,53 @@ void SourceDownloads(const Server& server, const fs::path& library, const std::s
         return Enqueue("test", game.id, false) &&
                WaitFor([&] { return Queued("test", game.id).state == State::failed; }, 120) &&
                Queued("test", game.id).error.find("damaged") != std::string::npos &&
-               !fs::exists(downloads / "test" / game.id / name) && !fs::exists(roms / name);
+               !fs::exists(downloads / "test" / game.id / name) && !fs::exists(roms / GameFolder(name, game.id));
     };
     Expect(spoilt(gamma, switch_roms / "Gamma.nsp"), "an NSP found damaged is deleted, and the download fails saying so");
     Expect(spoilt(racer, switch_roms / "Beta Racer" / "Beta Racer.xci"), "an XCI found damaged, too");
     Expect(Enqueue("test", racer.id, false) && WaitFor([&] { return Queued("test", racer.id).id.empty(); }, 120) &&
-               SameFile(roms / "Beta Racer.xci", switch_roms / "Beta Racer" / "Beta Racer.xci"),
+               SameFile(roms / "Beta Racer" / "Beta Racer.xci", switch_roms / "Beta Racer" / "Beta Racer.xci"),
            "tried again, it is downloaded again, and comes out right");
-    fs::remove(roms / "Beta Racer.xci");
-    for (const char* name : {"Beta Racer [UPD][v65536].nsp", "Beta Racer [DLC].nsp"}) fs::remove(updates / name);
+    fs::remove_all(roms / "Beta Racer");
     Changed();
     Expect(WaitFor([&] { return !GameOf("Beta Racer.xci").id.empty(); }, 20), "deleted again, for what follows");
 
     // Begun from a longer file than the server has now: it starts again (416), and comes out right.
     Write(downloads / "test" / gamma.id / "Gamma.nsp", std::string(fs::file_size(switch_roms / "Gamma.nsp") + 5000, 'y'));
     Expect(Enqueue("test", gamma.id, false) && WaitFor([&] { return Queued("test", gamma.id).id.empty(); }, 120) &&
-               SameFile(roms / "Gamma.nsp", switch_roms / "Gamma.nsp"),
+               SameFile(roms / "Gamma" / "Gamma.nsp", switch_roms / "Gamma.nsp"),
            "a download begun longer than the server's file starts again (after the damaged one: tried again)");
 
-    // A game with its update and DLC: the game to roms/, the others to updates/.
+    // A game with its update and DLC: all of them to the game's folder in roms/.
     Expect(Enqueue("test", racer.id, false) && WaitFor([&] { return Queued("test", racer.id).id.empty(); }, 120),
            "a game with its update and DLC is downloaded");
-    Expect(SameFile(roms / "Beta Racer.xci", switch_roms / "Beta Racer" / "Beta Racer.xci") &&
-               SameFile(updates / "Beta Racer [UPD][v65536].nsp",
+    const fs::path racer_folder = roms / "Beta Racer";
+    Expect(SameFile(racer_folder / "Beta Racer.xci", switch_roms / "Beta Racer" / "Beta Racer.xci") &&
+               SameFile(racer_folder / "Beta Racer [UPD][v65536].nsp",
                         switch_roms / "Beta Racer" / "update" / "Beta Racer [UPD][v65536].nsp") &&
-               SameFile(updates / "Beta Racer [DLC].nsp", switch_roms / "Beta Racer" / "dlc" / "Beta Racer [DLC].nsp"),
-           "the game in roms/, its update and DLC in updates/");
-    Expect(!fs::exists(roms / "Beta Racer Mod.nsp") && !fs::exists(updates / "Beta Racer Mod.nsp"),
-           "its mod is not downloaded");
+               SameFile(racer_folder / "Beta Racer [DLC].nsp", switch_roms / "Beta Racer" / "dlc" / "Beta Racer [DLC].nsp"),
+           "the game, its update and its DLC in the game's folder in roms/");
+    Expect(!fs::exists(racer_folder / "Beta Racer Mod.nsp") && !fs::exists(updates), "its mod is not downloaded, and nothing goes to updates/");
 
-    // A cancel: the download stops, what came of it goes; an update that was in updates/ already
-    // (the player's own) stays.
-    fs::remove(roms / "Delta Big.nsp");
+    // A cancel: the download stops, what came of it goes; an update that was in the game's folder
+    // already (the player's own) stays.
+    fs::remove_all(roms / "Delta Big");
     Changed();
     Expect(WaitFor([&] { return !GameOf("Delta Big.nsp").id.empty(); }, 20), "a deleted game is on the source only again");
     Expect(Enqueue("test", big.id, false) && WaitFor([&] { return Queued("test", big.id).done > 0; }, 60),
            "it downloads again");
     Expect(Cancel("test", big.id) && WaitFor([&] { return !fs::exists(downloads / "test" / big.id); }, 30) &&
-               !fs::exists(roms / "Delta Big.nsp"),
+               !fs::exists(roms / "Delta Big"),
            "a cancel stops it, and what came goes");
-    fs::remove(roms / "Beta Racer.xci");
-    Write(updates / "Beta Racer [UPD][v65536].nsp", "the player's own");
+    fs::remove(racer_folder / "Beta Racer.xci");
+    Write(racer_folder / "Beta Racer [UPD][v65536].nsp", "the player's own");
     Changed();
     Stop();
     Write(downloads / "test" / racer.id / "Beta Racer.xci", std::string(1000, 'x'));
     Expect(Enqueue("test", racer.id, false) && Cancel("test", racer.id), "a queued game is cancelled");
     Expect(WaitFor([&] { return !fs::exists(downloads / "test" / racer.id); }, 30) &&
-               Read(updates / "Beta Racer [UPD][v65536].nsp") == "the player's own",
-           "a cancel deletes what was downloaded, and nothing in updates/");
+               Read(racer_folder / "Beta Racer [UPD][v65536].nsp") == "the player's own",
+           "a cancel deletes what was downloaded, and nothing in roms/");
 
     // What .remote-downloads/ has for a game that is not queued goes when the menu opens; a queued
     // game's download stays.
@@ -440,13 +441,13 @@ void SourceDownloads(const Server& server, const fs::path& library, const std::s
     Expect(!SourceOf("old").error.empty() && SourceOf("old").address.empty(), "a source of an unknown type says so");
     Game office_gamma;
     for (const Game& game : Games())
-        if (game.source == "office" && game.file == "Gamma.nsp") office_gamma = game;
-    fs::remove(roms / "Gamma.nsp");
+        if (game.source == "office" && game.file == "Gamma/Gamma.nsp") office_gamma = game;
+    fs::remove_all(roms / "Gamma");
     Changed();
     Expect(Enqueue("office", office_gamma.id, false) && !Enqueue("home", gamma.id, false),
            "a game is queued from one source, not from the other one too");
     Expect(WaitFor([&] { return Queued("office", office_gamma.id).id.empty(); }, 120) &&
-               SameFile(roms / "Gamma.nsp", switch_roms / "Gamma.nsp"),
+               SameFile(roms / "Gamma" / "Gamma.nsp", switch_roms / "Gamma.nsp"),
            "it is downloaded from the second source");
 
     // Sources without a name are told apart.
@@ -456,7 +457,7 @@ void SourceDownloads(const Server& server, const fs::path& library, const std::s
 
     // A source taken out of sources.json: what was queued from it says so.
     setup(romm("Home", server.url, token) + "," + romm("Office", other, token));
-    fs::remove(roms / "Gamma.nsp");
+    fs::remove_all(roms / "Gamma");
     Changed();
     Stop();
     Expect(Enqueue("office", office_gamma.id, false), "queued from the second source");
@@ -471,7 +472,8 @@ void SourceDownloads(const Server& server, const fs::path& library, const std::s
     Expect(Read(config / "queue.json") == "[{\"id\":\"" + gamma.id + "\",\"source\":\"home\"}]",
            "the queue is kept for the next start");
     setup(romm("Home", other, token));
-    Expect(WaitFor([&] { return Queued("home", gamma.id).id.empty(); }, 120) && SameFile(roms / "Gamma.nsp", switch_roms / "Gamma.nsp"),
+    Expect(WaitFor([&] { return Queued("home", gamma.id).id.empty(); }, 120) &&
+               SameFile(roms / "Gamma" / "Gamma.nsp", switch_roms / "Gamma.nsp"),
            "the queue goes on with the new address");
     Stop();
 }

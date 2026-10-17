@@ -28,7 +28,7 @@ namespace Eden::Remote {
 struct SyncGame {
     std::uint64_t title_id = 0; // read from its file
     std::string name;           // as the Library shows it
-    std::string file;           // its file name in roms/
+    std::string file;           // its path in roms/
 };
 
 struct SyncPlaces {

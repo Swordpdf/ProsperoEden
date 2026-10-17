@@ -25,6 +25,7 @@
 
 #include <openssl/evp.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cstdio>
 #include <filesystem>
@@ -161,9 +162,30 @@ void Identity() {
     Expect(local(game("Galaxy 2", "Galaxy.2.nsp", true, "01B84DBAFD84A000", {}), 0x0100000000020000ull, "Galaxy 2",
                  "galaxy.2.NSP"),
            "the file it was downloaded as, although the title IDs disagree");
-    Expect(TitleKey(journey) == "screenscraper:123456" && TitleKey(game("A", "F.nsp", false, "", {})) == "file:f.nsp" &&
+    Expect(local(game("Ember", "Ember/Ember.xci", false, "", {}), 1, "Other", "ember/EMBER.xci") &&
+               local(game("Ember", "Ember/Ember.xci", false, "", {}), 1, "Other", "Ember.xci") &&
+               !local(game("Ember", "Ember/Ember.xci", false, "", {}), 1, "Other", "Other/Ember.xci"),
+           "a downloaded game by its path in roms/, or by its file name alone when the console's has no folder");
+    Expect(SameGame(game("A", "One/Same.nsp", false, "", {}), game("B", "Two/same.NSP", false, "", {})),
+           "the file names decide, whatever the game folders");
+    Expect(TitleKey(journey) == "screenscraper:123456" && TitleKey(game("A", "F/F.nsp", false, "", {})) == "file:f.nsp" &&
                TitleKey(game("A", "F.nsp", false, "0100000000010000", {})) == "title:0100000000010000",
            "a title's key");
+}
+
+// The folder in roms/ a game is downloaded to.
+void Folders() {
+    Expect(GameFolder("Ember Journey [0100000000010000][v0].nsp", "7") == "Ember Journey" &&
+               GameFolder("[Game] Ember Journey (USA).xci", "7") == "Ember Journey" &&
+               GameFolder("Ember_Journey - [v0].nsp", "7") == "Ember_Journey",
+           "the file's name without its extension and its tags");
+    Expect(GameFolder("[0100000000010000].nsp", "7") == "[0100000000010000]" &&
+               GameFolder(".Hidden (USA).nsp", "7") == "Hidden" && GameFolder("... .nsp", "a/b") == "a%2Fb",
+           "a tag at its start stays; no leading dot; else the source's id");
+    std::string long_name;
+    while (long_name.size() < 300) long_name += "\xC3\xA9";
+    const std::string folder = GameFolder(long_name + ".nsp", "7");
+    Expect(folder.size() == 254 && folder == long_name.substr(0, 254), "at most 255 bytes, cut between characters");
 }
 
 // The RomM backend on its own.
@@ -290,19 +312,19 @@ void MockSpecials(const std::string& url, const fs::path& root, const std::strin
     Expect(titles.size() == 5, "the same games on two sources are five titles");
     Expect(title_of("16").key == "screenscraper:1000#2", "a second copy on one source is a title of its own");
     Expect(title_of("10").key == "screenscraper:1000" && title_of("10").games.size() == 2 &&
-               title_of("10").games[1].file == "Alpha Quest (Office).nsp",
+               title_of("10").games[1].file == "Alpha Quest/Alpha Quest (Office).nsp",
            "a game of another file name on the second source is the same title");
     Expect(title_of("11").key == "title:0100000000011000" && title_of("13").key.starts_with("file:"),
            "titles by title ID, and by file name without anything else");
     Expect(Enqueue("office", "10", false) && !Enqueue("home", "10", false), "a game of another name is not queued twice");
     Expect(WaitFor([] { return !Queued("office", "10"); }) &&
-               Read(roms / "Alpha Quest (Office).nsp") == Pattern(100, 10000000),
-           "it is downloaded under that source's file name");
+               Read(roms / "Alpha Quest" / "Alpha Quest (Office).nsp") == Pattern(100, 10000000),
+           "it is downloaded to its game folder under that source's file name");
 
     // A full drive: the download fails with what the FTP server said, and what it wrote stays in
     // .remote-downloads/, to go on from once there is room.
     Game epsilon;
-    Expect(Eden::Remote::Find("home", "14", &epsilon) && epsilon.file == "Epsilon.nsp" && epsilon.parts.size() == 3 &&
+    Expect(Eden::Remote::Find("home", "14", &epsilon) && epsilon.file == "Epsilon/Epsilon.nsp" && epsilon.parts.size() == 3 &&
                !epsilon.parts[0].update && epsilon.parts[1].update && epsilon.parts[2].update,
            "the game file first, an update larger than it after it; the mod is left out");
     fs::create_directories(downloads / "home" / "14");
@@ -312,28 +334,48 @@ void MockSpecials(const std::string& url, const fs::path& root, const std::strin
     Expect(Find(Downloads(), "home", "14").error.find("No space left on device") != std::string::npos,
            "and says the drive is full, as the FTP server said");
     const fs::path written = downloads / "home" / "14" / "Epsilon [UPD][v131072].nsp";
-    Expect(fs::exists(written) && fs::file_size(written) == 1000 && !fs::exists(updates / "Epsilon [UPD][v131072].nsp") &&
-               !fs::exists(roms / "Epsilon.nsp"),
-           "what was written stays in .remote-downloads/");
+    Expect(fs::exists(written) && fs::file_size(written) == 1000 && !fs::exists(roms / "Epsilon"),
+           "what was written stays in .remote-downloads/, and no game folder is made yet");
     fs::remove(downloads / "home" / "14" / "ftp-full");
 
-    // Room again: it goes on, and the update larger than its game goes to updates/ (the categories
-    // decide, not the sizes); its mod stays on the server.
+    // Room again: it goes on, and the update larger than its game goes with it as an update (the
+    // categories decide, not the sizes); its mod stays on the server.
     start();
     Expect(Enqueue("home", "14", false) && WaitFor([] { return !Queued("home", "14"); }), "it goes on once there is room");
-    Expect(Read(roms / "Epsilon.nsp") == Pattern(140, 50000) &&
-               Read(updates / "Epsilon [UPD][v131072].nsp") == Pattern(141, 150000) &&
-               Read(updates / "Epsilon [DLC].nsp") == Pattern(142, 20000) && !fs::exists(roms / "Epsilon Mod.nsp") &&
-               !fs::exists(updates / "Epsilon Mod.nsp"),
-           "the game to roms/, its update and DLC to updates/, not its mod");
+    Expect(Read(roms / "Epsilon" / "Epsilon.nsp") == Pattern(140, 50000) &&
+               Read(roms / "Epsilon" / "Epsilon [UPD][v131072].nsp") == Pattern(141, 150000) &&
+               Read(roms / "Epsilon" / "Epsilon [DLC].nsp") == Pattern(142, 20000) &&
+               !fs::exists(roms / "Epsilon" / "Epsilon Mod.nsp") && !fs::exists(updates),
+           "the game, its update and its DLC to its game folder, not its mod, and nothing to updates/");
 
     // A server that sends a game file whole although part of it is there: it starts again.
     fs::create_directories(downloads / "home" / "11");
     Write(downloads / "home" / "11" / "Beta Racer.xci", std::string(5000000, 'x'));
     Expect(Enqueue("home", "11", false) && WaitFor([] { return !Queued("home", "11"); }), "a game from such a server");
-    Expect(Read(roms / "Beta Racer.xci") == Pattern(110, 6000000) &&
-               Read(updates / "Beta Racer [UPD][v65536].nsp") == Pattern(111, 100000),
+    Expect(Read(roms / "Beta Racer" / "Beta Racer.xci") == Pattern(110, 6000000) &&
+               Read(roms / "Beta Racer" / "Beta Racer [UPD][v65536].nsp") == Pattern(111, 100000),
            "a download that could not resume starts again, and every byte is right");
+
+    // A game downloaded before game folders: its file in roms/, its update in updates/. It is on
+    // the console, a download of it keeps those files and makes no game folder, and its files are
+    // found there, to be deleted.
+    fs::remove_all(roms / "Beta Racer");
+    fs::create_directories(updates);
+    Write(roms / "Beta Racer.xci", Pattern(110, 6000000));
+    Write(updates / "Beta Racer [UPD][v65536].nsp", Pattern(111, 100000));
+    Game racer;
+    Expect(Eden::Remote::Find("home", "11", &racer) && SameAsLocal(racer, 0, "", "Beta Racer.xci"),
+           "a game downloaded before game folders is on the console");
+    std::vector<std::string> earlier = Files("home", "11");
+    std::sort(earlier.begin(), earlier.end());
+    Expect(earlier == std::vector<std::string>{(roms / "Beta Racer.xci").string(),
+                                               (updates / "Beta Racer [UPD][v65536].nsp").string()},
+           "its files are where that download put them");
+    Expect(Enqueue("home", "11", false) && WaitFor([] { return !Queued("home", "11"); }) &&
+               !fs::exists(roms / "Beta Racer") && Read(roms / "Beta Racer.xci") == Pattern(110, 6000000),
+           "a download of it keeps them, and makes no game folder");
+    for (const std::string& path : earlier) fs::remove(path);
+    Expect(Files("home", "11").empty(), "once they are deleted, none of it is on the console");
     Eden::Remote::Stop();
 }
 
@@ -570,6 +612,7 @@ void SaveArchives(const fs::path& root) {
 
 int main(int argc, char** argv) {
     Identity();
+    Folders();
     RommBackend();
     StreamChecks();
     if (argc >= 3) SaveArchives(fs::path(argv[2]) / "archives");
