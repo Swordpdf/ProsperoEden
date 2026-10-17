@@ -170,24 +170,13 @@ void check_game_folder(const fs::path& base) {
     const fs::path folder = base / "roms" / "Sample";
     write_text(folder / "mods" / "Texture pack" / "romfs" / "a.bin", "x");
     write_text(folder / "mods" / "Shared name" / "exefs" / "0123456789ABCDEF.ips", "x");
-    write_text(folder / "cheats" / "0123456789ABCDEF.txt", "[One]
-04000000 00000001 00000001
-"
-                                                            "[Two]
-04000000 00000002 00000002
-");
+    write_text(folder / "cheats" / "0123456789ABCDEF.txt",
+               "[One]\n04000000 00000001 00000001\n[Two]\n04000000 00000002 00000002\n");
     write_text(base / "mods" / "0100DDDD00004000" / "Shared name" / "romfs" / "b.bin", "x");
-    write_text(base / "mods" / "0100DDDD00004000" / "Speed" / "exefs" / "0123456789ABCDEF.pchtxt", "@enabled
-");
-    write_text(base / "cheats" / "0100dddd00004000" / "0123456789ABCDEF.txt", "[Hidden]
-04000000 0 0
-");
-    write_text(base / "cheats" / "0100dddd00004000" / "FEDCBA9876543210.txt", "[Other version]
-04000000 0 0
-"
-                                                                               "[Second]
-04000000 0 0
-");
+    write_text(base / "mods" / "0100DDDD00004000" / "Speed" / "exefs" / "0123456789ABCDEF.pchtxt", "@enabled\n");
+    write_text(base / "cheats" / "0100dddd00004000" / "0123456789ABCDEF.txt", "[Hidden]\n04000000 00000003 00000003\n");
+    write_text(base / "cheats" / "0100dddd00004000" / "FEDCBA9876543210.txt",
+               "[Other version]\n04000000 00000004 00000004\n[Second]\n04000000 00000005 00000005\n");
     const Places places{(base / "mods").string(), (base / "cheats").string(), folder.string()};
     const auto mods = List(places, game);
     require(mods.size() == 4, "game folder: four mods");
