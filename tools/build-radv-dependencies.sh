@@ -44,7 +44,9 @@ bash "$vulkan/tools/build-radv.sh" release
 python3 "$root/tools/patch-radv-wsi.py"
 python3 "$root/tools/patch-radv-gs-compute.py"
 python3 "$root/tools/patch-radv-disk-cache.py"
+python3 "$root/tools/patch-radv-transfer-split.py"
 bash "$vulkan/tools/build-radv.sh" release
 python3 -B "$root/tools/patch-radv-wsi.py" --digest > "$vulkan/.deps/native/radv-release/EDEN_WSI_SHA256"
 python3 -B "$root/tools/patch-radv-gs-compute.py" --digest > "$vulkan/.deps/native/radv-release/EDEN_GS_SHA256"
 python3 -B "$root/tools/patch-radv-disk-cache.py" --digest > "$vulkan/.deps/native/radv-release/EDEN_DISK_CACHE_SHA256"
+python3 -B "$root/tools/patch-radv-transfer-split.py" --digest > "$vulkan/.deps/native/radv-release/EDEN_TRANSFER_SPLIT_SHA256"
