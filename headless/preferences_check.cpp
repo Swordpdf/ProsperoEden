@@ -113,8 +113,14 @@ int main() {
     // Last and recent games.
     assert(Eden::SaveLastGame("Sample Quest [id].nsp", file));
     assert(Eden::LoadLastGame(file) == "Sample Quest [id].nsp");
-    for (const char* invalid : {"../escape.nsp", "game.zip", "a/b.nsp"}) assert(!Eden::SaveLastGame(invalid, file));
+    for (const char* invalid : {"../escape.nsp", "game.zip", "a/b/c.nsp", "/game.nsp", ".hidden/game.nsp", "a/",
+                                "a/.nsp", "a\b.nsp", "Game/game.zip"})
+        assert(!Eden::SaveLastGame(invalid, file));
     assert(Eden::LoadLastGame(file) == "Sample Quest [id].nsp");
+    // A game in its own folder in roms/ (issue 168), and back to one directly in it.
+    assert(Eden::SaveLastGame("Sample Quest/Sample Quest [id].nsp", file));
+    assert(Eden::LoadLastGame(file) == "Sample Quest/Sample Quest [id].nsp");
+    assert(Eden::SaveLastGame("Sample Quest [id].nsp", file));
     assert(Eden::SaveRecentGame("Sample Quest.nsp", file));
     assert(Eden::SaveRecentGame("Demo Racer.xci", file));
     assert(Eden::SaveRecentGame("Sample Quest.nsp", file));

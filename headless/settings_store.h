@@ -174,10 +174,19 @@ inline int KeyIndex(const std::string& value, const char* const* keys, int count
     return fallback;
 }
 
-inline bool ValidRomFilename(std::string_view name) {
-    if (name.size() < 5 || name.size() > 255) return false;
+// A game's file as the Library names it: its path in the game files folder's roms/, either its
+// name ("Game.nsp") or a game folder and its name ("Game/Game.nsp", the game's update and DLC
+// beside it). Readable characters, one folder at most, never a hidden folder, "." or "..".
+inline bool ValidRomPath(std::string_view name) {
+    if (name.size() < 5 || name.size() > 511) return false;
     for (unsigned char c : name)
-        if (c < 32 || c == 127 || c == '/' || c == '\\') return false;
+        if (c < 32 || c == 127 || c == '\\') return false;
+    if (const auto slash = name.find('/'); slash != std::string_view::npos) {
+        if (slash == 0 || name[0] == '.' || name.find('/', slash + 1) != std::string_view::npos) return false;
+        if (slash > 255 || name.size() - slash - 1 < 5 || name.size() - slash - 1 > 255) return false;
+    } else if (name.size() > 255) {
+        return false;
+    }
     std::string extension(name.substr(name.size() - 4));
     for (char& c : extension) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     return extension == ".nsp" || extension == ".xci";
@@ -255,13 +264,13 @@ inline Json Legacy(const std::string& folder) {
             document["diagnostics"] = {{"detailed_logging", logging != 0}};
         }
     }
-    if (ReadFile(folder + "/last-game.txt", text) && ValidRomFilename(text))
+    if (ReadFile(folder + "/last-game.txt", text) && ValidRomPath(text))
         document["library"]["last_game"] = text;
     if (ReadFile(folder + "/recent-games.txt", text)) {
         Json recent = Json::array();
         std::istringstream lines(text);
         for (std::string line; std::getline(lines, line) && recent.size() < 4;)
-            if (ValidRomFilename(line)) recent.push_back(line);
+            if (ValidRomPath(line)) recent.push_back(line);
         if (!recent.empty()) document["library"]["recent"] = recent;
     }
     if (ReadFile(folder + "/assets-dir.txt", text)) {
@@ -894,11 +903,11 @@ inline bool SaveChosenCheats(uint64_t title_id, const std::vector<std::string>& 
 inline std::string LoadLastGame(const std::string& file = SettingsFile()) {
     const Settings::Json document = Settings::Load(file);
     const std::string name = Settings::String(document, Settings::Json::json_pointer("/library/last_game"));
-    return ValidRomFilename(name) ? name : std::string{};
+    return ValidRomPath(name) ? name : std::string{};
 }
 
 inline bool SaveLastGame(std::string_view name, const std::string& file = SettingsFile()) {
-    if (!ValidRomFilename(name)) return false;
+    if (!ValidRomPath(name)) return false;
     Settings::Json document = Settings::Load(file);
     document["version"] = 1;
     document["library"]["last_game"] = std::string(name);
@@ -914,14 +923,14 @@ inline std::vector<std::string> LoadRecentGames(const std::string& file = Settin
     for (const auto& entry : document.at(at)) {
         if (!entry.is_string()) continue;
         const std::string name = entry.get<std::string>();
-        if (recent.size() < 8 && ValidRomFilename(name) && std::find(recent.begin(), recent.end(), name) == recent.end())
+        if (recent.size() < 8 && ValidRomPath(name) && std::find(recent.begin(), recent.end(), name) == recent.end())
             recent.push_back(name);
     }
     return recent;
 }
 
 inline bool SaveRecentGame(std::string_view name, const std::string& file = SettingsFile()) {
-    if (!ValidRomFilename(name)) return false;
+    if (!ValidRomPath(name)) return false;
     auto recent = LoadRecentGames(file);
     recent.erase(std::remove(recent.begin(), recent.end(), name), recent.end());
     recent.insert(recent.begin(), std::string(name));

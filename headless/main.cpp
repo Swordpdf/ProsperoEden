@@ -1493,7 +1493,15 @@ int main(int argc, char** argv) {
                 system.SetShuttingDown(false);
                 // Update and DLC files (NSP or XCI) in the game files' updates folder apply to their
                 // base game: Eden's ExternalContentProvider, which the patch manager checks first.
+                // So do those in the game's own folder, when it has one (roms/<folder>/, issue 168).
                 Settings::values.external_content_dirs = {Eden::AssetsPath("updates")};
+                if (guest) {
+                    const std::string roms = Eden::AssetsPath("roms/");
+                    const std::string_view path{guest};
+                    if (path.starts_with(roms))
+                        if (const auto slash = path.find('/', roms.size()); slash != std::string_view::npos)
+                            Settings::values.external_content_dirs.emplace_back(path.substr(0, slash));
+                }
                 system.GetFileSystemController().CreateFactories(*system.GetFilesystem());
                 // The game's own contents, registered as Eden's desktop frontends do before booting a
                 // game (ConfigureFilesystemProvider). An update's data is a patch on the base game's:

@@ -34,14 +34,26 @@ uint32_t eden_game_supported_languages(const char* rom_path, const char* keys_di
 // itself when the game's languages are unknown.
 int eden_game_language(const char* rom_path, const char* keys_dir, uint64_t title_id, int chosen);
 
-// Update and DLC files (NSP or XCI, any depth) in updates_dir, read with the provider that also
-// applies them to a running game. Replaces the previous scan; eden_game_addons queries it.
-void eden_scan_addons(const char* updates_dir, const char* keys_dir);
-// The update and DLC files of a game in updates_dir (NSP or XCI, any depth), by the title IDs
-// they hold: each one's full path is handed to found. Returns how many there were.
+// What an NSP or XCI holds: a game (it has an application), else an update, else DLC; 0 when it
+// cannot be read (no keys yet, a damaged file).
+enum {
+    EDEN_CONTENT_UNKNOWN = 0,
+    EDEN_CONTENT_GAME = 1,
+    EDEN_CONTENT_UPDATE = 2,
+    EDEN_CONTENT_DLC = 3,
+};
+int eden_rom_content(const char* rom_path, const char* keys_dir);
+
+// Update and DLC files (NSP or XCI, any depth) in updates_dir and in the game folders of roms_dir
+// (its folders, one per game; roms_dir may be null), read with the provider that also applies them
+// to a running game. Replaces the previous scan; eden_game_addons queries it.
+void eden_scan_addons(const char* updates_dir, const char* roms_dir, const char* keys_dir);
+// The update and DLC files of a game in updates_dir and in game_dir, the game's own folder in
+// roms/ (null for a game directly in roms/), NSP or XCI at any depth, by the title IDs they hold:
+// each one's full path is handed to found. Returns how many there were.
 typedef void (*eden_found_file)(void* user, const char* path);
-int eden_game_addon_files(uint64_t title_id, const char* updates_dir, const char* keys_dir, eden_found_file found,
-                          void* user);
+int eden_game_addon_files(uint64_t title_id, const char* updates_dir, const char* game_dir, const char* keys_dir,
+                          eden_found_file found, void* user);
 // For a base game: the newest update's display version (empty without one) and its DLC count.
 // Returns nonzero when either exists.
 int eden_game_addons(uint64_t title_id, char* update_version, size_t capacity, unsigned* dlc_count);
