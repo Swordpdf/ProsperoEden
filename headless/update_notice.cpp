@@ -9,6 +9,7 @@
 #include <string>
 
 #include "diagnostics.h"
+#include "prosperoeden/version.h"
 #include "storage_paths.h"
 #include "update_check/self_update.h"
 #include "update_check/update_check.h"
@@ -81,6 +82,17 @@ void* Check(void*) {
         state = SELF_UPDATE_AVAILABLE;
     }
 #endif
+    // The program's own version counts too (issue 230): an install that replaced the program but
+    // kept an older sce_sys/param.json read as that older version, and the version the console
+    // already ran was offered at every start.
+    int comparable = 0;
+    if ((state == SELF_UPDATE_AVAILABLE || state == SELF_UPDATE_NOT_INSTALLABLE) &&
+        update_check_version_compare(result.available, kAppVersion, &comparable) <= 0 && comparable) {
+        Report("update check", (std::string{"sce_sys/param.json names "} + (result.installed[0] ? result.installed : "-") +
+                                ", the program is " + kAppVersion + ": nothing newer to offer")
+                                   .c_str());
+        state = SELF_UPDATE_UP_TO_DATE;
+    }
     char line[300];
     std::snprintf(line, sizeof(line), "result=%s installed=%s available=%s version=%s size=%llu",
                   ResultName(state), result.installed[0] ? result.installed : "-",
