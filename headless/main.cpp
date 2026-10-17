@@ -1287,7 +1287,17 @@ int main(int argc, char** argv) {
             // Mods): Eden's patch manager skips the names in this list. With the Library's Mods
             // switch off for the game, every one of them is in it.
             const u64 title = eden_game_title_id(guest);
-            const auto all_mods = Eden::Mods::List(Eden::AssetsPath("mods"), title);
+            // A game in its own folder in roms/ (issue 168) brings its update, DLC, mods and cheats.
+            Eden::Mods::SessionGameFolder().clear();
+            {
+                const std::string roms = Eden::AssetsPath("roms/");
+                const std::string_view path{guest};
+                if (path.starts_with(roms))
+                    if (const auto slash = path.find('/', roms.size()); slash != std::string_view::npos)
+                        Eden::Mods::SessionGameFolder() = std::string{path.substr(0, slash)};
+            }
+            const auto all_mods = Eden::Mods::List(
+                {Eden::AssetsPath("mods"), Eden::AssetsPath("cheats"), Eden::Mods::SessionGameFolder()}, title);
             auto mods_off = Eden::LoadDisabledMods(title);
             if (!Eden::LoadModsEnabled(title)) {
                 for (const auto& mod : all_mods)
@@ -1495,13 +1505,8 @@ int main(int argc, char** argv) {
                 // base game: Eden's ExternalContentProvider, which the patch manager checks first.
                 // So do those in the game's own folder, when it has one (roms/<folder>/, issue 168).
                 Settings::values.external_content_dirs = {Eden::AssetsPath("updates")};
-                if (guest) {
-                    const std::string roms = Eden::AssetsPath("roms/");
-                    const std::string_view path{guest};
-                    if (path.starts_with(roms))
-                        if (const auto slash = path.find('/', roms.size()); slash != std::string_view::npos)
-                            Settings::values.external_content_dirs.emplace_back(path.substr(0, slash));
-                }
+                if (const std::string& folder = Eden::Mods::SessionGameFolder(); !folder.empty())
+                    Settings::values.external_content_dirs.push_back(folder);
                 system.GetFileSystemController().CreateFactories(*system.GetFilesystem());
                 // The game's own contents, registered as Eden's desktop frontends do before booting a
                 // game (ConfigureFilesystemProvider). An update's data is a patch on the base game's:

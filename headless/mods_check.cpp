@@ -162,6 +162,47 @@ void check_listing(const fs::path& base) {
     require(Summary({}, {}) == "none", "no mods");
 }
 
+// A game in its own folder in roms/ (issue 168): its mods/ and cheats/, with mods/ and cheats/ of
+// the game files folder.
+void check_game_folder(const fs::path& base) {
+    using namespace Eden::Mods;
+    const std::uint64_t game = 0x0100DDDD00004000ULL;
+    const fs::path folder = base / "roms" / "Sample";
+    write_text(folder / "mods" / "Texture pack" / "romfs" / "a.bin", "x");
+    write_text(folder / "mods" / "Shared name" / "exefs" / "0123456789ABCDEF.ips", "x");
+    write_text(folder / "cheats" / "0123456789ABCDEF.txt", "[One]
+04000000 00000001 00000001
+"
+                                                            "[Two]
+04000000 00000002 00000002
+");
+    write_text(base / "mods" / "0100DDDD00004000" / "Shared name" / "romfs" / "b.bin", "x");
+    write_text(base / "mods" / "0100DDDD00004000" / "Speed" / "exefs" / "0123456789ABCDEF.pchtxt", "@enabled
+");
+    write_text(base / "cheats" / "0100dddd00004000" / "0123456789ABCDEF.txt", "[Hidden]
+04000000 0 0
+");
+    write_text(base / "cheats" / "0100dddd00004000" / "FEDCBA9876543210.txt", "[Other version]
+04000000 0 0
+"
+                                                                               "[Second]
+04000000 0 0
+");
+    const Places places{(base / "mods").string(), (base / "cheats").string(), folder.string()};
+    const auto mods = List(places, game);
+    require(mods.size() == 4, "game folder: four mods");
+    require(mods[0].name == std::string(kCheatsFolder) && mods[0].kinds == kCheats, "game folder: the cheats folders");
+    require(mods[1].name == "Shared name" && mods[1].kinds == kCode, "game folder: its mod of a shared name first");
+    require(mods[2].name == "Speed" && mods[3].name == "Texture pack", "game folder: with the shared mods");
+    const auto files = CheatFolderFiles(places, game);
+    require(files.size() == 2 && files[0] == folder / "cheats" / "0123456789ABCDEF.txt" &&
+                files[1].filename() == "FEDCBA9876543210.txt",
+            "game folder: its cheat file for a version first, cheats/ for the others");
+    require(mods[0].cheats.size() == 4, "game folder: the cheats of both files");
+    require(List(Places{(base / "mods").string(), (base / "cheats").string(), {}}, game).size() == 3,
+            "a game directly in roms/: mods/ and cheats/ only");
+}
+
 void check_cheats(const fs::path& base) {
     using namespace Eden::Mods;
     using Ids = std::vector<std::string>;
@@ -283,8 +324,9 @@ int main() {
     check_pchtxt();
     check_listing(base);
     check_cheats(base);
+    check_game_folder(base);
     check_settings(base);
     fs::remove_all(base);
-    std::puts("Mods: IPS and IPS32 patches, .pchtxt hex, text and long values, the folder listing, "
+    std::puts("Mods: IPS and IPS32 patches, .pchtxt hex, text and long values, the folder listing, a game's own folder, "
               "switching off per game, the game's Mods switch, cheats chosen one by one PASS");
 }

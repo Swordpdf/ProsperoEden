@@ -2795,8 +2795,8 @@ ${paths_source}")
     # and never created here (Eden makes one for every game that starts).
     eden_patch(bis_source
         "    return GetOrCreateDirectoryRelative(load_root, fmt::format(\"/{:016X}\", title_id));\n}\n\nVirtualDir BISFactory::GetModificationDumpRoot"
-        "    const auto wanted = fmt::format(\"{:016X}\", title_id);\n    if (load_root != nullptr)\n        for (const auto& folder : load_root->GetSubdirectories())\n            if (Common::ToUpper(folder->GetName()) == wanted) return folder;\n    return nullptr;\n}\n\nVirtualDir BISFactory::GetModificationDumpRoot")
-    string(PREPEND bis_source "#include \"common/string_util.h\"\n")
+        "    const auto wanted = fmt::format(\"{:016X}\", title_id);\n    VirtualDir shared;\n    if (load_root != nullptr)\n        for (const auto& folder : load_root->GetSubdirectories())\n            if (Common::ToUpper(folder->GetName()) == wanted) shared = folder;\n    // With the game's own folder's mods and the cheats/ folders' cheats (game_folder_vfs.h).\n    return Eden::GameFolderMods::Root(std::move(shared), title_id, wanted);\n}\n\nVirtualDir BISFactory::GetModificationDumpRoot")
+    string(PREPEND bis_source "#include \"common/string_util.h\"\n#include \"${EDEN_PORT_DIR}/game_folder_vfs.h\"\n")
     write_derived("${PORT_BUILD_DIR}/bis_factory.cpp" "${bis_source}")
     list(REMOVE_ITEM core_sources file_sys/bis_factory.cpp)
     list(APPEND core_sources "${PORT_BUILD_DIR}/bis_factory.cpp")

@@ -1,13 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Mods: what the player put in the game files folder's mods/ (next to roms/), in the layout Eden's
-// patch manager reads and mod archives come in:
+// Mods: what the player put beside a game, in the layout Eden's patch manager reads and mod
+// archives come in. In the game's own folder in roms/ (issue 168):
 //
-//   mods/<title ID, 16 hex digits>/<mod name>/exefs/    code patches (*.pchtxt, *.ips) or whole
-//                                                       replacement files (main, subsdk0, ...)
-//                                           /romfs/     game files that replace the game's own
-//                                           /romfs_ext/ (also romfslite/)
-//                                           /cheats/    <build ID>.txt
-//   mods/<title ID>/cheat_<anything>.txt                 cheats without a folder
+//   roms/<game>/mods/<mod name>/exefs/      code patches (*.pchtxt, *.ips) or whole replacement
+//                                           files (main, subsdk0, ...)
+//                              /romfs/      game files that replace the game's own
+//                              /romfs_ext/  (also romfslite/)
+//   roms/<game>/cheats/<build ID>.txt       cheats, one file per version of the game
+//
+// and in the game files folder, for any game: mods/<title ID, 16 hex digits>/<mod name>/ (the same
+// layout, a mod's own cheats/<build ID>.txt and loose cheat_<anything>.txt files too) and
+// cheats/<title ID>/<build ID>.txt. A mod of the same name in both is one mod, its files from the
+// game's folder first; the cheat files of both cheats/ folders make one mod, kCheatsFolder (the game's folder's
+// file first when both have one for a version). The derived bis_factory.cpp shows Eden the same
+// (game_folder_vfs.h).
 //
 // Eden applies every mod of the running game, in the order of their names, except those the
 // launcher switched off (settings_store.h keeps their names per game; main.cpp hands them to
@@ -40,6 +46,24 @@
 
 namespace Eden::Mods {
 namespace fs = std::filesystem;
+
+// The mod the cheats/ folders make (roms/<game>/cheats/ and cheats/<title ID>/).
+inline constexpr std::string_view kCheatsFolder = "Cheats folder";
+
+// Where a game's mods are: the game files folder's mods/ and cheats/, and the game's own folder in
+// roms/ (empty for a game directly in roms/).
+struct Places {
+    std::string mods;
+    std::string cheats;
+    std::string game_folder;
+};
+
+// The game folder of the game being started, for Eden's patch manager (game_folder_vfs.h); empty
+// for a game directly in roms/. main.cpp sets it before the game boots.
+inline std::string& SessionGameFolder() {
+    static std::string folder;
+    return folder;
+}
 
 enum : unsigned {
     kCode = 1,    // exefs: patches or replacement code
@@ -127,19 +151,47 @@ inline unsigned Kinds(const fs::path& mod) {
 
 // The cheats a mod lists (its cheats/ folder's files, one per build of the game, or a loose cheat
 // file), once per name, when there are several.
+inline std::vector<Patches::Entry> CheatList(std::vector<fs::path> files, const std::string& name);
+
+inline std::vector<fs::path> TextFiles(const fs::path& folder) {
+    std::vector<fs::path> files;
+    for (const auto& file : ListFolder(folder))
+        if (!IsFolder(file) && Lower(file.path().extension().string()) == ".txt") files.push_back(file.path());
+    std::sort(files.begin(), files.end());
+    return files;
+}
+
 inline std::vector<Patches::Entry> CheatList(const fs::directory_entry& mod) {
     std::vector<fs::path> files;
     if (!IsFolder(mod)) {
         files.push_back(mod.path());
     } else {
-        for (const auto& part : ListFolder(mod.path())) {
-            if (!IsFolder(part) || Lower(part.path().filename().string()) != "cheats") continue;
-            for (const auto& file : ListFolder(part.path()))
-                if (!IsFolder(file) && Lower(file.path().extension().string()) == ".txt") files.push_back(file.path());
-        }
+        for (const auto& part : ListFolder(mod.path()))
+            if (IsFolder(part) && Lower(part.path().filename().string()) == "cheats")
+                for (auto& file : TextFiles(part.path())) files.push_back(std::move(file));
     }
     std::sort(files.begin(), files.end());
-    const std::string name = mod.path().filename().string();
+    return CheatList(std::move(files), mod.path().filename().string());
+}
+
+// The files of the cheats/ folders, one per version of the game: the game's folder's first, then
+// those of cheats/<title ID>/ for versions it has none for.
+inline std::vector<fs::path> CheatFolderFiles(const Places& places, uint64_t title_id) {
+    std::vector<fs::path> files;
+    std::set<std::string> versions;
+    const auto add = [&](const fs::path& folder) {
+        for (auto& file : TextFiles(folder))
+            if (versions.insert(Lower(file.filename().string())).second) files.push_back(std::move(file));
+    };
+    if (!places.game_folder.empty())
+        for (const auto& entry : ListFolder(places.game_folder))
+            if (IsFolder(entry) && Lower(entry.path().filename().string()) == "cheats") add(entry.path());
+    if (!places.cheats.empty())
+        if (const std::string folder = TitleFolder(places.cheats, title_id); !folder.empty()) add(folder);
+    return files;
+}
+
+inline std::vector<Patches::Entry> CheatList(std::vector<fs::path> files, const std::string& name) {
     std::vector<Patches::Entry> cheats;
     for (const auto& file : files) {
         std::ifstream in(file, std::ios::binary);
@@ -156,23 +208,39 @@ inline std::vector<Patches::Entry> CheatList(const fs::directory_entry& mod) {
     return cheats;
 }
 
-// The game's mods, in the order Eden applies them.
-inline std::vector<Mod> List(const std::string& root, uint64_t title_id) {
+// The game's mods, in the order Eden applies them: those of its own folder, then those of mods/
+// that it has none of the same name of, and the cheats/ folders' cheats as one more.
+inline std::vector<Mod> List(const Places& places, uint64_t title_id) {
     std::vector<Mod> mods;
-    const std::string folder = TitleFolder(root, title_id);
-    if (folder.empty()) return mods;
-    for (const auto& entry : ListFolder(folder)) {
-        const std::string name = entry.path().filename().string();
-        if (IsFolder(entry)) {
-            if (const unsigned kinds = Kinds(entry.path()))
-                mods.push_back({name, kinds, kinds & kCheats ? CheatList(entry) : std::vector<Patches::Entry>{}});
-        } else if (name.starts_with("cheat_")) {
-            mods.push_back({name, kCheats, CheatList(entry)});
+    std::set<std::string> names;
+    const auto add_folder = [&](const std::string& folder) {
+        for (const auto& entry : ListFolder(folder)) {
+            const std::string name = entry.path().filename().string();
+            if (name == kCheatsFolder || names.contains(name)) continue;
+            if (IsFolder(entry)) {
+                if (const unsigned kinds = Kinds(entry.path())) {
+                    mods.push_back({name, kinds, kinds & kCheats ? CheatList(entry) : std::vector<Patches::Entry>{}});
+                    names.insert(name);
+                }
+            } else if (name.starts_with("cheat_")) {
+                mods.push_back({name, kCheats, CheatList(entry)});
+                names.insert(name);
+            }
         }
+    };
+    if (!places.game_folder.empty())
+        for (const auto& entry : ListFolder(places.game_folder))
+            if (IsFolder(entry) && Lower(entry.path().filename().string()) == "mods") add_folder(entry.path().string());
+    if (const std::string folder = TitleFolder(places.mods, title_id); !folder.empty()) add_folder(folder);
+    if (auto files = CheatFolderFiles(places, title_id); !files.empty()) {
+        const std::string name{kCheatsFolder};
+        mods.push_back({name, kCheats, CheatList(std::move(files), name)});
     }
     std::sort(mods.begin(), mods.end(), [](const Mod& a, const Mod& b) { return a.name < b.name; });
     return mods;
 }
+
+inline std::vector<Mod> List(const std::string& root, uint64_t title_id) { return List(Places{root, {}, {}}, title_id); }
 
 // Switching one of a mod's cheats: the game's chosen cheats after it. One of a group (two frame
 // rates) takes the other's place.

@@ -3,12 +3,15 @@
 // the settings file, Eden's metadata reader.
 #pragma once
 
+#include "mods.h"
 #include "pe/ui/services.hpp"
 #include "remote/remote.h"
 
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
+#include <cstdint>
+#include <map>
 #include <mutex>
 #include <optional>
 #include <string>
@@ -132,6 +135,10 @@ private:
     std::string launch_error_;
     std::string setup_; // what is missing from keys and firmware; empty when ready
     std::mutex bridge_; // Eden's metadata reader keeps state between calls: one caller at a time
+    // Each game's own folder in roms/ by its title ID, as the Library last found it (issue 168).
+    Eden::Mods::Places ModPlaces(std::uint64_t title_id);
+    std::mutex game_folders_lock_;
+    std::map<std::uint64_t, std::string> game_folders_;
     // The download sources' games as titles (Remote::Titles), read again when their lists changed:
     // the menu asks for its downloads four times a second.
     std::vector<Eden::Remote::Title> Titles();

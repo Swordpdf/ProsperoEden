@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <cctype>
+#include <cerrno>
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
@@ -767,6 +768,10 @@ std::vector<pe::ui::Game> EdenServices::games() {
             else
                 (void)std::remove(staged.c_str());
             game.title_id = eden_game_title_id(path.c_str());
+            if (const std::string folder = GameFolderOf(file); game.title_id && !folder.empty()) {
+                const std::lock_guard folders(game_folders_lock_);
+                game_folders_[game.title_id] = folder;
+            }
             // The game's own language (Library > Game settings > Language) or Settings > Language.
             const GameLanguage language = LanguageFor(path, game.title_id, Eden::PreferencesFor(game.title_id).language);
             game.addons = AddOnSummary(game.title_id);
@@ -1263,13 +1268,22 @@ bool EdenServices::save_import(std::uint64_t, std::string*) { return false; }
 bool EdenServices::save_export(std::uint64_t, std::string*) { return false; }
 #endif
 
-// Mods (headless/mods.h): what the game files folder's mods/<title ID>/ holds for a game, which
-// of them are switched off and which cheats are chosen (settings_store.h).
+// Where a game's mods are (headless/mods.h): the game files folder's mods/ and cheats/, and the
+// game's own folder in roms/ when the Library found it in one.
+Eden::Mods::Places EdenServices::ModPlaces(std::uint64_t title_id) {
+    Eden::Mods::Places places{Eden::AssetsPath("mods"), Eden::AssetsPath("cheats"), {}};
+    const std::lock_guard lock(game_folders_lock_);
+    if (const auto found = game_folders_.find(title_id); found != game_folders_.end()) places.game_folder = found->second;
+    return places;
+}
+
+// Mods (headless/mods.h): what a game has, which of them are switched off and which cheats are
+// chosen (settings_store.h).
 std::vector<pe::ui::Mod> EdenServices::mods(std::uint64_t title_id) {
     std::vector<pe::ui::Mod> result;
     const auto off = Eden::LoadDisabledMods(title_id);
     const auto chosen = Eden::LoadChosenCheats(title_id);
-    for (const Eden::Mods::Mod& mod : Eden::Mods::List(Eden::AssetsPath("mods"), title_id)) {
+    for (const Eden::Mods::Mod& mod : Eden::Mods::List(ModPlaces(title_id), title_id)) {
         std::string kind;
         const auto add = [&kind](const char* text) {
             if (!kind.empty()) kind += ", ";
@@ -1289,7 +1303,7 @@ std::vector<pe::ui::Mod> EdenServices::mods(std::uint64_t title_id) {
 bool EdenServices::set_cheat_enabled(std::uint64_t title_id, const std::string& name, const std::string& cheat,
                                      bool enabled) {
     bool saved = false;
-    for (const Eden::Mods::Mod& mod : Eden::Mods::List(Eden::AssetsPath("mods"), title_id))
+    for (const Eden::Mods::Mod& mod : Eden::Mods::List(ModPlaces(title_id), title_id))
         if (mod.name == name)
             saved = Eden::SaveChosenCheats(
                 title_id, Eden::Mods::ChooseCheat(mod, cheat, enabled, Eden::LoadChosenCheats(title_id)));
@@ -1311,11 +1325,16 @@ bool EdenServices::set_mods_enabled(std::uint64_t title_id, bool enabled) {
     return saved;
 }
 
+// A game in its own folder keeps its mods there; any other, in mods/<title ID>/.
 std::string EdenServices::mods_folder(std::uint64_t title_id) {
+    if (const std::string folder = ModPlaces(title_id).game_folder; !folder.empty())
+        return "roms/" + std::filesystem::path(folder).filename().string() + "/mods/";
     return "mods/" + Eden::Mods::TitleName(title_id) + "/";
 }
 
 bool EdenServices::make_mods_folder(std::uint64_t title_id) {
+    if (const std::string folder = ModPlaces(title_id).game_folder; !folder.empty())
+        return mkdir((folder + "/mods").c_str(), 0777) == 0 || errno == EEXIST;
     const std::string root = Eden::AssetsPath("mods");
     if (!Eden::Mods::TitleFolder(root, title_id).empty()) return true;
     (void)mkdir(root.c_str(), 0777);
