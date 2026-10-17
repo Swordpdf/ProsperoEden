@@ -174,6 +174,48 @@ eden_sparse_replace("    std::size_t alloc_size{};\n"
 write_derived("${PORT_BUILD_DIR}/sparse/common/sparse_large_vector.h" "${sparse_header}")
 include("${EDEN_PORT_DIR}/jit-page-table.cmake")
 
+# The GPU's address space table (Common::MultiLevelPageTable, one per address space a game asks
+# for) reserves its whole range with an anonymous mmap and relies on the system to back a page
+# only when it is first written. On the PS5 an anonymous mapping comes out of the flexible pool
+# (a few hundred MiB): a game that asked for a larger GPU address space (40 bits: a 1 GiB table)
+# got no table at all, and the next mapping wrote through a null base ("assert base" in Eden's
+# log, then SIGSEGV on nvservices). It is reserved like the other large tables instead, sparse
+# (AllocateSparsePages, src/memory_pages.cpp), and each first-level chunk is committed when the
+# table reserves it for a mapping (AllocateLevel), which is the only way a mapping is written.
+file(READ "${PROJECT_SOURCE_DIR}/src/common/multi_level_page_table.inc" mlpt_source)
+foreach(mlpt_site
+        "    void* base{mmap(nullptr, alloc_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)};\n    if (base == MAP_FAILED)\n        base = nullptr;\n"
+        "    ASSERT(munmap(base_ptr, alloc_size) == 0);\n"
+        "#else\n    void* base = ptr;\n#endif\n")
+    string(FIND "${mlpt_source}" "${mlpt_site}" mlpt_at)
+    if(mlpt_at LESS 0)
+        message(FATAL_ERROR "Pinned multi_level_page_table.inc changed; review how the GPU page table is reserved.")
+    endif()
+endforeach()
+string(REPLACE
+    "    void* base{mmap(nullptr, alloc_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)};\n    if (base == MAP_FAILED)\n        base = nullptr;\n"
+    "    void* base{AllocateSparsePages(alloc_size)};\n" mlpt_source "${mlpt_source}")
+string(REPLACE "    ASSERT(munmap(base_ptr, alloc_size) == 0);\n"
+    "    FreeSparsePages(base_ptr, alloc_size);\n" mlpt_source "${mlpt_source}")
+string(REPLACE "#else\n    void* base = ptr;\n#endif\n"
+    "#else\n    void* base = ptr;\n    // The chunk is written next (MemoryManager::PageTableOp): give its slots memory of their own.\n    const auto chunk_begin = reinterpret_cast<std::uintptr_t>(ptr);\n    const auto chunk_end = chunk_begin + first_level_chunk_size;\n    for (std::uintptr_t page = chunk_begin; page < chunk_end; page += 0x200000)\n        CommitSparsePage(page);\n    CommitSparsePage(chunk_end - 1);\n#endif\n"
+    mlpt_source "${mlpt_source}")
+string(REPLACE "namespace Common {\n"
+    "namespace Common {\nvoid* AllocateSparsePages(std::size_t size) noexcept;\nvoid FreeSparsePages(void* base, std::size_t size) noexcept;\nvoid CommitSparsePage(std::uintptr_t page) noexcept;\n"
+    mlpt_source "${mlpt_source}")
+string(PREPEND mlpt_source "#include <cstdint>\n")
+file(READ "${PROJECT_SOURCE_DIR}/src/common/multi_level_page_table.cpp" mlpt_unit)
+string(REPLACE "#include \"common/multi_level_page_table.inc\"\n" "${mlpt_source}\n" mlpt_unit "${mlpt_unit}")
+string(FIND "${mlpt_unit}" "AllocateSparsePages(alloc_size)" mlpt_done)
+if(mlpt_done LESS 0)
+    message(FATAL_ERROR "Pinned multi_level_page_table.cpp changed; it no longer includes the .inc as expected.")
+endif()
+write_derived("${PORT_BUILD_DIR}/multi_level_page_table.cpp" "${mlpt_unit}")
+get_target_property(common_sources common SOURCES)
+list(REMOVE_ITEM common_sources multi_level_page_table.cpp)
+list(APPEND common_sources "${PORT_BUILD_DIR}/multi_level_page_table.cpp")
+set_property(TARGET common PROPERTY SOURCES "${common_sources}")
+
 # An abandoned fiber stack is not unwound. Empty the by-value weak reference
 # before switching; jump_fcontext returns the live destination supplied by the
 # resumer, under that fiber's guard, just as the initial entry trampoline does.
