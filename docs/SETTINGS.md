@@ -81,7 +81,14 @@ Six presets come with the app:
 | Retro | An old television: colour fringing at the edges, curved scanlines with a phosphor mask, darker corners |
 | Vivid | Warmer, more saturated colour, deeper blacks and brighter whites, a light sharpen |
 
-The presets are files in `/data/prosperoeden/user/post_presets` (`.fxp`; the app writes the six there the first time), built from the effects in `/data/prosperoeden/user/post_shaders` (`.fx`). A preset file of your own in that folder is listed beside them by its name: its `chain=` line names the effects in order, each with its technique and values (`Bloom.fx|Bloom|Radius=1.2,Amount=0.25;Sharpen.fx|Sharpen|Amount=0.75`). An effect it names that the console does not have is left out.
+The presets are files in `/data/prosperoeden/user/post_presets` (`.fxp`; the app writes the six there the first time), built from the effects in `/data/prosperoeden/user/post_shaders` (`.fx`).
+
+| Folder | What goes in it |
+|---|---|
+| `/data/prosperoeden/user/post_presets/` | Presets (`.fxp`): a name, a description and the chain of effects |
+| `/data/prosperoeden/user/post_shaders/` | ReShade FX effects (`.fx`) and the files they include (`.fxh`) |
+
+Restart ProsperoEden after adding files: the list is read when the menu opens. A ReShade `.ini` preset does not load as it is; write its effects into a `.fxp` chain instead (below). A preset file of your own in that folder is listed beside them by its name: its `chain=` line names the effects in order, each with its technique and values (`Bloom.fx|Bloom|Radius=1.2,Amount=0.25;Sharpen.fx|Sharpen|Amount=0.75`). An effect it names that the console does not have is left out.
 
 - It is drawn by the **Vulkan** renderer; with OpenGL the game shows as it is.
 - It applies when a game starts. A line at launch (`Post-processing:` in `stderr.log`) names the preset, or says why it is off.

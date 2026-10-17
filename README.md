@@ -46,6 +46,7 @@ Local-wireless multiplayer through Eden rooms is new in v1.000.110 and experimen
 - **A steadier frame rate in heavy scenes** - some games time their own frames and drop to a lower frame rate (30 to 20, or 60 to 30) as soon as a frame takes a little too long. ProsperoEden lets the game's clock give by up to 15% in those moments, so the game keeps its frame rate and runs a few percent slower instead of losing a third of its frames.
 - **120 Hz output** - on a display that shows 120 Hz, games can run on a 120 Hz output: **Refresh rate** in **Settings > Video**, or in one game's settings. A frame that is a little late is then shown 8 ms later instead of 17 ms, and patches for more than 60 FPS need it. The menu stays at 60 Hz.
 - **Frame generation** - between two of a game's own pictures ProsperoEden can show one made up from them, so a 30 FPS game looks like 60: **Frame generation** in **Settings > Video**, or in one game's settings. It needs your own copy of Lossless Scaling; see [Frame generation](docs/SETTINGS.md#frame-generation).
+- **Post-processing (ReShade FX)** - a look drawn over the game's picture: **Post-processing** in **Settings > Video**, or in one game's settings, with the Vulkan renderer. Six presets come with the app (Anime, Cinematic, Clean, Dreamy, Retro, Vivid). Presets of your own (`.fxp`) go in `/data/prosperoeden/user/post_presets/` and the ReShade FX effects they use (`.fx`, with any `.fxh` they include) in `/data/prosperoeden/user/post_shaders/`; they are listed after a restart. See [Post-processing](docs/SETTINGS.md#post-processing).
 - **Game files anywhere** - keys, firmware, and games can live in any folder the PS5 can read: internal storage, an M.2 or external drive, or a USB device.
 - **Folder browser** - pick the game files folder in **Settings > Game files**. It shows how many keys, firmware files, and games each folder holds. Hold L1/R1 to page quickly.
 - **Library** - your games as covers, with the selected game's details beside them. The home screen has **Continue Playing** and **Recently Played**, which keep working after you move your files.
@@ -86,12 +87,12 @@ Local-wireless multiplayer through Eden rooms is new in v1.000.110 and experimen
 
 ## Guides
 
-<a name="game-files-folder"></a><a name="app-data"></a><a name="updating"></a><a name="going-back-to-the-previous-version"></a><a name="moving-save-data"></a><a name="mods"></a><a name="quick-start-with-romm"></a><a name="download-sources"></a><a name="romm"></a><a name="save-sync"></a><a name="romm-1"></a><a name="performance-settings"></a><a name="frame-generation"></a><a name="profiles"></a><a name="settings-per-game"></a><a name="button-mapping"></a><a name="language-and-accessibility"></a><a name="upgrading-from-an-earlier-alpha"></a><a name="roadmap"></a>
+<a name="game-files-folder"></a><a name="app-data"></a><a name="updating"></a><a name="going-back-to-the-previous-version"></a><a name="moving-save-data"></a><a name="mods"></a><a name="quick-start-with-romm"></a><a name="download-sources"></a><a name="romm"></a><a name="save-sync"></a><a name="romm-1"></a><a name="performance-settings"></a><a name="frame-generation"></a><a name="post-processing"></a><a name="profiles"></a><a name="settings-per-game"></a><a name="button-mapping"></a><a name="language-and-accessibility"></a><a name="upgrading-from-an-earlier-alpha"></a><a name="roadmap"></a>
 
 | Guide | What is in it |
 |---|---|
 | [Game files, app data and updates](docs/INSTALL.md) | The layout of the game files folder, where settings, saves and logs are kept, updating from the menu or by hand, going back to the previous version |
-| [Settings](docs/SETTINGS.md) | The Performance switches, frame generation, profiles, settings per game, button mapping, language and accessibility |
+| [Settings](docs/SETTINGS.md) | The Performance switches, post-processing (ReShade FX presets), frame generation, profiles, settings per game, button mapping, language and accessibility |
 | [Save data](docs/SAVES.md) | Moving save data in and out, and save sync with a server |
 | [Download sources and RomM](docs/DOWNLOADS.md) | Games from a RomM server or another source in your network, and the download queue |
 | [Mods](docs/MODS.md) | Patches, replacement game files and cheats |
