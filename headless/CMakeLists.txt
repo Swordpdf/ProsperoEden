@@ -800,12 +800,17 @@ if(PS5_NATIVE)
     target_sources(dynarmic PRIVATE "${PORT_BUILD_DIR}/a32_interface.cpp")
 endif()
 
+include("${EDEN_PORT_DIR}/guest-code-cache.cmake")
+
 # Carry both qualified JIT configuration changes into the real core wrappers.
 # Generate local derivatives; the pinned dependency itself remains unchanged.
 get_target_property(core_sources core SOURCES)
 foreach(bits 32 64)
     set(relative "arm/dynarmic/arm_dynarmic_${bits}.cpp")
     file(READ "${PROJECT_SOURCE_DIR}/src/core/${relative}" wrapper)
+    if(bits EQUAL 64)
+        eden_guest_code_cache(wrapper)
+    endif()
     string(REPLACE "Common::PageTable::SIGN_BIT" "std::countl_zero(Common::PageTable::ATTRIBUTE_MASK)" wrapper "${wrapper}")
     # The JIT's direct page table when the process has one (headless/jit-page-table.cmake).
     set(direct_anchor "            config.page_table_sign_extension = std::uint8_t(std::countl_zero(Common::PageTable::ATTRIBUTE_MASK));\n        }\n")
@@ -1007,6 +1012,16 @@ write_derived("${PORT_BUILD_DIR}/physical_core.cpp"
 # rate is applied where Eden applies its own clock settings, and it follows the frames the
 # game hands in (BufferQueueProducer::QueueBuffer, below).
 file(READ "${PROJECT_SOURCE_DIR}/src/core/core_timing.cpp" core_timing_source)
+# Publish the stop request before waking either wait. Otherwise the timing thread can
+# consume the wake, re-enter Wait(), and leave Reset permanently blocked in join().
+set(timing_stop_old "    paused = true;\n    pause_event.Set();\n    event.Set();\n    if (timer_thread.joinable()) {\n        timer_thread.request_stop();\n        timer_thread.join();\n    }")
+string(FIND "${core_timing_source}" "${timing_stop_old}" timing_stop_at)
+if(timing_stop_at LESS 0)
+    message(FATAL_ERROR "Pinned CoreTiming::Reset changed")
+endif()
+string(REPLACE "${timing_stop_old}"
+    "    paused = true;\n    if (timer_thread.joinable()) {\n        timer_thread.request_stop();\n    }\n    pause_event.Set();\n    event.Set();\n    if (timer_thread.joinable()) {\n        timer_thread.join();\n    }"
+    core_timing_source "${core_timing_source}")
 set(guest_clock_old "    if (::Settings::values.sync_core_speed.GetValue()) {")
 string(FIND "${core_timing_source}" "${guest_clock_old}" guest_clock_at)
 if(guest_clock_at LESS 0)
@@ -2426,7 +2441,7 @@ eden_patch(fx_effect_source [=[    std::vector<std::filesystem::path> effect_fil
             Common::FS::DirEntryFilter::File);
         std::sort(found.begin(), found.end());
         for (auto& path : found) {
-            const auto name = Common::FS::PathToUTF8String(std::filesystem::relative(path, folder));
+            const auto name = Common::FS::PathToUTF8String(path.lexically_relative(folder));
             if (folder == own) {
                 own_names.insert(name);
             } else if (own_names.contains(name)) {
@@ -2438,6 +2453,9 @@ eden_patch(fx_effect_source [=[    std::vector<std::filesystem::path> effect_fil
 
     for (const auto& [file, folder] : effect_files) {
         FxEffectDesc desc = DescribeEffect(file, folder);]=])
+# Catalog keys are relative names, not filesystem identity checks. PS5 denies
+# canonical()/lstat even for readable shader files; avoid that during discovery.
+eden_patch(fx_effect_source "std::filesystem::relative(path, root)" "path.lexically_relative(root)")
 string(PREPEND fx_effect_source "#include <set>\n#include <utility>\n#include \"${EDEN_PORT_DIR}/reshade_folder.h\"\n")
 write_derived("${PORT_BUILD_DIR}/fx_effect.cpp" "${fx_effect_source}")
 list(REMOVE_ITEM video_sources post_processing/fx_preset.cpp post_processing/fx_effect.cpp)

@@ -67,6 +67,7 @@ python3 -B "$root/headless/check_slab_lifetime.py" \
     "$scratch/source/src/core/hle/kernel/slab_helpers.h"
 echo "Building Eden with $jobs parallel jobs"
 cmake --build "$scratch/native-local" --target eden-headless core -j "$jobs"
+python3 -B "$root/tools/check-timing-stop.py" "$scratch/native-local"
 # In every build: an object that saw Eden's own table header would write a table the rest keeps sparse.
 python3 -B "$root/tools/check-sparse-header.py" "$scratch/native-local"
 python3 -B "$root/tools/check-multiplayer-headers.py" "$scratch/native-local"

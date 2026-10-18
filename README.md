@@ -97,6 +97,7 @@ Local-wireless multiplayer through Eden rooms is new in v1.000.110 and experimen
 | [Save data](docs/SAVES.md) | Moving save data in and out, and save sync with a server |
 | [Download sources and RomM](docs/DOWNLOADS.md) | Games from a RomM server or another source in your network, and the download queue |
 | [Mods and cheats](docs/MODS.md) | Patches and replacement game files, and cheats, each in a list of their own |
+| [Smash Ultimate 13.0.4](docs/SMASH_MODS.md) | Tested Skyline/ARCropolis setup and moveset installation |
 | [Multiplayer](docs/MULTIPLAYER.md) | Local wireless play through Eden rooms: setup and current limits |
 | [Forwarders](docs/FORWARDER.md) | Starting a game from its own tile on the PS5's home screen |
 | [Themes](docs/THEMES.md) | What a launcher theme is made of |
