@@ -1,0 +1,16 @@
+--- a/src/video_core/post_processing/fx_effect.cpp
++++ b/src/video_core/post_processing/fx_effect.cpp
+@@ -162,7 +162,12 @@
+ 
+ FxEffectDesc DescribeEffect(const std::filesystem::path& path, const std::filesystem::path& root) {
+     FxEffectDesc desc;
+-    desc.file = Common::FS::PathToUTF8String(std::filesystem::relative(path, root));
++    std::error_code relative_error;
++    auto relative_path = std::filesystem::relative(path, root, relative_error);
++    if (relative_error) {
++        relative_path = path.lexically_relative(root);
++    }
++    desc.file = Common::FS::PathToUTF8String(relative_path);
+     desc.name = Common::FS::PathToUTF8String(path.stem());
+ 
+     const auto compiled =

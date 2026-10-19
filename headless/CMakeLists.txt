@@ -2426,7 +2426,11 @@ eden_patch(fx_effect_source [=[    std::vector<std::filesystem::path> effect_fil
             Common::FS::DirEntryFilter::File);
         std::sort(found.begin(), found.end());
         for (auto& path : found) {
-            const auto name = Common::FS::PathToUTF8String(std::filesystem::relative(path, folder));
+            std::error_code name_error;
+            auto relative_name = std::filesystem::relative(path, folder, name_error);
+            if (name_error)
+                relative_name = path.lexically_relative(folder);
+            const auto name = Common::FS::PathToUTF8String(relative_name);
             if (folder == own) {
                 own_names.insert(name);
             } else if (own_names.contains(name)) {
