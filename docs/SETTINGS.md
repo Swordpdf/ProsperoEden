@@ -55,6 +55,27 @@ Above 100%, the emulated console's display refreshes that much more often, so a 
 
 The launch line says what a session got (`Performance: ... speed limit 200%` in `stderr.log`).
 
+### Adaptive guest clock
+
+Games use the normal guest tick rate by default. The automatic clock adjustment introduced in
+v1.001.000 can feed back on itself: if a game waits on its tick counter to pace a frame, slowing
+that counter lengthens the wait, which the adjustment mistakes for more work. A 30 FPS game can
+then settle at 25.5 FPS even after a brief delay.
+
+For a game that drops its frame rate in steps (for example, from 30 to 20 FPS), the old workaround
+remains available as an advanced option in `config/prosperoeden.json`, under that game's title ID:
+
+```json
+{
+  "games": { "0100000000010000": { "adaptive_clock": true } }
+}
+```
+
+This is a file-only option; there is no menu switch. Leave the game before editing the file, and
+start it again afterwards. It reduces the guest's tick rate by at most 15%; audio and kernel
+timeouts keep their normal clocks. Remove the option or set it to `false` if play slows down.
+The launch log records `adaptive clock on` or `adaptive clock off` for each session.
+
 ### Console memory
 
 A game's console has 4 GiB of memory, and its kernel divides them between the game, the applets and the system. **Settings > Performance > Memory** gives games the larger memory the console's developer units have: how much the game and everything running in it is told there is. Left and right move over the three; it applies when a game starts, so leave the game and start it again.

@@ -6,10 +6,15 @@
 // On the console its heavy scenes need 34 to 37 ms a frame: a few percent over, for which the
 // game gave up a third of its frame rate, tried again a second later, and gave up again.
 //
-// The counter the guest reads follows the clock at a rate of its own (Scale). While the game
-// hands its frames in on time the rate is 1. When frames come later than the interval the game
-// asked for, the rate is lowered, by up to 15%, so that the game times them at just under that
-// interval: it keeps its frame rate, and the frames are shown as they come (27 to 28 a second
+// This workaround is off unless explicitly chosen for a game. A game that paces frames by this
+// counter waits longer when it slows: feeding that wait back into the rate adjustment drives a
+// 30 FPS game to the 85% floor (25.5 FPS), even after a single small delay with no extra work.
+// Normal guest timing must therefore be the default, not a decision made from frame lateness.
+//
+// When opted in, the counter the guest reads follows the clock at a rate of its own (Scale).
+// While the game hands its frames in on time the rate is 1. When frames come later than the
+// interval the game asked for, the rate is lowered, by up to 15%, so that the game times them
+// at just under that interval: it keeps its frame rate, and the frames are shown as they come (27 to 28 a second
 // in those scenes instead of 20 to 22). Frames later than that read late even so, and the game
 // goes down a step as it would on its own. Only what the guest reads from the counter
 // stretches; the kernel's timeouts, the display and the audio keep the clock.
@@ -29,9 +34,30 @@ inline std::atomic<std::uint32_t> sequence{0};                   // odd while th
 inline std::atomic<std::uint64_t> host_base{0}, guest_base{0};
 inline std::atomic<std::uint32_t> rate{kOne};
 inline std::atomic_flag writing = ATOMIC_FLAG_INIT;
+// Configured before the session's threads start; never changed while a guest is running.
+inline bool enabled = false;
+struct FrameHistory {
+    std::uint64_t last_ns = 0, fast_seen_ns = 0;
+    int last_interval = 0, fast_interval = 0;
+    std::array<std::uint64_t, 4> periods{};
+    unsigned filled = 0, at = 0;
+};
+inline FrameHistory history;
+
+// A new game's clock and frame history must not inherit the preceding game's rate or intervals.
+// Called only before the new session's threads start, after the old session has stopped.
+inline void Reset(bool active) noexcept {
+    enabled = active;
+    history = {};
+    host_base.store(0, std::memory_order_relaxed);
+    guest_base.store(0, std::memory_order_relaxed);
+    rate.store(kOne, std::memory_order_relaxed);
+    sequence.store(0, std::memory_order_relaxed);
+}
 
 // The guest's reading for a reading of the clock's counter.
 inline std::uint64_t Scale(std::uint64_t host) noexcept {
+    if (!enabled) return host;
     for (;;) {
         const std::uint32_t before = sequence.load(std::memory_order_acquire);
         const std::uint64_t from = host_base.load(std::memory_order_relaxed);
@@ -76,10 +102,8 @@ constexpr std::uint32_t RateFor(std::uint64_t period_ns, std::uint64_t target_ns
 // less than the shorter interval before it comes back up, and stay down in scenes that need a
 // few percent more. When it comes back up the rate stays as it is until four frames tell.
 inline void FrameQueued(int swap_interval) noexcept {
-    static std::uint64_t last_ns = 0, fast_seen_ns = 0;
-    static int last_interval = 0, fast_interval = 0;
-    static std::array<std::uint64_t, 4> periods{};
-    static unsigned filled = 0, at = 0;
+    if (!enabled) return;
+    auto& [last_ns, fast_seen_ns, last_interval, fast_interval, periods, filled, at] = history;
     const std::uint64_t now_ns = static_cast<std::uint64_t>(Common::g_wall_clock.GetTimeNS().count());
     const std::uint64_t period = now_ns - last_ns;
     last_ns = now_ns;

@@ -449,6 +449,26 @@ int main() {
         assert(!Eden::SaveGameSettings(racer, own, speed_file));
     }
 
+    // Guest clock adjustment is off unless explicitly chosen for this title. Launcher saves
+    // preserve the advanced option without applying it to another game or accepting bad types.
+    {
+        const std::string clock_file = std::string(directory) + "/clock.json";
+        assert(!Eden::LoadAdaptiveClock(racer, clock_file));
+        std::ofstream(clock_file) << R"({"adaptive_clock": true,
+            "games": {"0100000000010000": {"adaptive_clock": true},
+                      "0100000000020000": {"adaptive_clock": "true"}}})";
+        assert(Eden::LoadAdaptiveClock(racer, clock_file));
+        assert(!Eden::LoadAdaptiveClock(quest, clock_file));
+        assert(!Eden::LoadAdaptiveClock(0, clock_file));
+        assert(Eden::SavePreferences(Eden::LoadPreferences(clock_file), clock_file));
+        assert(Eden::SavePerformance(racer, Eden::LoadPerformance(racer, clock_file), clock_file));
+        assert(Eden::SaveGameSettings(racer, Eden::LoadGameSettings(racer, clock_file), clock_file));
+        assert(Eden::LoadAdaptiveClock(racer, clock_file));
+        assert(!Eden::LoadAdaptiveClock(quest, clock_file));
+        std::ofstream(clock_file) << R"({"games": {"0100000000010000": {"adaptive_clock": false}}})";
+        assert(!Eden::LoadAdaptiveClock(racer, clock_file));
+    }
+
     // Button mapping (button_mapping.h): the usual one, a changed one, and one the file names
     // badly. Choosing a button another game button has swaps the two.
     {

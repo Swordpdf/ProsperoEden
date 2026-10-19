@@ -39,6 +39,7 @@
 #include "hud.h"
 #include "loading_art.h"
 #include "display_refresh.h"
+#include "guest_clock.h"
 #include "log_flusher.h"
 #include "multiplayer_logging.h"
 #include "mods.h"
@@ -1260,6 +1261,9 @@ int main(int argc, char** argv) {
             // one is off unless chosen there, for every game or for this one. The levels start
             // every session at their exact values (above), so one that is not chosen is off.
             const auto speed = Eden::LoadPerformance(eden_game_title_id(guest));
+            // Clock adjustment is an explicit per-game workaround, not a default speed change.
+            // This runs before Core::System creates any of the new guest's threads.
+            Eden::GuestClock::Reset(Eden::LoadAdaptiveClock(eden_game_title_id(guest)));
             Settings::values.use_asynchronous_shaders = speed.async_shaders;
             if (speed.fast_gpu) {
                 // Nothing calls UpdateGPUAccuracy() here; set the live value too.
@@ -1318,6 +1322,7 @@ int main(int argc, char** argv) {
                                     ", reactive flushing " + on(Settings::values.use_reactive_flushing.GetValue()) +
                                     ", skip invalidation " +
                                     on(Settings::values.skip_cpu_inner_invalidation.GetValue()) +
+                                    ", adaptive clock " + on(Eden::GuestClock::enabled) +
                                     ", speed limit " +
                                     (Settings::values.use_speed_limit.GetValue() ?
                                          std::to_string(Settings::values.speed_limit.GetValue()) + "%" :
