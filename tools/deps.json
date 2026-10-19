@@ -108,7 +108,7 @@
       "name": "lapy-owned-helper",
       "about": "Lapy one-shot elfldr owned-root helper with guarded target lifetime and balanced vnode ownership",
       "kind": "git",
-      "url": "https://github.com/blackbearreloaded/PS5-Lapy-JB-Daemon.git",
+      "url": "https://github.com/ArkSama/PS5-Lapy-JB-Daemon.git",
       "commit": "57fcc19b7f57e46c823d6f2a6c6233ebf3288079",
       "path": ".deps/PS5-Lapy-JB-Daemon-57fcc19"
     },

@@ -249,7 +249,22 @@ static void check_audio(u32 sm) {
 #include "core-lifecycle.inc"
 #include "core-churn.inc"
 
+#include "core-hooks.inc"
+#include "core-code-memory.inc"
+
 void guest_main(void) {
+#ifdef EDEN_GUEST_CODE_MEMORY
+    check_code_memory();
+    PRINT("EDEN_CORE_FIXTURE_PASS");
+    ONE(exit_process, 0);
+    return;
+#endif
+#ifdef EDEN_GUEST_HOOKS
+    check_hooks();
+    PRINT("EDEN_CORE_FIXTURE_PASS");
+    ONE(exit_process, 0);
+    return;
+#endif
 #ifdef EDEN_GUEST_CHURN
     check_churn();
 #endif
