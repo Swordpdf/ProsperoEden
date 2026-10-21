@@ -18,7 +18,8 @@ namespace Eden::GameFolderMods {
 
 // shared: the game's folder in mods/, or null.
 inline FileSys::VirtualDir Root(FileSys::VirtualDir shared, std::uint64_t title_id, std::string name) {
-    const Mods::Places places{Eden::AssetsPath("mods"), Eden::AssetsPath("cheats"), Mods::SessionGameFolder()};
+    // The game folder's mods and cheats for the game's own title only (Mods::GameFolderFor).
+    const Mods::Places places{Eden::AssetsPath("mods"), Eden::AssetsPath("cheats"), Mods::GameFolderFor(title_id)};
     // Its files keep a reference to the filesystem they came from: one for the whole run.
     static FileSys::RealVfsFilesystem vfs;
     std::vector<FileSys::VirtualDir> layers;

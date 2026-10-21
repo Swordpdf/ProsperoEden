@@ -1145,12 +1145,16 @@ int main(int argc, char** argv) {
             // and its own post-processing (reshade_folder.h): its presets and effects are read
             // again when the folder is another than the last game's.
             Eden::Mods::SessionGameFolder().clear();
+            Eden::Mods::SessionTitle() = 0;
             if (guest) {
                 const std::string roms = Eden::AssetsPath("roms/");
                 const std::string_view path{guest};
                 if (path.starts_with(roms))
-                    if (const auto slash = path.find('/', roms.size()); slash != std::string_view::npos)
+                    if (const auto slash = path.find('/', roms.size()); slash != std::string_view::npos) {
                         Eden::Mods::SessionGameFolder() = std::string{path.substr(0, slash)};
+                        // Its mods and cheats are this title's alone (Mods::GameFolderFor).
+                        Eden::Mods::SessionTitle() = game_title;
+                    }
             }
             if (Eden::Reshade::SetGameFolder(Eden::Mods::SessionGameFolder())) {
                 VideoCore::ReloadFxPresetCatalog();

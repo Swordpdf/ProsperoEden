@@ -69,6 +69,21 @@ inline std::string& SessionGameFolder() {
     return folder;
 }
 
+// That game's title ID; main.cpp sets it with the folder.
+inline std::uint64_t& SessionTitle() {
+    static std::uint64_t title = 0;
+    return title;
+}
+
+// The game folder whose mods and cheats apply to `title_id`: the session's, for its own title
+// alone. Eden asks for the mods of every title it patches, the game's DLC and update among them,
+// and a game folder's mods are the game's: given for its DLC too, a mod switched off for the game
+// (its title's disabled list) still applied to the DLC's data, and the game did not start
+// (issue 281). Mods for one of those titles go in mods/<its title ID>/.
+inline std::string GameFolderFor(std::uint64_t title_id) {
+    return title_id != 0 && title_id == SessionTitle() ? SessionGameFolder() : std::string{};
+}
+
 enum : unsigned {
     kCode = 1,    // exefs: patches or replacement code
     kFiles = 2,   // romfs: replacement game files
