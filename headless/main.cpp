@@ -679,6 +679,12 @@ int main(int argc, char** argv) {
         const bool game = std::filesystem::is_regular_file(selected_game);
         if (!game) throw std::runtime_error("Selected ROM is no longer available");
         const char* guest = selected_game.c_str();
+        // The game as the Library names it: its path in roms/ ("Game.nsp", or "Game/Game.nsp" in a
+        // game folder), else its file name. Its cover and its place among the recent games go by it.
+        const std::string roms_folder = Eden::AssetsPath("roms/");
+        const std::string rom_name = selected_game.rfind(roms_folder, 0) == 0
+                                         ? selected_game.substr(roms_folder.size())
+                                         : std::filesystem::path(selected_game).filename().string();
         // The audio and the renderer read this game's own settings (Library > Game settings).
 #ifdef PS5_NATIVE
         const uint64_t game_title = game ? eden_game_title_id(guest) : 0;
@@ -687,13 +693,8 @@ int main(int argc, char** argv) {
 #endif
         Eden::session_title.store(game_title);
         // The loading screen shows the game's cover: the one the launcher keeps of it, found by
-        // the file's name in the game files folder (loading_art.h).
-        {
-            const std::string roms = Eden::AssetsPath("roms/");
-            Eden::Loading::SetArtFromCover(Eden::CoverFile(
-                selected_game.rfind(roms, 0) == 0 ? selected_game.substr(roms.size()) :
-                                                    std::filesystem::path(selected_game).filename().string()));
-        }
+        // the game's name in the game files folder (loading_art.h).
+        Eden::Loading::SetArtFromCover(Eden::CoverFile(rom_name));
         const unsigned cycles = game ? 1 : 3;
         const bool devices = EDEN_DEVICE_FRONTEND;
         if (game) {
@@ -1614,9 +1615,10 @@ int main(int argc, char** argv) {
                 }
 #ifdef PS5_NATIVE
                 if (game) {
-                    const auto filename = std::filesystem::path(guest).filename().string();
-                    const bool saved_last = Eden::SaveLastGame(filename);
-                    const bool saved_recent = Eden::SaveRecentGame(filename);
+                    // By its name in roms/: a game in a game folder saved by its file name alone
+                    // was not found again, and the home page left it out (issue 264).
+                    const bool saved_last = Eden::SaveLastGame(rom_name);
+                    const bool saved_recent = Eden::SaveRecentGame(rom_name);
                     if (!saved_last || !saved_recent)
                         Eden::Report("history", "Could not save recent game");
                 }
