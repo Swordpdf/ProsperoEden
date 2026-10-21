@@ -19,6 +19,10 @@ uses it after filesystem access is set up, so `roms/` resolves against the folde
 
 - The forwarded game starts once. Quitting it (Touchpad + L1) opens the library, or, with
   `--exit-after-game`, ends ProsperoEden.
+- A game moved into its own game folder after the forwarder was made is still found: for a
+  missing `roms/Game.nsp`, ProsperoEden starts `roms/Game/Game.nsp`, or else the `Game.nsp` in
+  the only game folder that has one. Only a game the forwarder put directly in `roms/` is looked
+  for this way.
 - If the file is missing (or filesystem access was not granted, so the path cannot be read), the
   launcher opens and shows `Forwarded game not found: <path>`.
 - After a crash, ProsperoEden restarts without arguments and shows the crash notice; the

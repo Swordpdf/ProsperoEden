@@ -495,7 +495,11 @@ int main(int argc, char** argv) {
         bool forwarded_session = false;
         if (!forwarded.rom.empty() && last_crash.report.empty()) {
             const std::string path = Eden::ResolveForwardedRom(forwarded.rom, Eden::AssetsPath("roms"));
+            // A game moved into a game folder after its forwarder was made.
+            const std::string moved = path.empty() || Eden::FileExists(path) ?
+                std::string{} : Eden::FindMovedForwardedRom(path, Eden::AssetsPath("roms"));
             if (!path.empty() && Eden::FileExists(path)) forwarded_game = path;
+            else if (!moved.empty()) forwarded_game = moved;
             else launch_error = "Forwarded game not found: " + (path.empty() ? forwarded.rom : path);
             Eden::BootTrace::Line("forwarded game: %s", forwarded_game.empty() ? "not found" : "found");
         }
