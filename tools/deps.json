@@ -59,7 +59,7 @@
       "name": "opengl-sdk",
       "about": "PS5 OpenGL 4.6 SDK 1.0.2 (launcher UI and the OpenGL renderer)",
       "kind": "archive",
-      "url": "https://github.com/blackbearreloaded/ps5-opengl/releases/download/v1.0.2/ps5-opengl-sdk-1.0.2.tar.gz",
+      "url": "https://github.com/darkxex/ps5-opengl/releases/download/v1.0.2/ps5-opengl-sdk-1.0.2.tar.gz",
       "sha256": "30d8e51dd062739b629346102be5932728ba714bc50b1bdcdf08306c8843d9a4",
       "extract": ".deps",
       "creates": ".deps/ps5-opengl-sdk-1.0.2/sdk/lib/libps5_opengl_core33.a"
@@ -82,23 +82,23 @@
       "dest": ".deps/ps5-homebrew-ui-aed286b8",
       "creates": ".deps/ps5-homebrew-ui-aed286b8/src/ui/theme.cpp",
       "files": [
-        {"name": "src/ui/theme.cpp", "url": "https://raw.githubusercontent.com/blackbearreloaded/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/ui/theme.cpp", "sha256": "15ca512c61df48864ee787fa93b91d4f67d5103819e4a596eb4fa9bc38db42b6"},
-        {"name": "src/ui/theme.hpp", "url": "https://raw.githubusercontent.com/blackbearreloaded/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/ui/theme.hpp", "sha256": "9726e50acbf33a89494c1763f0fa4ba6464b152800bed6b8b8053aa41cc4a709"},
-        {"name": "src/gfx/draw_list.hpp", "url": "https://raw.githubusercontent.com/blackbearreloaded/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/gfx/draw_list.hpp", "sha256": "8c19ec93966fe03f61f7ffdb701a39a1fb011436742949453a4801173478ee9f"},
-        {"name": "src/gfx/font.hpp", "url": "https://raw.githubusercontent.com/blackbearreloaded/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/gfx/font.hpp", "sha256": "c6fd392e18d6dc6c7dbaf104078f10f57af963fd116fb201c4c55de54d3c4ade"},
-        {"name": "src/gfx/font_format.hpp", "url": "https://raw.githubusercontent.com/blackbearreloaded/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/gfx/font_format.hpp", "sha256": "d8beee75b7c823bbe16a93258e65a67cb565d178c2b4dd9f241bea731d277484"},
-        {"name": "src/gfx/backdrop_spec.hpp", "url": "https://raw.githubusercontent.com/blackbearreloaded/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/gfx/backdrop_spec.hpp", "sha256": "0e03db2915bc0a7b65b280d0b9c817264289a69a6f86493e3c3bba4cbcf73852"},
-        {"name": "src/audio/cues.hpp", "url": "https://raw.githubusercontent.com/blackbearreloaded/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/audio/cues.hpp", "sha256": "ca3c3961ae2086abe429d76e8d7c30dea3b669c5a0a4553f3eaaad6932a0db2c"},
-        {"name": "src/audio/mixer.hpp", "url": "https://raw.githubusercontent.com/blackbearreloaded/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/audio/mixer.hpp", "sha256": "7d438dcaa70fea00fb9121e74b644162f836adb353e47a0b104270c64405752c"},
-        {"name": "src/audio/stream_ring.hpp", "url": "https://raw.githubusercontent.com/blackbearreloaded/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/audio/stream_ring.hpp", "sha256": "ffb6427b2a32662609cb1156971d748277573a2da0e2ed99bc6488c5da87be3b"},
-        {"name": "LICENSE", "url": "https://raw.githubusercontent.com/blackbearreloaded/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/LICENSE", "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"}
+        {"name": "src/ui/theme.cpp", "url": "https://raw.githubusercontent.com/Phononenom/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/ui/theme.cpp", "sha256": "15ca512c61df48864ee787fa93b91d4f67d5103819e4a596eb4fa9bc38db42b6"},
+        {"name": "src/ui/theme.hpp", "url": "https://raw.githubusercontent.com/Phononenom/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/ui/theme.hpp", "sha256": "9726e50acbf33a89494c1763f0fa4ba6464b152800bed6b8b8053aa41cc4a709"},
+        {"name": "src/gfx/draw_list.hpp", "url": "https://raw.githubusercontent.com/Phononenom/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/gfx/draw_list.hpp", "sha256": "8c19ec93966fe03f61f7ffdb701a39a1fb011436742949453a4801173478ee9f"},
+        {"name": "src/gfx/font.hpp", "url": "https://raw.githubusercontent.com/Phononenom/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/gfx/font.hpp", "sha256": "c6fd392e18d6dc6c7dbaf104078f10f57af963fd116fb201c4c55de54d3c4ade"},
+        {"name": "src/gfx/font_format.hpp", "url": "https://raw.githubusercontent.com/Phononenom/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/gfx/font_format.hpp", "sha256": "d8beee75b7c823bbe16a93258e65a67cb565d178c2b4dd9f241bea731d277484"},
+        {"name": "src/gfx/backdrop_spec.hpp", "url": "https://raw.githubusercontent.com/Phononenom/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/gfx/backdrop_spec.hpp", "sha256": "0e03db2915bc0a7b65b280d0b9c817264289a69a6f86493e3c3bba4cbcf73852"},
+        {"name": "src/audio/cues.hpp", "url": "https://raw.githubusercontent.com/Phononenom/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/audio/cues.hpp", "sha256": "ca3c3961ae2086abe429d76e8d7c30dea3b669c5a0a4553f3eaaad6932a0db2c"},
+        {"name": "src/audio/mixer.hpp", "url": "https://raw.githubusercontent.com/Phononenom/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/audio/mixer.hpp", "sha256": "7d438dcaa70fea00fb9121e74b644162f836adb353e47a0b104270c64405752c"},
+        {"name": "src/audio/stream_ring.hpp", "url": "https://raw.githubusercontent.com/Phononenom/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/src/audio/stream_ring.hpp", "sha256": "ffb6427b2a32662609cb1156971d748277573a2da0e2ed99bc6488c5da87be3b"},
+        {"name": "LICENSE", "url": "https://raw.githubusercontent.com/Phononenom/ps5-homebrew-ui/aed286b81cdf70a814d3059f54633ba34844e46e/LICENSE", "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"}
       ]
     },
     {
       "name": "boilerplate",
       "about": "PS5 Native App Boilerplate: Payload SDK v0.42, runtime libc.prx and the native packaging tool",
       "kind": "git",
-      "url": "https://github.com/blackbearreloaded/ps5-native-app-boilerplate.git",
+      "url": "https://github.com/Phononenom/ps5-native-app-boilerplate.git",
       "commit": "dd44bbdc75437332ed22e3ba95126733419ef25a",
       "path": "../ps5-native-app-boilerplate",
       "setup": ["bash", "tools/setup-native-dependencies.sh"],
@@ -108,7 +108,7 @@
       "name": "lapy-owned-helper",
       "about": "Lapy one-shot elfldr owned-root helper with guarded target lifetime and balanced vnode ownership",
       "kind": "git",
-      "url": "https://github.com/blackbearreloaded/PS5-Lapy-JB-Daemon.git",
+      "url": "https://github.com/ArkSama/PS5-Lapy-JB-Daemon.git",
       "commit": "57fcc19b7f57e46c823d6f2a6c6233ebf3288079",
       "path": ".deps/PS5-Lapy-JB-Daemon-57fcc19"
     },

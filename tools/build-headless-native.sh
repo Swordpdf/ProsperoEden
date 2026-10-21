@@ -74,6 +74,7 @@ python3 -B "$root/tools/check-multiplayer-headers.py" "$scratch/native-local"
 [[ ${EDEN_SKIP_SOURCE_CHECKS:-0} == 1 ]] && exit 0
 python3 -B "$root/headless/check_audio_shutdown.py" "$scratch/native-local/headless/core.cpp" "$scratch/source/src/core/core.cpp"
 python3 -B "$root/tools/check-load-failure.py"
+python3 -B "$root/tools/check-update-versions.py" "$scratch/native-local/headless/registered_cache.cpp"
 python3 -B "$root/tools/check-nso-memory.py"
 python3 -B "$root/tools/check-performance.py"
 python3 -B "$root/tools/check-performance-settings.py"

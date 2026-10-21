@@ -1521,6 +1521,36 @@ function(eden_patch source old new)
     set(${source} "${patched}" PARENT_SCOPE)
 endfunction()
 
+# A game with several updates beside it (in updates/ or in its game folder) runs the newest: the
+# patch manager takes its code and data by version (ListUpdateVersions, newest first). Eden kept
+# the rest of the update by the file it scanned last, which the folder's order decides: the game's
+# version and its control data (its save data sizes, its DLC, its version string) could come from
+# an older update than its code. They come from the newest too (issue 281).
+get_target_property(core_sources core SOURCES)
+file(READ "${PROJECT_SOURCE_DIR}/src/core/file_sys/registered_cache.cpp" content_source)
+eden_patch(content_source [=[            entries[{title_id, content_type, title_type}] = file;
+
+            if (title_type == TitleType::Update) {
+                versions[title_id] = version;
+                UpsertExternalVersionEntry(multi_version_entries, title_id, version, version_string,
+                                           content_type, file);
+            }
+]=] [=[            if (title_type == TitleType::Update) {
+                UpsertExternalVersionEntry(multi_version_entries, title_id, version, version_string,
+                                           content_type, file);
+                // An older update than one already found stays listed, but is not the update.
+                if (const auto known = versions.find(title_id); known != versions.end() && known->second > version)
+                    return;
+                versions[title_id] = version;
+            }
+
+            entries[{title_id, content_type, title_type}] = file;
+]=])
+write_derived("${PORT_BUILD_DIR}/registered_cache.cpp" "${content_source}")
+list(REMOVE_ITEM core_sources file_sys/registered_cache.cpp)
+list(APPEND core_sources "${PORT_BUILD_DIR}/registered_cache.cpp")
+set_property(TARGET core PROPERTY SOURCES "${core_sources}")
+
 # Mods (headless/mods.h). Eden's .pchtxt reader takes every line as a record or a flag: the
 # credits at the end of a real patch file then wrote over the start of the game's code. Only
 # records and known flags are read here (headless/mods_check.cpp checks all of it).
