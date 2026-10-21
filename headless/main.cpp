@@ -48,6 +48,8 @@
 #include "load_address.h"
 #include "preferences.h"
 #include "metadata_bridge.h"
+#include "game_files.h"
+#include "ncz_vfs.h"
 #ifdef EDEN_PS5_OPENGL
 #include "graphics.h"
 #include "video_core/renderer_base.h"
@@ -329,6 +331,19 @@ int main(int argc, char** argv) {
             std::error_code folder_error;
             std::filesystem::create_directories(folder, folder_error);
         }
+        // Solid-compressed NSZs are unpacked here while their game runs, and what is found in them
+        // outside a game is kept here too (ncz_vfs.h). Only the game being played keeps its
+        // unpacked copies.
+        {
+            const std::string unpacked = Eden::UserDir() + "/cache/nsz";
+            std::error_code folder_error;
+            std::filesystem::create_directories(unpacked, folder_error);
+            Eden::Ncz::SetUnpackFolder(unpacked, [unpacked](const std::function<bool(const std::string&)>& keep) {
+                std::error_code list_error;
+                for (const auto& entry : Eden::ReadNativeDirectory(unpacked, list_error))
+                    if (!keep(entry.path().filename().string())) std::remove(entry.path().c_str());
+            });
+        }
         // Keep the previous session's logs: a freeze is diagnosed after the app is reopened.
         for (const char* name : {"stderr.log", "heap.log"}) {
             const std::string log = Eden::LogFile(name);
@@ -591,8 +606,7 @@ int main(int argc, char** argv) {
             std::error_code rom_error;
             for (const auto& entry : Eden::ReadNativeDirectory(folder, rom_error)) {
                 const auto filename = entry.path().filename().string();
-                const auto extension = entry.path().extension();
-                if (extension != ".nsp" && extension != ".xci") continue;
+                if (!Eden::IsGameFile(filename)) continue;
                 const auto path = folder + "/" + filename;
                 if (filename.find(development_id) != std::string::npos ||
                     eden_game_title_id(path.c_str()) == development_title) {
@@ -1561,6 +1575,10 @@ int main(int argc, char** argv) {
                     applets.software_keyboard = std::make_unique<Eden::SystemKeyboardApplet>(Eden::AskSystemKeyboard);
                     system.GetFrontendAppletHolder().SetFrontendAppletSet(std::move(applets));
                 }
+                // A solid-compressed NSZ is unpacked while its game runs, never while the library
+                // is read (ncz_vfs.h). Set before Touchpad + L1 is heard below, which stops it.
+                Eden::Ncz::SetUnpackAllowed(true);
+                SCOPE_EXIT { Eden::Ncz::SetUnpackAllowed(false); };
                 Service::AM::FrontendAppletParameters params{
                     .applet_id = Service::AM::AppletId::Application,
                 };
@@ -1585,6 +1603,7 @@ int main(int argc, char** argv) {
 #endif
                         if (pad->TakeReturnToMenu() || asked) {
                             Eden::Report("exit", "Touchpad + L1 while the game loads: leaving as soon as it can be stopped");
+                            Eden::Ncz::SetUnpackAllowed(false);  // an NSZ being unpacked stops (ncz_vfs.h)
                             Eden::StopLimit::Begin();
                             left_while_loading = true;
                             break;

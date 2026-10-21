@@ -11,6 +11,7 @@
 #include "profiles.h"
 #include "update_notice.h"
 #include "game_name.h"
+#include "game_files.h"
 #include "native_directory.h"
 #include "reshade_folder.h"
 #include "pe/core/strings.hpp"
@@ -282,15 +283,11 @@ bool AddOnInGameFolder(const std::string& path) {
     return addon;
 }
 
-// The games in roms/, by their paths in it: its NSP and XCI files, and those in its game folders
-// (one level down, issue 168) that hold a game and not its update or DLC. Called with the
+// The games in roms/, by their paths in it: its NSP, XCI, NSZ and XCZ files, and those in its game
+// folders (one level down, issue 168) that hold a game and not its update or DLC. Called with the
 // metadata reader held.
 std::vector<std::string> GameFiles() {
-    const auto rom = [](const std::string& name) {
-        std::string lower = name;
-        for (char& c : lower) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-        return lower.ends_with(".nsp") || lower.ends_with(".xci");
-    };
+    const auto rom = [](const std::string& name) { return Eden::IsGameFile(name); };
     const std::string roms = Eden::AssetsPath("roms");
     std::vector<std::string> files;
     bool ok = false;
@@ -1247,7 +1244,7 @@ pe::ui::FolderInfo EdenServices::folder_info(const std::string& directory) {
     pe::ui::FolderInfo info;
     info.keys = Eden::FileExists(JoinPath(directory, "keys/prod.keys"));
     info.firmware = CountFiles(JoinPath(directory, "firmware"), {".nca"});
-    info.games = CountFiles(JoinPath(directory, "roms"), {".nsp", ".xci"});
+    info.games = CountFiles(JoinPath(directory, "roms"), {".nsp", ".xci", ".nsz", ".xcz"});
     return info;
 }
 

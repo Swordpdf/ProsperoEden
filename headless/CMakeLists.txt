@@ -1521,6 +1521,64 @@ function(eden_patch source old new)
     set(${source} "${patched}" PARENT_SCOPE)
 endfunction()
 
+# NSZ and XCZ (headless/ncz_vfs.h): nsz turns an NSP's or XCI's larger NCAs into NCZ files of the
+# same name, <id>.ncz. Where Eden looks for an NCA it takes the NCZ, read back as that NCA.
+get_target_property(core_sources core SOURCES)
+file(READ "${PROJECT_SOURCE_DIR}/src/core/file_sys/submission_package.cpp" nsp_source)
+eden_patch(nsp_source [=[                auto next_file = pfs->GetFile(fmt::format("{}.nca", id_string));
+]=] [=[                auto next_file = pfs->GetFile(fmt::format("{}.nca", id_string));
+                if (next_file == nullptr)
+                    next_file = ::Eden::Ncz::Open(pfs->GetFile(fmt::format("{}.ncz", id_string)));
+]=])
+file(READ "${PROJECT_SOURCE_DIR}/src/core/file_sys/card_image.cpp" xci_source)
+eden_patch(xci_source [=[    for (const VirtualFile& partition_file : partition->GetFiles()) {
+        if (partition_file->GetExtension() != "nca") {
+]=] [=[    for (const VirtualFile& listed_file : partition->GetFiles()) {
+        const VirtualFile partition_file =
+            listed_file->GetExtension() == "ncz" ? ::Eden::Ncz::Open(listed_file) : listed_file;
+        if (partition_file == nullptr || partition_file->GetExtension() != "nca") {
+]=])
+file(READ "${PROJECT_SOURCE_DIR}/src/core/loader/loader.cpp" loader_source)
+eden_patch(loader_source [=[    else if (extension == "xci")
+        return FileType::XCI;
+    else if (extension == "nsp")
+        return FileType::NSP;
+]=] [=[    else if (extension == "xci" || extension == "xcz")
+        return FileType::XCI;
+    else if (extension == "nsp" || extension == "nsz")
+        return FileType::NSP;
+]=])
+file(READ "${PROJECT_SOURCE_DIR}/src/core/loader/nsp.cpp" nsp_loader_source)
+eden_patch(nsp_loader_source [=[        if (name.size() >= 4 && name.substr(name.size() - 4) == ".nca") {
+]=] [=[        if (name.size() >= 4 &&
+            (name.substr(name.size() - 4) == ".nca" || name.substr(name.size() - 4) == ".ncz")) {
+]=])
+# Updates and DLC beside a game may be NSZ or XCZ too.
+file(READ "${PROJECT_SOURCE_DIR}/src/core/file_sys/registered_cache.cpp" content_source)
+eden_patch(content_source [=[        if (extension == "nsp") {
+            ProcessNSP(file);
+        } else if (extension == "xci") {
+            ProcessXCI(file);
+]=] [=[        if (extension == "nsp" || extension == "nsz") {
+            ProcessNSP(file);
+        } else if (extension == "xci" || extension == "xcz") {
+            ProcessXCI(file);
+]=])
+foreach(ncz_patched IN ITEMS "file_sys/submission_package.cpp|nsp_source" "file_sys/card_image.cpp|xci_source"
+                             "loader/loader.cpp|loader_source" "loader/nsp.cpp|nsp_loader_source"
+                             "file_sys/registered_cache.cpp|content_source")
+    string(REPLACE "|" ";" ncz_parts "${ncz_patched}")
+    list(GET ncz_parts 0 ncz_relative)
+    list(GET ncz_parts 1 ncz_variable)
+    get_filename_component(ncz_name "${ncz_relative}" NAME_WE)
+    write_derived("${PORT_BUILD_DIR}/ncz-${ncz_name}.cpp"
+        "#include \"${EDEN_PORT_DIR}/ncz_vfs.h\"\n${${ncz_variable}}")
+    list(REMOVE_ITEM core_sources "${ncz_relative}")
+    list(APPEND core_sources "${PORT_BUILD_DIR}/ncz-${ncz_name}.cpp")
+endforeach()
+list(APPEND core_sources "${EDEN_PORT_DIR}/ncz.cpp")
+set_property(TARGET core PROPERTY SOURCES "${core_sources}")
+
 # Mods (headless/mods.h). Eden's .pchtxt reader takes every line as a record or a flag: the
 # credits at the end of a real patch file then wrote over the start of the game's code. Only
 # records and known flags are read here (headless/mods_check.cpp checks all of it).

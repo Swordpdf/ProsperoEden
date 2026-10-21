@@ -15,7 +15,7 @@ Only these subfolders matter; the folder itself can have any name and location.
 │   └── *.nca                           # extracted firmware NCAs
 ├── roms/
 │   └── <Game>/                         # one folder per game
-│       ├── <game>.nsp                  # the game (NSP or XCI)
+│       ├── <game>.nsp                  # the game (NSP or XCI, or NSZ or XCZ: see Compressed games)
 │       ├── <game> update.nsp           # optional: its update and DLC files, beside it
 │       ├── <game> DLC.nsp
 │       ├── mods/                       # optional: its mods, one folder each (see Mods and cheats)
@@ -38,6 +38,36 @@ Each game sits in a folder of its own in `roms/`, with everything that belongs t
 
 The folder browser shows how many keys, firmware files, and games each folder holds, so you can check a folder before selecting it. Moving your files later only needs a new selection in Settings; saved settings, covers, and recently played games carry over.
 
+### Compressed games (NSZ and XCZ)
+
+Play your compressed library as it is: no converting, no extra copies of games that do not need one.
+
+`NSZ` · `XCZ` · updates and DLC too · compressed with [nsz](https://github.com/nicoboss/nsz)
+
+NSZ and XCZ files are NSPs and XCIs whose larger contents nsz compressed. Put them in `roms/` like any other game. How a game plays depends on how nsz compressed it:
+
+| | **Block** (`nsz -B`) | **Solid** (`nsz -S`) |
+|---|---|---|
+| nsz's default for | XCZ | NSZ |
+| First start | at once | unpacked once, which takes a while for a large game |
+| Later starts | at once | at once, from the unpacked copy |
+| Space on the console | the file itself | the file, plus the last played game uncompressed |
+
+**Block compression** can be read anywhere in the file. These games play straight from the compressed file.
+
+**Solid compression** can only be read from its start. The first time such a game starts, ProsperoEden unpacks its compressed contents once into `/data/prosperoeden/user/cache/nsz`. That needs about as much free space as the game uncompressed; `stderr.log` shows how far it is. Only the game you play last keeps its unpacked copy: unpacking another one removes it. Touchpad + L1 while it unpacks stops it, and it is done again the next time the game starts.
+
+**In the Library,** a solid-compressed game or update is read at the end of its data when it is first looked at, which takes a few seconds per GB. What that finds is kept beside the unpacked copies (up to 16 MiB per game or update, usually about 5), so it is quick from then on.
+
+**Short on space?** When the console's storage is too full to unpack a game, the log says so, and the game is read without unpacking instead: far too slow to play, so free some space first. To play a solid-compressed game without ever unpacking it, compress it again with block compression on a computer:
+
+```text
+nsz -D <game>.nsz
+nsz -C -B <game>.nsp
+```
+
+The folder `/data/prosperoeden/user/cache/nsz` can be deleted whenever no game is running; it is made again as needed.
+
 ## App data
 
 ProsperoEden keeps its own data in `/data/prosperoeden`, separately from the game files folder:
@@ -57,6 +87,7 @@ ProsperoEden keeps its own data in `/data/prosperoeden`, separately from the gam
 ├── logs/                               # current and previous session logs, crash reports
 ├── previous-version/PPSA99008-backup/  # the version the last self-update replaced
 └── user/                               # every profile's saves, and emulator user data
+    ├── cache/nsz/                      # solid-compressed NSZ games: the last one played, unpacked
     └── lossless/Lossless.dll           # optional: your copy, for frame generation
 ```
 

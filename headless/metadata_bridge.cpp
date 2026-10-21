@@ -1,5 +1,6 @@
 #include "game_name.h"
 #include "metadata_bridge.h"
+#include "game_files.h"
 #include "assets_dir.h"
 #include "diagnostics.h"
 #include "profiles.h"
@@ -224,11 +225,11 @@ uint64_t eden_game_title_id(const char* rom_path) {
     std::string path = rom_path;
     std::transform(path.begin(), path.end(), path.begin(),
                    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-    if (path.ends_with(".xci")) {
+    if (Eden::IsCardImageFile(path)) {
         FileSys::XCI image(file);
         return image.GetStatus() == Loader::ResultStatus::Success ? image.GetProgramTitleID() : 0;
     }
-    if (path.ends_with(".nsp")) {
+    if (Eden::IsPackageFile(path)) {
         FileSys::NSP package(file);
         return package.GetStatus() == Loader::ResultStatus::Success ? package.GetProgramTitleID() : 0;
     }
@@ -247,7 +248,7 @@ int eden_extract_game_metadata(const char* rom_path, const char* keys_dir,
     std::string path = rom_path;
     std::transform(path.begin(), path.end(), path.begin(),
                    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-    const bool xci = path.size() >= 4 && path.substr(path.size() - 4) == ".xci";
+    const bool xci = Eden::IsCardImageFile(path);
     FileSys::VirtualDir packed_update;
     const auto romfs = OpenControlRomFs(file, xci, &packed_update);
     if (!romfs) return 0;
@@ -276,7 +277,7 @@ uint32_t eden_game_supported_languages(const char* rom_path, const char* keys_di
         std::transform(path.begin(), path.end(), path.begin(),
                        [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
         FileSys::VirtualDir packed_update;
-        const auto romfs = OpenControlRomFs(file, path.ends_with(".xci"), &packed_update);
+        const auto romfs = OpenControlRomFs(file, Eden::IsCardImageFile(path), &packed_update);
         if (!romfs) return 0;
         return GameLanguages()[rom_path] = ReadLanguages(romfs, packed_update);
     } catch (const std::exception& error) {
@@ -309,9 +310,9 @@ int eden_rom_content(const char* rom_path, const char* keys_dir) {
         std::transform(path.begin(), path.end(), path.begin(),
                        [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
         std::shared_ptr<FileSys::NSP> package;
-        if (path.ends_with(".nsp")) {
+        if (Eden::IsPackageFile(path)) {
             package = std::make_shared<FileSys::NSP>(file);
-        } else if (path.ends_with(".xci")) {
+        } else if (Eden::IsCardImageFile(path)) {
             FileSys::XCI image(file);
             if (image.GetStatus() == Loader::ResultStatus::Success) package = image.GetSecurePartitionNSP();
         }
@@ -387,9 +388,9 @@ bool HoldsContentOf(const FileSys::VirtualFile& file, uint64_t base) {
     std::transform(name.begin(), name.end(), name.begin(),
                    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     std::shared_ptr<FileSys::NSP> package;
-    if (name.ends_with(".nsp")) {
+    if (Eden::IsPackageFile(name)) {
         package = std::make_shared<FileSys::NSP>(file);
-    } else if (name.ends_with(".xci")) {
+    } else if (Eden::IsCardImageFile(name)) {
         FileSys::XCI image(file);
         if (image.GetStatus() == Loader::ResultStatus::Success) package = image.GetSecurePartitionNSP();
     }

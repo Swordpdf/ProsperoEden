@@ -59,6 +59,7 @@
 
 #include "button_mapping.h"
 #include "storage_paths.h"
+#include "game_files.h"
 #include "multiplayer.h"
 
 namespace Eden {
@@ -186,8 +187,9 @@ inline int KeyIndex(const std::string& value, const char* const* keys, int count
 }
 
 // A game's file as the Library names it: its path in the game files folder's roms/, either its
-// name ("Game.nsp") or a game folder and its name ("Game/Game.nsp", the game's update and DLC
-// beside it). Readable characters, one folder at most, never a hidden folder, "." or "..".
+// name ("Game.nsp"; .xci, .nsz and .xcz too) or a game folder and its name ("Game/Game.nsp", the
+// game's update and DLC beside it). Readable characters, one folder at most, never a hidden
+// folder, "." or "..".
 inline bool ValidRomPath(std::string_view name) {
     if (name.size() < 5 || name.size() > 511) return false;
     for (unsigned char c : name)
@@ -198,9 +200,7 @@ inline bool ValidRomPath(std::string_view name) {
     } else if (name.size() > 255) {
         return false;
     }
-    std::string extension(name.substr(name.size() - 4));
-    for (char& c : extension) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    return extension == ".nsp" || extension == ".xci";
+    return IsGameFile(name);
 }
 
 // A wallpaper's file name: the name alone (the image lives in the wallpapers folder), readable
