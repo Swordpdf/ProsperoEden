@@ -2293,17 +2293,24 @@ file(READ "${PROJECT_SOURCE_DIR}/src/audio_core/sink/sink_details.cpp" sink_sour
 string(REPLACE "    return GetOutputSinkDetails(sink_id).factory(device_id);"
     "    if (device_id == \"ps5\") return std::make_unique<Eden::AudioSink>();\n    return GetOutputSinkDetails(sink_id).factory(device_id);" sink_source "${sink_source}")
 write_derived("${PORT_BUILD_DIR}/sink_details.cpp" "#include \"devices.h\"\n${sink_source}")
-# Mirror mono PCM into both hardware channels in the existing upmix path.
 file(READ "${PROJECT_SOURCE_DIR}/src/audio_core/sink/sink_stream.cpp" stream_source)
-string(REPLACE "    if (type == StreamType::In)\n        return;"
-    "    if (type == StreamType::In)\n        return;\n    static_assert(std::is_same_v<decltype(samples_buffer), Common::RingBuffer<s16, 0x10000>>);\n    if (buffer.frames * device_channels > 0x10000 - samples_buffer.Size())\n        throw std::overflow_error(\"Audio PCM queue capacity exceeded\");" stream_source "${stream_source}")
+# A full PCM ring drops its oldest audio (headless/audio_queue.h) instead of stopping the game
+# (issue 270); upstream's ring would cut the new buffer short and leave the queue out of step.
+set(old_stream_append "    if (type == StreamType::In)\n        return;\n\n    constexpr s32 min")
+string(FIND "${stream_source}" "${old_stream_append}" stream_append_offset)
+if(stream_append_offset LESS 0)
+    message(FATAL_ERROR "Pinned SinkStream::AppendBuffer changed; review the full queue handling.")
+endif()
+string(REPLACE "${old_stream_append}"
+    "    if (type == StreamType::In)\n        return;\n    static_assert(std::is_same_v<decltype(samples_buffer), Common::RingBuffer<s16, 0x10000>>);\n    if (buffer.frames * device_channels > 0x10000)\n        throw std::invalid_argument(\"Audio PCM buffer larger than the queue\");\n    if (buffer.frames * device_channels > 0x10000 - samples_buffer.Size()) {\n        std::unique_lock release_lk{release_mutex};\n        const u64 dropped = Eden::AudioQueue::DropOldest(samples_buffer, 0x10000, queue, playing_buffer, queued_buffers, device_channels, buffer.frames * device_channels);\n        release_lk.unlock();\n        release_cv.notify_one();\n        {\n            std::scoped_lock count_lk{sample_count_lock};\n            min_played_sample_count += dropped;\n            max_played_sample_count += dropped;\n        }\n        static std::atomic<u32> full_count{};\n        const u32 times = ++full_count;\n        if (times <= 8 || times % 256 == 0)\n            LOG_WARNING(Audio_Sink, \"EDEN_AUDIO_QUEUE_FULL stream={} dropped_frames={} times={}\", name, dropped, times);\n    }\n\n    constexpr s32 min" stream_source "${stream_source}")
+# Mirror mono PCM into both hardware channels in the existing upmix path.
 string(REPLACE "        samples_buffer.Push(new_samples);"
     "        if (system_channels == 1 && device_channels == 2) {\n            for (std::size_t i = 0; i < new_samples.size(); i += 2) new_samples[i + 1] = new_samples[i];\n        }\n        samples_buffer.Push(new_samples);" stream_source "${stream_source}")
 # Refresh the held frame before a partial hardware block underruns.
 string(REPLACE "    std::memcpy(last_frame.data(), &output_buffer[(frames_written - 1) * frame_size], frame_size_bytes);" "" stream_source "${stream_source}")
 string(REPLACE "        samples_buffer.Pop(&output_buffer[frames_written * frame_size], frames_available * frame_size);"
     "        samples_buffer.Pop(&output_buffer[frames_written * frame_size], frames_available * frame_size);\n        if (frames_available) std::memcpy(last_frame.data(), &output_buffer[(frames_written + frames_available - 1) * frame_size], frame_size_bytes);" stream_source "${stream_source}")
-write_derived("${PORT_BUILD_DIR}/sink_stream.cpp" "#include <stdexcept>\n${stream_source}")
+write_derived("${PORT_BUILD_DIR}/sink_stream.cpp" "#include <stdexcept>\n#include \"audio_queue.h\"\n#include \"common/logging.h\"\n${stream_source}")
 # A bitfield expression yields 0/1, so explicitly restore the SRC flag's bit position.
 file(READ "${PROJECT_SOURCE_DIR}/src/audio_core/renderer/voice/voice_info.cpp" voice_source)
 set(old_voice_flag "flags |= u16(params.flags.IsVoicePitchAndSrcSkippedSupported);")

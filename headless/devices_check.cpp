@@ -871,8 +871,9 @@ void CheckAudio() {
         stream->ClearQueue();
         std::vector<s16> full(65536, 1234); SinkBuffer large{32768, 0, 10, false};
         stream->AppendBuffer(large, full);
+        // A full ring drops its oldest audio for the new buffer instead of stopping the game.
         std::array<s16, 2> extra{}; SinkBuffer one{1, 0, 11, false};
-        Reject([&] { stream->AppendBuffer(one, extra); });
+        stream->AppendBuffer(one, extra);
         CHECK(stream->GetQueueSize() == 1); stream->ClearQueue();
         CHECK(stream->GetQueueSize() == 0); sink.CloseStream(stream);
     }
