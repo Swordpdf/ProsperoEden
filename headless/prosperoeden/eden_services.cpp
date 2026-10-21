@@ -164,6 +164,31 @@ int CountFiles(const std::string& directory, std::initializer_list<const char*> 
     return ok ? count : -1;
 }
 
+// The games in a roms folder: its NSP and XCI files, and its game folders (one level down, issue
+// 168) that hold one, each one game with its update and DLC beside it; -1 when it cannot be read. Counting the files in roms/ alone, a game files folder
+// whose games were all in game folders read "0 games" in Settings > Game files.
+int CountGames(const std::string& roms) {
+    const auto rom = [](std::string name) {
+        for (char& c : name) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        return name.ends_with(".nsp") || name.ends_with(".xci");
+    };
+    bool ok = false;
+    int count = 0;
+    for (const std::string& name : ListEntries(roms, false, ok))
+        count += rom(name) && Eden::ValidRomPath(name);
+    if (!ok) return -1;
+    bool listed = false;
+    for (const std::string& folder : ListEntries(roms, true, listed)) {
+        if (folder.empty() || folder[0] == '.') continue;
+        bool read = false;
+        const auto files = ListEntries(JoinPath(roms, folder), false, read);
+        count += std::any_of(files.begin(), files.end(), [&](const std::string& name) {
+            return rom(name) && Eden::ValidRomPath(folder + "/" + name);
+        });
+    }
+    return count;
+}
+
 // A title from the file's name: without its extension and the tags dumps carry
 // ("Name [0100...][v0]", "Name (USA)").
 std::string CleanTitle(const std::string& filename) {
@@ -1247,7 +1272,7 @@ pe::ui::FolderInfo EdenServices::folder_info(const std::string& directory) {
     pe::ui::FolderInfo info;
     info.keys = Eden::FileExists(JoinPath(directory, "keys/prod.keys"));
     info.firmware = CountFiles(JoinPath(directory, "firmware"), {".nca"});
-    info.games = CountFiles(JoinPath(directory, "roms"), {".nsp", ".xci"});
+    info.games = CountGames(JoinPath(directory, "roms"));
     return info;
 }
 
