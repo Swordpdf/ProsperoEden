@@ -26,3 +26,40 @@ uses it after filesystem access is set up, so `roms/` resolves against the folde
 - Arguments only reach a new ProsperoEden process. If ProsperoEden is already running, the
   system brings it to the front and `main` does not run again; a forwarder should close it
   first.
+
+## The Library's games: library.json
+
+A forwarder maker can list the games ProsperoEden has, with their names and covers, from
+`/data/prosperoeden/library.json`. ProsperoEden writes it each time its Library is read (when the
+launcher opens, once keys and firmware are set up, and when games are added or deleted), in one
+step, so a reader never sees half of it. It
+holds the games on the console, not those that can only be downloaded from a source.
+
+```json
+{
+  "version": 1,
+  "app": "PPSA99008",
+  "game_files": "/mnt/usb0/eden",
+  "games": [
+    {
+      "file": "Mario Kart 8 Deluxe/Mario Kart 8 Deluxe.nsp",
+      "path": "/mnt/usb0/eden/roms/Mario Kart 8 Deluxe/Mario Kart 8 Deluxe.nsp",
+      "title": "Mario Kart 8 Deluxe",
+      "title_id": "0100152000022000",
+      "cover": "/data/prosperoeden/covers/1a2b3c4d.tga"
+    }
+  ]
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `version` | The format. Later versions only add fields; a reader of version 1 reads them as well. |
+| `game_files` | The game files folder in use (**Settings > Game files**), which holds `roms/`. |
+| `file` | The game's path in `roms/`: what to pass to `--rom`. |
+| `path` | Its full path. |
+| `title` | The name the Library shows. |
+| `title_id` | 16 hexadecimal digits, or `null` when the game's data could not be read (keys missing, for one). |
+| `cover` | Its cover, a TGA image, or `null` when it has none yet. |
+
+Without filesystem access ProsperoEden cannot write it, and the file stays as it last was.
