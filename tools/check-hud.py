@@ -154,9 +154,14 @@ int main() {
         assert(std::string_view(Eden::FormatHudText(clock, 100, "VLK", by_core, -1,
                                                     Eden::kHudFieldAll | Eden::kHudFieldOneCore).data())
                == "VLK 60FPS 17.0MS CPU 92% GPU 43% MEM 4.1/8.0G");
+        // A game that leaves the fourth core (the Switch's system core) alone: three cores.
         by_core.cores[3] = ~0u;
         assert(std::string_view(Eden::FormatHudText(clock, 100, "VLK", by_core).data())
-               == "VLK 60FPS 17.0MS CPU 92% 45% 38% --% GPU 43% MEM 4.1/8.0G");
+               == "VLK 60FPS 17.0MS CPU 92% 45% 38% GPU 43% MEM 4.1/8.0G");
+        // One between cores that report keeps its place.
+        by_core.cores[1] = ~0u; by_core.cores[3] = 3;
+        assert(std::string_view(Eden::FormatHudText(clock, 100, "VLK", by_core).data())
+               == "VLK 60FPS 17.0MS CPU 92% --% 38% 3% GPU 43% MEM 4.1/8.0G");
     }
     // The graphics' part follows the pool when it is known.
     {

@@ -2,6 +2,7 @@
 #pragma once
 #include <algorithm>
 #include <array>
+#include <iterator>
 #include <atomic>
 #include <chrono>
 #include <cmath>
@@ -331,10 +332,15 @@ inline std::array<char, kHudTextMax + 1> FormatHudText(const HudClock& clock, co
             std::snprintf(piece, sizeof(piece), " CPU %u%%", busiest);
             put(piece);
         } else if (by_core) {
-            // Each core with its own sign, so each is coloured by its own load.
+            // Each core with its own sign, so each is coloured by its own load. The last cores that
+            // never ran the game's code are left out: most games leave the fourth, which the
+            // Switch keeps for its own system, alone, and its "--%" read as a broken reading
+            // (Swordpdf/ProsperoEden#275). A core between two that report still shows "--".
             put(" CPU");
-            for (const unsigned load : machine.cores) {
-                if (load != ~0u) std::snprintf(piece, sizeof(piece), " %u%%", load);
+            std::size_t shown = std::size(machine.cores);
+            while (shown > 0 && machine.cores[shown - 1] == ~0u) --shown;
+            for (std::size_t i = 0; i < shown; ++i) {
+                if (machine.cores[i] != ~0u) std::snprintf(piece, sizeof(piece), " %u%%", machine.cores[i]);
                 else std::snprintf(piece, sizeof(piece), " --%%");
                 put(piece);
             }
