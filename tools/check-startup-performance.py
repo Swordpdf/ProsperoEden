@@ -100,6 +100,45 @@ int main() {
     worker.join(); // No sampling after shutdown or join.
 }
 '''
+# The overlay's per-core load leaves the core's idle polling out (GuestCoreLoads): a core that
+# burns 300 ms of CPU, 225 ms of it polling while idle, reads about 75 ms of work, not 300.
+loads_code = r'''
+#include "performance.h"
+#include "fastmem.h"
+#include <atomic>
+#include <cassert>
+#include <chrono>
+#include <cstdio>
+#include <thread>
+extern "C" void ps5_opengl_heap_snapshot(const char*, unsigned) {}
+namespace Eden::Fastmem {
+Stats WindowStats() noexcept { return {}; }
+std::uint64_t Faults() noexcept { return 0; }
+std::uint64_t Demotions() noexcept { return 0; }
+}
+static void Burn(std::chrono::milliseconds length) {
+    const auto end = std::chrono::steady_clock::now() + length;
+    while (std::chrono::steady_clock::now() < end) std::atomic_signal_fence(std::memory_order_seq_cst);
+}
+int main() {
+    using namespace Eden::Performance;
+    using namespace std::chrono_literals;
+    PlatformChecks();
+    RegisterWorker("CPUCore_2");
+    unsigned loads[4];
+    GuestCoreLoads(loads);                 // asks for readings
+    SampleCoreCpu(2);                      // the first one
+    std::this_thread::sleep_for(260ms);
+    GuestCoreLoads(loads);                 // takes it as the start
+    Burn(300ms);
+    CountIdle(2, 300'000'000, false, 225'000'000);
+    SampleCoreCpu(2);
+    GuestCoreLoads(loads);
+    std::printf("core 2 load %u%%\n", loads[2]);
+    // 75 ms of work over ~560 ms: about 13%; counting the polling as work would read about 54%.
+    assert(loads[2] != ~0u && loads[2] >= 4 && loads[2] <= 30);
+}
+'''
 with tempfile.TemporaryDirectory(prefix='eden-startup-') as directory:
     directory = Path(directory)
     (directory / 'check.cpp').write_text(code)
@@ -112,6 +151,16 @@ with tempfile.TemporaryDirectory(prefix='eden-startup-') as directory:
                     str(source / 'common/x64/rdtsc.cpp'), str(source / 'common/steady_clock.cpp'),
                     '-Wl,--wrap=clock_gettime', '-o', str(executable)], check=True)
     output = subprocess.check_output([str(executable)], text=True, timeout=15)
+    (directory / 'loads.cpp').write_text(loads_code)
+    loads_executable = directory / 'loads'
+    subprocess.run(['clang++-18', '-std=c++20', '-O2', '-pthread', '-DARCHITECTURE_x86_64',
+                    '-I', str(root / 'headless'), '-I', str(root / 'src'), '-I', str(source),
+                    '-I', str(root / '.deps/fmt-12.1.0/include'),
+                    str(directory / 'loads.cpp'), str(root / 'headless/performance.cpp'),
+                    str(root / 'src/memory_pages.cpp'), str(source / 'common/cpu_features.cpp'),
+                    str(source / 'common/x64/rdtsc.cpp'), str(source / 'common/steady_clock.cpp'),
+                    '-o', str(loads_executable)], check=True)
+    print(subprocess.check_output([str(loads_executable)], text=True, timeout=15).strip())
     assert 'EDEN_PERF_CPU_CLOCK_CHECK valid=1 ' in output
     assert 'EDEN_PERF_CPU_CLOCK_CHECK valid=0 ' in output
     assert output.count('EDEN_PERF_OWNER_CLOCK_CHECK valid=1 ') == 1
@@ -132,4 +181,4 @@ with tempfile.TemporaryDirectory(prefix='eden-startup-') as directory:
     for index, expected in ((1, '-22'), (3, '-95'), (4, '-95')):
         assert re.search(r'EDEN_PERF_CPU_POINT core=0 .*cpu_ns=' + expected + ' ', snapshots[index])
     assert re.search(r'EDEN_PERF_CPU_POINT core=1 .*cpu_ns=\d+ thread=456 pc=1234 svc=ffffffff', snapshots[0])
-print('Startup checks, owner CPU qualification and unavailable-clock controls PASS')
+print('Startup checks, owner CPU qualification, unavailable-clock controls and per-core load without idle polling PASS')

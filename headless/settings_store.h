@@ -802,6 +802,16 @@ inline Preferences PreferencesFor(uint64_t title_id, const std::string& file = S
 // read their game's settings for.
 inline std::atomic<uint64_t> session_title{0};
 
+// Advanced, file-only workaround, deliberately per game: reducing the guest's tick rate helps
+// some dynamic frame-rate games but also slows games that pace themselves by that counter.
+// Keep it outside "performance", whose visible switches SavePerformance replaces as a group.
+inline bool LoadAdaptiveClock(uint64_t title_id, const std::string& file = SettingsFile()) {
+    if (!title_id) return false;
+    using Settings::Json;
+    return Settings::Bool(Settings::Load(file),
+                          Json::json_pointer("/games/" + Settings::TitleKey(title_id) + "/adaptive_clock"), false);
+}
+
 // Speed against accuracy, for every game ("performance") and for one ("games/<title>/performance",
 // whose values go before the general ones, one value at a time). Settings > Performance has
 // a switch for each general value, and Library > Game settings > Performance one for each of a

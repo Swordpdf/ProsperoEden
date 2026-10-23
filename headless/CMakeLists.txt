@@ -977,9 +977,10 @@ string(FIND "${physical_core_source}" "${prefetch_old}" prefetch_at)
 if(prefetch_at LESS 0)
     message(FATAL_ERROR "Pinned prefetch-abort handling changed")
 endif()
-# Guest core idle: count each wait and how long it lasted, and spin on the
-# interrupt flag for a bounded time before sleeping on the condition variable, because waking a
-# sleeping host thread puts the host scheduler's latency on the guest's critical path.
+# Guest core idle: count each wait and how long it lasted, and poll the interrupt flag before
+# sleeping on the condition variable, because waking a sleeping host thread puts the host
+# scheduler's latency on the guest's critical path. How long each core polls follows its recent
+# waits (performance.h, AdaptIdlePoll).
 set(idle_old "void PhysicalCore::Idle() {\n    std::unique_lock lk{m_guard};\n    m_on_interrupt.wait(lk, [this] { return m_is_interrupted; });\n}")
 string(FIND "${physical_core_source}" "${idle_old}" idle_at)
 if(idle_at LESS 0)
@@ -987,17 +988,46 @@ if(idle_at LESS 0)
 endif()
 string(REPLACE "${idle_old}" [=[void PhysicalCore::Idle() {
     const long long start = ::Eden::Performance::NowNs();
-    const unsigned spins = ::Eden::Performance::idle_spin_iterations.load(std::memory_order_relaxed);
-    for (unsigned i = 0; i < spins && !__atomic_load_n(&m_is_interrupted, __ATOMIC_ACQUIRE); ++i)
-        __builtin_ia32_pause();
+    const long long poll = ::Eden::Performance::IdlePollBudget(m_core_index);
+    if (poll > 0)
+        for (unsigned i = 1; !__atomic_load_n(&m_is_interrupted, __ATOMIC_ACQUIRE); ++i) {
+            ::Eden::CpuRelax();
+            if ((i & 63) == 0 && ::Eden::Performance::NowNs() - start >= poll) break;
+        }
+    const long long spun = poll > 0 ? ::Eden::Performance::NowNs() - start : 0;
     bool slept;
+    long long raised;
     {
         std::unique_lock lk{m_guard};
         slept = !m_is_interrupted;
         m_on_interrupt.wait(lk, [this] { return m_is_interrupted; });
+        raised = ::Eden::Performance::RaisedNs(m_core_index);
     }
-    ::Eden::Performance::CountIdle(m_core_index, ::Eden::Performance::NowNs() - start, slept);
+    const long long waited = ::Eden::Performance::NowNs() - start;
+    ::Eden::Performance::CountIdle(m_core_index, waited, slept, spun);
+    ::Eden::Performance::AdaptIdlePoll(m_core_index, raised > start ? raised - start : 0, slept);
 }]=] physical_core_source "${physical_core_source}")
+# The time an interrupt raises a core's flag, for the core's idle poll (performance.h AdaptIdlePoll).
+# Idle and IsInterrupted read the flag without the lock, so those reads and the flag's writes
+# (under the lock) are atomic.
+set(interrupt_old "    // Add interrupt flag.\n    m_is_interrupted = true;")
+set(clear_old "    std::scoped_lock lk{m_guard};\n    m_is_interrupted = false;")
+set(is_interrupted_old "bool PhysicalCore::IsInterrupted() const {\n    return m_is_interrupted;\n}")
+foreach(pinned_text IN ITEMS interrupt_old clear_old is_interrupted_old)
+    string(FIND "${physical_core_source}" "${${pinned_text}}" pinned_at)
+    if(pinned_at LESS 0)
+        message(FATAL_ERROR "Pinned PhysicalCore::Interrupt or ClearInterrupt changed")
+    endif()
+endforeach()
+string(REPLACE "${interrupt_old}"
+    "    // Add interrupt flag.\n    if (!m_is_interrupted) ::Eden::Performance::NoteInterrupt(m_core_index);\n    __atomic_store_n(&m_is_interrupted, true, __ATOMIC_RELEASE);"
+    physical_core_source "${physical_core_source}")
+string(REPLACE "${clear_old}"
+    "    std::scoped_lock lk{m_guard};\n    __atomic_store_n(&m_is_interrupted, false, __ATOMIC_RELAXED);"
+    physical_core_source "${physical_core_source}")
+string(REPLACE "${is_interrupted_old}"
+    "bool PhysicalCore::IsInterrupted() const {\n    return __atomic_load_n(&m_is_interrupted, __ATOMIC_ACQUIRE);\n}"
+    physical_core_source "${physical_core_source}")
 string(REPLACE "${prefetch_old}"
     "            } else {\n                interface->LogBacktrace(process);\n                if (prefetch_abort)\n                    ::Eden::RecordGuestFault(\"guest thread \" + Core::GetThreadName(thread).value_or(\"?\") +\n                                             \" jumped to an unmapped address\");\n            }\n            thread->RequestSuspend(kernel, SuspendType::Debug);"
     physical_core_source "${physical_core_source}")
@@ -1033,6 +1063,21 @@ list(REMOVE_ITEM core_sources "core_timing.cpp")
 list(APPEND core_sources "${PORT_BUILD_DIR}/core_timing.cpp")
 list(REMOVE_ITEM core_sources "hle/kernel/physical_core.cpp")
 list(APPEND core_sources "${PORT_BUILD_DIR}/physical_core.cpp")
+# The scheduler retries a thread's context guard while another core holds it (the thread is still
+# switching away there). Pinned Eden retries at full speed; PAUSE between tries leaves the core's
+# other hardware thread its share and keeps the retries off the line the holder has to write.
+file(READ "${PROJECT_SOURCE_DIR}/src/core/hle/kernel/k_scheduler.cpp" scheduler_source)
+set(guard_retry_old "                // If we do, another core is interfering, and we must start again.\n                goto retry;\n            }\n        }")
+string(FIND "${scheduler_source}" "${guard_retry_old}" guard_retry_at)
+if(guard_retry_at LESS 0)
+    message(FATAL_ERROR "Pinned KScheduler context guard retry changed")
+endif()
+string(REPLACE "${guard_retry_old}"
+    "                // If we do, another core is interfering, and we must start again.\n                goto retry;\n            }\n            ::Eden::CpuRelax();\n        }"
+    scheduler_source "${scheduler_source}")
+write_derived("${PORT_BUILD_DIR}/k_scheduler.cpp" "#include \"${EDEN_PORT_DIR}/kernel_spin_lock.h\"\n${scheduler_source}")
+list(REMOVE_ITEM core_sources "hle/kernel/k_scheduler.cpp")
+list(APPEND core_sources "${PORT_BUILD_DIR}/k_scheduler.cpp")
 # Guest kernel spin locks spin before blocking (performance.h kernel_spin_iterations).
 file(READ "${PROJECT_SOURCE_DIR}/src/core/hle/kernel/k_spin_lock.cpp" spin_source)
 set(spin_old "void KSpinLock::Lock() {\n    m_lock.lock();\n}")

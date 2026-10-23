@@ -32,6 +32,23 @@ The accuracy switches help only where a game is held back by what they relax. In
 
 Resolution, the upscaling filter, the renderer and the refresh rate, which change speed too, are in **Settings > Video** and in a game's own settings.
 
+### Idle emulated cores
+
+An emulated CPU core with no runnable guest thread waits for an interrupt to wake it. Waking a
+sleeping core takes the console's scheduler some time, so a core first watches for the interrupt
+for a short while (up to 0.5 ms) before it sleeps. Each core sets how long from its own recent
+waits. A core that is handed work within that time keeps watching and wakes at once, as before.
+A core whose waits keep running past it (a few dozen in a row, about a frame or two) stops
+watching and sleeps at once, leaving that CPU time to the rest of the console. The first short
+wait after that sleeps; the core then watches again as long as before.
+
+The CPU overlay's numbers are the emulated cores' work: the time a core spends watching for an
+interrupt while it waits (above) is waiting, and is not counted. A game that waits very often for
+very short times keeps its core watching nearly all the time; Kirby and the Forgotten Land's main
+core read 95-97% that way while it did about 60% work. With **CPU by core** off, the CPU overlay
+shows the busiest emulated core, rather than total PS5 CPU usage. A core executing guest or
+emulator work can still reach 100%.
+
 ### Speed limit
 
 **Settings > Performance > Speed limit** is how fast a game may run, as a percentage of the console it was made for (Eden's *Limit Speed Percentage*). Left and right move over **100%** (the default, and what every earlier version did), **150%**, **200%**, **300%** and **Unlimited**. A game can have its own in **Library > Game settings > Performance**, which follows Settings until you choose one; it applies when a game starts.
@@ -54,6 +71,27 @@ Above 100%, the emulated console's display refreshes that much more often, so a 
 ```
 
 The launch line says what a session got (`Performance: ... speed limit 200%` in `stderr.log`).
+
+### Adaptive guest clock
+
+Games use the normal guest tick rate by default. The automatic clock adjustment introduced in
+v1.001.000 can feed back on itself: if a game waits on its tick counter to pace a frame, slowing
+that counter lengthens the wait, which the adjustment mistakes for more work. A 30 FPS game can
+then settle at 25.5 FPS even after a brief delay.
+
+For a game that drops its frame rate in steps (for example, from 30 to 20 FPS), the old workaround
+remains available as an advanced option in `config/prosperoeden.json`, under that game's title ID:
+
+```json
+{
+  "games": { "0100000000010000": { "adaptive_clock": true } }
+}
+```
+
+This is a file-only option; there is no menu switch. Leave the game before editing the file, and
+start it again afterwards. It reduces the guest's tick rate by at most 15%; audio and kernel
+timeouts keep their normal clocks. Remove the option or set it to `false` if play slows down.
+The launch log records `adaptive clock on` or `adaptive clock off` for each session.
 
 ### Console memory
 

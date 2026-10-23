@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <chrono>
@@ -10,6 +11,7 @@
 #include <vector>
 #include <optional>
 #include "common/cpu_features.h"
+#include "kernel_spin_lock.h"
 
 namespace Eden::Performance {
 void RegisterWorker(const char* name);
@@ -185,7 +187,7 @@ inline void GuestCacheLock(Mutex& mutex) {
     if (mutex.try_lock()) return;
     cache_lock_contended.fetch_add(1, std::memory_order_relaxed);
     for (unsigned tries = cache_lock_spins.load(std::memory_order_relaxed); tries != 0; --tries) {
-        for (int pause = 0; pause < 4; ++pause) __builtin_ia32_pause();
+        for (int pause = 0; pause < 4; ++pause) ::Eden::CpuRelax();
         if (mutex.try_lock()) return;
     }
     cache_lock_blocked.fetch_add(1, std::memory_order_relaxed);
@@ -202,7 +204,7 @@ inline void YieldToGuests() {
     const auto now = [] { return Common::g_wall_clock.GetTimeNS().count(); };
     const long long until = now() + 2'000'000;
     while (cache_lock_sleepers.load(std::memory_order_acquire) != 0 && now() < until)
-        for (int pause = 0; pause < 16; ++pause) __builtin_ia32_pause();
+        for (int pause = 0; pause < 16; ++pause) ::Eden::CpuRelax();
 }
 // A guest write to a GPU-tracked page whose cache lock the GPU thread holds (it holds both for each
 // draw's preparation, up to 40% of the time in heavy scenes, longer when a scene change creates and
@@ -455,7 +457,7 @@ inline void SpinAcquire(Mutex& mutex) {
     const unsigned spins = kernel_spin_iterations.load(std::memory_order_relaxed);
     for (unsigned i = 0; i < spins; ++i) {
         if (mutex.try_lock()) return;
-        __builtin_ia32_pause();
+        ::Eden::CpuRelax();
     }
     mutex.lock();
 }
@@ -526,27 +528,96 @@ inline std::atomic<bool> trace_fs_callers{false};
 // compare, [17]/[18] hcr=cpu constant predicate draw/skip, [19] hcr=exact pending-query fallback.
 inline std::array<std::atomic<unsigned long long>, 20> render_conditions{};
 // Guest core idle waits (PhysicalCore::Idle): calls, nanoseconds until the
-// interrupt, and calls that went to sleep because nothing arrived while spinning.
+// interrupt, calls that went to sleep because nothing arrived while spinning, and the
+// nanoseconds spent polling the interrupt flag. Polling is CPU time the core spends waiting:
+// the overlay's per-core load leaves it out (GuestCoreLoads), so a core that polls through
+// a game's short waits does not read as busy.
 struct IdleCounters {
-    std::atomic<unsigned long long> calls{0}, nanoseconds{0}, sleeps{0};
+    std::atomic<unsigned long long> calls{0}, nanoseconds{0}, sleeps{0}, spin_ns{0};
 };
 inline std::array<IdleCounters, 4> guest_idle{};
-// PAUSE iterations a guest core spins on its interrupt flag before sleeping (~20 ns each on the
-// console). Guest job systems hand work between cores thousands of times a second; sleeping on a
-// handoff puts the host's thread wake-up latency on the critical path. 100 us took a racing game's
-// heavy phase from ~55 to ~59.6 FPS; 500 us (the default) cut a tested game's requests for
-// 30 FPS from 23% to 15% of frames (sleeps per core 800 -> 330 a second). 2 ms cut them to 12% but
-// made some effects flicker. dev-settings idle_spin_us=N overrides it (0 sleeps at once).
-inline std::atomic<unsigned> idle_spin_iterations{25000};
+// The longest a guest core polls its interrupt flag before sleeping. Guest job systems hand work
+// between cores thousands of times a second, and sleeping on a handoff puts the host's thread
+// wake-up latency on the critical path: a 100 us poll took a racing game's heavy phase from ~55 to
+// ~59.6 FPS; 500 us cut a tested game's requests for 30 FPS from 23% to 15% of frames (sleeps per
+// core 800 -> 330 a second). 2 ms cut them to 12% but made some effects flicker.
+//
+// A fixed poll is spent in full on every wait that outlasts it: a core that waits for most of a
+// frame spins 500 us of every wait for nothing. So each core adapts its poll to its own waits, on
+// the lines of Linux's haltpoll governor for a KVM guest's idle vCPUs. A wait counts by when its
+// interrupt came (PhysicalCore::Interrupt stamps it), not by when the core was running again, so
+// the host's wake-up time does not make a short wait look long:
+//  - a sleep that polling up to the longest would have caught grows the poll at once: to twice
+//    that wait, at least double and a tenth of the longest, and back to what it was before it
+//    last shrank. A short wait caught while polling keeps it;
+//  - only after kIdleLongRun waits in a row outlasted the longest poll does each further one halve
+//    it, to nothing below a tenth. Most cores mix short handoffs with long waits (several of each
+//    a frame, and a dozen long ones between two handoffs is common); long waits between handoffs
+//    must not cost the next handoff its poll.
+// A core that only waits long stops polling after a few dozen waits (about a frame or two); the
+// first handoff after that sleeps, as every one did without polling, and the next ones are caught
+// again. dev-settings idle_spin_us=N polls a fixed N us instead.
+inline std::atomic<long long> idle_poll_most_ns{500'000};
+inline std::atomic<bool> idle_poll_adaptive{true};
+inline constexpr unsigned kIdleLongRun = 32;
+// Per guest core, read and written only by that core's host thread: its poll now, its poll before
+// it last shrank, and how many waits in a row have outlasted the longest poll.
+inline std::array<std::atomic<long long>, 4> idle_poll_ns{}, idle_poll_kept_ns{};
+inline std::array<std::atomic<unsigned>, 4> idle_long_run{};
+// When an interrupt last raised each core's flag (under the core's lock, PhysicalCore::Interrupt).
+inline std::array<std::atomic<long long>, 4> idle_raised_ns{};
+inline void NoteInterrupt(std::size_t core) {
+    if (core < idle_raised_ns.size()) idle_raised_ns[core].store(NowNs(), std::memory_order_relaxed);
+}
+inline long long RaisedNs(std::size_t core) {
+    return core < idle_raised_ns.size() ? idle_raised_ns[core].load(std::memory_order_relaxed) : 0;
+}
+inline long long IdlePollBudget(std::size_t core) {
+    const long long most = idle_poll_most_ns.load(std::memory_order_relaxed);
+    if (!idle_poll_adaptive.load(std::memory_order_relaxed) || core >= idle_poll_ns.size()) return most;
+    return std::min(idle_poll_ns[core].load(std::memory_order_relaxed), most);
+}
+// After a wait whose interrupt came `wanted_ns` after the core began to wait, which went to sleep
+// (`slept`) or was caught while polling.
+inline void AdaptIdlePoll(std::size_t core, long long wanted_ns, bool slept) {
+    if (!idle_poll_adaptive.load(std::memory_order_relaxed) || core >= idle_poll_ns.size()) return;
+    const long long most = idle_poll_most_ns.load(std::memory_order_relaxed);
+    const long long least = most / 10;
+    const long long poll = std::min(idle_poll_ns[core].load(std::memory_order_relaxed), most);
+    long long next = poll;
+    if (wanted_ns <= most) {
+        idle_long_run[core].store(0, std::memory_order_relaxed);
+        // Polling longer would have caught it.
+        if (slept && wanted_ns > poll) {
+            const long long kept = idle_poll_kept_ns[core].exchange(0, std::memory_order_relaxed);
+            next = std::min(std::max({poll * 2, least, wanted_ns * 2, kept}), most);
+        }
+    } else {
+        const unsigned run = idle_long_run[core].load(std::memory_order_relaxed);
+        if (run < kIdleLongRun) {
+            idle_long_run[core].store(run + 1, std::memory_order_relaxed);
+        } else {
+            if (poll > idle_poll_kept_ns[core].load(std::memory_order_relaxed))
+                idle_poll_kept_ns[core].store(poll, std::memory_order_relaxed);
+            next = poll / 2 < least ? 0 : poll / 2;
+        }
+    }
+    if (next != poll) idle_poll_ns[core].store(next, std::memory_order_relaxed);
+}
 // Draws between the Vulkan rasterizer's hand-offs to its worker, minus one (a power of two minus
 // one; tools/prepare-vulkan-port.py). Upstream hands off every 8 draws; dev-settings
 // dispatch_draws=N (8 to 512) overrides the 64 used here.
 inline std::atomic<unsigned> dispatch_mask{63};
-inline void CountIdle(std::size_t core, long long nanoseconds, bool slept) {
+inline void CountIdle(std::size_t core, long long nanoseconds, bool slept, long long spun = 0) {
     if (core >= guest_idle.size()) return;
     guest_idle[core].calls.fetch_add(1, std::memory_order_relaxed);
     guest_idle[core].nanoseconds.fetch_add(static_cast<unsigned long long>(nanoseconds), std::memory_order_relaxed);
     if (slept) guest_idle[core].sleeps.fetch_add(1, std::memory_order_relaxed);
+    if (spun > 0) guest_idle[core].spin_ns.fetch_add(static_cast<unsigned long long>(spun), std::memory_order_relaxed);
+}
+// The nanoseconds a guest core has spent polling while idle, for its load (GuestCoreLoads).
+inline unsigned long long IdleSpinNs(std::size_t core) {
+    return core < guest_idle.size() ? guest_idle[core].spin_ns.load(std::memory_order_relaxed) : 0;
 }
 // Development: reads 32-bit guest words for code dumps (installed by the frontend per session).
 inline bool (*guest_read32)(unsigned long long address, unsigned& value) = nullptr;

@@ -331,6 +331,8 @@ struct CpuSample {
     unsigned long long thread = 0, pc = 0;
     unsigned svc = ~0u, fpcr = 0;
     unsigned long long compilations = 0, compile_ns = 0;
+    // The core's idle polling so far (IdleSpinNs), read with cpu_ns so the two stay in step.
+    unsigned long long idle_spin_ns = 0;
 };
 std::array<CpuSample, 4> cpu_samples;
 // Read/written only by the worker owning this core; samples use workers_mutex.
@@ -570,7 +572,10 @@ void GuestCoreLoads(unsigned loads[4]) {
     // writes its own when it next leaves the guest's code after being asked (SampleCpu); here
     // the last two readings of a core are set against the time between them. A core that wrote
     // nothing since the last look was asleep, which is no load; when it wakes, its next reading
-    // covers the whole stretch.
+    // covers the whole stretch. The time the core spent polling its interrupt flag while idle
+    // (PhysicalCore::Idle) is CPU time spent waiting, not working, and is left out: a game that
+    // waits ~13,000 times a second for ~27 us each (Kirby and the Forgotten Land's main thread,
+    // Swordpdf/ProsperoEden#275) kept its core polling and read 95-97% busy at ~60% work.
     struct Core {
         long long mono = 0, cpu = 0;
         unsigned shown = ~0u;
@@ -592,12 +597,13 @@ void GuestCoreLoads(unsigned loads[4]) {
                 core = {};
             } else if (core.mono == 0) {
                 core.mono = sample.mono_ns;
-                core.cpu = sample.cpu_ns;
+                core.cpu = sample.cpu_ns - static_cast<long long>(sample.idle_spin_ns);
             } else if (sample.mono_ns > core.mono) {
-                core.shown = Percent(static_cast<double>(sample.cpu_ns - core.cpu) /
+                const long long busy = sample.cpu_ns - static_cast<long long>(sample.idle_spin_ns);
+                core.shown = Percent(static_cast<double>(busy - core.cpu) /
                                      static_cast<double>(sample.mono_ns - core.mono));
                 core.mono = sample.mono_ns;
-                core.cpu = sample.cpu_ns;
+                core.cpu = busy;
             } else if (core.shown != ~0u) {
                 core.shown = 0;
             }
@@ -1061,6 +1067,7 @@ void SampleCoreCpu(unsigned core) {
     sample.epoch = epoch;
     sample.mono_ns = ClockNs(CLOCK_MONOTONIC);
     sample.cpu_ns = owner_cpu_clock_valid ? ClockNs(CLOCK_THREAD_CPUTIME_ID) : -ENOTSUP;
+    sample.idle_spin_ns = IdleSpinNs(core);
     std::lock_guard lock(workers_mutex);
     cpu_samples[core] = sample;
 }
@@ -1072,7 +1079,7 @@ void SampleCpu(unsigned core, unsigned long long thread, unsigned long long pc, 
     const CpuSample sample{epoch, ClockNs(CLOCK_MONOTONIC),
         owner_cpu_clock_valid ? ClockNs(CLOCK_THREAD_CPUTIME_ID) : -ENOTSUP, thread, pc, svc, fpcr,
         compilation[core].calls.load(std::memory_order_relaxed),
-        compilation[core].nanoseconds.load(std::memory_order_relaxed)};
+        compilation[core].nanoseconds.load(std::memory_order_relaxed), IdleSpinNs(core)};
     std::lock_guard lock(workers_mutex);
     cpu_samples[core] = sample;
 }
